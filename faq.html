@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FAQ | Gradely.info</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+      line-height: 1.7;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 30px;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      color: #00ffb3;
+    }
+
+    header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .faq-item {
+      margin-bottom: 25px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding-bottom: 15px;
+    }
+
+    .faq-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .faq-question {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #00d2ff;
+      margin-bottom: 10px;
+    }
+
+    .faq-answer {
+      color: #e8f4fc;
+      font-size: 1rem;
+    }
+
+    .btn {
+      display: inline-block;
+      background: #00d2ff;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #0a84ff;
+      transform: scale(1.05);
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9rem;
+      color: #eee;
+      opacity: 0.8;
+    }
+
+    footer img {
+      height: 24px;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @media (max-width: 600px) {
+      .container { margin: 20px; }
+      header h1 { font-size: 1.8rem; }
+      .content { padding: 20px; }
+      .faq-question { font-size: 1.15rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>❓ Frequently Asked Questions</h1>
+      <p>Everything you need to know about using Gradely.info</p>
+    </header>
+
+    <div class="content">
+      <!-- FAQ Section -->
+      <div class="faq-item">
+        <div class="faq-question">How do I log in as a parent?</div>
+        <div class="faq-answer">
+          Go to the Parent Login page and enter your child’s Student ID and password.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">What should I do if I forget my password?</div>
+        <div class="faq-answer">
+          Click “Forgot Password?” on the login page, enter your child’s Student ID, and a reset link will be sent to your registered email or phone.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">Can I change my password after logging in?</div>
+        <div class="faq-answer">
+          Yes! After logging in, go to your dashboard and click “Change My Password” to update it securely.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">How do I download my child’s result PDF?</div>
+        <div class="faq-answer">
+          After logging in, navigate to the dashboard and click the “Download PDF Report” button to get a printable version of the term results.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">What subscription plans do you offer?</div>
+        <div class="faq-answer">
+          We offer:<br>
+          • <strong>Basic Plan:</strong> ₦12,000/month<br>
+          • <strong>Pro Plan:</strong> ₦19,000/month — includes SMS alerts, advanced analytics, custom branding, and priority support.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">How can schools upload student results?</div>
+        <div class="faq-answer">
+          Admins can use the “Upload Results” tool with our Excel/CSV template. Simply fill in the data and import it directly into the system.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">Are results automatically sent to student portal?</div>
+        <div class="faq-answer">
+          Yes! Once uploaded, results can be instantly viewed using login details and parents get notification via email and SMS.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">Is my data secure?</div>
+        <div class="faq-answer">
+          Absolutely. All passwords are encrypted with bcrypt, and data is stored in secure PostgreSQL databases. We follow best practices for authentication and encryption.
+        </div>
+      </div>
+
+      <!-- Contact Support Link -->
+      <div style="text-align: center; margin-top: 30px;">
+        <p>Still have questions?</p>
+        <a href="help-support.html" class="btn">Contact Support</a>
+      </div>
+
+      <!-- Back to Home -->
+      <div style="text-align: center; margin-top: 20px;">
+        <a href="index.html" style="color: #00d2ff; text-decoration: none; font-weight: 600;">← Back to Homepage</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <img src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" alt="RIS Logo" />
+    <strong>© 2025 Gradely.info</strong> | Powered by RIS
+    <div style="margin-top: 10px;">
+      <a href="terms.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Terms of Service</a> •
+      <a href="privacy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Privacy Policy</a> •
+      <a href="refund-policy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Refund Policy</a>
+    </div>
+  </footer>
+
+<script src="js/kaima-chatbot.js"></script>
+
+
+</body>
+</html>

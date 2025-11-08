@@ -1,0 +1,4 @@
+<form action="/api/import-results" method="post" enctype="multipart/form-data">
+  <input type="file" name="resultsFile" accept=".csv,.xlsx" required />
+  <button type="submit">Upload Results</button>
+</form>

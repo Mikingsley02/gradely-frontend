@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact Us | Gradely.info</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+      line-height: 1.7;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 30px;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      color: #00ffb3;
+    }
+
+    header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+    }
+
+    .contact-info {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .contact-info h2 {
+      font-size: 1.4rem;
+      color: #00d2ff;
+      margin-bottom: 15px;
+    }
+
+    .contact-info p {
+      margin: 10px 0;
+      font-size: 1rem;
+    }
+
+    .contact-info a {
+      color: #00d2ff;
+      text-decoration: none;
+    }
+
+    .contact-info a:hover {
+      text-decoration: underline;
+    }
+
+    /* Enhanced Input Fields */
+    .contact-form input,
+    .contact-form textarea {
+      width: 100%;
+      padding: 12px 14px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      max-width: 100%; /* Prevent overflow */
+    }
+
+    /* Brighter placeholder text */
+    .contact-form input::placeholder,
+    .contact-form textarea::placeholder {
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 500;
+    }
+
+    /* Focus effect */
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+      outline: 2px solid #00d2ff;
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+    }
+
+    .contact-form textarea {
+      height: 150px;
+      resize: vertical;
+      max-width: 100%; /* Ensure no horizontal overflow */
+    }
+
+    .contact-form button {
+      background: #00d2ff;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      width: 100%; /* Full width on mobile */
+      max-width: 100%;
+    }
+
+    .contact-form button:hover {
+      background: #0a84ff;
+      transform: scale(1.03);
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9rem;
+      color: #eee;
+      opacity: 0.8;
+    }
+
+    footer img {
+      height: 24px;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    /* === MOBILE RESPONSIVENESS === */
+    @media (max-width: 600px) {
+      .container { margin: 20px; }
+      header h1 { font-size: 1.8rem; }
+      .content { padding: 20px; }
+      .contact-grid {
+        grid-template-columns: 1fr; /* Stack on small screens */
+        gap: 20px;
+      }
+      .contact-form input,
+      .contact-form textarea {
+        padding: 10px;
+        font-size: 0.95rem;
+      }
+      .contact-form button {
+        padding: 10px;
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>📬 Contact Us</h1>
+      <p>We'd love to hear from you! Reach out with any questions or feedback.</p>
+    </header>
+
+    <div class="content">
+      <div class="contact-grid">
+        <!-- Contact Info -->
+        <div class="contact-info">
+          <h2>📞 Get in Touch</h2>
+          <p><strong>Email:</strong> <a href="mailto:support@gradely.info">support@gradely.info</a></p>
+          <p><strong>Phone:</strong> <a href="tel:+2348064287477">+234 806 428 7477</a></p>
+          <p><strong>Business Hours:</strong><br>Mon - Fri, 9:00 AM - 5:00 PM WAT</p>
+
+          <h2 style="margin-top: 20px;">📍 Office Address</h2>
+          <p>Remit Integrated Services<br>25 Josephat Mojekwu Street, Along Living Faith Church, Ext 3, FO1,<br>Kubwa, Abuja, F.C.T, Nigeria</p>
+
+          <h2 style="margin-top: 20px;">💬 Quick Help</h2>
+          <p>For immediate assistance, use our <a href="help-support.html" style="color:#00d2ff;">Help & Support</a> page or visit the <a href="faq.html" style="color:#00d2ff;">FAQ</a>.</p>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="contact-form">
+          <h2 style="color: #00d2ff; margin-bottom: 15px;">Send Us a Message</h2>
+          <form id="contactForm">
+            <input type="text" placeholder="Your Name" required />
+            <input type="email" placeholder="Your Email" required />
+            <input type="text" placeholder="Subject" required />
+            <textarea placeholder="Your Message" required></textarea>
+            <button type="submit">Send Message</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Back to Home -->
+      <div style="text-align: center; margin-top: 30px;">
+        <a href="index.html" style="color: #00d2ff; text-decoration: none; font-weight: 600;">← Back to Homepage</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <img src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" alt="RIS Logo" />
+    <strong>© 2025 Gradely.info</strong> | Powered by RIS
+    <div style="margin-top: 10px;">
+      <a href="terms.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Terms</a> •
+      <a href="privacy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Privacy</a> •
+      <a href="refund-policy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Refund Policy</a>
+    </div>
+  </footer>
+
+  <script>
+    // Optional: Handle form submission later via email service
+    document.getElementById("contactForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      alert("Thank you! Your message has been sent. We'll reply within 2 business hours.");
+      e.target.reset();
+    });
+  </script>
+
+
+
+<script src="js/kaima-chatbot.js"></script> 
+
+</body>
+</html>

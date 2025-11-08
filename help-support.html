@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Help & Support | Gradely.info</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 30px;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      color: #00ffb3;
+    }
+
+    header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      color: #00d2ff;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      padding-bottom: 8px;
+    }
+
+    .section ul {
+      list-style-type: none;
+    }
+
+    .section li {
+      margin: 12px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .section li::before {
+      content: "➡️";
+      position: absolute;
+      left: 0;
+    }
+
+    .contact-info {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+    }
+
+    .contact-info p {
+      margin: 10px 0;
+      font-size: 1rem;
+    }
+
+    .btn {
+      display: inline-block;
+      background: #00d2ff;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #0a84ff;
+      transform: scale(1.05);
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9rem;
+      color: #eee;
+      opacity: 0.8;
+    }
+
+    footer img {
+      height: 24px;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @media (max-width: 600px) {
+      .container { margin: 20px; }
+      header h1 { font-size: 1.8rem; }
+      .content { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>🛠️ Help & Support</h1>
+      <p>We're here to help you get the most out of Gradely.info</p>
+    </header>
+
+    <div class="content">
+      <!-- Common Issues -->
+      <div class="section">
+        <h2>📚 Common Questions</h2>
+        <ul>
+          <li><strong>How do I reset my password?</strong><br>
+            Go to login → Click “Forgot Password?” → Enter Student ID.</li>
+          <li><strong>Where can I download results as PDF?</strong><br>
+            After logging in, go to your dashboard and click “Download PDF”.</li>
+          <li><strong>Can parents access results without internet?</strong><br>
+            Yes! Results are SMS-delivered via Twilio if needed.</li>
+          <li><strong>How do I upload student results?</strong><br>
+            Admins: Use the “Upload Results” tool with our Excel template.</li>
+        </ul>
+      </div>
+
+      <!-- Troubleshooting -->
+      <div class="section">
+        <h2>🔧 Troubleshooting</h2>
+        <ul>
+          <li>Login fails? Double-check Student ID and password case.</li>
+          <li>No results showing? Confirm data was uploaded to the correct term.</li>
+          <li>Page not loading? Clear browser cache or try incognito mode.</li>
+          <li>File upload failed? Make sure it's .xlsx, .xls, or .csv format.</li>
+        </ul>
+      </div>
+
+      <!-- Contact Support -->
+      <div class="section">
+        <h2>📞 Contact Support</h2>
+        <div class="contact-info">
+          <p><strong>Email:</strong> <a href="mailto:support@gradely.info" style="color:#00d2ff;">support@gradely.info</a></p>
+          <p><strong>Phone:</strong> +234 806 428 7477</p>
+          <p><strong>Business Hours:</strong> Mon - Fri, 8:00 AM - 6:00 PM WAT</p>
+          <p>We respond within 2 business hours during working days.</p>
+          <a href="mailto:support@gradely.info" class="btn">📧 Email Us Now</a>
+        </div>
+      </div>
+
+      <!-- Back to Home -->
+      <div style="text-align: center; margin-top: 30px;">
+        <a href="index.html" style="color: #00d2ff; text-decoration: none; font-weight: 600;">← Back to Homepage</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <img src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" alt="RIS Logo" />
+    <strong>© 2025 Gradely.info</strong> | Powered by RIS
+    <div style="margin-top: 10px;">
+      <a href="terms.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Terms of Service</a> •
+      <a href="privacy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Privacy Policy</a> •
+      <a href="refund-policy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Refund Policy</a>
+    </div>
+  </footer>
+
+
+  <script src="js/kaima-chatbot.js"></script>
+
+</body>
+</html>

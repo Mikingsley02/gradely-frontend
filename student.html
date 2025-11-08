@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📚 Student Results | Gradely.info</title>
+  <link rel="icon" href="https://gradely.info/favicon.ico" />
+  <style>
+    :root {
+      --primary: #2575fc;
+      --secondary: #6a11cb;
+      --success: #27ae60;
+      --danger: #e74c3c;
+      --light-bg: #f4f6f9;
+      --dark-text: #2c3e50;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: var(--light-bg);
+      color: var(--dark-text);
+      padding: 15px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 20px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--secondary), var(--primary));
+      color: white;
+      text-align: center;
+      padding: 35px 20px;
+    }
+
+    header h1 { font-size: 1.8rem; font-weight: 600; }
+    header p { margin-top: 6px; opacity: 0.9; }
+
+    .student-info {
+      padding: 25px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #eee;
+      line-height: 1.8;
+    }
+
+    .student-info strong { color: var(--dark-text); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 14px 12px;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    th {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    tr:nth-child(even) { background: #f9fbff; }
+    tr:hover { background: #eef3ff; }
+
+    .chart-container {
+      padding: 30px 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .actions {
+      text-align: center;
+      padding: 25px 15px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      margin: 0 8px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: 500;
+    }
+
+    .btn-download { background: var(--success); color: #fff; }
+    .btn-download:hover { background: #219a52; }
+
+    .btn-logout { background: var(--danger); color: #fff; }
+    .btn-logout:hover { background: #c0392b; }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #f8f9fa;
+      border-top: 1px solid #eee;
+      font-size: 0.9rem;
+      color: #555;
+      margin-top: 20px;
+    }
+
+    .message {
+      text-align: center;
+      padding: 20px;
+      color: #777;
+      font-style: italic;
+    }
+
+    /* Password Section */
+    #changePasswordPrompt, #changePasswordForm {
+      margin: 20px auto;
+      max-width: 600px;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    #changePasswordPrompt {
+      background: #fff8e1;
+      border: 1px solid #ffeb3b;
+      display: none;
+      color: #5d4037;
+    }
+
+    #changePasswordForm {
+      background: #f3f3f3;
+      display: none;
+    }
+
+    #changePasswordForm input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    #changePasswordForm button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    @media (max-width: 600px) {
+      th, td { font-size: 0.85rem; }
+      header h1 { font-size: 1.4rem; }
+      .btn { width: 100%; margin: 8px 0; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>📘 Student Term Results</h1>
+      <p>Review your child’s academic performance below</p>
+    </header>
+
+    <div class="student-info">
+      <p><strong>Name:</strong> <span id="studentName">Loading...</span></p>
+      <p><strong>Class:</strong> <span id="studentClass">Loading...</span></p>
+      <p><strong>Student ID:</strong> <span id="studentId">Loading...</span></p>
+      <p><strong>Term:</strong> <span id="studentTerm">Loading...</span></p>
+    </div>
+
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Score</th>
+          <th>Total</th>
+          <th>Grade</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody">
+        <tr><td colspan="5" class="message">Loading results...</td></tr>
+      </tbody>
+    </table>
+
+    <div class="chart-container">
+      <canvas id="performanceChart"></canvas>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-download" onclick="downloadPDF()">📥 Download PDF</button>
+      <button class="btn btn-logout" onclick="logout()">🔐 Logout</button>
+    </div>
+  </div>
+
+  <!-- Password Prompt -->
+  <div id="changePasswordPrompt">
+    <h3>🔐 Secure Your Account</h3>
+    <p>If this is your first login, please change your default password for security.</p>
+    <button style="background:#e65100; color:white;" onclick="showChangePasswordForm()">Change Password</button>
+  </div>
+
+  <!-- Change Password Form -->
+  <div id="changePasswordForm">
+    <h3>Change Your Password</h3>
+    <form id="changePassForm" onsubmit="handleChangePassword(event)">
+      <label>Current Password</label>
+      <input type="password" id="currentPassword" required />
+      <br/><br/>
+      <label>New Password</label>
+      <input type="password" id="newPassword" required />
+      <br/><br/>
+      <label>Confirm New Password</label>
+      <input type="password" id="confirmPassword" required />
+      <br/><br/>
+      <button type="submit" style="background:#3498db;color:white;">💾 Save</button>
+      <button type="button" style="background:#95a5a6;color:white;" onclick="hideChangePasswordForm()">Cancel</button>
+    </form>
+    <p id="changePassMsg"></p>
+  </div>
+
+  <footer>
+    © 2025 gradely.info. All rights reserved. | Powered by RIS<br>
+    <a href="terms.html">Terms</a> • 
+    <a href="privacy.html">Privacy</a> • 
+    <a href="refund-policy.html">Refund Policy</a>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+ <script>
+const backendUrl = "https://gradely-backend-7xoh.onrender.com";
+let chartInstance = null;
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const studentId = localStorage.getItem("studentId");
+  if (!studentId) {
+    alert("❌ You are not logged in. Please log in first.");
+    window.location.href = "index.html";
+    return;
+  }
+
+  // ✅ Correct backend endpoint
+  const apiUrl = `${backendUrl}/api/result/student/${studentId}`;
+
+  try {
+    const response = await fetch(apiUrl);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+
+    if (!data.success) {
+      document.getElementById("resultsBody").innerHTML =
+        `<tr><td colspan="5" class="message">⚠️ ${data.message}</td></tr>`;
+      return;
+    }
+
+    // ✅ Render student info
+    const student = data.student;
+    document.getElementById("studentName").textContent =
+      `${student.first_name} ${student.middle_name || ""} ${student.last_name}`;
+    document.getElementById("studentClass").textContent = student.class || "N/A";
+    document.getElementById("studentId").textContent = student.student_id;
+    document.getElementById("studentTerm").textContent =
+      data.results?.[0]?.term || "N/A";
+
+    // ✅ Render results
+    const resultsBody = document.getElementById("resultsBody");
+    if (data.results && data.results.length > 0) {
+      resultsBody.innerHTML = data.results
+        .map(
+          (r) => `
+          <tr>
+            <td>${r.subject}</td>
+            <td>${r.score}</td>
+            <td>${r.total_marks}</td>
+            <td>${r.grade}</td>
+            <td>${r.remarks}</td>
+          </tr>`
+        )
+        .join("");
+      renderChart(data.results);
+    } else {
+      resultsBody.innerHTML = `<tr><td colspan="5" class="message">⚠️ No results found for this student.</td></tr>`;
+    }
+
+    // ✅ Show password change prompt if first login
+    const firstLogin = localStorage.getItem("firstLogin") === "true";
+    if (firstLogin) {
+      document.getElementById("changePasswordPrompt").style.display = "block";
+    }
+  } catch (error) {
+    console.error("Error fetching student data:", error);
+    document.getElementById("resultsBody").innerHTML =
+      `<tr><td colspan="5" class="message">⚠️ Failed to fetch data. Please check your connection or backend.</td></tr>`;
+  }
+});
+
+// === Render Chart ===
+function renderChart(results) {
+  const ctx = document.getElementById("performanceChart").getContext("2d");
+  if (chartInstance) chartInstance.destroy();
+
+  const subjects = results.map((r) => r.subject);
+  const scores = results.map((r) => r.score);
+  const colors = [
+    "#FF6B6B", "#4ECDC4", "#FFD93D", "#6A5ACD", "#1ABC9C",
+    "#F39C12", "#E74C3C", "#3498DB", "#9B59B6", "#2ECC71"
+  ];
+
+  chartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: subjects.length ? subjects : ["No Data"],
+      datasets: [{
+        label: "Scores",
+        data: scores.length ? scores : [0],
+        backgroundColor: subjects.map((_, i) => colors[i % colors.length]),
+        borderRadius: 6,
+      }],
+    },
+    options: {
+      scales: { y: { beginAtZero: true, max: 100 } },
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: "Performance Overview",
+          font: { size: 16 },
+          color: "#2c3e50",
+        },
+      },
+    },
+  });
+}
+
+// === Logout ===
+function logout() {
+  localStorage.clear();
+  window.location.href = "index.html";
+}
+
+// === Download PDF ===
+async function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p", "mm", "a4");
+
+  const name = document.getElementById("studentName").textContent;
+  const cls = document.getElementById("studentClass").textContent;
+  const id = document.getElementById("studentId").textContent;
+  const term = document.getElementById("studentTerm").textContent;
+  const currentDate = new Date().toLocaleString();
+
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("RESULT REPORT CARD", 105, 20, null, null, "center");
+
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Student Name: ${name}`, 20, 35);
+  doc.text(`Class: ${cls}`, 20, 43);
+  doc.text(`Student ID: ${id}`, 20, 51);
+  doc.text(`Term: ${term}`, 20, 60);
+
+  doc.setFillColor(37, 117, 252);
+  doc.setTextColor(255, 255, 255);
+  doc.rect(20, 70, 170, 8, "F");
+  doc.text("Subject", 25, 76);
+  doc.text("Score", 85, 76);
+  doc.text("Total", 110, 76);
+  doc.text("Grade", 135, 76);
+  doc.text("Remarks", 155, 76);
+
+  const rows = Array.from(document.querySelectorAll("#resultsBody tr")).map(tr =>
+    Array.from(tr.children).map(td => td.textContent)
+  );
+
+  let y = 85;
+  doc.setTextColor(0, 0, 0);
+  rows.forEach(row => {
+    doc.text(row[0] || "", 25, y);
+    doc.text(row[1] || "", 87, y);
+    doc.text(row[2] || "", 112, y);
+    doc.text(row[3] || "", 137, y);
+    doc.text(doc.splitTextToSize(row[4] || "", 55), 155, y);
+    y += 10;
+  });
+
+  const chartCanvas = document.getElementById("performanceChart");
+  const chartImg = chartCanvas.toDataURL("image/png", 1.0);
+  doc.addImage(chartImg, "PNG", 20, y + 5, 170, 70);
+  y += 85;
+
+  doc.text("Principal Signature: _______________________", 20, y + 15);
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(`Generated on: ${currentDate}`, 20, y + 25);
+  doc.save(`${id || "Result"}-Report.pdf`);
+}
+
+// === Password change functions ===
+function showChangePasswordForm() {
+  document.getElementById("changePasswordPrompt").style.display = "none";
+  document.getElementById("changePasswordForm").style.display = "block";
+}
+
+function hideChangePasswordForm() {
+  document.getElementById("changePasswordForm").style.display = "none";
+}
+
+async function handleChangePassword(e) {
+  e.preventDefault();
+  const studentId = localStorage.getItem("studentId");
+  const currentPassword = document.getElementById("currentPassword").value;
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+
+  if (newPassword !== confirmPassword) {
+    document.getElementById("changePassMsg").textContent = "❌ Passwords do not match";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${backendUrl}/api/change-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentId, currentPassword, newPassword }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById("changePassMsg").textContent =
+        "✅ Password changed successfully!";
+      localStorage.setItem("firstLogin", "false");
+      setTimeout(() => hideChangePasswordForm(), 2000);
+    } else {
+      document.getElementById("changePassMsg").textContent = `❌ ${data.message}`;
+    }
+  } catch (err) {
+    console.error("Password change error:", err);
+    document.getElementById("changePassMsg").textContent =
+      "⚠️ Failed to update password";
+  }
+}
+</script>
+
+
+<script src="js/kaima-chatbot.js"></script>
+<script src="js/session-timeout.js"></script>
+
+
+</body>
+</html>

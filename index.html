@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gradely Info Portal | Powered by RIS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+      text-align: center;
+      overflow-x: hidden;
+      padding: 20px;
+    }
+
+    .top-nav {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 15px;
+      font-size: 0.9rem;
+    }
+
+    .top-nav a {
+      color: #00d2ff;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .top-nav a:hover {
+      color: white;
+      text-shadow: 0 0 5px rgba(0, 210, 255, 0.5);
+    }
+
+    header {
+      margin-top: 60px; /* Adjusted for top nav */
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    header span {
+      color: #00d2ff;
+    }
+
+    .hero {
+      margin-top: 40px;
+      max-width: 700px;
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 40px 30px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      animation: fadeIn 1.2s ease-out;
+    }
+
+    .hero h2 {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+    }
+
+    .hero p {
+      font-size: 1rem;
+      opacity: 0.9;
+      margin-bottom: 25px;
+      line-height: 1.6;
+    }
+
+    .btn-group {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: #00d2ff;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 25px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      min-width: 160px;
+    }
+
+    .btn:hover {
+      background: #0a84ff;
+      transform: scale(1.05);
+    }
+
+    .btn.admin {
+      background: #ff6b6b;
+    }
+
+    .btn.admin:hover {
+      background: #ee5253;
+    }
+
+    .btn.register {
+      background: #2ed573;
+    }
+
+    .btn.register:hover {
+      background: #1eae60;
+    }
+
+    footer {
+      background: rgba(255,255,255,0.1);
+      border-top: 1px solid rgba(255,255,255,0.2);
+      width: 100%;
+      text-align: center;
+      padding: 15px 10px;
+      font-size: 0.9rem;
+      color: #eee;
+      margin-top: auto;
+    }
+
+    footer img {
+      height: 28px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === MOBILE RESPONSIVENESS === */
+    @media (max-width: 768px) {
+      .top-nav {
+        font-size: 0.85rem;
+        gap: 10px;
+        right: 15px;
+        top: 15px;
+      }
+      header h1 { font-size: 2.2rem; }
+      .hero { padding: 30px 20px; margin-top: 30px; }
+      .hero h2 { font-size: 1.6rem; }
+      .btn { width: 100%; max-width: 250px; padding: 14px 20px; }
+    }
+
+    @media (max-width: 480px) {
+      .top-nav {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        font-size: 0.8rem;
+      }
+      header h1 { font-size: 1.8rem; }
+      .hero h2 { font-size: 1.3rem; }
+      footer { font-size: 0.85rem; padding: 12px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Right Links -->
+  <div class="top-nav">
+    <a href="help-support.html">Help & Support</a>
+    <a href="faq.html">FAQ</a>
+    <a href="contact.html">Contact Us</a>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <h1>Welcome to gradely<span style="color:#31bdd2;">.info</span></h1>
+    <p>A digital results and performance tracking system by <strong>RIS</strong></p>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h2>Empowering Parents, Schools & Students  </h2>
+    <p>Access academic results, track student progress, and stay informed — all from the comfort of your device.  
+    Gradely.info helps schools simplify performance management and communication with parents.</p>
+
+    <div class="btn-group">
+      <a href="parent-login.html" class="btn">👨‍👩‍👧 Parent Login</a>
+      <a href="admin-login.html" class="btn admin">🔐 Admin Login</a>
+      <a href="register-school.html" class="btn register">🏫 School Registration</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="
+    text-align: center;
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    color: #eee;
+    background: rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-top: auto;
+  ">
+    <div>
+      <img 
+        src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" 
+        alt="RIS Logo" 
+        style="height: 28px; vertical-align: middle; margin-right: 8px;"
+      >
+      <strong>© 2025 Gradely.info</strong> | Powered by RIS | All Rights Reserved
+    </div>
+
+    <!-- Policies - Centered below -->
+    <div style="margin-top: 10px;">
+      <a href="terms.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">
+        Terms
+      </a>
+      •
+      <a href="privacy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">
+        Privacy
+      </a>
+      •
+      <a href="refund-policy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">
+        Refund Policy
+      </a>
+    </div>
+  </footer>
+
+  <script src="js/kaima-chatbot.js"></script>
+
+</body>
+</html>

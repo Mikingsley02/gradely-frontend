@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📚 Result Portal - Powered by RIS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 450px;
+      overflow: hidden;
+      text-align: center;
+      transform: translateY(0);
+      transition: transform 0.3s ease;
+    }
+    .container:hover {
+      transform: translateY(-5px);
+    }
+    .header {
+      background: #0c2461;
+      color: white;
+      padding: 30px;
+    }
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    .header p {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+    .content {
+      padding: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 0.9rem;
+    }
+
+    /* Password field wrapper for eye icon */
+    .password-wrapper {
+      position: relative;
+      width: 100%;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #bdc3c7;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+    input:focus {
+      border-color: #3498db;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    button:hover {
+      background: #2980b9;
+      transform: scale(1.02);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    button.loading {
+      background: #27ae60;
+      pointer-events: none;
+    }
+    button .text {
+      transition: opacity 0.3s ease;
+    }
+    button .spinner {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 16px;
+      height: 16px;
+      border: 2px solid white;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    .admin-link {
+      margin-top: 20px;
+      font-size: 0.9rem;
+    }
+    .admin-link a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    .admin-link a:hover {
+      text-decoration: underline;
+    }
+
+    /* === MOBILE RESPONSIVENESS === */
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+      .container {
+        border-radius: 12px;
+        max-width: 100%;
+        margin: 0 auto;
+      }
+      .header h1 {
+        font-size: 1.6rem;
+      }
+      .header p,
+      .content p,
+      label,
+      button {
+        font-size: 0.95rem;
+      }
+      input {
+        font-size: 1rem;
+      }
+      .content {
+        padding: 20px;
+      }
+      footer {
+        font-size: 0.8rem;
+        padding: 12px;
+      }
+    }
+
+    /* Prevent iOS zoom on input focus */
+    @media (max-width: 768px) {
+      input, button {
+        font-size: 16px !important;
+      }
+    }
+
+    /* Footer Styling */
+    footer {
+      background: #f8f9fa;
+      padding: 15px;
+      font-size: 0.85rem;
+      color: #666;
+      border-top: 1px solid #eee;
+      text-align: center;
+    }
+    footer a {
+      color: #3498db;
+      text-decoration: none;
+      margin: 0 5px;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Toggle Password Icon */
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 1.2em;
+      color: #666;
+      user-select: none;
+    }
+    .toggle-password:hover {
+      color: #2e7d32;
+    }
+
+    /* === ANIMATIONS FOR CHATBOT === */
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(12, 36, 97, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(12, 36, 97, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(12, 36, 97, 0); }
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login Form -->
+  <div class="container">
+    <div class="header">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="
+          display: inline-block;
+          padding: 10px 25px;
+          background: #0c2461;
+          color: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        ">
+          <h1 style="
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+          ">
+            gradely<span style="color:#31bdd2;">.info</span>
+          </h1>
+          <p style="margin: 5px 0 0; font-size: 0.9rem; opacity: 0.9; font-weight: 400;">
+          </p>
+        </div>
+      </div>
+      <p>View Term Results Online</p>
+    </div>
+
+    <div class="content">
+      <p style="margin-bottom: 20px; color: #555;">
+        Welcome! Parents can log in using their child's Student ID and password.
+      </p>
+
+      <form id="parentLoginForm">
+        <div class="form-group">
+          <label for="studentId">Student ID</label>
+          <input type="text" id="studentId" placeholder="Enter Student ID" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="password" placeholder="Enter Password" required />
+            <span class="toggle-password" onclick="togglePassword()">👁️</span>
+          </div>
+        </div>
+        <button type="submit">
+          <span class="text">Login & View Results</span>
+          <span class="spinner"></span>
+        </button>
+      </form>
+      
+      <p style="font-size: 0.9rem; margin-top: 15px;">
+        <a href="#" onclick="resetPassword()" style="color: #3498db; text-decoration: none;">🔐 Forgot password?</a>
+      </p>
+
+      <script>
+        function resetPassword() {
+          const studentId = prompt("Enter your child's Student ID to reset password:");
+          if (!studentId) return;
+
+          fetch('/api/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ student_id: studentId })
+          })
+          .then(res => res.json())
+          .then(data => {
+            alert(data.message);
+          })
+          .catch(err => {
+            alert("Connection error. Check that the server is running?");
+          });
+        }
+      </script>
+
+      <div class="admin-link">
+        <a href="index.html">← Back to Home</a>
+      </div>
+    </div>
+
+    <!-- Footer with RIS Logo, Terms & Privacy -->
+    <footer>
+      <img 
+        style="height: 30px; vertical-align: middle; margin-right: 8px;"
+      />
+      <strong>© 2025 gradely.info. All rights reserved. | Powered by RIS</strong><br>
+      <a href="terms.html">Terms</a> • 
+      <a href="privacy.html">Privacy</a>
+    </footer>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // Toggle password visibility
+    function togglePassword() {
+      const passwordInput = document.getElementById("password");
+      const icon = passwordInput.nextElementSibling;
+      const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+      passwordInput.setAttribute("type", type);
+      icon.textContent = type === "text" ? "🙈" : "👁️";
+    }
+
+    // Handle form submission
+    document.getElementById('parentLoginForm').onsubmit = async (e) => {
+      e.preventDefault();
+
+      const student_id = document.getElementById('studentId').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const btn = e.target.querySelector('button');
+      const text = btn.querySelector('.text');
+      const spinner = btn.querySelector('.spinner');
+
+      // Show loading state
+      btn.classList.add('loading');
+      text.style.opacity = '0';
+      spinner.style.display = 'block';
+
+      console.log('🟢 Attempting login for:', student_id);
+
+      try {
+        // ✅ FIXED: Removed trailing space in production URL
+        const API_BASE = window.location.hostname.includes("localhost")
+          ? "http://localhost:5000"
+          : "https://gradely-backend.onrender.com"; // ← NO TRAILING SPACE
+
+        const response = await fetch(`${API_BASE}/api/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ student_id, password }),
+          credentials: "include",
+        });
+
+        console.log('🔵 Response status:', response.status);
+        const data = await response.json().catch(() => ({}));
+        console.log('🟣 Response body:', data);
+
+        if (data.success) {
+          console.log('✅ Login successful! Redirecting...');
+          localStorage.setItem('studentId', student_id);
+          localStorage.setItem('firstLogin', 'true');
+          window.location.href = 'student.html';
+        } else {
+          console.warn('❌ Login failed:', data.message);
+          alert('❌ ' + (data.message || 'Login failed.'));
+        }
+      } catch (err) {
+        console.error('🚨 Network or server error:', err);
+        alert('Connection error. Please check your internet or backend status.');
+      } finally {
+        btn.classList.remove('loading');
+        text.style.opacity = '1';
+        spinner.style.display = 'none';
+      }
+    }
+  </script>
+   
+  <script src="js/kaima-chatbot.js"></script>
+
+</body>
+</html>

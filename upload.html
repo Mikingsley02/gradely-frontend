@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📊 Upload Results | Gradely Info</title>
+  <!-- Load xlsx from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      color: #fff;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 35px 25px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 0.95rem;
+      opacity: 0.9;
+      margin-bottom: 25px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      text-align: left;
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #e8e8e8;
+    }
+
+    select, input[type="file"], button {
+      width: 100%;
+      height: 45px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    select {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 0 10px;
+    }
+
+    select option {
+      color: #000;
+    }
+
+    input[type="file"] {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    input[type="file"]::file-selector-button {
+      background: #0a84ff;
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: all 0.3s ease;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: #006edc;
+      box-shadow: 0 0 10px rgba(10, 132, 255, 0.3);
+    }
+
+    button {
+      background: #0a84ff;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    }
+
+    button:hover {
+      background: #006edc;
+      transform: scale(1.03);
+      box-shadow: 0 4px 15px rgba(10, 132, 255, 0.3);
+    }
+
+    .download-btn {
+      background: #00b7ff;
+    }
+
+    .download-btn:hover {
+      background: #0097e6;
+      box-shadow: 0 4px 15px rgba(0, 183, 255, 0.3);
+    }
+
+    .back-link {
+      display: block;
+      margin-top: 25px;
+      font-size: 0.9rem;
+      color: #fff;
+      text-decoration: none;
+      opacity: 0.9;
+      text-align: center;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Loader overlay */
+    .loader-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: #fff;
+      z-index: 9999;
+      text-align: center;
+    }
+
+    .spinner {
+      border: 5px solid rgba(255, 255, 255, 0.2);
+      border-top: 5px solid #0a84ff;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto; /* ✅ Pushes footer to bottom */
+      text-align: center;
+      font-size: 0.9rem;
+      color: #eee;
+      width: 100%;
+      padding: 20px 0;
+      background: rgba(0, 0, 0, 0.1);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    footer a {
+      color: #00d2ff;
+      text-decoration: none;
+      margin: 0 5px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 25px 20px;
+      }
+      h2 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>📊 Upload Student Results</h2>
+    <p>Upload your result sheet using the provided Excel template.</p>
+    <form id="resultForm">
+      <label for="term">Select Term *</label>
+      <select id="term" required>
+        <option value="">-- Select Term --</option>
+        <option value="1st Term">1st Term</option>
+        <option value="2nd Term">2nd Term</option>
+        <option value="3rd Term">3rd Term</option>
+      </select>
+
+      <label for="file">Upload Result File *</label>
+      <input type="file" id="file" accept=".csv, .xls, .xlsx" required />
+
+      <button type="button" class="download-btn" onclick="downloadTemplate()">⬇️ Download Excel Template</button>
+      <button type="submit">📤 Upload Result</button>
+    </form>
+
+    <a href="dashboard.html" class="back-link">⬅ Back to Dashboard</a>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    &copy; 2025 gradely.info. All rights reserved.<br>
+    <a href="terms.html">Terms</a> • 
+    <a href="privacy.html">Privacy</a> • 
+    <a href="refund-policy.html">Refund Policy</a>
+  </footer>
+
+  <!-- Loader overlay -->
+  <div class="loader-overlay" id="loaderOverlay">
+    <div class="spinner"></div>
+    <p>Uploading results... please wait</p>
+  </div>
+
+  <script>
+  const backendUrl = "https://gradely-backend-7xoh.onrender.com";
+
+  function showLoader(show) {
+    document.getElementById("loaderOverlay").style.display = show ? "flex" : "none";
+  }
+
+  // Download sample Excel template
+  function downloadTemplate() {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["student_id", "subject", "score", "total_marks", "grade", "remarks", "term", "academic_year", "school_id"],
+      ["STU001", "Mathematics", "85", "100", "A", "Excellent", "1st Term", "2024/2025", "SCH001"],
+      ["STU002", "English", "78", "100", "B", "Good work", "1st Term", "2024/2025", "SCH001"]
+    ]);
+    XLSX.utils.book_append_sheet(wb, ws, "Result Template");
+    XLSX.writeFile(wb, "Gradely_Result_Template.xlsx");
+  }
+
+  // ✅ Handle form submission
+  document.getElementById("resultForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const term = document.getElementById("term").value;
+    const file = document.getElementById("file").files[0];
+    if (!term || !file) return alert("⚠️ Please select a term and upload a file.");
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        showLoader(true);
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const results = XLSX.utils.sheet_to_json(sheet);
+
+        console.log("📘 Parsed Excel Data:", results);
+
+        const response = await fetch(`${backendUrl}/api/results/upload-results`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ term, results }),
+        });
+
+        const resData = await response.json();
+        showLoader(false);
+
+        if (resData.success) {
+          alert(resData.message || "✅ Upload complete!");
+        } else {
+          alert("⚠️ " + (resData.message || "Upload failed."));
+        }
+      } catch (err) {
+        showLoader(false);
+        console.error("🚫 Upload error:", err);
+        alert("🚫 Connection error. Please try again.");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+</script>
+
+
+  <script src="js/kaima-chatbot.js"></script>
+  <script src="js/session-timeout.js"></script>
+
+</body>
+</html>

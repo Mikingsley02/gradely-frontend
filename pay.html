@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💳 Complete Your Payment | Gradely Info</title>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #00b09b, #96c93d);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #fff;
+    }
+    .box {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+    button {
+      background: #fff;
+      color: #00b09b;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #00d084;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Complete Your Subscription</h2>
+    <p id="planDetails"></p>
+    <button id="payBtn">Proceed to Pay</button>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const school_id = urlParams.get("school_id");
+    const plan = urlParams.get("plan");
+
+    const planPrices = {
+      basic: 12000,
+      pro: 19000
+    };
+
+    document.getElementById("planDetails").textContent =
+      `You selected the ${plan.toUpperCase()} plan — ₦${planPrices[plan].toLocaleString()} per month.`;
+
+    document.getElementById("payBtn").addEventListener("click", () => {
+      let handler = PaystackPop.setup({
+        key: "pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxx", // ✅ Replace with your Paystack public key
+        email: "schooladmin@example.com", // ideally from backend
+        amount: planPrices[plan] * 100, // amount in kobo
+        ref: "REF" + Math.floor(Math.random() * 1000000000),
+        metadata: {
+          custom_fields: [
+            { display_name: "School ID", variable_name: "school_id", value: school_id }
+          ]
+        },
+        callback: function (response) {
+          // ✅ Verify payment with backend
+          fetch("https://gradely-backend-7xoh.onrender.com/api/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reference: response.reference, school_id })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert("✅ Payment successful! Your school is now active.");
+              window.location.href = "admin-login.html";
+            } else {
+              alert("⚠️ " + data.message);
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            alert("⚠️ Could not verify payment.");
+          });
+        },
+        onClose: function () {
+          alert("Payment window closed.");
+        }
+      });
+
+      handler.openIframe();
+    });
+  </script>
+
+<script src="js/kaima-chatbot.js"></script>
+
+  
+</body>
+</html>

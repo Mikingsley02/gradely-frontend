@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>⚙️ Settings | Gradely Info</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      margin: 0;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 30px 15px;
+    }
+    .settings-card {
+      background: #fff;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+    .settings-header {
+      background: #0c2461;
+      color: white;
+      text-align: center;
+      padding: 25px;
+    }
+    .settings-header h2 {
+      margin: 0;
+      font-size: 1.6rem;
+      font-weight: 600;
+    }
+    .settings-body {
+      padding: 25px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+      position: relative;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #2c3e50;
+    }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 6px;
+      border: 1px solid #bdc3c7;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    input:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+    ::placeholder {
+      color: #999;
+      opacity: 1;
+    }
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 38px;
+      cursor: pointer;
+      user-select: none;
+      color: #888;
+      font-size: 1.1rem;
+    }
+    button {
+      background: #3498db;
+      color: #fff;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 18px;
+      font-weight: 600;
+      color: #299aca;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: color 0.3s;
+    }
+    .back-link:hover {
+      color: #c0392b;
+      text-decoration: underline;
+    }
+    .message {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 0.95rem;
+      min-height: 20px;
+    }
+    .error { color: #e74c3c; }
+    .success { color: #27ae60; }
+    .footer {
+      text-align: center;
+      color: #eee;
+      font-size: 0.8rem;
+      margin-top: 30px;
+    }
+    .footer a {
+      color: #00d2ff;
+      text-decoration: none;
+      margin: 0 8px;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="settings-card">
+    <div class="settings-header">
+      <h2>⚙️ School Settings</h2>
+      <p>Update only the fields you want to change.</p>
+    </div>
+
+    <div class="settings-body">
+      <form id="settingsForm">
+        <div class="form-group">
+          <label>School Name</label>
+          <input type="text" name="school_name" id="school_name" placeholder="Enter school name" />
+        </div>
+
+        <div class="form-group">
+          <label>School Email</label>
+          <input type="email" name="email" id="email" placeholder="school@example.com" />
+        </div>
+
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="text" name="phone_number" id="phone_number" placeholder="08012345678" />
+        </div>
+
+        <div class="form-group">
+          <label>Current Password</label>
+          <input type="password" name="current_password" id="current_password" placeholder="Enter current password" />
+          <span class="toggle-password" onclick="togglePassword('current_password', this)">👁️</span>
+        </div>
+
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" name="new_password" id="new_password" placeholder="Enter new password" />
+          <span class="toggle-password" onclick="togglePassword('new_password', this)">👁️</span>
+        </div>
+
+        <button type="submit">💾 Save Changes</button>
+
+        <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+
+        <div id="message" class="message"></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="footer">
+    &copy; 2025 <strong>gradely.info</strong>. All rights reserved.<br/>
+    <a href="terms.html">Terms of Service</a> •
+    <a href="privacy.html">Privacy Policy</a> •
+    <a href="refund-policy.html">Refund Policy</a>
+  </div>
+
+  <script>
+    const API_BASE = "https://gradely-backend-7xoh.onrender.com";
+
+    document.addEventListener("DOMContentLoaded", loadSchoolData);
+
+    async function loadSchoolData() {
+      const msgEl = document.getElementById("message");
+      msgEl.textContent = "⏳ Loading settings...";
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/school-info`);
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById("school_name").value = data.school?.school_name || "";
+          document.getElementById("email").value = data.school?.email || "";
+          document.getElementById("phone_number").value = data.school?.phone_number || "";
+          msgEl.textContent = "";
+        } else {
+          msgEl.className = "message error";
+          msgEl.textContent = "⚠️ Failed to load school info.";
+        }
+      } catch {
+        msgEl.className = "message error";
+        msgEl.textContent = "🚫 Unable to connect to server.";
+      }
+    }
+
+    document.getElementById("settingsForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const msgEl = document.getElementById("message");
+      msgEl.textContent = "⏳ Updating settings...";
+      msgEl.className = "message";
+
+      const payload = {
+        school_name: form.school_name.value.trim(),
+        email: form.email.value.trim(),
+        phone_number: form.phone_number.value.trim(),
+        current_password: form.current_password.value,
+        new_password: form.new_password.value
+      };
+
+      Object.keys(payload).forEach(key => {
+        if (!payload[key]) delete payload[key];
+      });
+
+      if (payload.new_password && !payload.current_password) {
+        msgEl.className = "message error";
+        msgEl.textContent = "⚠️ Enter current password to change password.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/update-settings`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await res.json().catch(() => ({ success: false, message: "Invalid response" }));
+
+        if (result.success) {
+          msgEl.className = "message success";
+          msgEl.textContent = "✅ Settings updated successfully!";
+          form.current_password.value = "";
+          form.new_password.value = "";
+        } else {
+          msgEl.className = "message error";
+          msgEl.textContent = "❌ " + (result.message || "Update failed.");
+        }
+      } catch {
+        msgEl.className = "message error";
+        msgEl.textContent = "🚫 Server connection failed.";
+      }
+    };
+
+    function togglePassword(fieldId, icon) {
+      const input = document.getElementById(fieldId);
+      if (input.type === "password") {
+        input.type = "text";
+        icon.textContent = "🙈";
+      } else {
+        input.type = "password";
+        icon.textContent = "👁️";
+      }
+    }
+  </script>
+
+<script src="js/kaima-chatbot.js"></script>
+<script src="js/session-timeout.js"></script>
+
+
+</body>
+</html>

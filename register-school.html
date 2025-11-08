@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🏫 Register Your School | Gradely Info</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      padding: 20px;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 35px 25px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 480px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    h2 { margin-bottom: 10px; font-size: 1.8rem; color: #fff; }
+    p { font-size: 0.95rem; margin-bottom: 20px; opacity: 0.9; }
+    form { display: flex; flex-direction: column; gap: 18px; text-align: left; }
+    label { font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; color: #e8e8e8; }
+    input, select, button {
+      width: 100%; height: 42px; border-radius: 10px; border: none; outline: none;
+      font-size: 1rem; padding: 0 14px; box-sizing: border-box; transition: all 0.3s ease;
+    }
+    input, select { background: rgba(255, 255, 255, 0.9); color: #333; }
+    input::placeholder { color: #777; }
+    input:focus, select:focus {
+      border: 2px solid #00d2ff; background: white; box-shadow: 0 0 6px rgba(0,210,255,0.3);
+    }
+    select {
+      appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat; background-position: right 14px center; background-size: 16px;
+      cursor: pointer;
+    }
+    button {
+      background: #00d2ff; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+    }
+    button:hover { background: #0a84ff; transform: scale(1.03); }
+
+    /* Test Mode Button */
+    #skipPaymentBtn {
+      background: #999;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+    }
+    #skipPaymentBtn.loading {
+      background: #777;
+      color: #ccc;
+      pointer-events: none;
+    }
+
+    .back-link {
+      display: block; margin-top: 20px; font-size: 0.9rem; color: #fff; text-decoration: none; opacity: 0.9; text-align: center;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9rem;
+      color: #eee;
+      background: rgba(0, 0, 0, 0.1);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      width: 100%;
+      margin-top: auto;
+    }
+
+    footer a {
+      color: #00d2ff;
+      text-decoration: none;
+      margin: 0 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🏫 Register Your School</h2>
+    <p>Join hundreds of schools using <strong>Gradely.info</strong> to share results digitally.</p>
+
+    <form id="schoolForm">
+      <label>School Name *</label>
+      <input type="text" id="schoolName" placeholder="e.g., Elora Destiny International School" required />
+
+      <label>Admin ID *</label>
+      <input type="text" id="adminNumber" placeholder="e.g., ADM001" required />
+
+      <label>Email *</label>
+      <input type="email" id="email" placeholder="admin@school.edu.ng" required />
+
+      <label>Phone (WhatsApp) *</label>
+      <input type="text" id="phone" placeholder="+2348031234567" required />
+
+      <label>Create Password *</label>
+      <input type="password" id="password" placeholder="Enter password" required />
+
+      <label>Confirm Password *</label>
+      <input type="password" id="confirmPassword" placeholder="Re-enter password" required />
+
+      <label>Subscription Plan *</label>
+      <select id="plan" required>
+        <option value="">-- Select Plan --</option>
+        <option value="basic">Basic - ₦12,000/month</option>
+        <option value="pro">Pro - ₦19,000/month</option>
+      </select>
+
+      <button type="submit" id="submitBtn">✅ Proceed to Payment</button>
+
+      <button type="button" id="skipPaymentBtn">
+        🚀 Register Without Payment
+      </button>
+    </form>
+
+    <a href="index.html" class="back-link">← Back to Home</a>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    © 2025 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br>
+    <a href="terms.html">Terms of Service</a> • 
+    <a href="privacy.html">Privacy Policy</a> • 
+    <a href="refund-policy.html">Refund Policy</a>
+  </footer>
+
+
+  <script>
+const API_BASE = "https://gradely-backend-7xoh.onrender.com";
+
+// ✅ Handle registration (with payment or without)
+async function handleRegistration(testMode = false) {
+  const submitBtn = document.getElementById("submitBtn");
+  const skipBtn = document.getElementById("skipPaymentBtn");
+
+  if (testMode) {
+    skipBtn.textContent = "🚀 Registering (Test Mode)...";
+    skipBtn.disabled = true;
+  } else {
+    submitBtn.textContent = "⏳ Registering...";
+    submitBtn.disabled = true;
+  }
+
+  const school_name = document.getElementById("schoolName").value.trim();
+  const admin_id = document.getElementById("adminNumber").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const confirm_password = document.getElementById("confirmPassword").value.trim();
+  const subscription_plan = document.getElementById("plan").value;
+
+  if (!school_name || !admin_id || !email || !phone || !password || !confirm_password || !subscription_plan) {
+    alert("⚠️ Please fill in all fields.");
+    resetButtons();
+    return;
+  }
+
+  if (password !== confirm_password) {
+    alert("❌ Password does not match. Please try again.");
+    resetButtons();
+    return;
+  }
+
+  const data = {
+    school_name,
+    admin_id,
+    email,
+    phone,
+    password,
+    confirm_password,
+    subscription_plan,
+    test_mode: testMode
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    console.log("✅ Server response:", result);
+
+    if (res.ok && result.success) {
+      alert("✅ Registration successful!");
+
+      if (testMode) {
+        // Skip payment, go straight to dashboard
+        window.location.href = `dashboard.html?school_id=${encodeURIComponent(result.admin?.id)}&plan=${encodeURIComponent(subscription_plan)}`;
+      } else {
+        // Proceed to payment
+        window.location.href = `pay.html?school_id=${encodeURIComponent(result.admin?.id)}&plan=${encodeURIComponent(subscription_plan)}`;
+      }
+    } else {
+      alert("⚠️ " + (result.message || "Registration failed."));
+    }
+  } catch (err) {
+    console.error("🚫 Registration error:", err);
+    alert("⚠️ Could not connect to the server. Please check your internet or contact support.");
+  } finally {
+    resetButtons();
+  }
+}
+
+// ✅ Helper to reset button text/states
+function resetButtons() {
+  const submitBtn = document.getElementById("submitBtn");
+  const skipBtn = document.getElementById("skipPaymentBtn");
+  submitBtn.textContent = "✅ Proceed to Payment";
+  submitBtn.disabled = false;
+  skipBtn.textContent = "🚀 Register Without Payment";
+  skipBtn.disabled = false;
+}
+
+// ✅ Event listeners
+document.getElementById("schoolForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  handleRegistration(false);
+});
+
+document.getElementById("skipPaymentBtn").addEventListener("click", () => {
+  handleRegistration(true);
+});
+</script>
+
+
+
+  <script src="js/kaima-chatbot.js"></script>
+</body>
+</html>
