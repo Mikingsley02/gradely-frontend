@@ -42,7 +42,7 @@
     }
     select {
       appearance: none;
-      background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-image: url('image/svg+xml;utf8,<svg fill="%23333" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
       background-repeat: no-repeat; background-position: right 14px center; background-size: 16px;
       cursor: pointer;
     }
@@ -87,6 +87,25 @@
       text-decoration: none;
       margin: 0 6px;
     }
+
+    /* === Password Visibility Toggle === */
+    .password-wrapper {
+      position: relative;
+      width: 100%;
+    }
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 1.2em;
+      color: #666;
+      user-select: none;
+    }
+    .toggle-password:hover {
+      color: #0077b6;
+    }
   </style>
 </head>
 <body>
@@ -108,10 +127,16 @@
       <input type="text" id="phone" placeholder="+2348031234567" required />
 
       <label>Create Password *</label>
-      <input type="password" id="password" placeholder="Enter password" required />
+      <div class="password-wrapper">
+        <input type="password" id="password" placeholder="Enter password" required />
+        <span class="toggle-password" onclick="togglePasswordVisibility('password')">👁️</span>
+      </div>
 
       <label>Confirm Password *</label>
-      <input type="password" id="confirmPassword" placeholder="Re-enter password" required />
+      <div class="password-wrapper">
+        <input type="password" id="confirmPassword" placeholder="Re-enter password" required />
+        <span class="toggle-password" onclick="togglePasswordVisibility('confirmPassword')">👁️</span>
+      </div>
 
       <label>Subscription Plan *</label>
       <select id="plan" required>
@@ -133,112 +158,114 @@
   <!-- Footer -->
   <footer>
     © 2025 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br>
-    <a href="terms.html">Terms of Service</a> • 
-    <a href="privacy.html">Privacy Policy</a> • 
+    <a href="terms.html">Terms</a> • 
+    <a href="privacy.html">Privacy</a> • 
     <a href="refund-policy.html">Refund Policy</a>
   </footer>
 
-
   <script>
-const API_BASE = "https://gradely-backend-7xoh.onrender.com";
+    // ✅ Password visibility toggle
+    function togglePasswordVisibility(fieldId) {
+      const input = document.getElementById(fieldId);
+      const icon = input.nextElementSibling;
+      const isPassword = input.getAttribute('type') === 'password';
+      input.setAttribute('type', isPassword ? 'text' : 'password');
+      icon.textContent = isPassword ? '🙈' : '👁️';
+    }
 
-// ✅ Handle registration (with payment or without)
-async function handleRegistration(testMode = false) {
-  const submitBtn = document.getElementById("submitBtn");
-  const skipBtn = document.getElementById("skipPaymentBtn");
+    // ✅ FIXED: Removed trailing space in API_BASE
+    const API_BASE = "https://gradely-backend.onrender.com"; // ← No space!
 
-  if (testMode) {
-    skipBtn.textContent = "🚀 Registering (Test Mode)...";
-    skipBtn.disabled = true;
-  } else {
-    submitBtn.textContent = "⏳ Registering...";
-    submitBtn.disabled = true;
-  }
-
-  const school_name = document.getElementById("schoolName").value.trim();
-  const admin_id = document.getElementById("adminNumber").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const confirm_password = document.getElementById("confirmPassword").value.trim();
-  const subscription_plan = document.getElementById("plan").value;
-
-  if (!school_name || !admin_id || !email || !phone || !password || !confirm_password || !subscription_plan) {
-    alert("⚠️ Please fill in all fields.");
-    resetButtons();
-    return;
-  }
-
-  if (password !== confirm_password) {
-    alert("❌ Password does not match. Please try again.");
-    resetButtons();
-    return;
-  }
-
-  const data = {
-    school_name,
-    admin_id,
-    email,
-    phone,
-    password,
-    confirm_password,
-    subscription_plan,
-    test_mode: testMode
-  };
-
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
-
-    const result = await res.json();
-    console.log("✅ Server response:", result);
-
-    if (res.ok && result.success) {
-      alert("✅ Registration successful!");
+    // ✅ Handle registration (with payment or without)
+    async function handleRegistration(testMode = false) {
+      const submitBtn = document.getElementById("submitBtn");
+      const skipBtn = document.getElementById("skipPaymentBtn");
 
       if (testMode) {
-        // Skip payment, go straight to dashboard
-        window.location.href = `dashboard.html?school_id=${encodeURIComponent(result.admin?.id)}&plan=${encodeURIComponent(subscription_plan)}`;
+        skipBtn.textContent = "🚀 Registering (Test Mode)...";
+        skipBtn.disabled = true;
       } else {
-        // Proceed to payment
-        window.location.href = `pay.html?school_id=${encodeURIComponent(result.admin?.id)}&plan=${encodeURIComponent(subscription_plan)}`;
+        submitBtn.textContent = "⏳ Registering...";
+        submitBtn.disabled = true;
       }
-    } else {
-      alert("⚠️ " + (result.message || "Registration failed."));
+
+      const school_name = document.getElementById("schoolName").value.trim();
+      const admin_id = document.getElementById("adminNumber").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const confirm_password = document.getElementById("confirmPassword").value.trim();
+      const subscription_plan = document.getElementById("plan").value;
+
+      if (!school_name || !admin_id || !email || !phone || !password || !confirm_password || !subscription_plan) {
+        alert("⚠️ Please fill in all fields.");
+        resetButtons();
+        return;
+      }
+
+      if (password !== confirm_password) {
+        alert("❌ Password does not match. Please try again.");
+        resetButtons();
+        return;
+      }
+
+      // ✅ Send only required fields
+      const data = {
+        school_name,
+        admin_id,
+        email,
+        phone,
+        password,
+        subscription_plan
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        console.log("✅ Server response:", result);
+
+        if (res.ok && result.success) {
+          alert("✅ Registration successful!");
+
+          if (testMode) {
+            window.location.href = `admin-dashboard.html?admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}`;
+          } else {
+            window.location.href = `pay.html?admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}`;
+          }
+        } else {
+          alert("⚠️ " + (result.message || "Registration failed."));
+        }
+      } catch (err) {
+        console.error("🚫 Registration error:", err);
+        alert("⚠️ Could not connect to the server. Please check your internet or contact support.");
+      } finally {
+        resetButtons();
+      }
     }
-  } catch (err) {
-    console.error("🚫 Registration error:", err);
-    alert("⚠️ Could not connect to the server. Please check your internet or contact support.");
-  } finally {
-    resetButtons();
-  }
-}
 
-// ✅ Helper to reset button text/states
-function resetButtons() {
-  const submitBtn = document.getElementById("submitBtn");
-  const skipBtn = document.getElementById("skipPaymentBtn");
-  submitBtn.textContent = "✅ Proceed to Payment";
-  submitBtn.disabled = false;
-  skipBtn.textContent = "🚀 Register Without Payment";
-  skipBtn.disabled = false;
-}
+    function resetButtons() {
+      const submitBtn = document.getElementById("submitBtn");
+      const skipBtn = document.getElementById("skipPaymentBtn");
+      submitBtn.textContent = "✅ Proceed to Payment";
+      submitBtn.disabled = false;
+      skipBtn.textContent = "🚀 Register Without Payment";
+      skipBtn.disabled = false;
+    }
 
-// ✅ Event listeners
-document.getElementById("schoolForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  handleRegistration(false);
-});
+    document.getElementById("schoolForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      handleRegistration(false);
+    });
 
-document.getElementById("skipPaymentBtn").addEventListener("click", () => {
-  handleRegistration(true);
-});
-</script>
-
-
+    document.getElementById("skipPaymentBtn").addEventListener("click", () => {
+      handleRegistration(true);
+    });
+  </script>
 
   <script src="js/kaima-chatbot.js"></script>
 </body>
