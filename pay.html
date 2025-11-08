@@ -75,7 +75,7 @@
         },
         callback: function (response) {
           // ✅ Verify payment with backend
-          fetch("https://gradely-backend-7xoh.onrender.com/api/verify-payment", {
+          fetch("https://gradely-backend-1.onrender.com/api/verify-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ reference: response.reference, school_id })

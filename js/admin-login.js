@@ -1,5 +1,5 @@
 // ✅ admin-login.js
-const API_BASE = "https://gradely-backend-7xoh.onrender.com/api"; // change if local
+const API_BASE = "https://gradely-backend-1.onrender.com"; // change if local
 
 document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("adminLoginForm");

@@ -1,7 +1,7 @@
 // ✅ FRONTEND SCRIPT for manage-students.html
 // Handles: fetching, searching, editing (modal), deleting
 
-const backendUrl = "https://gradely-backend.onrender.com";
+const backendUrl = "https://gradely-backend-1.onrender.com";
 
 document.addEventListener("DOMContentLoaded", () => {
   const studentTableBody = document.getElementById("studentTableBody");

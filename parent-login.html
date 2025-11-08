@@ -348,7 +348,7 @@
         // ✅ FIXED: Removed trailing space in production URL
         const API_BASE = window.location.hostname.includes("localhost")
           ? "http://localhost:5000"
-          : "https://gradely-backend.onrender.com"; // ← NO TRAILING SPACE
+          : "https://gradely-backend-1.onrender.com";
 
         const response = await fetch(`${API_BASE}/api/login`, {
           method: "POST",

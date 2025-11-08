@@ -1,5 +1,5 @@
 // ✅ js/register-school.js — Stable Version
-const API_BASE = "https://gradely-backend-7xoh.onrender.com";
+const API_BASE = "https://gradely-backend-1.onrender.com";
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("schoolForm");
