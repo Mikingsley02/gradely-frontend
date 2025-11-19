@@ -42,8 +42,10 @@
     }
     select {
       appearance: none;
-      background-image: url('image/svg+xml;utf8,<svg fill="%23333" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
-      background-repeat: no-repeat; background-position: right 14px center; background-size: 16px;
+      background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23333'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 16px;
       cursor: pointer;
     }
     button {
@@ -141,8 +143,8 @@
       <label>Subscription Plan *</label>
       <select id="plan" required>
         <option value="">-- Select Plan --</option>
-        <option value="basic">Basic - ₦12,000/month</option>
-        <option value="pro">Pro - ₦19,000/month</option>
+        <option value="basic">Basic - ₦16,800/month</option>
+        <option value="pro">Pro - ₦19,200/month</option>
       </select>
 
       <button type="submit" id="submitBtn">✅ Proceed to Payment</button>
@@ -173,10 +175,8 @@
       icon.textContent = isPassword ? '🙈' : '👁️';
     }
 
-    // ✅ FIXED: Removed trailing space in API_BASE
     const API_BASE = "https://gradely-backend-1.onrender.com";
 
-    // ✅ Handle registration (with payment or without)
     async function handleRegistration(testMode = false) {
       const submitBtn = document.getElementById("submitBtn");
       const skipBtn = document.getElementById("skipPaymentBtn");
@@ -209,7 +209,6 @@
         return;
       }
 
-      // ✅ Send only required fields
       const data = {
         school_name,
         admin_id,
