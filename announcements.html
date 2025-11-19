@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📢 School Announcements | Gradely</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 25px;
+      flex: 1;
+    }
+    .footer {
+      text-align: center;
+      padding: 20px 0;
+      font-size: 0.9rem;
+      color: #555;
+      margin-top: 30px;
+    }
+    .footer a {
+      color: #00d2ff;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+    h1 {
+      color: #0c2461;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .announcement {
+      background: #f1f8ff;
+      border-left: 4px solid #3498db;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+    }
+    .announcement h3 {
+      margin: 0 0 8px;
+      color: #0c2461;
+    }
+    .announcement .date {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .announcement .actions {
+      text-align: right;
+      margin-top: 10px;
+    }
+    .delete-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .delete-btn:hover {
+      background: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📢 School Announcements</h1>
+
+    <!-- Post New Announcement -->
+    <div class="form-group">
+      <input type="text" id="title" placeholder="Announcement Title" />
+    </div>
+    <div class="form-group">
+      <textarea id="message" placeholder="Write your announcement..."></textarea>
+    </div>
+    <button onclick="postAnnouncement()">Post Announcement</button>
+
+    <!-- Announcements List -->
+    <div id="announcementsList" style="margin-top: 30px;">
+      <!-- Announcements will load here -->
+    </div>
+  </div>
+
+  <!-- ✅ Footer Added -->
+  <div class="footer">
+    &copy; 2025 <strong>gradely.info</strong>. All rights reserved.
+    <div style="margin-top: 10px;">
+      <a href="terms.html">Terms</a> •
+      <a href="privacy.html">Privacy</a> •
+      <a href="refund-policy.html">Refund Policy</a>
+    </div>
+  </div>
+
+  <script>
+    let school_id = null;
+
+    // Get school_id from URL or session
+    window.addEventListener("DOMContentLoaded", () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      school_id = urlParams.get('school_id') || localStorage.getItem('school_id');
+      if (!school_id) {
+        alert("School ID not found. Please log in again.");
+        window.location.href = 'admin-login.html';
+        return;
+      }
+      loadAnnouncements();
+    });
+
+    async function loadAnnouncements() {
+      try {
+        const res = await fetch(`/api/announcements/${school_id}`);
+        const data = await res.json();
+        if (data.success) {
+          const list = document.getElementById('announcementsList');
+          if (data.announcements.length === 0) {
+            list.innerHTML = '<p>No announcements yet.</p>';
+            return;
+          }
+          list.innerHTML = data.announcements.map(a => `
+            <div class="announcement">
+              <div class="date">${new Date(a.created_at).toLocaleString()}</div>
+              <h3>${a.title}</h3>
+              <p>${a.message}</p>
+              <div class="actions">
+                <button class="delete-btn" onclick="deleteAnnouncement(${a.id})">Archive</button>
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        console.error("Load failed:", err);
+        document.getElementById('announcementsList').innerHTML = '<p>Failed to load announcements.</p>';
+      }
+    }
+
+    async function postAnnouncement() {
+      const title = document.getElementById('title').value.trim();
+      const message = document.getElementById('message').value.trim();
+      if (!title || !message) return alert("Please fill all fields.");
+
+      try {
+        const res = await fetch('/api/announcements', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ school_id, title, message })
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('title').value = '';
+          document.getElementById('message').value = '';
+          loadAnnouncements(); // refresh
+        } else {
+          alert(data.message);
+        }
+      } catch (err) {
+        alert("Failed to post announcement.");
+      }
+    }
+
+    async function deleteAnnouncement(id) {
+      if (!confirm("Archive this announcement?")) return;
+      try {
+        await fetch(`/api/announcements/${id}`, { method: 'DELETE' });
+        loadAnnouncements();
+      } catch (err) {
+        alert("Failed to archive.");
+      }
+    }
+  </script>
+</body>
+</html>

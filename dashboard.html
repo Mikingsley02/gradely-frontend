@@ -30,6 +30,19 @@
       margin: 0;
     }
 
+    .plan-badge {
+      background: #00d2ff;
+      color: #0c2461;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-left: 12px;
+    }
+
+    .plan-badge.basic { background: #ffcc00; color: #000; }
+    .plan-badge.pro { background: #00e676; color: #000; }
+
     .logout-btn {
       background: #ff5f6d;
       border: none;
@@ -69,6 +82,47 @@
       background: rgba(255, 255, 255, 0.15);
     }
 
+    .card.pro-only {
+      position: relative;
+    }
+
+    .card.pro-only::after {
+      content: "🔒 Pro";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ffcc00;
+      color: #000;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+
+    .card.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .card.disabled:hover {
+      transform: none;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .upgrade-prompt {
+      grid-column: 1 / -1;
+      background: rgba(0, 0, 0, 0.2);
+      border: 2px dashed #00e676;
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .upgrade-prompt:hover {
+      background: rgba(0, 230, 118, 0.2);
+    }
+
     .icon {
       font-size: 2.2rem;
       margin-bottom: 10px;
@@ -105,11 +159,13 @@
 <body>
 
   <header>
-    <h1>🎓 Gradely.info — School Dashboard</h1>
+    <h1>🎓 Gradely.info — School Dashboard 
+      <span id="planBadge" class="plan-badge"></span>
+    </h1>
     <button class="logout-btn" id="logoutBtn">Logout</button>
   </header>
 
-  <main class="dashboard-container">
+  <main class="dashboard-container" id="dashboardContainer">
     <div class="card" onclick="goTo('manage-students.html')">
       <div class="icon">👩‍🏫</div>
       <h3>Manage Students</h3>
@@ -122,11 +178,17 @@
       <p>Post student results for instant access.</p>
     </div>
 
-    <div class="card" onclick="goTo('manage-classes.html')">
+    <div class="card pro-only" id="manageClassesCard" onclick="handleProFeature('manage-classes.html')">
       <div class="icon">🏫</div>
       <h3>Manage Classes</h3>
       <p>Set up class groups and assign teachers.</p>
     </div>
+
+    <div class="card pro-only" onclick="handleProFeature('announcements.html')">
+  <div class="icon">📢</div>
+  <h3>School Announcements</h3>
+  <p>Send alerts to all parents via SMS/email.</p>
+  </div>
 
     <div class="card" onclick="goTo('subscription.html')">
       <div class="icon">💳</div>
@@ -141,47 +203,73 @@
     </div>
   </main>
 
-   <footer>
-      © 2025 gradely.info. All rights reserved. | Powered by RIS<br>
-      <a href="terms.html">Terms</a> • 
-      <a href="privacy.html">Privacy</a> • 
-      <a href="refund-policy.html">Refund Policy</a>
-    </footer>
+  <footer>
+    © 2025 gradely.info. All rights reserved. | Powered by RIS<br>
+    <a href="terms.html">Terms</a> • 
+    <a href="privacy.html">Privacy</a> • 
+    <a href="refund-policy.html">Refund Policy</a>
+  </footer>
 
- <script>
-  // Wait for DOM to load
-  document.addEventListener("DOMContentLoaded", () => {
-    // Optional: Update year if element exists
-    const yearEl = document.getElementById("year");
-    if (yearEl) {
-      yearEl.textContent = new Date().getFullYear();
-    }
+  <script>
+    let currentPlan = 'basic'; // default
 
-    // Setup logout button
-    const logoutBtn = document.getElementById("logoutBtn");
-    if (!logoutBtn) {
-      console.error("Logout button not found! Check ID.");
-      return;
-    }
+    document.addEventListener("DOMContentLoaded", () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      currentPlan = urlParams.get('plan') || 'basic';
 
-    logoutBtn.addEventListener("click", () => {
-      if (confirm("Are you sure you want to logout?")) {
-        localStorage.clear();
-        window.location.href = "index.html";
+      const badge = document.getElementById('planBadge');
+      badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+      badge.className = `plan-badge ${currentPlan}`;
+
+      applyPlanRestrictions();
+
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+          if (confirm("Are you sure you want to logout?")) {
+            localStorage.clear();
+            window.location.href = "index.html";
+          }
+        });
       }
     });
-  });
 
-  // Navigation function (used by dashboard cards)
-  function goTo(page) {
-    window.location.href = page;
-  }
-</script>
+    function applyPlanRestrictions() {
+      if (currentPlan === 'basic') {
+        const proCards = document.querySelectorAll('.pro-only');
+        proCards.forEach(card => {
+          card.classList.add('disabled');
+        });
 
-<script src="js/kaima-chatbot.js"></script>
-<script src="js/session-timeout.js"></script>
+        const container = document.getElementById('dashboardContainer');
+        const upgradeCard = document.createElement('div');
+        upgradeCard.className = 'upgrade-prompt';
+        upgradeCard.innerHTML = `
+          <div class="icon">✨</div>
+          <h3>Upgrade to Pro!</h3>
+          <p>Unlock bulk student upload, custom subjects, class management & PDF reports.</p>
+        `;
+        upgradeCard.onclick = () => {
+          window.location.href = 'subscription.html?plan=pro';
+        };
+        container.appendChild(upgradeCard);
+      }
+    }
 
+    function handleProFeature(url) {
+      if (currentPlan === 'pro') {
+        window.location.href = url;
+      } else {
+        alert("💡 This feature is available only on Pro plan. Upgrade to unlock!");
+      }
+    }
 
+    function goTo(page) {
+      window.location.href = page;
+    }
+  </script>
 
+  <script src="js/kaima-chatbot.js"></script>
+  <script src="js/session-timeout.js"></script>
 </body>
 </html>

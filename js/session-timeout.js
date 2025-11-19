@@ -1,5 +1,5 @@
 // ========== SESSION TIMEOUT WITH COUNTDOWN POPUP ==========
-// Works for Admin, Teacher, and Parent dashboards
+// Works for Admin, and Parent dashboards
 
 (function () {
   const TIMEOUT_DURATION = 15 * 60 * 1000; // 15 minutes
