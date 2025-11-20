@@ -1,14 +1,21 @@
-// ========== SESSION TIMEOUT WITH COUNTDOWN POPUP ==========
-// Works for Admin, and Parent dashboards
-
+// ========== SESSION TIMEOUT WITH SMART REDIRECT ==========
 (function () {
   const TIMEOUT_DURATION = 15 * 60 * 1000; // 15 minutes
-  const WARNING_DURATION = 60 * 1000; // 1 minute before logout
+  const WARNING_DURATION = 60 * 1000;      // 1 minute warning
 
   let timeout, warningTimer, countdownInterval;
   let countdown = 60;
 
-  // Create popup dynamically
+  // Save current URL before timeout
+  function saveCurrentPage() {
+    try {
+      sessionStorage.setItem('redirectAfterLogin', window.location.href);
+    } catch (e) {
+      console.warn("Could not save redirect URL:", e);
+    }
+  }
+
+  // Create popup
   const popup = document.createElement("div");
   popup.innerHTML = `
     <div id="sessionWarning" style="
@@ -68,13 +75,12 @@
     clearTimeout(warningTimer);
     clearInterval(countdownInterval);
 
-    // Warning popup timer (14 min)
     warningTimer = setTimeout(showWarning, TIMEOUT_DURATION - WARNING_DURATION);
-    // Auto logout after full 15 min
     timeout = setTimeout(logoutUser, TIMEOUT_DURATION);
   }
 
   function showWarning() {
+    saveCurrentPage(); // ✅ Save where user is
     sessionWarning.style.display = "flex";
     countdown = 60;
     countdownNum.textContent = countdown;
@@ -95,21 +101,23 @@
 
   function stayLoggedIn() {
     hideWarning();
+    // ✅ Ping backend to refresh session (if you have auth)
+    fetch('/api/refresh-session', { method: 'POST' }).catch(() => {});
     startTimers();
   }
 
   function logoutUser() {
     hideWarning();
-    alert("⚠️ Session expired due to inactivity. Please log in again.");
+    saveCurrentPage(); // ✅ Save even on auto-logout
     localStorage.clear();
     sessionStorage.clear();
+    alert("⚠️ Session expired due to inactivity. Please log in again.");
 
-    if (window.location.href.includes("admin")) {
+    // ✅ Redirect to correct login
+    if (window.location.pathname.includes("admin")) {
       window.location.href = "admin-login.html";
-    } else if (window.location.href.includes("teacher")) {
-      window.location.href = "teacher-login.html";
-    } else if (window.location.href.includes("parent")) {
-      window.location.href = "parents-login.html";
+    } else if (window.location.pathname.includes("student")) {
+      window.location.href = "parent-login.html"; // or student.html
     } else {
       window.location.href = "index.html";
     }
@@ -118,10 +126,25 @@
   stayLoggedInBtn.addEventListener("click", stayLoggedIn);
   logoutNowBtn.addEventListener("click", logoutUser);
 
+  // ✅ Track activity
   ["click", "mousemove", "keypress", "scroll", "touchstart"].forEach(event => {
-    document.addEventListener(event, startTimers);
+    document.addEventListener(event, startTimers, true);
   });
 
+  // ✅ On login pages, restore redirect
+  if (window.location.pathname.endsWith('admin-login.html') || 
+      window.location.pathname.endsWith('parent-login.html')) {
+    const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+    if (redirectUrl) {
+      const loginForm = document.querySelector('form');
+      if (loginForm) {
+        loginForm.addEventListener('submit', () => {
+          sessionStorage.setItem('postLoginRedirect', redirectUrl);
+        });
+      }
+    }
+  }
+
   startTimers();
-  console.log("✅ Session timeout active (15 mins, 1-minute warning).");
+  console.log("✅ Session timeout active (15 mins)");
 })();
