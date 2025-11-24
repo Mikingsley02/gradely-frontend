@@ -232,7 +232,7 @@
           alert("✅ Registration successful!");
 
           if (testMode) {
-            window.location.href = `admin-dashboard.html?admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}`;
+            window.location.href = `dashboard.html?admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}`;
           } else {
             window.location.href = `pay.html?admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}`;
           }
