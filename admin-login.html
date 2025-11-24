@@ -318,7 +318,7 @@
         if (data.success) {
           alert("✅ Login successful!");
           sessionStorage.setItem("adminId", admin_id);
-          window.location.href = "admin-dashboard.html";
+          window.location.href = "dashboard.html";
         } else {
           alert("❌ " + (data.message || "Invalid credentials"));
         }
