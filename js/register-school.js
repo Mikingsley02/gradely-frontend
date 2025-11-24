@@ -80,6 +80,9 @@ document.addEventListener("DOMContentLoaded", () => {
           : "✅ Registration successful! Redirecting to payment..."
         );
 
+        // ✅ Save school_id to sessionStorage
+        sessionStorage.setItem("school_id", result.school_id);
+
         const redirectUrl = skipPayment
           ? `dashboard.html?school_id=${encodeURIComponent(result.school_id)}`
           : `pay.html?school_id=${encodeURIComponent(result.school_id)}&plan=${encodeURIComponent(plan)}`;
@@ -89,9 +92,8 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("⚠️ " + (result.message || "Registration failed."));
       }
     } catch (err) {
-    console.error("📛 Critical error:", err.message); // This shows up in Render logs
-    res.status(500).json({ success: false, message: "Server error during registration." });
-  
+      console.error("📛 Critical error:", err.message);
+      alert("⚠️ Could not connect to the server. Please try again.");
     } finally {
       submitBtn.textContent = "✅ Proceed to Payment";
       submitBtn.disabled = false;

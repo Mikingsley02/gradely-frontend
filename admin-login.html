@@ -318,6 +318,10 @@
         if (data.success) {
           alert("✅ Login successful!");
           sessionStorage.setItem("adminId", admin_id);
+          // ✅ NEW: Save school_id from login response
+          if (data.admin && data.admin.school_id) {
+            sessionStorage.setItem("school_id", data.admin.school_id);
+          }
           window.location.href = "dashboard.html";
         } else {
           alert("❌ " + (data.message || "Invalid credentials"));
