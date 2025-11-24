@@ -213,12 +213,11 @@
     document.addEventListener("DOMContentLoaded", async () => {
       const msgEl = document.getElementById("message");
 
-      // ✅ Get school_id from URL or localStorage
+      // ✅ Get school_id from URL, localStorage, OR sessionStorage
       const urlParams = new URLSearchParams(window.location.search);
-      let school_id = urlParams.get('school_id');
-      if (!school_id) {
-        school_id = localStorage.getItem('school_id');
-      }
+      let school_id = urlParams.get('school_id') 
+        || localStorage.getItem('school_id') 
+        || sessionStorage.getItem('school_id');
 
       if (!school_id) {
         msgEl.className = "message error";
@@ -252,9 +251,6 @@
           // ✅ Show "Upgrade to Pro" if Basic
           if (plan === 'basic') {
             document.getElementById("upgradeBtn").style.display = "block";
-            // Optionally hide renew/cancel for Basic
-            // document.getElementById("renewBtn").style.display = "none";
-            // document.getElementById("cancelBtn").style.display = "none";
           }
         } else {
           throw new Error(result.message || "Failed to load subscription");
@@ -271,9 +267,10 @@
 
     // ✅ NEW: Upgrade function
     function upgradeToPro() {
-      // Preserve school_id in upgrade flow
       const urlParams = new URLSearchParams(window.location.search);
-      let school_id = urlParams.get('school_id') || localStorage.getItem('school_id');
+      let school_id = urlParams.get('school_id') 
+        || localStorage.getItem('school_id') 
+        || sessionStorage.getItem('school_id');
       let redirectUrl = "register-school.html?plan=pro";
       if (school_id) {
         redirectUrl += `&school_id=${encodeURIComponent(school_id)}`;
@@ -286,7 +283,6 @@
       const msgEl = document.getElementById("message");
       const btn = document.getElementById("renewBtn");
 
-      // Loading state
       const originalText = btn.innerHTML;
       btn.disabled = true;
       btn.style.opacity = "0.7";
@@ -308,10 +304,10 @@
           throw new Error(result.message || "Renewal failed");
         }
       } catch (err) {
+        console.error("Renew error:", err);
         msgEl.className = "message error";
-        msgEl.textContent = "❌ " + err.message;
+        msgEl.textContent = "❌ " + (err.message || "Network error");
       } finally {
-        // Reset button
         btn.disabled = false;
         btn.style.opacity = "1";
         btn.innerHTML = originalText;
@@ -325,7 +321,6 @@
       const msgEl = document.getElementById("message");
       const btn = document.getElementById("cancelBtn");
 
-      // Loading state
       const originalText = btn.innerHTML;
       btn.disabled = true;
       btn.style.opacity = "0.7";
@@ -347,10 +342,10 @@
           throw new Error(result.message || "Cancellation failed");
         }
       } catch (err) {
+        console.error("Cancel error:", err);
         msgEl.className = "message error";
-        msgEl.textContent = "❌ " + err.message;
+        msgEl.textContent = "❌ " + (err.message || "Network error");
       } finally {
-        // Reset button
         btn.disabled = false;
         btn.style.opacity = "1";
         btn.innerHTML = originalText;
@@ -360,6 +355,7 @@
     // Logout function
     function logout() {
       localStorage.clear();
+      sessionStorage.clear();
       window.location.href = "login.html";
     }
   </script>
