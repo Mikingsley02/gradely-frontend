@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.success) {
         alert("✅ Login successful!");
         localStorage.setItem("adminToken", data.token);
+        sessionStorage.setItem("adminId", admin_id);
         sessionStorage.setItem("school_id", data.admin.school_id);
         window.location.href = "dashboard.html"; // redirect to dashboard
       } else {
