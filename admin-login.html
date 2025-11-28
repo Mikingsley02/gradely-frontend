@@ -280,72 +280,69 @@
 
   <!-- ✅ Scripts -->
   <script>
-    // ✅ Added: Password visibility toggle function (was missing)
-    function toggleAdminPassword() {
-      const passwordInput = document.getElementById("adminPassword");
-      const icon = passwordInput.nextElementSibling;
-      const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-      passwordInput.setAttribute("type", type);
-      icon.textContent = type === "text" ? "🙈" : "👁️";
-    }
+  // Toggle password
+  function toggleAdminPassword() {
+    const passwordInput = document.getElementById("adminPassword");
+    const icon = passwordInput.nextElementSibling;
 
-    document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
+    const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+    passwordInput.setAttribute("type", type);
 
-      const admin_id = document.getElementById("adminId").value.trim();
-      const password = document.getElementById("adminPassword").value.trim();
+    icon.textContent = type === "text" ? "🙈" : "👁️";
+  }
 
-      const btn = e.target.querySelector("button");
-      const text = btn.querySelector(".text");
-      const spinner = btn.querySelector(".spinner");
+  document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      btn.classList.add("loading");
-      text.style.opacity = "0";
-      spinner.style.display = "block";
+    const admin_id = document.getElementById("adminId").value.trim();
+    const password = document.getElementById("adminPassword").value.trim();
 
-      const API_BASE = window.location.hostname.includes("localhost")
-        ? "http://localhost:5000"
-        : "https://gradely-backend-1.onrender.com";
+    const btn = e.target.querySelector("button");
+    const text = btn.querySelector(".text");
+    const spinner = btn.querySelector(".spinner");
 
-      try {
-        const res = await fetch(`${API_BASE}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ admin_id, password }),
-        });
+    btn.classList.add("loading");
+    text.style.opacity = "0";
+    spinner.style.display = "block";
 
-        const data = await res.json();
-        if (data.success) {
-  alert("✅ Login successful!");
-  sessionStorage.setItem("adminId", admin_id);
+    const API_BASE = window.location.hostname.includes("localhost")
+      ? "http://localhost:5000"
+      : "https://gradely-backend-1.onrender.com";
 
-  // Fetch school_id using admin_id
-  fetch(`${API_BASE}/api/school/by-admin/${admin_id}`)
-    .then(res => res.json())
-    .then(schoolData => {
-      if (schoolData.success) {
-        sessionStorage.setItem("school_id", schoolData.school_id);
-        window.location.href = "dashboard.html";
-      } else {
-        // Fallback: use admin_id as school_id (if you prefer)
-        sessionStorage.setItem("school_id", admin_id);
-        window.location.href = "dashboard.html";
-      }
-    })
-    .catch(err => {
-      console.error("School fetch error:", err);
-      // Fallback to admin_id as school_id
-      sessionStorage.setItem("school_id", admin_id);
-      window.location.href = "dashboard.html";
-    });
-}
-       } finally {
-        btn.classList.remove("loading");
-        text.style.opacity = "1";
-        spinner.style.display = "none";
-        }
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_id, password }),
       });
-  </script>
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert("✅ Login successful!");
+
+        // Save admin + school details
+        sessionStorage.setItem("adminId", data.admin.admin_id);
+        sessionStorage.setItem("school_id", data.admin.school_id);
+        sessionStorage.setItem("school_name", data.admin.school_name);
+        sessionStorage.setItem("subscription_plan", data.admin.subscription_plan);
+
+        window.location.href = "dashboard.html";
+        return;
+      } else {
+        alert("❌ " + data.message);
+      }
+
+    } catch (err) {
+      console.error("Login error:", err);
+      alert("❌ Network or server error. Please try again.");
+    } finally {
+      btn.classList.remove("loading");
+      text.style.opacity = "1";
+      spinner.style.display = "none";
+    }
+  });
+</script>
 
   <!-- Chatbot -->
   <script src="js/kaima-chatbot.js"></script>
