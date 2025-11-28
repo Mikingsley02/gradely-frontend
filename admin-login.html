@@ -280,68 +280,97 @@
 
   <!-- ✅ Scripts -->
   <script>
-  // Toggle password
-  function toggleAdminPassword() {
-    const passwordInput = document.getElementById("adminPassword");
-    const icon = passwordInput.nextElementSibling;
+// ✅ Add this check at the top to ensure user is logged in
+if (!sessionStorage.getItem("school_id")) {
+  alert("⚠️ Please log in first.");
+  window.location.href = "login.html"; // Redirect to login if not logged in
+  throw new Error("Redirecting to login..."); // Stop further execution
+}
 
-    const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-    passwordInput.setAttribute("type", type);
+const backendUrl = "https://gradely-backend-1.onrender.com";
 
-    icon.textContent = type === "text" ? "🙈" : "👁️";
-  }
+function showLoader(show) {
+  document.getElementById("loaderOverlay").style.display = show ? "flex" : "none";
+}
 
-  document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
+// Download sample Excel template
+function downloadTemplate() {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ["student_id", "subject", "score", "total_marks", "grade", "remarks", "term", "academic_year", "school_id"],
+    ["STU001", "Mathematics", "85", "100", "A", "Excellent", "1st Term", "2024/2025", "SCH001"],
+    ["STU002", "English", "78", "100", "B", "Good work", "1st Term", "2024/2025", "SCH001"]
+  ]);
+  XLSX.utils.book_append_sheet(wb, ws, "Result Template");
+  XLSX.writeFile(wb, "Gradely_Result_Template.xlsx");
+}
+
+// ✅ Handle form submission
+document.getElementById("resultForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+  const term = document.getElementById("term").value;
+  const file = document.getElementById("file").files[0];
+  // ✅ school_id is now guaranteed to exist due to the check above
+  const school_id = sessionStorage.getItem("school_id");
 
-  const admin_id = document.getElementById("adminId").value.trim();
-  const password = document.getElementById("adminPassword").value.trim();
-
-  const btn = e.target.querySelector("button");
-  const text = btn.querySelector(".text");
-  const spinner = btn.querySelector(".spinner");
-
-  btn.classList.add("loading");
-  text.style.opacity = "0";
-  spinner.style.display = "block";
-
-  const API_BASE = window.location.hostname.includes("localhost")
-    ? "http://localhost:5000"
-    : "https://gradely-backend-1.onrender.com";
-
-  try {
-    const res = await fetch(`${API_BASE}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ admin_id, password }),
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      alert("✅ Login successful!");
-
-      // ✅ Save all needed info for uploads and dashboard
-      sessionStorage.setItem("adminId", data.admin.admin_id);
-      sessionStorage.setItem("school_id", data.admin.school_id);
-      sessionStorage.setItem("school_name", data.admin.school_name);
-      sessionStorage.setItem("subscription_plan", data.admin.subscription_plan);
-
-      window.location.href = "dashboard.html";
-    } else {
-      alert("❌ " + (data.message || "Login failed."));
-    }
-
-  } catch (err) {
-    console.error("❌ Network or server error:", err);
-    alert("❌ Network or server error. Please try again.");
-  } finally {
-    btn.classList.remove("loading");
-    text.style.opacity = "1";
-    spinner.style.display = "none";
+  if (!term || !file) {
+    alert("⚠️ Please select a term and upload a file.");
+    return;
   }
-});
 
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    try {
+      showLoader(true);
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      let results = XLSX.utils.sheet_to_json(sheet);
+
+      console.log("📘 Parsed Excel Data:", results);
+
+      // Ensure every row has school_id and academic_year
+      const academic_year = new Date().getFullYear() + "/" + (new Date().getFullYear() + 1); // default to current
+      results = results.map(r => ({
+        student_id: r.student_id,
+        subject: r.subject,
+        score: r.score,
+        total_marks: r.total_marks || 100,
+        grade: r.grade || null,
+        remarks: r.remarks || "",
+        term: r.term || term,
+        academic_year: r.academic_year || academic_year,
+        school_id: r.school_id || school_id
+      }));
+
+      if (results.length === 0) {
+        showLoader(false);
+        alert("⚠️ No valid rows found in the Excel file.");
+        return;
+      }
+
+      const response = await fetch(`${backendUrl}/api/result/upload-results`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ term, results, school_id }),
+      });
+
+      const resData = await response.json();
+      showLoader(false);
+
+      if (resData.success) {
+        alert("✅ " + (resData.message || "Upload complete!"));
+      } else {
+        alert("⚠️ " + (resData.message || "Upload failed."));
+      }
+    } catch (err) {
+      showLoader(false);
+      console.error("🚫 Upload error:", err);
+      alert("⚠️ Failed to connect to server. Please check your internet or backend status.");
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
 </script>
 
   <!-- Chatbot -->
