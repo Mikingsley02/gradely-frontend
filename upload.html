@@ -261,7 +261,12 @@
     e.preventDefault();
     const term = document.getElementById("term").value;
     const file = document.getElementById("file").files[0];
-    if (!term || !file) return alert("⚠️ Please select a term and upload a file.");
+    const school_id = sessionStorage.getItem("school_id"); // ✅ Get school_id
+
+    if (!term || !file || !school_id) {
+      alert("⚠️ Missing term, file, or school ID. Please log in again.");
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -274,10 +279,11 @@
 
         console.log("📘 Parsed Excel Data:", results);
 
-        const response = await fetch(`${backendUrl}/api/results/upload-results`, {
+        // ✅ FIXED: Correct endpoint + add school_id
+        const response = await fetch(`${backendUrl}/api/result/upload-results`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ term, results }),
+          body: JSON.stringify({ term, results, school_id }), // ✅ Include school_id
         });
 
         const resData = await response.json();
@@ -291,16 +297,14 @@
       } catch (err) {
         showLoader(false);
         console.error("🚫 Upload error:", err);
-        alert("🚫 Connection error. Please try again.");
+        alert("⚠️ Failed to connect to server. Please check your internet or backend status.");
       }
     };
     reader.readAsArrayBuffer(file);
   });
 </script>
 
-
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
-
 </body>
 </html>
