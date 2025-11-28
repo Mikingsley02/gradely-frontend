@@ -257,51 +257,68 @@
   }
 
   // ✅ Handle form submission
-  document.getElementById("resultForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const term = document.getElementById("term").value;
-    const file = document.getElementById("file").files[0];
-    const school_id = sessionStorage.getItem("school_id"); // ✅ Get school_id
 
-    if (!term || !file || !school_id) {
-      alert("⚠️ Missing term, file, or school ID. Please log in again.");
-      return;
-    }
+document.getElementById("uploadResultsForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        showLoader(true);
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const results = XLSX.utils.sheet_to_json(sheet);
+  const btn = e.target.querySelector("button");
+  const text = btn.querySelector(".text");
+  const spinner = btn.querySelector(".spinner");
 
-        console.log("📘 Parsed Excel Data:", results);
+  btn.classList.add("loading");
+  text.style.opacity = "0";
+  spinner.style.display = "block";
 
-        // ✅ FIXED: Correct endpoint + add school_id
-        const response = await fetch(`${backendUrl}/api/result/upload-results`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ term, results, school_id }), // ✅ Include school_id
-        });
+  try {
+    const school_id = sessionStorage.getItem("school_id");
+    if (!school_id) throw new Error("No school ID found. Please log in again.");
 
-        const resData = await response.json();
-        showLoader(false);
+    // Collect form values — replace these selectors with your actual input IDs
+    const term = document.getElementById("term").value.trim();
+    const academic_year = document.getElementById("year").value.trim();
 
-        if (resData.success) {
-          alert(resData.message || "✅ Upload complete!");
-        } else {
-          alert("⚠️ " + (resData.message || "Upload failed."));
-        }
-      } catch (err) {
-        showLoader(false);
-        console.error("🚫 Upload error:", err);
-        alert("⚠️ Failed to connect to server. Please check your internet or backend status.");
+    // Example: gather results from a table
+    const results = [];
+    const rows = document.querySelectorAll(".result-row"); // update if your table rows have different class
+    rows.forEach(row => {
+      const student_id = row.querySelector(".student_id").value.trim();
+      const subject = row.querySelector(".subject").value.trim();
+      const score = row.querySelector(".score").value.trim();
+      const total_marks = row.querySelector(".total_marks") ? row.querySelector(".total_marks").value.trim() : 100;
+      const remarks = row.querySelector(".remarks") ? row.querySelector(".remarks").value.trim() : "";
+      if (student_id && subject && score !== "") {
+        results.push({ student_id, subject, score, total_marks, remarks });
       }
-    };
-    reader.readAsArrayBuffer(file);
-  });
+    });
+
+    if (results.length === 0) throw new Error("No results found to upload.");
+
+    const payload = { results, term, academic_year, school_id };
+
+    const API_BASE = window.location.hostname.includes("localhost")
+      ? "http://localhost:5000"
+      : "https://gradely-backend-1.onrender.com";
+
+    const res = await fetch(`${API_BASE}/api/result/upload-results`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.message || "Upload failed.");
+
+    alert(`✅ ${data.message}`);
+  } catch (err) {
+    console.error("Upload error:", err);
+    alert(`❌ ${err.message}`);
+  } finally {
+    btn.classList.remove("loading");
+    text.style.opacity = "1";
+    spinner.style.display = "none";
+  }
+});
 </script>
 
   <script src="js/kaima-chatbot.js"></script>
