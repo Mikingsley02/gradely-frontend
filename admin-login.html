@@ -316,24 +316,29 @@
 
         const data = await res.json();
         if (data.success) {
-        alert("✅ Login successful!");
-        sessionStorage.setItem("adminId", admin_id);
-        // ✅ Fetch school_id using admin_id
-        fetch(`${API_BASE}/api/school/by-admin/${admin_id}`)
-         .then(res => res.json())
-         .then(schoolData => {
-       if (schoolData.success) {
+  alert("✅ Login successful!");
+  sessionStorage.setItem("adminId", admin_id);
+
+  // Fetch school_id using admin_id
+  fetch(`${API_BASE}/api/school/by-admin/${admin_id}`)
+    .then(res => res.json())
+    .then(schoolData => {
+      if (schoolData.success) {
         sessionStorage.setItem("school_id", schoolData.school_id);
-        window.location.href = "dashboard.html";
-        } else {
-        alert("⚠️ Could not load school info. Please contact support.");
-        }
-       })
-       .catch(err => {
-        console.error("School fetch error:", err);
-       alert("⚠️ Failed to load school data.");
-        });
-       }
+        window.location.href = "admin-dashboard.html";
+      } else {
+        // Fallback: use admin_id as school_id (if you prefer)
+        sessionStorage.setItem("school_id", admin_id);
+        window.location.href = "admin-dashboard.html";
+      }
+    })
+    .catch(err => {
+      console.error("School fetch error:", err);
+      // Fallback to admin_id as school_id
+      sessionStorage.setItem("school_id", admin_id);
+      window.location.href = "dashboard.html";
+    });
+}
        } finally {
         btn.classList.remove("loading");
         text.style.opacity = "1";
