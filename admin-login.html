@@ -325,11 +325,11 @@
     .then(schoolData => {
       if (schoolData.success) {
         sessionStorage.setItem("school_id", schoolData.school_id);
-        window.location.href = "admin-dashboard.html";
+        window.location.href = "dashboard.html";
       } else {
         // Fallback: use admin_id as school_id (if you prefer)
         sessionStorage.setItem("school_id", admin_id);
-        window.location.href = "admin-dashboard.html";
+        window.location.href = "dashboard.html";
       }
     })
     .catch(err => {
