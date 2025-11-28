@@ -292,56 +292,56 @@
   }
 
   document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const admin_id = document.getElementById("adminId").value.trim();
-    const password = document.getElementById("adminPassword").value.trim();
+  const admin_id = document.getElementById("adminId").value.trim();
+  const password = document.getElementById("adminPassword").value.trim();
 
-    const btn = e.target.querySelector("button");
-    const text = btn.querySelector(".text");
-    const spinner = btn.querySelector(".spinner");
+  const btn = e.target.querySelector("button");
+  const text = btn.querySelector(".text");
+  const spinner = btn.querySelector(".spinner");
 
-    btn.classList.add("loading");
-    text.style.opacity = "0";
-    spinner.style.display = "block";
+  btn.classList.add("loading");
+  text.style.opacity = "0";
+  spinner.style.display = "block";
 
-    const API_BASE = window.location.hostname.includes("localhost")
-      ? "http://localhost:5000"
-      : "https://gradely-backend-1.onrender.com";
+  const API_BASE = window.location.hostname.includes("localhost")
+    ? "http://localhost:5000"
+    : "https://gradely-backend-1.onrender.com";
 
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin_id, password }),
-      });
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ admin_id, password }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (data.success) {
-        alert("✅ Login successful!");
+    if (data.success) {
+      alert("✅ Login successful!");
 
-        // Save admin + school details
-        sessionStorage.setItem("adminId", data.admin.admin_id);
-        sessionStorage.setItem("school_id", data.admin.school_id);
-        sessionStorage.setItem("school_name", data.admin.school_name);
-        sessionStorage.setItem("subscription_plan", data.admin.subscription_plan);
+      // ✅ Save all needed info for uploads and dashboard
+      sessionStorage.setItem("adminId", data.admin.admin_id);
+      sessionStorage.setItem("school_id", data.admin.school_id);
+      sessionStorage.setItem("school_name", data.admin.school_name);
+      sessionStorage.setItem("subscription_plan", data.admin.subscription_plan);
 
-        window.location.href = "dashboard.html";
-        return;
-      } else {
-        alert("❌ " + data.message);
-      }
-
-    } catch (err) {
-      console.error("Login error:", err);
-      alert("❌ Network or server error. Please try again.");
-    } finally {
-      btn.classList.remove("loading");
-      text.style.opacity = "1";
-      spinner.style.display = "none";
+      window.location.href = "dashboard.html";
+    } else {
+      alert("❌ " + (data.message || "Login failed."));
     }
-  });
+
+  } catch (err) {
+    console.error("❌ Network or server error:", err);
+    alert("❌ Network or server error. Please try again.");
+  } finally {
+    btn.classList.remove("loading");
+    text.style.opacity = "1";
+    spinner.style.display = "none";
+  }
+});
+
 </script>
 
   <!-- Chatbot -->
