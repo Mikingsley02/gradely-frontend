@@ -316,24 +316,30 @@
 
         const data = await res.json();
         if (data.success) {
-          alert("✅ Login successful!");
-          sessionStorage.setItem("adminId", admin_id);
-          // ✅ NEW: Save school_id from login response
-          if (data.admin && data.admin.school_id) {
-            sessionStorage.setItem("school_id", data.admin.school_id);
-          }
-          window.location.href = "dashboard.html";
+        alert("✅ Login successful!");
+        sessionStorage.setItem("adminId", admin_id);
+        // ✅ Fetch school_id using admin_id
+        fetch(`${API_BASE}/api/school/by-admin/${admin_id}`)
+         .then(res => res.json())
+         .then(schoolData => {
+       if (schoolData.success) {
+        sessionStorage.setItem("school_id", schoolData.school_id);
+        window.location.href = "dashboard.html";
         } else {
-          alert("❌ " + (data.message || "Invalid credentials"));
+        alert("⚠️ Could not load school info. Please contact support.");
         }
-      } catch (err) {
-        alert("⚠️ Connection error. Please check your internet or backend.");
-      } finally {
+       })
+       .catch(err => {
+        console.error("School fetch error:", err);
+       alert("⚠️ Failed to load school data.");
+        });
+       }
+       } finally {
         btn.classList.remove("loading");
         text.style.opacity = "1";
         spinner.style.display = "none";
-      }
-    });
+        }
+      });
   </script>
 
   <!-- Chatbot -->

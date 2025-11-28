@@ -42,41 +42,75 @@
       color: #fff;
       margin-top: auto;
     }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .container {
+        margin-top: 15px;
+        padding: 0 10px;
+      }
+      .d-flex {
+        flex-direction: column !important;
+        gap: 12px;
+        align-items: stretch !important;
+      }
+      .d-flex > * {
+        width: 100% !important;
+      }
+      .table-responsive {
+        border-radius: 10px;
+        overflow-x: auto;
+      }
+      .btn-sm {
+        padding: 6px 10px;
+        font-size: 0.85rem;
+      }
+      th, td {
+        font-size: 0.85rem;
+        padding: 8px;
+      }
+      h4 {
+        font-size: 1.4rem;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
       <h4>Manage Students</h4>
-      <a href="dashboard.html" class="btn btn-primary">⬅ Back to Dashboard</a>
+      <a href="dashboard.html" class="btn btn-primary btn-sm">⬅ Dashboard</a>
     </div>
 
+    <!-- ✅ RESTORED LAYOUT: Add Student (left), Search (right) -->
     <div class="d-flex justify-content-between mb-3">
       <button id="addStudentBtn" class="btn btn-success" onclick="window.location.href='create-student.html'">➕ Add Student</button>
 
       <div class="d-flex gap-2">
-        <input type="text" id="searchInput" placeholder="Search by ID or Name" class="form-control" />
+        <input type="text" id="searchInput" placeholder="Search by ID or Name" class="form-control" style="max-width: 200px;" />
         <button id="searchBtn" class="btn btn-primary">Search</button>
       </div>
     </div>
 
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Full Name</th>
-          <th>Class</th>
-          <th>Section</th>
-          <th>Phone</th>
-          <th>Parent Email</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="studentsTableBody">
-        <tr><td colspan="7" class="text-center">Loading...</td></tr>
-      </tbody>
-    </table>
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Full Name</th>
+            <th>Class</th>
+            <th>Section</th>
+            <th>Phone</th>
+            <th>Parent Email</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="studentsTableBody">
+          <tr><td colspan="7" class="text-center">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
 
     <div id="messageBox"></div>
   </div>
@@ -146,7 +180,7 @@
 
   <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const schoolId = localStorage.getItem("school_id");
+  const schoolId = sessionStorage.getItem("school_id");
   const tableBody = document.querySelector("#studentsTableBody");
   const searchInput = document.querySelector("#searchInput");
   const searchBtn = document.querySelector("#searchBtn");
@@ -195,7 +229,17 @@ document.addEventListener("DOMContentLoaded", () => {
     attachDeleteHandlers();
   }
 
-  searchBtn.addEventListener("click", async () => {
+  // ✅ SEARCH BY BUTTON CLICK
+  searchBtn.addEventListener("click", handleSearch);
+
+  // ✅ SEARCH BY ENTER KEY
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  });
+
+  async function handleSearch() {
     const query = searchInput.value.trim();
     if (!query) return loadStudents();
 
@@ -213,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Search error:", err);
       tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">⚠️ Search failed.</td></tr>`;
     }
-  });
+  }
 
   function attachEditHandlers() {
     document.querySelectorAll(".edit-btn").forEach(btn => {
