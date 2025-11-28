@@ -319,16 +319,16 @@
     const data = await res.json();
 
     if (data.success) {
-      alert("✅ Login successful!");
+  alert("✅ Login successful!");
 
-      // ✅ Save all needed info for uploads and dashboard
-      sessionStorage.setItem("adminId", data.admin.admin_id);
-      sessionStorage.setItem("school_id", data.admin.school_id);
-      sessionStorage.setItem("school_name", data.admin.school_name);
-      sessionStorage.setItem("subscription_plan", data.admin.subscription_plan);
+  // ✅ CORRECT: admin_id = school identifier
+  sessionStorage.setItem("adminId", data.admin.admin_id);
+  sessionStorage.setItem("school_id", data.admin.admin_id);
+  sessionStorage.setItem("school_name", data.admin.school_name || "");
+  sessionStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
 
-      window.location.href = "dashboard.html";
-    } else {
+  window.location.href = "dashboard.html";
+  } else {
       alert("❌ " + (data.message || "Login failed."));
     }
 
