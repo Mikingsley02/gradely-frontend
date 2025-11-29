@@ -280,18 +280,18 @@
 
   <!-- ✅ Scripts -->
   <script>
-  // Toggle password
-  function toggleAdminPassword() {
-    const passwordInput = document.getElementById("adminPassword");
-    const icon = passwordInput.nextElementSibling;
+// Toggle password
+function toggleAdminPassword() {
+  const passwordInput = document.getElementById("adminPassword");
+  const icon = passwordInput.nextElementSibling;
 
-    const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-    passwordInput.setAttribute("type", type);
+  const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+  passwordInput.setAttribute("type", type);
 
-    icon.textContent = type === "text" ? "🙈" : "👁️";
-  }
+  icon.textContent = type === "text" ? "🙈" : "👁️";
+}
 
-  document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
+document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const admin_id = document.getElementById("adminId").value.trim();
@@ -318,17 +318,25 @@
 
     const data = await res.json();
 
+    if (!res.ok) {
+      alert("❌ " + (data.message || "Login failed."));
+      return;
+    }
+
     if (data.success) {
-  alert("✅ Login successful!");
+      alert("✅ Login successful!");
 
-  // ✅ CORRECT: admin_id = school identifier
-  sessionStorage.setItem("adminId", data.admin.admin_id);
-  sessionStorage.setItem("school_id", data.admin.admin_id);
-  sessionStorage.setItem("school_name", data.admin.school_name || "");
-  sessionStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
+      // ✅ These values REALLY exist from backend
+      sessionStorage.setItem("adminId", data.admin.admin_id);
+      sessionStorage.setItem("school_id", data.admin.admin_id);
+      sessionStorage.setItem("admin_name", data.admin.name);
 
-  window.location.href = "dashboard.html";
-  } else {
+      // ❌ Removed invalid values that were crashing
+      // school_name doesn't exist
+      // subscription_plan doesn't exist
+
+      window.location.href = "dashboard.html";
+    } else {
       alert("❌ " + (data.message || "Login failed."));
     }
 
@@ -341,8 +349,8 @@
     spinner.style.display = "none";
   }
 });
-
 </script>
+
 
   <!-- Chatbot -->
   <script src="js/kaima-chatbot.js"></script>
