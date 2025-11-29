@@ -331,10 +331,6 @@ document.getElementById("adminLoginForm").addEventListener("submit", async (e) =
       sessionStorage.setItem("school_id", data.admin.admin_id);
       sessionStorage.setItem("admin_name", data.admin.name);
 
-      // ❌ Removed invalid values that were crashing
-      // school_name doesn't exist
-      // subscription_plan doesn't exist
-
       window.location.href = "dashboard.html";
     } else {
       alert("❌ " + (data.message || "Login failed."));

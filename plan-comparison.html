@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📦 Plan Comparison | Gradely Info</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      margin: 0;
+      padding: 20px;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      margin-top: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 2rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      opacity: 0.9;
+      margin-bottom: 30px;
+      font-size: 1.1rem;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .comparison-table th {
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.15);
+      font-weight: 600;
+    }
+
+    .comparison-table td {
+      padding: 15px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .feature {
+      text-align: left;
+      font-weight: 500;
+    }
+
+    .included {
+      color: #27ae60;
+      font-weight: bold;
+    }
+
+    .not-included {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    .pro-only {
+      color: #ffcc00;
+      font-weight: bold;
+    }
+
+    .plan-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .plan-price {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 10px 0;
+    }
+
+    .basic-price { color: #3498db; }
+    .pro-price { color: #00e676; }
+
+    .upgrade-btn {
+      background: #00e676;
+      color: #000;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 30px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .upgrade-btn:hover {
+      background: #00c853;
+      transform: scale(1.05);
+    }
+
+    .back-link {
+      display: block;
+      margin-top: 25px;
+      font-size: 0.95rem;
+      color: #fff;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .lock-icon {
+      font-size: 0.9rem;
+      color: #ffcc00;
+      margin-left: 5px;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+      h1 { font-size: 1.6rem; }
+      .subtitle { font-size: 1rem; }
+      .comparison-table th, .comparison-table td {
+        padding: 10px 8px;
+        font-size: 0.9rem;
+      }
+      .plan-name { font-size: 1.1rem; }
+      .plan-price { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>📦 Choose the Right Plan for Your School</h1>
+    <p class="subtitle">Compare features and select the plan that fits your needs</p>
+
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>
+            <div class="plan-name">Basic</div>
+            <div class="plan-price basic-price">₦16,800/month</div>
+          </th>
+          <th>
+            <div class="plan-name">Pro</div>
+            <div class="plan-price pro-price">₦19,200/month</div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="feature">Admin Logins</td>
+          <td class="included">✅ 1 admin</td>
+          <td class="included">✅ Unlimited admins</td>
+        </tr>
+        <tr>
+          <td class="feature">Student Capacity</td>
+          <td class="included">✅ Up to 200 students</td>
+          <td class="included">✅ Unlimited students</td>
+        </tr>
+        <tr>
+          <td class="feature">Result Upload</td>
+          <td class="included">✅ Bulk upload (Excel/CSV)</td>
+          <td class="included">✅ Bulk upload (Excel/CSV)</td>
+        </tr>
+        <tr>
+          <td class="feature">Student Registration</td>
+          <td class="included">✅ Manual (one-by-one)</td>
+          <td class="included">✅ Bulk upload (Excel/CSV)</td>
+        </tr>
+        <tr>
+          <td class="feature">PDF Report Cards</td>
+          <td class="not-included">❌ Not available</td>
+          <td class="included">✅ With school logo</td>
+        </tr>
+        <tr>
+          <td class="feature">Custom Branding</td>
+          <td class="not-included">❌ Gradely logo only</td>
+          <td class="included">✅ Your school name & logo</td>
+        </tr>
+        <tr>
+          <td class="feature">SMS Alerts</td>
+          <td class="included">✅ On result publish</td>
+          <td class="included">✅ Unlimited alerts</td>
+        </tr>
+        <tr>
+          <td class="feature">WhatsApp Alerts</td>
+          <td class="not-included">❌</td>
+          <td class="pro-only">✅ <span class="lock-icon">🔓</span></td>
+        </tr>
+        <tr>
+          <td class="feature">API Access</td>
+          <td class="not-included">❌</td>
+          <td class="pro-only">✅ <span class="lock-icon">🔓</span></td>
+        </tr>
+        <tr>
+          <td class="feature">Priority Support</td>
+          <td class="not-included">❌ Email only</td>
+          <td class="included">✅ WhatsApp + Email</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button class="upgrade-btn" onclick="upgradeToPro()">
+      ✨ Upgrade to Pro Plan
+    </button>
+
+    <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+  </div>
+
+  <script>
+    function upgradeToPro() {
+      // Get school_id from session if available
+      const school_id = sessionStorage.getItem('school_id');
+      let url = 'register-school.html?plan=pro';
+      if (school_id) {
+        url += `&school_id=${encodeURIComponent(school_id)}`;
+      }
+      window.location.href = url;
+    }
+  </script>
+</body>
+</html>

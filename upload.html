@@ -236,51 +236,50 @@
   </div>
 
   <script>
-  const backendUrl = "https://gradely-backend-1.onrender.com";
+const backendUrl = "https://gradely-backend-1.onrender.com";
 
-  function showLoader(show) {
-    document.getElementById("loaderOverlay").style.display = show ? "flex" : "none";
-  }
+// Show/hide loader overlay
+function showLoader(show) {
+  document.getElementById("loaderOverlay").style.display = show ? "flex" : "none";
+}
 
-  function downloadTemplate() {
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet([
-      ["student_id", "subject", "score", "total_marks", "grade", "remarks", "term", "academic_year", "school_id"],
-      ["STU001", "Mathematics", "85", "100", "A", "Excellent", "1st Term", "2024/2025", "SCH001"],
-      ["STU002", "English", "78", "100", "B", "Good work", "1st Term", "2024/2025", "SCH001"]
-    ]);
-    XLSX.utils.book_append_sheet(wb, ws, "Result Template");
-    XLSX.writeFile(wb, "Gradely_Result_Template.xlsx");
-  }
+// Download Excel template
+function downloadTemplate() {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ["student_id", "subject", "score", "total_marks", "grade", "remarks", "term", "academic_year", "school_id"],
+    ["STU001", "Mathematics", "85", "100", "A", "Excellent", "1st Term", "2024/2025", "SCH001"],
+    ["STU002", "English", "78", "100", "B", "Good work", "1st Term", "2024/2025", "SCH001"]
+  ]);
+  XLSX.utils.book_append_sheet(wb, ws, "Result Template");
+  XLSX.writeFile(wb, "Gradely_Result_Template.xlsx");
+}
 
+// Upload results
 document.getElementById("resultForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // ✅ Get school_id with fallback
-  let school_id = sessionStorage.getItem("school_id");
-  if (!school_id) {
-    const adminId = sessionStorage.getItem("adminId");
-    if (adminId) {
-      school_id = adminId;
-    } else {
-      alert("⚠️ School not found. Please log in again.");
-      window.location.href = "admin-login.html";
-      return;
-    }
-  }
-
   const term = document.getElementById("term").value;
   const file = document.getElementById("file").files[0];
+  const school_id = sessionStorage.getItem("school_id");
+
+  if (!school_id) {
+    alert("⚠️ School not found. Please log in again.");
+    window.location.href = "admin-login.html";
+    return;
+  }
 
   if (!term || !file) {
     alert("⚠️ Please select a term and upload a file.");
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = async (event) => {
-    try {
-      showLoader(true);
+  try {
+    showLoader(true);
+
+    // ✅ Read Excel file
+    const reader = new FileReader();
+    reader.onload = async (event) => {
       const data = new Uint8Array(event.target.result);
       const workbook = XLSX.read(data, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -305,29 +304,32 @@ document.getElementById("resultForm").addEventListener("submit", async (e) => {
         return;
       }
 
-      const response = await fetch(`${backendUrl}/api/result/upload-results`, {
+      // ✅ Upload results
+      const uploadRes = await fetch(`${backendUrl}/api/result/upload-results`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ term, results, school_id }),
       });
 
-      const resData = await response.json();
+      const uploadData = await uploadRes.json().catch(() => ({ success: false, message: "Invalid JSON response" }));
       showLoader(false);
 
-      if (resData.success) {
-        alert("✅ " + (resData.message || "Upload complete!"));
+      if (uploadData.success) {
+        alert("✅ " + (uploadData.message || "Upload complete!"));
       } else {
-        alert("⚠️ " + (resData.message || "Upload failed."));
+        alert("⚠️ " + (uploadData.message || "Upload failed."));
       }
-    } catch (err) {
-      showLoader(false);
-      console.error("🚫 Upload error:", err);
-      alert("⚠️ Failed to connect to server. Please check your internet or backend status.");
-    }
-  };
-  reader.readAsArrayBuffer(file);
+    };
+
+    reader.readAsArrayBuffer(file);
+  } catch (err) {
+    showLoader(false);
+    console.error("🚫 Upload error:", err);
+    alert("⚠️ Failed to connect to server. Please check your internet or backend status.");
+  }
 });
 </script>
+
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>

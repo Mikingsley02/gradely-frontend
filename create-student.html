@@ -213,111 +213,127 @@
   </div>
 
   <script>
-    const API_BASE = "https://gradely-backend-1.onrender.com";
+const API_BASE = "https://gradely-backend-1.onrender.com";
 
-    // ✅ Create Single Student
-    document.getElementById('createForm').onsubmit = async (e) => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(e.target));
-      const msgEl = document.getElementById('message');
+// ✅ Create Single Student
+document.getElementById('createForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const msgEl = document.getElementById('message');
 
-      msgEl.textContent = "⏳ Creating student...";
-      msgEl.className = "message";
+  const school_id = sessionStorage.getItem("school_id");
+  if (!school_id) {
+    alert("⚠️ School not found. Please log in again.");
+    window.location.href = "admin-login.html";
+    return;
+  }
 
-      try {
-        const res = await fetch(`${API_BASE}/api/admin/create-student`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
+  const data = { ...Object.fromEntries(new FormData(e.target)), school_id };
 
-        const result = await res.json().catch(() => ({ success: false, message: "Invalid JSON response" }));
+  msgEl.textContent = "⏳ Creating student...";
+  msgEl.className = "message";
 
-        if (result.success) {
-          msgEl.className = 'message success';
-          msgEl.textContent = result.message || '✅ Student created successfully!';
-          e.target.reset();
-          setTimeout(() => window.location.href = 'manage-students.html', 1500);
-        } else {
-          msgEl.className = 'message error';
-          msgEl.textContent = '❌ ' + (result.message || 'Failed to create student.');
-        }
-      } catch (err) {
-        console.error("Frontend error:", err);
-        msgEl.className = 'message error';
-        msgEl.textContent = '⚠️ Could not connect to server.';
-      }
-    };
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/create-student`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
 
-    function goBack() {
-      window.location.href = "dashboard.html";
+    const result = await res.json().catch(() => ({ success: false, message: "Invalid JSON response" }));
+
+    if (result.success) {
+      msgEl.className = 'message success';
+      msgEl.textContent = result.message || '✅ Student created successfully!';
+      e.target.reset();
+      setTimeout(() => window.location.href = 'manage-students.html', 1500);
+    } else {
+      msgEl.className = 'message error';
+      msgEl.textContent = '❌ ' + (result.message || 'Failed to create student.');
     }
+  } catch (err) {
+    console.error("Frontend error:", err);
+    msgEl.className = 'message error';
+    msgEl.textContent = '⚠️ Could not connect to server.';
+  }
+};
 
-    // ✅ Download Excel Template
-    function downloadStudentTemplate() {
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet([
-        ["student_id", "first_name", "middle_name", "last_name", "class", "section", "phone_number", "parent_email", "password"],
-        ["STD001", "Amina", "Fatimah", "Johnson", "JSS 1", "B", "08012345678", "parent@mail.com", "12345"]
-      ]);
-      XLSX.utils.book_append_sheet(wb, ws, "Students");
-      XLSX.writeFile(wb, "Student_Bulk_Template.xlsx");
-    }
+// ✅ Bulk Upload Students
+async function uploadBulkStudents() {
+  const fileInput = document.getElementById('bulkFile');
+  const file = fileInput.files[0];
+  const msgEl = document.getElementById('bulkMessage');
 
-    // ✅ Bulk Upload Students
-    async function uploadBulkStudents() {
-      const fileInput = document.getElementById('bulkFile');
-      const file = fileInput.files[0];
-      const msgEl = document.getElementById('bulkMessage');
+  const school_id = sessionStorage.getItem("school_id");
+  if (!school_id) {
+    alert("⚠️ School not found. Please log in again.");
+    window.location.href = "admin-login.html";
+    return;
+  }
 
-      if (!file) {
+  if (!file) {
+    msgEl.className = 'message error';
+    msgEl.textContent = '⚠️ Please select a file first.';
+    return;
+  }
+
+  msgEl.textContent = "⏳ Uploading file...";
+  msgEl.className = "message";
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+      if (!jsonData.length) {
         msgEl.className = 'message error';
-        msgEl.textContent = '⚠️ Please select a file first.';
+        msgEl.textContent = '⚠️ File is empty.';
         return;
       }
 
-      msgEl.textContent = "⏳ Uploading file...";
-      msgEl.className = "message";
+      const res = await fetch(`${API_BASE}/api/admin/bulk-create-students`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ school_id, students: jsonData })
+      });
 
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: "array" });
-          const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(sheet);
+      const result = await res.json().catch(() => ({ success: false, message: "Invalid JSON response" }));
 
-          if (!jsonData.length) {
-            msgEl.className = 'message error';
-            msgEl.textContent = '⚠️ File is empty.';
-            return;
-          }
-
-          const res = await fetch(`${API_BASE}/api/admin/bulk-create-students`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ students: jsonData })
-          });
-
-          const result = await res.json().catch(() => ({ success: false, message: "Invalid JSON response" }));
-
-          if (result.success) {
-            msgEl.className = 'message success';
-            msgEl.textContent = `✅ Successfully uploaded ${jsonData.length} student(s)!`;
-            fileInput.value = "";
-          } else {
-            msgEl.className = 'message error';
-            msgEl.textContent = '❌ ' + (result.message || "Upload failed.");
-          }
-        } catch (err) {
-          console.error("Bulk upload error:", err);
-          msgEl.className = 'message error';
-          msgEl.textContent = '🚫 Upload failed. Check console for details.';
-        }
-      };
-      reader.readAsArrayBuffer(file);
+      if (result.success) {
+        msgEl.className = 'message success';
+        msgEl.textContent = `✅ Successfully uploaded ${jsonData.length} student(s)!`;
+        fileInput.value = "";
+      } else {
+        msgEl.className = 'message error';
+        msgEl.textContent = '❌ ' + (result.message || "Upload failed.");
+      }
+    } catch (err) {
+      console.error("Bulk upload error:", err);
+      msgEl.className = 'message error';
+      msgEl.textContent = '🚫 Upload failed. Check console for details.';
     }
-  </script>
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ✅ Download Excel Template
+function downloadStudentTemplate() {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ["student_id", "first_name", "middle_name", "last_name", "class", "section", "phone_number", "parent_email", "password"],
+    ["STD001", "Amina", "Fatimah", "Johnson", "JSS 1", "B", "08012345678", "parent@mail.com", "12345"]
+  ]);
+  XLSX.utils.book_append_sheet(wb, ws, "Students");
+  XLSX.writeFile(wb, "Student_Bulk_Template.xlsx");
+}
+
+function goBack() {
+  window.location.href = "dashboard.html";
+}
+</script>
+
 
 <script src="js/kaima-chatbot.js"></script> 
 <script src="js/session-timeout.js"></script>
