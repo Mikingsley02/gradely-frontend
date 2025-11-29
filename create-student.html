@@ -213,6 +213,7 @@
   </div>
 
   <script>
+// ✅ Fixed: Removed trailing space
 const API_BASE = "https://gradely-backend-1.onrender.com";
 
 // ✅ Create Single Student
@@ -233,13 +234,24 @@ document.getElementById('createForm').onsubmit = async (e) => {
   msgEl.className = "message";
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/create-student`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+    // ✅ Single student
+    const res = await fetch(`${API_BASE}/api/students/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify(data)
     });
 
-    const result = await res.json().catch(() => ({ success: false, message: "Invalid JSON response" }));
+
+    let result;
+    if (res.ok) {
+      result = await res.json();
+    } else {
+      try {
+        result = await res.json();
+      } catch {
+        throw new Error(`Server returned error ${res.status}`);
+      }
+    }
 
     if (result.success) {
       msgEl.className = 'message success';
@@ -251,13 +263,13 @@ document.getElementById('createForm').onsubmit = async (e) => {
       msgEl.textContent = '❌ ' + (result.message || 'Failed to create student.');
     }
   } catch (err) {
-    console.error("Frontend error:", err);
+    console.error("Student creation error:", err);
     msgEl.className = 'message error';
-    msgEl.textContent = '⚠️ Could not connect to server.';
+    msgEl.textContent = '⚠️ ' + (err.message || 'Could not connect to server.');
   }
 };
 
-// ✅ Bulk Upload Students
+// ✅ Bulk Upload
 async function uploadBulkStudents() {
   const fileInput = document.getElementById('bulkFile');
   const file = fileInput.files[0];
@@ -293,13 +305,23 @@ async function uploadBulkStudents() {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/api/admin/bulk-create-students`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ school_id, students: jsonData })
-      });
+      // ✅ Bulk upload
+      const res = await fetch(`${API_BASE}/api/students/bulk-upload`, {
+      method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({ school_id, students: jsonData })
+    });
 
-      const result = await res.json().catch(() => ({ success: false, message: "Invalid JSON response" }));
+      let result;
+      if (res.ok) {
+        result = await res.json();
+      } else {
+        try {
+          result = await res.json();
+        } catch {
+          throw new Error(`Upload failed (${res.status})`);
+        }
+      }
 
       if (result.success) {
         msgEl.className = 'message success';
@@ -312,13 +334,13 @@ async function uploadBulkStudents() {
     } catch (err) {
       console.error("Bulk upload error:", err);
       msgEl.className = 'message error';
-      msgEl.textContent = '🚫 Upload failed. Check console for details.';
+      msgEl.textContent = '⚠️ ' + (err.message || 'Upload failed. Check console.');
     }
   };
   reader.readAsArrayBuffer(file);
 }
 
-// ✅ Download Excel Template
+// ✅ Template
 function downloadStudentTemplate() {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([
