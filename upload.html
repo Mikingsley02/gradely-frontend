@@ -236,7 +236,6 @@
   </div>
 
   <script>
-  // ✅ FIXED: Removed trailing space
   const backendUrl = "https://gradely-backend-1.onrender.com";
 
   function showLoader(show) {
@@ -254,76 +253,81 @@
     XLSX.writeFile(wb, "Gradely_Result_Template.xlsx");
   }
 
-  // ✅ Guard + upload logic
-  document.getElementById("resultForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+document.getElementById("resultForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    const school_id = sessionStorage.getItem("school_id");
-    if (!school_id) {
+  // ✅ Get school_id with fallback
+  let school_id = sessionStorage.getItem("school_id");
+  if (!school_id) {
+    const adminId = sessionStorage.getItem("adminId");
+    if (adminId) {
+      school_id = adminId;
+    } else {
       alert("⚠️ School not found. Please log in again.");
-      window.location.href = "login.html";
+      window.location.href = "admin-login.html";
       return;
     }
+  }
 
-    const term = document.getElementById("term").value;
-    const file = document.getElementById("file").files[0];
+  const term = document.getElementById("term").value;
+  const file = document.getElementById("file").files[0];
 
-    if (!term || !file) {
-      alert("⚠️ Please select a term and upload a file.");
-      return;
-    }
+  if (!term || !file) {
+    alert("⚠️ Please select a term and upload a file.");
+    return;
+  }
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        showLoader(true);
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        let results = XLSX.utils.sheet_to_json(sheet);
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    try {
+      showLoader(true);
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      let results = XLSX.utils.sheet_to_json(sheet);
 
-        const academic_year = new Date().getFullYear() + "/" + (new Date().getFullYear() + 1);
-        results = results.map(r => ({
-          student_id: r.student_id,
-          subject: r.subject,
-          score: r.score,
-          total_marks: r.total_marks || 100,
-          grade: r.grade || null,
-          remarks: r.remarks || "",
-          term: r.term || term,
-          academic_year: r.academic_year || academic_year,
-          school_id: r.school_id || school_id
-        }));
+      const academic_year = new Date().getFullYear() + "/" + (new Date().getFullYear() + 1);
+      results = results.map(r => ({
+        student_id: r.student_id,
+        subject: r.subject,
+        score: r.score,
+        total_marks: r.total_marks || 100,
+        grade: r.grade || null,
+        remarks: r.remarks || "",
+        term: r.term || term,
+        academic_year: r.academic_year || academic_year,
+        school_id: r.school_id || school_id
+      }));
 
-        if (results.length === 0) {
-          showLoader(false);
-          alert("⚠️ No valid rows found in the Excel file.");
-          return;
-        }
-
-        const response = await fetch(`${backendUrl}/api/result/upload-results`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ term, results, school_id }),
-        });
-
-        const resData = await response.json();
+      if (results.length === 0) {
         showLoader(false);
-
-        if (resData.success) {
-          alert("✅ " + (resData.message || "Upload complete!"));
-        } else {
-          alert("⚠️ " + (resData.message || "Upload failed."));
-        }
-      } catch (err) {
-        showLoader(false);
-        console.error("🚫 Upload error:", err);
-        alert("⚠️ Failed to connect to server. Please check your internet or backend status.");
+        alert("⚠️ No valid rows found in the Excel file.");
+        return;
       }
-    };
-    reader.readAsArrayBuffer(file);
-  });
-  </script>
+
+      const response = await fetch(`${backendUrl}/api/result/upload-results`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ term, results, school_id }),
+      });
+
+      const resData = await response.json();
+      showLoader(false);
+
+      if (resData.success) {
+        alert("✅ " + (resData.message || "Upload complete!"));
+      } else {
+        alert("⚠️ " + (resData.message || "Upload failed."));
+      }
+    } catch (err) {
+      showLoader(false);
+      console.error("🚫 Upload error:", err);
+      alert("⚠️ Failed to connect to server. Please check your internet or backend status.");
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+</script>
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
