@@ -318,68 +318,72 @@
 
   <!-- JavaScript -->
   <script>
-    // Toggle password visibility
-    function togglePassword() {
-      const passwordInput = document.getElementById("password");
-      const icon = passwordInput.nextElementSibling;
-      const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-      passwordInput.setAttribute("type", type);
-      icon.textContent = type === "text" ? "🙈" : "👁️";
-    }
+  // Toggle password visibility
+  function togglePassword() {
+    const passwordInput = document.getElementById("password");
+    const icon = passwordInput.nextElementSibling;
+    const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+    passwordInput.setAttribute("type", type);
+    icon.textContent = type === "text" ? "🙈" : "👁️";
+  }
 
-    // Handle form submission
-    document.getElementById('parentLoginForm').onsubmit = async (e) => {
-      e.preventDefault();
+  // Handle form submission
+  document.getElementById('parentLoginForm').onsubmit = async (e) => {
+    e.preventDefault();
 
-      const student_id = document.getElementById('studentId').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const btn = e.target.querySelector('button');
-      const text = btn.querySelector('.text');
-      const spinner = btn.querySelector('.spinner');
+    const student_id = document.getElementById('studentId').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const btn = e.target.querySelector('button');
+    const text = btn.querySelector('.text');
+    const spinner = btn.querySelector('.spinner');
 
-      // Show loading state
-      btn.classList.add('loading');
-      text.style.opacity = '0';
-      spinner.style.display = 'block';
+    // Show loading state
+    btn.classList.add('loading');
+    text.style.opacity = '0';
+    spinner.style.display = 'block';
 
-      console.log('🟢 Attempting login for:', student_id);
+    console.log('🟢 Attempting parent login for:', student_id);
 
-      try {
-        // ✅ FIXED: Removed trailing space in production URL
-        const API_BASE = window.location.hostname.includes("localhost")
-          ? "http://localhost:5000"
-          : "https://gradely-backend-1.onrender.com";
+    try {
+      // ✅ FIXED: Removed trailing space in production URL
+      const API_BASE = window.location.hostname.includes("localhost")
+        ? "http://localhost:5000"
+        : "https://gradely-backend-1.onrender.com"; // ← no trailing space
 
-        const response = await fetch(`${API_BASE}/api/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ student_id, password }),
-          credentials: "include",
-        });
+      const response = await fetch(`${API_BASE}/api/auth/parent-login`, { // ← updated endpoint
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ student_id, password })
+      });
 
-        console.log('🔵 Response status:', response.status);
-        const data = await response.json().catch(() => ({}));
-        console.log('🟣 Response body:', data);
-
-        if (data.success) {
-          console.log('✅ Login successful! Redirecting...');
-          localStorage.setItem('studentId', student_id);
-          localStorage.setItem('firstLogin', 'true');
-          window.location.href = 'student.html';
-        } else {
-          console.warn('❌ Login failed:', data.message);
-          alert('❌ ' + (data.message || 'Login failed.'));
-        }
-      } catch (err) {
-        console.error('🚨 Network or server error:', err);
-        alert('Connection error. Please check your internet or backend status.');
-      } finally {
-        btn.classList.remove('loading');
-        text.style.opacity = '1';
-        spinner.style.display = 'none';
+      let data;
+      if (response.ok) {
+        data = await response.json();
+      } else {
+        // Handle non-JSON errors gracefully
+        const text = await response.text();
+        data = { success: false, message: `Server error (${response.status})` };
       }
+
+      if (data.success) {
+        console.log('✅ Parent login successful! Redirecting...');
+        localStorage.setItem('studentId', student_id);
+        localStorage.setItem('school_id', data.parent.school_id); // store for results
+        window.location.href = 'student.html';
+      } else {
+        console.warn('❌ Parent login failed:', data.message);
+        alert('❌ ' + (data.message || 'Login failed.'));
+      }
+    } catch (err) {
+      console.error('🚨 Network error:', err);
+      alert('⚠️ Connection error. Please check your internet.');
+    } finally {
+      btn.classList.remove('loading');
+      text.style.opacity = '1';
+      spinner.style.display = 'none';
     }
-  </script>
+  }
+</script>
    
   <script src="js/kaima-chatbot.js"></script>
 
