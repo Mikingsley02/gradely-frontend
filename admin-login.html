@@ -326,10 +326,11 @@ document.getElementById("adminLoginForm").addEventListener("submit", async (e) =
     if (data.success) {
       alert("✅ Login successful!");
 
-      // ✅ These values REALLY exist from backend
       sessionStorage.setItem("adminId", data.admin.admin_id);
       sessionStorage.setItem("school_id", data.admin.admin_id);
-      sessionStorage.setItem("admin_name", data.admin.name);
+      sessionStorage.setItem("school_name", data.admin.school_name || "");
+      sessionStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
+      window.location.href = "dashboard.html";
 
       window.location.href = "dashboard.html";
     } else {
