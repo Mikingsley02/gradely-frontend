@@ -172,6 +172,7 @@
       <p><strong>Class:</strong> <span id="studentClass">Loading...</span></p>
       <p><strong>Student ID:</strong> <span id="studentId">Loading...</span></p>
       <p><strong>Term:</strong> <span id="studentTerm">Loading...</span></p>
+      <p><strong>Academic Year:</strong> <span id="studentAcademicYear">Loading...</span></p> <!-- ✅ ADDED -->
     </div>
 
     <table id="resultsTable">
@@ -181,11 +182,13 @@
           <th>Score</th>
           <th>Total</th>
           <th>Grade</th>
+          <th>Term</th>
+          <th>Academic Year</th> <!-- ✅ ADDED -->
           <th>Remarks</th>
         </tr>
       </thead>
       <tbody id="resultsBody">
-        <tr><td colspan="5" class="message">Loading results...</td></tr>
+        <tr><td colspan="7" class="message">Loading results...</td></tr> <!-- ✅ 7 cols -->
       </tbody>
     </table>
 
@@ -236,7 +239,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
  <script>
-const backendUrl = "https://gradely-backend-1.onrender.com";
+const backendUrl = "https://gradely-backend-1.onrender.com"; // ✅ Fixed trailing space
+
 let chartInstance = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -247,7 +251,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ✅ Correct backend endpoint
   const apiUrl = `${backendUrl}/api/result/student/${studentId}`;
 
   try {
@@ -257,20 +260,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!data.success) {
       document.getElementById("resultsBody").innerHTML =
-        `<tr><td colspan="5" class="message">⚠️ ${data.message}</td></tr>`;
+        `<tr><td colspan="7" class="message">⚠️ ${data.message}</td></tr>`;
       return;
     }
 
-    // ✅ Render student info
     const student = data.student;
     document.getElementById("studentName").textContent =
       `${student.first_name} ${student.middle_name || ""} ${student.last_name}`;
     document.getElementById("studentClass").textContent = student.class || "N/A";
     document.getElementById("studentId").textContent = student.student_id;
-    document.getElementById("studentTerm").textContent =
-      data.results?.[0]?.term || "N/A";
+    
+    // ✅ Use first result's term/year as representative
+    const firstResult = data.results?.[0];
+    document.getElementById("studentTerm").textContent = firstResult?.term || "N/A";
+    document.getElementById("studentAcademicYear").textContent = firstResult?.academic_year || "N/A"; // ✅
 
-    // ✅ Render results
     const resultsBody = document.getElementById("resultsBody");
     if (data.results && data.results.length > 0) {
       resultsBody.innerHTML = data.results
@@ -281,16 +285,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             <td>${r.score}</td>
             <td>${r.total_marks}</td>
             <td>${r.grade}</td>
-            <td>${r.remarks}</td>
+            <td>${r.term || '-'}</td>
+            <td>${r.academic_year || '-'}</td> <!-- ✅ -->
+            <td>${r.remarks || '-'}</td>
           </tr>`
         )
         .join("");
       renderChart(data.results);
     } else {
-      resultsBody.innerHTML = `<tr><td colspan="5" class="message">⚠️ No results found for this student.</td></tr>`;
+      resultsBody.innerHTML = `<tr><td colspan="7" class="message">⚠️ No results found for this student.</td></tr>`;
     }
 
-    // ✅ Show password change prompt if first login
     const firstLogin = localStorage.getItem("firstLogin") === "true";
     if (firstLogin) {
       document.getElementById("changePasswordPrompt").style.display = "block";
@@ -298,11 +303,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (error) {
     console.error("Error fetching student data:", error);
     document.getElementById("resultsBody").innerHTML =
-      `<tr><td colspan="5" class="message">⚠️ Failed to fetch data. Please check your connection or backend.</td></tr>`;
+      `<tr><td colspan="7" class="message">⚠️ Failed to fetch data. Please check your connection or backend.</td></tr>`;
   }
 });
 
-// === Render Chart ===
 function renderChart(results) {
   const ctx = document.getElementById("performanceChart").getContext("2d");
   if (chartInstance) chartInstance.destroy();
@@ -340,13 +344,12 @@ function renderChart(results) {
   });
 }
 
-// === Logout ===
 function logout() {
   localStorage.clear();
   window.location.href = "index.html";
 }
 
-// === Download PDF ===
+// ✅ UPDATED: PDF includes Academic Year
 async function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("p", "mm", "a4");
@@ -355,6 +358,7 @@ async function downloadPDF() {
   const cls = document.getElementById("studentClass").textContent;
   const id = document.getElementById("studentId").textContent;
   const term = document.getElementById("studentTerm").textContent;
+  const academicYear = document.getElementById("studentAcademicYear").textContent; // ✅
   const currentDate = new Date().toLocaleString();
 
   doc.setFontSize(18);
@@ -367,28 +371,32 @@ async function downloadPDF() {
   doc.text(`Class: ${cls}`, 20, 43);
   doc.text(`Student ID: ${id}`, 20, 51);
   doc.text(`Term: ${term}`, 20, 60);
+  doc.text(`Academic Year: ${academicYear}`, 20, 68); // ✅
 
   doc.setFillColor(37, 117, 252);
   doc.setTextColor(255, 255, 255);
-  doc.rect(20, 70, 170, 8, "F");
-  doc.text("Subject", 25, 76);
-  doc.text("Score", 85, 76);
-  doc.text("Total", 110, 76);
-  doc.text("Grade", 135, 76);
-  doc.text("Remarks", 155, 76);
+  doc.rect(20, 78, 170, 8, "F");
+  doc.text("Subject", 25, 84);
+  doc.text("Score", 85, 84);
+  doc.text("Total", 110, 84);
+  doc.text("Grade", 135, 84);
+  doc.text("Term", 155, 84);
+  doc.text("Year", 180, 84);
 
   const rows = Array.from(document.querySelectorAll("#resultsBody tr")).map(tr =>
     Array.from(tr.children).map(td => td.textContent)
   );
 
-  let y = 85;
+  let y = 94;
   doc.setTextColor(0, 0, 0);
   rows.forEach(row => {
     doc.text(row[0] || "", 25, y);
     doc.text(row[1] || "", 87, y);
     doc.text(row[2] || "", 112, y);
     doc.text(row[3] || "", 137, y);
-    doc.text(doc.splitTextToSize(row[4] || "", 55), 155, y);
+    doc.text(row[4] || "", 157, y);
+    doc.text(row[5] || "", 177, y);
+    doc.text(doc.splitTextToSize(row[6] || "", 55), 200, y); // Adjust X if needed
     y += 10;
   });
 
@@ -450,10 +458,8 @@ async function handleChangePassword(e) {
 }
 </script>
 
-
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
-
 
 </body>
 </html>

@@ -196,21 +196,17 @@
       }
     }
   </style>
+
+  <!-- Academic year placeholder styling -->
+  <style>
+    #academicYear::placeholder {
+      color: #c2e0ff !important;
+      opacity: 1;
+    }
+    #academicYear:-ms-input-placeholder { color: #c2e0ff; }
+    #academicYear::-ms-input-placeholder { color: #c2e0ff; }
+  </style>
 </head>
-
-<style>
-  #academicYear::placeholder {
-    color: #c2e0ff !important;
-    opacity: 1;
-  }
-  #academicYear:-ms-input-placeholder { /* IE */
-    color: #c2e0ff;
-  }
-  #academicYear::-ms-input-placeholder { /* Edge */
-    color: #c2e0ff;
-  }
-</style>
-
 <body>
 
   <div class="container">
@@ -226,13 +222,13 @@
       </select>
 
       <label for="academicYear">Academic Year *</label>
-<input 
-  type="text" 
-  id="academicYear" 
-  placeholder="e.g., 2024/2025" 
-  required 
-  style="background: rgba(255, 255, 255, 0.15); color: #fff; border: none; border-radius: 12px; height: 45px; padding: 0 15px; font-size: 1rem; outline: none;"
-/>
+      <input 
+        type="text" 
+        id="academicYear" 
+        placeholder="e.g., 2024/2025" 
+        required 
+        style="background: rgba(255, 255, 255, 0.15); color: #fff; border: none; border-radius: 12px; height: 45px; padding: 0 15px; font-size: 1rem; outline: none;"
+      />
 
       <label for="file">Upload Result File *</label>
       <input type="file" id="file" accept=".csv, .xls, .xlsx" required />
@@ -259,100 +255,96 @@
   </div>
 
   <script>
-const backendUrl = "https://gradely-backend-1.onrender.com";
+    // ✅ FIXED: No trailing space
+    const backendUrl = "https://gradely-backend-1.onrender.com";
 
-// Show/hide loader overlay
-function showLoader(show) {
-  document.getElementById("loaderOverlay").style.display = show ? "flex" : "none";
-}
+    function showLoader(show) {
+      document.getElementById("loaderOverlay").style.display = show ? "flex" : "none";
+    }
 
-// Download Excel template
-function downloadTemplate() {
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([
-    ["student_id", "subject", "score", "total_marks", "grade", "remarks", "term"],
-    ["STU001", "Mathematics", "85", "100", "A", "Excellent", "1st Term"]
-  ]);
-  XLSX.utils.book_append_sheet(wb, ws, "Result Template");
-  XLSX.writeFile(wb, "Gradely_Result_Template.xlsx");
-}
+    // ✅ SIMPLIFIED TEMPLATE: no term or academic_year
+    function downloadTemplate() {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet([
+        ["student_id", "subject", "score", "total_marks", "grade", "remarks"],
+        ["STU001", "Mathematics", "85", "100", "A", "Excellent"]
+      ]);
+      XLSX.utils.book_append_sheet(wb, ws, "Result Template");
+      XLSX.writeFile(wb, "Gradely_Result_Template.xlsx");
+    }
 
-// Upload results
-document.getElementById("resultForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+    document.getElementById("resultForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-  const term = document.getElementById("term").value;
-  const academic_year = document.getElementById("academicYear").value.trim();
-  const file = document.getElementById("file").files[0];
-  const school_id = sessionStorage.getItem("school_id");
+      const term = document.getElementById("term").value;
+      const academic_year = document.getElementById("academicYear").value.trim();
+      const file = document.getElementById("file").files[0];
+      const school_id = sessionStorage.getItem("school_id");
 
-  if (!school_id) {
-    alert("⚠️ School not found. Please log in again.");
-    window.location.href = "admin-login.html";
-    return;
-  }
-
-  if (!term || !file) {
-    alert("⚠️ Please select a term and upload a file.");
-    return;
-  }
-
-  try {
-    showLoader(true);
-
-    // ✅ Read Excel file
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const data = new Uint8Array(event.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      let results = XLSX.utils.sheet_to_json(sheet);
-
-      const academic_year = new Date().getFullYear() + "/" + (new Date().getFullYear() + 1);
-      results = results.map(r => ({
-        student_id: r.student_id,
-        subject: r.subject,
-        score: r.score,
-        total_marks: r.total_marks || 100,
-        grade: r.grade || null,
-        remarks: r.remarks || "",
-        term: r.term || term,
-        academic_year: r.academic_year || academic_year,
-        school_id: r.school_id || school_id
-      }));
-
-      if (results.length === 0) {
-        showLoader(false);
-        alert("⚠️ No valid rows found in the Excel file.");
+      if (!school_id) {
+        alert("⚠️ School not found. Please log in again.");
+        window.location.href = "admin-login.html";
         return;
       }
 
-      // ✅ Upload results
-      const uploadRes = await fetch(`${backendUrl}/api/result/upload-results`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ term, academic_year, results, school_id }),
-      });
-
-      const uploadData = await uploadRes.json().catch(() => ({ success: false, message: "Invalid JSON response" }));
-      showLoader(false);
-
-      if (uploadData.success) {
-        alert("✅ " + (uploadData.message || "Upload complete!"));
-      } else {
-        alert("⚠️ " + (uploadData.message || "Upload failed."));
+      if (!term || !academic_year || !file) {
+        alert("⚠️ Please fill in all required fields.");
+        return;
       }
-    };
 
-    reader.readAsArrayBuffer(file);
-  } catch (err) {
-    showLoader(false);
-    console.error("🚫 Upload error:", err);
-    alert("⚠️ Failed to connect to server. Please check your internet or backend status.");
-  }
-});
-</script>
+      try {
+        showLoader(true);
 
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          let results = XLSX.utils.sheet_to_json(sheet);
+
+          // ✅ CRITICAL: term & academic_year come ONLY from form
+          results = results.map(r => ({
+            student_id: r.student_id,
+            subject: r.subject,
+            score: r.score,
+            total_marks: r.total_marks || 100,
+            grade: r.grade || null,
+            remarks: r.remarks || "",
+            term: term,               // ← from dropdown
+            academic_year: academic_year, // ← from input
+            school_id: school_id
+          }));
+
+          if (results.length === 0) {
+            showLoader(false);
+            alert("⚠️ No valid rows found in the Excel file.");
+            return;
+          }
+
+          const response = await fetch(`${backendUrl}/api/result/upload-results`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ term, academic_year, results, school_id }),
+          });
+
+          const resData = await response.json().catch(() => ({ success: false, message: "Invalid JSON response" }));
+          showLoader(false);
+
+          if (resData.success) {
+            alert("✅ " + (resData.message || "Upload complete!"));
+          } else {
+            alert("⚠️ " + (resData.message || "Upload failed."));
+          }
+        };
+
+        reader.readAsArrayBuffer(file);
+      } catch (err) {
+        showLoader(false);
+        console.error("🚫 Upload error:", err);
+        alert("⚠️ Failed to connect to server. Please check your internet or backend status.");
+      }
+    });
+  </script>
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
