@@ -188,26 +188,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveEditBtn = document.getElementById("saveEditBtn");
 
   async function loadStudents() {
-    if (!schoolId) {
-      tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">❌ Missing school ID</td></tr>`;
+  if (!schoolId) {
+    tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">❌ Missing school ID</td></tr>`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/students/${schoolId}`);
+    const data = await res.json();
+
+    if (!data.success || !data.students.length) {
+      tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-warning">⚠️ No students found.</td></tr>`;
       return;
     }
 
-    try {
-      const res = await fetch(`/api/students/students/${schoolId}`);
-      const data = await res.json();
-
-      if (!data.success || !data.students.length) {
-        tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-warning">⚠️ No students found.</td></tr>`;
-        return;
-      }
-
-      renderTable(data.students);
-    } catch (err) {
-      console.error("Error loading students:", err);
-      tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">⚠️ Failed to load students.</td></tr>`;
-    }
+    renderTable(data.students);
+  } catch (err) {
+    console.error("Error loading students:", err);
+    tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">⚠️ Failed to load students.</td></tr>`;
   }
+}
 
   function renderTable(students) {
     tableBody.innerHTML = students.map(student => `
