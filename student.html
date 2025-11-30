@@ -177,14 +177,15 @@
   <div class="container">
     <header>
       <div class="school-name" id="schoolName">Loading School...</div>
-      <h1>📘 Student Term Results</h1>
+      <h2>📘 Student Term Results</h2>
       <p>Review your child’s academic performance below</p>
     </header>
 
     <div class="student-info">
       <p><strong>Name:</strong> <span id="studentName">Loading...</span></p>
-      <p><strong>Class:</strong> <span id="studentClass">Loading...</span></p>
       <p><strong>Student ID:</strong> <span id="studentId">Loading...</span></p>
+      <p><strong>Class:</strong> <span id="studentClass">Loading...</span></p>
+      
       
       <!-- ✅ View Results Dropdown -->
       <p>
@@ -283,8 +284,8 @@
         const student = data.student;
         document.getElementById("studentName").textContent =
           `${student.first_name} ${student.middle_name || ""} ${student.last_name}`;
+          document.getElementById("studentId").textContent = student.student_id || "N/A";
         document.getElementById("studentClass").textContent = student.class || "N/A";
-        document.getElementById("studentId").textContent = student.student_id;
         document.getElementById("schoolName").textContent = data.school_name || "Gradely School";
 
         const selector = document.getElementById("yearTermSelector");
@@ -330,6 +331,7 @@
       try {
         const response = await fetch(url);
         const data = await response.json();
+        console.log("API Response:", data);
 
         if (!data.success || !data.results || data.results.length === 0) {
           document.getElementById("resultsBody").innerHTML = 
