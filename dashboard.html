@@ -211,37 +211,56 @@
   </footer>
 
   <script>
-    let currentPlan = 'basic'; // default
+  let currentPlan = 'basic';
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      currentPlan = urlParams.get('plan') || 'basic';
+  document.addEventListener("DOMContentLoaded", async () => {
+    const schoolId = sessionStorage.getItem("school_id");
+    
+    if (!schoolId) {
+      alert("⚠️ Session expired. Please log in again.");
+      window.location.href = "admin-login.html";
+      return;
+    }
 
-      const badge = document.getElementById('planBadge');
-      badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-      badge.className = `plan-badge ${currentPlan}`;
+    try {
+      // ✅ Fetch real subscription plan from backend
+      const res = await fetch(`https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${schoolId}`);
+      const data = await res.json();
 
-      applyPlanRestrictions();
+      if (data.success) {
+        currentPlan = data.plan; // 'basic' or 'pro'
+      } else {
+        console.warn("Failed to load plan:", data.message);
+      }
+    } catch (err) {
+      console.error("Error fetching plan:", err);
+    }
 
-      const logoutBtn = document.getElementById("logoutBtn");
-      if (logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
-          if (confirm("Are you sure you want to logout?")) {
-            localStorage.clear();
-            window.location.href = "index.html";
-          }
-        });
+    // ✅ Update UI
+    const badge = document.getElementById('planBadge');
+    badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+    badge.className = `plan-badge ${currentPlan}`;
+
+    applyPlanRestrictions();
+
+    // Logout handler
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      if (confirm("Are you sure you want to logout?")) {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = "index.html";
       }
     });
+  });
 
-    function applyPlanRestrictions() {
-      if (currentPlan === 'basic') {
-        const proCards = document.querySelectorAll('.pro-only');
-        proCards.forEach(card => {
-          card.classList.add('disabled');
-        });
-
-        const container = document.getElementById('dashboardContainer');
+  function applyPlanRestrictions() {
+    const proCards = document.querySelectorAll('.pro-only');
+    if (currentPlan === 'basic') {
+      proCards.forEach(card => card.classList.add('disabled'));
+      
+      // Add upgrade prompt
+      const container = document.getElementById('dashboardContainer');
+      if (!document.querySelector('.upgrade-prompt')) {
         const upgradeCard = document.createElement('div');
         upgradeCard.className = 'upgrade-prompt';
         upgradeCard.innerHTML = `
@@ -249,25 +268,26 @@
           <h3>Upgrade to Pro!</h3>
           <p>Unlock bulk student upload, custom subjects, class management & PDF reports.</p>
         `;
-        upgradeCard.onclick = () => {
-          window.location.href = 'subscription.html?plan=pro';
-        };
+        upgradeCard.onclick = () => window.location.href = 'subscription.html?plan=pro';
         container.appendChild(upgradeCard);
       }
+    } else {
+      proCards.forEach(card => card.classList.remove('disabled'));
     }
+  }
 
-    function handleProFeature(url) {
-      if (currentPlan === 'pro') {
-        window.location.href = url;
-      } else {
-        alert("💡 This feature is available only on Pro plan. Upgrade to unlock!");
-      }
+  function handleProFeature(url) {
+    if (currentPlan === 'pro') {
+      window.location.href = url;
+    } else {
+      alert("💡 This feature is available only on Pro plan. Upgrade to unlock!");
     }
+  }
 
-    function goTo(page) {
-      window.location.href = page;
-    }
-  </script>
+  function goTo(page) {
+    window.location.href = page;
+  }
+</script>
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
