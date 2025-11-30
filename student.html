@@ -253,7 +253,10 @@
   }
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("p", "mm", "a4");
+  const doc = new jsPDF("p", "mm", "a4"); // A4 = 210x297mm
+  const pageHeight = 297;
+  const pageWidth = 210;
+  const margin = 15;
 
   const schoolName = currentData.school_name || "Gradely School";
   const student = currentData.student;
@@ -263,61 +266,81 @@
   const term = firstResult?.term || "N/A";
   const year = firstResult?.academic_year || "N/A";
 
-  // Header
-  doc.setFontSize(18);
+  // === HEADER ===
+  doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text(schoolName, 105, 20, null, null, "center");
-  doc.text("RESULT REPORT CARD", 105, 30, null, null, "center");
+  doc.text(schoolName, pageWidth / 2, 20, { align: "center" });
+  doc.setFontSize(14);
+  doc.text("RESULT REPORT CARD", pageWidth / 2, 30, { align: "center" });
 
-  // Student info
-  doc.setFontSize(12);
+  // === STUDENT INFO ===
+  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(`Student Name: ${name}`, 20, 45);
-  doc.text(`Student ID: ${id}`, 20, 53);
-  doc.text(`Class: ${student.class || "N/A"}`, 20, 61);
-  doc.text(`Term: ${term}`, 20, 69);
-  doc.text(`Academic Year: ${year}`, 20, 77);
+  let y = 45;
+  doc.text(`Student Name: ${name}`, margin, y);
+  y += 6;
+  doc.text(`Student ID: ${id}`, margin, y);
+  y += 6;
+  doc.text(`Class: ${student.class || "N/A"}`, margin, y);
+  y += 6;
+  doc.text(`Term: ${term}`, margin, y);
+  y += 6;
+  doc.text(`Academic Year: ${year}`, margin, y);
+  y += 12; // Extra space before table
+
+  // === RESULTS TABLE ===
+  const headers = ["Subject", "Score", "Total", "Grade", "Remarks"];
+  const colWidths = [60, 25, 25, 20, 60]; // Total = 190 (fits in 180mm width with margins)
+  const startX = margin;
 
   // Table header
   doc.setFillColor(37, 117, 252);
   doc.setTextColor(255, 255, 255);
-  doc.rect(20, 87, 170, 8, "F");
-  doc.text("Subject", 25, 93);
-  doc.text("Score", 85, 93);
-  doc.text("Total", 110, 93);
-  doc.text("Grade", 135, 93);
-  doc.text("Remarks", 155, 93);
+  doc.rect(startX, y, 190, 6, "F");
+  headers.forEach((header, i) => {
+    doc.text(header, startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0) + 2, y + 4);
+  });
+  y += 10;
 
   // Table rows
-  let y = 103;
-  currentData.results.forEach(r => {
+  currentData.results.forEach((r, index) => {
+    if (y > pageHeight - 40) {
+      doc.addPage();
+      y = 20;
+    }
+    const rowY = y;
     doc.setTextColor(0, 0, 0);
-    doc.text(r.subject || "", 25, y);
-    doc.text(String(r.score || ""), 87, y);
-    doc.text(String(r.total_marks || ""), 112, y);
-    doc.text(r.grade || "", 137, y);
-    doc.text(doc.splitTextToSize(r.remarks || "", 50), 155, y);
-    y += 10;
+    doc.text(r.subject || "", startX, rowY);
+    doc.text(String(r.score || ""), startX + 62, rowY);
+    doc.text(String(r.total_marks || ""), startX + 87, rowY);
+    doc.text(r.grade || "", startX + 112, rowY);
+    doc.text(doc.splitTextToSize(r.remarks || "-", 55), startX + 132, rowY);
+    y += 8;
   });
 
-  // ✅ Wait for chart to be ready, then add to PDF
+  y += 8;
+
+  // === CHART ===
   const canvas = document.getElementById("performanceChart");
   if (canvas) {
-    // Give canvas a moment to finish rendering
     await new Promise(resolve => setTimeout(resolve, 100));
     const chartImg = canvas.toDataURL("image/png", 1.0);
-    const imgProps = doc.getImageProperties(chartImg);
-    const width = 170;
-    const height = (imgProps.height * width) / imgProps.width;
-    doc.addImage(chartImg, "PNG", 20, y + 10, width, height);
-    y = y + 10 + height;
+    const maxWidth = 180;
+    const maxHeight = 60; // Reduced height
+    doc.addImage(chartImg, "PNG", margin, y, maxWidth, maxHeight);
+    y += maxHeight + 10;
   }
 
-  // Footer
-  doc.text("Principal Signature: _______________________", 20, y + 10);
+  // === FOOTER ===
+  if (y > pageHeight - 30) {
+    doc.addPage();
+    y = 20;
+  }
   doc.setFontSize(10);
+  doc.text("Principal Signature: _______________________", margin, y);
+  y += 8;
   doc.setTextColor(100);
-  doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, y + 20);
+  doc.text(`Generated on: ${new Date().toLocaleString()}`, margin, y);
 
   doc.save(`${id}_Report.pdf`);
 }
