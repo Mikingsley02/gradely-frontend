@@ -160,7 +160,7 @@
 
   <header>
     <h1>🎓 Gradely.info — School Dashboard 
-      <span id="planBadge" class="plan-badge"></span>
+      <span id="planBadge" class="plan-badge">Loading...</span>
     </h1>
     <button class="logout-btn" id="logoutBtn">Logout</button>
   </header>
@@ -185,10 +185,10 @@
     </div>
 
     <div class="card pro-only" onclick="handleProFeature('announcements.html')">
-  <div class="icon">📢</div>
-  <h3>School Announcements</h3>
-  <p>Send alerts to all parents via SMS/email.</p>
-  </div>
+      <div class="icon">📢</div>
+      <h3>School Announcements</h3>
+      <p>Send alerts to all parents via SMS/email.</p>
+    </div>
 
     <div class="card" onclick="goTo('subscription.html')">
       <div class="icon">💳</div>
@@ -211,83 +211,85 @@
   </footer>
 
   <script>
-  let currentPlan = 'basic';
+    let currentPlan = 'basic';
 
-  document.addEventListener("DOMContentLoaded", async () => {
-    const schoolId = sessionStorage.getItem("school_id");
-    
-    if (!schoolId) {
-      alert("⚠️ Session expired. Please log in again.");
-      window.location.href = "admin-login.html";
-      return;
-    }
-
-    try {
-      // ✅ Fetch real subscription plan from backend
-      const res = await fetch(`https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${schoolId}`);
-      const data = await res.json();
-
-      if (data.success) {
-        currentPlan = data.plan; // 'basic' or 'pro'
-      } else {
-        console.warn("Failed to load plan:", data.message);
-      }
-    } catch (err) {
-      console.error("Error fetching plan:", err);
-    }
-
-    // ✅ Update UI
-    const badge = document.getElementById('planBadge');
-    badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-    badge.className = `plan-badge ${currentPlan}`;
-
-    applyPlanRestrictions();
-
-    // Logout handler
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      if (confirm("Are you sure you want to logout?")) {
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = "index.html";
-      }
-    });
-  });
-
-  function applyPlanRestrictions() {
-    const proCards = document.querySelectorAll('.pro-only');
-    if (currentPlan === 'basic') {
-      proCards.forEach(card => card.classList.add('disabled'));
+    document.addEventListener("DOMContentLoaded", async () => {
+      const schoolId = sessionStorage.getItem("school_id");
       
-      // Add upgrade prompt
-      const container = document.getElementById('dashboardContainer');
-      if (!document.querySelector('.upgrade-prompt')) {
-        const upgradeCard = document.createElement('div');
-        upgradeCard.className = 'upgrade-prompt';
-        upgradeCard.innerHTML = `
-          <div class="icon">✨</div>
-          <h3>Upgrade to Pro!</h3>
-          <p>Unlock bulk student upload, custom subjects, class management & PDF reports.</p>
-        `;
-        upgradeCard.onclick = () => window.location.href = 'subscription.html?plan=pro';
-        container.appendChild(upgradeCard);
+      if (!schoolId) {
+        alert("⚠️ Session expired. Please log in again.");
+        window.location.href = "admin-login.html";
+        return;
       }
-    } else {
-      proCards.forEach(card => card.classList.remove('disabled'));
-    }
-  }
 
-  function handleProFeature(url) {
-    if (currentPlan === 'pro') {
-      window.location.href = url;
-    } else {
-      alert("💡 This feature is available only on Pro plan. Upgrade to unlock!");
-    }
-  }
+      try {
+        // ✅ Fetch real plan from backend
+        const res = await fetch(`https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${schoolId}`);
+        const data = await res.json();
 
-  function goTo(page) {
-    window.location.href = page;
-  }
-</script>
+        if (data.success) {
+          currentPlan = data.plan; // 'basic' or 'pro'
+        } else {
+          console.warn("Plan load failed:", data.message);
+        }
+      } catch (err) {
+        console.error("Error:", err);
+      }
+
+      // ✅ Update UI
+      const badge = document.getElementById('planBadge');
+      badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+      badge.className = `plan-badge ${currentPlan}`;
+
+      applyPlanRestrictions();
+
+      // Logout
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        if (confirm("Are you sure you want to logout?")) {
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = "index.html";
+        }
+      });
+    });
+
+    function applyPlanRestrictions() {
+      const proCards = document.querySelectorAll('.pro-only');
+      if (currentPlan === 'basic') {
+        proCards.forEach(card => card.classList.add('disabled'));
+        
+        const container = document.getElementById('dashboardContainer');
+        if (!document.querySelector('.upgrade-prompt')) {
+          const upgradeCard = document.createElement('div');
+          upgradeCard.className = 'upgrade-prompt';
+          upgradeCard.innerHTML = `
+            <div class="icon">✨</div>
+            <h3>Upgrade to Pro!</h3>
+            <p>Unlock bulk student upload, custom subjects, class management & PDF reports.</p>
+          `;
+          upgradeCard.onclick = () => window.location.href = 'subscription.html?plan=pro';
+          container.appendChild(upgradeCard);
+        }
+      } else {
+        proCards.forEach(card => card.classList.remove('disabled'));
+        // Remove upgrade prompt if exists
+        const prompt = document.querySelector('.upgrade-prompt');
+        if (prompt) prompt.remove();
+      }
+    }
+
+    function handleProFeature(url) {
+      if (currentPlan === 'pro') {
+        window.location.href = url;
+      } else {
+        alert("💡 This feature is available only on Pro plan. Upgrade to unlock!");
+      }
+    }
+
+    function goTo(page) {
+      window.location.href = page;
+    }
+  </script>
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
