@@ -40,8 +40,22 @@
       padding: 35px 20px;
     }
 
-    header h1 { font-size: 1.8rem; font-weight: 600; }
-    header p { margin-top: 6px; opacity: 0.9; }
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+
+    header .school-name {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-top: 8px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    header p {
+      margin-top: 6px;
+      opacity: 0.9;
+    }
 
     .student-info {
       padding: 25px;
@@ -117,7 +131,6 @@
       font-style: italic;
     }
 
-    /* Password Section */
     #changePasswordPrompt, #changePasswordForm {
       margin: 20px auto;
       max-width: 600px;
@@ -154,7 +167,7 @@
 
     @media (max-width: 600px) {
       th, td { font-size: 0.85rem; }
-      header h1 { font-size: 1.4rem; }
+      header h1, header .school-name { font-size: 1.3rem; }
       .btn { width: 100%; margin: 8px 0; }
     }
   </style>
@@ -163,16 +176,17 @@
 <body>
   <div class="container">
     <header>
+      <div class="school-name" id="schoolName">Loading School...</div> <!-- ✅ ADDED -->
       <h1>📘 Student Term Results</h1>
       <p>Review your child’s academic performance below</p>
     </header>
 
     <div class="student-info">
       <p><strong>Name:</strong> <span id="studentName">Loading...</span></p>
-      <p><strong>Class:</strong> <span id="studentClass">Loading...</span></p>
       <p><strong>Student ID:</strong> <span id="studentId">Loading...</span></p>
+      <p><strong>Class:</strong> <span id="studentClass">Loading...</span></p>
       <p><strong>Term:</strong> <span id="studentTerm">Loading...</span></p>
-      <p><strong>Academic Year:</strong> <span id="studentAcademicYear">Loading...</span></p> <!-- ✅ ADDED -->
+      <p><strong>Academic Year:</strong> <span id="studentAcademicYear">Loading...</span></p>
     </div>
 
     <table id="resultsTable">
@@ -182,13 +196,11 @@
           <th>Score</th>
           <th>Total</th>
           <th>Grade</th>
-          <th>Term</th>
-          <th>Academic Year</th> <!-- ✅ ADDED -->
           <th>Remarks</th>
         </tr>
       </thead>
       <tbody id="resultsBody">
-        <tr><td colspan="7" class="message">Loading results...</td></tr> <!-- ✅ 7 cols -->
+        <tr><td colspan="5" class="message">Loading results...</td></tr>
       </tbody>
     </table>
 
@@ -239,7 +251,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
  <script>
-const backendUrl = "https://gradely-backend-1.onrender.com"; // ✅ Fixed trailing space
+const backendUrl = "https://gradely-backend-1.onrender.com";
 
 let chartInstance = null;
 
@@ -260,40 +272,39 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!data.success) {
       document.getElementById("resultsBody").innerHTML =
-        `<tr><td colspan="7" class="message">⚠️ ${data.message}</td></tr>`;
+        `<tr><td colspan="5" class="message">⚠️ ${data.message}</td></tr>`;
       return;
     }
+
+    // ✅ Extract school name (from first result or student data)
+    const firstResult = data.results?.[0];
+    const schoolName = firstResult?.school_name || "Gradely School";
+    document.getElementById("schoolName").textContent = schoolName;
 
     const student = data.student;
     document.getElementById("studentName").textContent =
       `${student.first_name} ${student.middle_name || ""} ${student.last_name}`;
-    document.getElementById("studentClass").textContent = student.class || "N/A";
     document.getElementById("studentId").textContent = student.student_id;
-    
-    // ✅ Use first result's term/year as representative
-    const firstResult = data.results?.[0];
+    document.getElementById("studentClass").textContent = student.class || "N/A";
     document.getElementById("studentTerm").textContent = firstResult?.term || "N/A";
-    document.getElementById("studentAcademicYear").textContent = firstResult?.academic_year || "N/A"; // ✅
+    document.getElementById("studentAcademicYear").textContent = firstResult?.academic_year || "N/A";
 
     const resultsBody = document.getElementById("resultsBody");
     if (data.results && data.results.length > 0) {
       resultsBody.innerHTML = data.results
-        .map(
-          (r) => `
+        .map(r => `
           <tr>
             <td>${r.subject}</td>
             <td>${r.score}</td>
             <td>${r.total_marks}</td>
             <td>${r.grade}</td>
-            <td>${r.term || '-'}</td>
-            <td>${r.academic_year || '-'}</td> <!-- ✅ -->
             <td>${r.remarks || '-'}</td>
-          </tr>`
-        )
+          </tr>
+        `)
         .join("");
       renderChart(data.results);
     } else {
-      resultsBody.innerHTML = `<tr><td colspan="7" class="message">⚠️ No results found for this student.</td></tr>`;
+      resultsBody.innerHTML = `<tr><td colspan="5" class="message">⚠️ No results found for this student.</td></tr>`;
     }
 
     const firstLogin = localStorage.getItem("firstLogin") === "true";
@@ -303,7 +314,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (error) {
     console.error("Error fetching student data:", error);
     document.getElementById("resultsBody").innerHTML =
-      `<tr><td colspan="7" class="message">⚠️ Failed to fetch data. Please check your connection or backend.</td></tr>`;
+      `<tr><td colspan="5" class="message">⚠️ Failed to fetch data.</td></tr>`;
   }
 });
 
@@ -311,12 +322,9 @@ function renderChart(results) {
   const ctx = document.getElementById("performanceChart").getContext("2d");
   if (chartInstance) chartInstance.destroy();
 
-  const subjects = results.map((r) => r.subject);
-  const scores = results.map((r) => r.score);
-  const colors = [
-    "#FF6B6B", "#4ECDC4", "#FFD93D", "#6A5ACD", "#1ABC9C",
-    "#F39C12", "#E74C3C", "#3498DB", "#9B59B6", "#2ECC71"
-  ];
+  const subjects = results.map(r => r.subject);
+  const scores = results.map(r => r.score);
+  const colors = ["#FF6B6B", "#4ECDC4", "#FFD93D", "#6A5ACD", "#1ABC9C", "#F39C12", "#E74C3C", "#3498DB", "#9B59B6", "#2ECC71"];
 
   chartInstance = new Chart(ctx, {
     type: "bar",
@@ -349,54 +357,53 @@ function logout() {
   window.location.href = "index.html";
 }
 
-// ✅ UPDATED: PDF includes Academic Year
+// ✅ PDF includes school name, term, and academic year
 async function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("p", "mm", "a4");
 
+  const schoolName = document.getElementById("schoolName").textContent;
   const name = document.getElementById("studentName").textContent;
   const cls = document.getElementById("studentClass").textContent;
   const id = document.getElementById("studentId").textContent;
   const term = document.getElementById("studentTerm").textContent;
-  const academicYear = document.getElementById("studentAcademicYear").textContent; // ✅
+  const academicYear = document.getElementById("studentAcademicYear").textContent;
   const currentDate = new Date().toLocaleString();
 
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text("RESULT REPORT CARD", 105, 20, null, null, "center");
+  doc.text(schoolName, 105, 20, null, null, "center");
+  doc.text("RESULT REPORT CARD", 105, 30, null, null, "center");
 
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
-  doc.text(`Student Name: ${name}`, 20, 35);
-  doc.text(`Class: ${cls}`, 20, 43);
-  doc.text(`Student ID: ${id}`, 20, 51);
-  doc.text(`Term: ${term}`, 20, 60);
-  doc.text(`Academic Year: ${academicYear}`, 20, 68); // ✅
+  doc.text(`Student Name: ${name}`, 20, 45);
+  doc.text(`Class: ${cls}`, 20, 53);
+  doc.text(`Student ID: ${id}`, 20, 61);
+  doc.text(`Term: ${term}`, 20, 69);
+  doc.text(`Academic Year: ${academicYear}`, 20, 77);
 
   doc.setFillColor(37, 117, 252);
   doc.setTextColor(255, 255, 255);
-  doc.rect(20, 78, 170, 8, "F");
-  doc.text("Subject", 25, 84);
-  doc.text("Score", 85, 84);
-  doc.text("Total", 110, 84);
-  doc.text("Grade", 135, 84);
-  doc.text("Term", 155, 84);
-  doc.text("Year", 180, 84);
+  doc.rect(20, 87, 170, 8, "F");
+  doc.text("Subject", 25, 93);
+  doc.text("Score", 85, 93);
+  doc.text("Total", 110, 93);
+  doc.text("Grade", 135, 93);
+  doc.text("Remarks", 155, 93);
 
   const rows = Array.from(document.querySelectorAll("#resultsBody tr")).map(tr =>
     Array.from(tr.children).map(td => td.textContent)
   );
 
-  let y = 94;
+  let y = 103;
   doc.setTextColor(0, 0, 0);
   rows.forEach(row => {
     doc.text(row[0] || "", 25, y);
     doc.text(row[1] || "", 87, y);
     doc.text(row[2] || "", 112, y);
     doc.text(row[3] || "", 137, y);
-    doc.text(row[4] || "", 157, y);
-    doc.text(row[5] || "", 177, y);
-    doc.text(doc.splitTextToSize(row[6] || "", 55), 200, y); // Adjust X if needed
+    doc.text(doc.splitTextToSize(row[4] || "", 55), 155, y);
     y += 10;
   });
 
@@ -412,7 +419,7 @@ async function downloadPDF() {
   doc.save(`${id || "Result"}-Report.pdf`);
 }
 
-// === Password change functions ===
+// === Password functions (unchanged) ===
 function showChangePasswordForm() {
   document.getElementById("changePasswordPrompt").style.display = "none";
   document.getElementById("changePasswordForm").style.display = "block";
@@ -443,8 +450,7 @@ async function handleChangePassword(e) {
     const data = await res.json();
 
     if (data.success) {
-      document.getElementById("changePassMsg").textContent =
-        "✅ Password changed successfully!";
+      document.getElementById("changePassMsg").textContent = "✅ Password changed successfully!";
       localStorage.setItem("firstLogin", "false");
       setTimeout(() => hideChangePasswordForm(), 2000);
     } else {
@@ -452,8 +458,7 @@ async function handleChangePassword(e) {
     }
   } catch (err) {
     console.error("Password change error:", err);
-    document.getElementById("changePassMsg").textContent =
-      "⚠️ Failed to update password";
+    document.getElementById("changePassMsg").textContent = "⚠️ Failed to update password";
   }
 }
 </script>
