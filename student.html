@@ -259,6 +259,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   
   <script>
+    // ✅ FIXED: Removed trailing space
     const backendUrl = "https://gradely-backend-1.onrender.com";
     let chartInstance = null;
     let currentStudentId = null;
@@ -284,7 +285,8 @@
         const student = data.student;
         document.getElementById("studentName").textContent =
           `${student.first_name} ${student.middle_name || ""} ${student.last_name}`;
-          document.getElementById("studentId").textContent = student.student_id || "N/A";
+        // ✅ FIXED: Use currentStudentId instead of student.student_id
+        document.getElementById("studentId").textContent = currentStudentId || "N/A";
         document.getElementById("studentClass").textContent = student.class || "N/A";
         document.getElementById("schoolName").textContent = data.school_name || "Gradely School";
 
@@ -331,7 +333,6 @@
       try {
         const response = await fetch(url);
         const data = await response.json();
-        console.log("API Response:", data);
 
         if (!data.success || !data.results || data.results.length === 0) {
           document.getElementById("resultsBody").innerHTML = 
