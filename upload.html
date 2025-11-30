@@ -197,6 +197,20 @@
     }
   </style>
 </head>
+
+<style>
+  #academicYear::placeholder {
+    color: #c2e0ff !important;
+    opacity: 1;
+  }
+  #academicYear:-ms-input-placeholder { /* IE */
+    color: #c2e0ff;
+  }
+  #academicYear::-ms-input-placeholder { /* Edge */
+    color: #c2e0ff;
+  }
+</style>
+
 <body>
 
   <div class="container">
@@ -210,6 +224,15 @@
         <option value="2nd Term">2nd Term</option>
         <option value="3rd Term">3rd Term</option>
       </select>
+
+      <label for="academicYear">Academic Year *</label>
+<input 
+  type="text" 
+  id="academicYear" 
+  placeholder="e.g., 2024/2025" 
+  required 
+  style="background: rgba(255, 255, 255, 0.15); color: #fff; border: none; border-radius: 12px; height: 45px; padding: 0 15px; font-size: 1rem; outline: none;"
+/>
 
       <label for="file">Upload Result File *</label>
       <input type="file" id="file" accept=".csv, .xls, .xlsx" required />
@@ -247,9 +270,8 @@ function showLoader(show) {
 function downloadTemplate() {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([
-    ["student_id", "subject", "score", "total_marks", "grade", "remarks", "term", "academic_year", "school_id"],
-    ["STU001", "Mathematics", "85", "100", "A", "Excellent", "1st Term", "2024/2025", "SCH001"],
-    ["STU002", "English", "78", "100", "B", "Good work", "1st Term", "2024/2025", "SCH001"]
+    ["student_id", "subject", "score", "total_marks", "grade", "remarks", "term"],
+    ["STU001", "Mathematics", "85", "100", "A", "Excellent", "1st Term"]
   ]);
   XLSX.utils.book_append_sheet(wb, ws, "Result Template");
   XLSX.writeFile(wb, "Gradely_Result_Template.xlsx");
@@ -260,6 +282,7 @@ document.getElementById("resultForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const term = document.getElementById("term").value;
+  const academic_year = document.getElementById("academicYear").value.trim();
   const file = document.getElementById("file").files[0];
   const school_id = sessionStorage.getItem("school_id");
 
@@ -308,7 +331,7 @@ document.getElementById("resultForm").addEventListener("submit", async (e) => {
       const uploadRes = await fetch(`${backendUrl}/api/result/upload-results`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ term, results, school_id }),
+        body: JSON.stringify({ term, academic_year, results, school_id }),
       });
 
       const uploadData = await uploadRes.json().catch(() => ({ success: false, message: "Invalid JSON response" }));
