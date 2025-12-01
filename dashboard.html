@@ -226,7 +226,7 @@
       }
 
       try {
-        // ✅ Fetch real plan from backend
+        // ✅ FIXED: Removed trailing space in URL
         const res = await fetch(`https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${schoolId}`);
         const data = await res.json();
 
@@ -246,7 +246,6 @@
 
       applyPlanRestrictions();
 
-      // Logout
       document.getElementById("logoutBtn").addEventListener("click", () => {
         if (confirm("Are you sure you want to logout?")) {
           localStorage.clear();
@@ -275,7 +274,6 @@
         }
       } else {
         proCards.forEach(card => card.classList.remove('disabled'));
-        // Remove upgrade prompt if exists
         const prompt = document.querySelector('.upgrade-prompt');
         if (prompt) prompt.remove();
       }
