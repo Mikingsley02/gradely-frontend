@@ -214,83 +214,102 @@
   </footer>
 
   <script>
-    let currentPlan = 'basic';
+  let currentPlan = 'basic';
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      const schoolId = sessionStorage.getItem("school_id");
+  document.addEventListener("DOMContentLoaded", async () => {
+    const schoolId = sessionStorage.getItem("school_id");
+    console.log("🔍 school_id from session:", schoolId);
+    
+    if (!schoolId) {
+      alert("⚠️ Session expired. Please log in again.");
+      window.location.href = "admin-login.html";
+      return;
+    }
+
+    // ✅ Build clean URL
+    const apiUrl = `https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
+    console.log("📡 Fetching plan from:", apiUrl);
+
+    try {
+      const res = await fetch(apiUrl);
+      console.log("📡 Response status:", res.status);
       
-      if (!schoolId) {
-        alert("⚠️ Session expired. Please log in again.");
-        window.location.href = "admin-login.html";
-        return;
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("📡 API Error Body:", text);
+        throw new Error(`HTTP ${res.status}`);
       }
 
-      try {
-        // ✅ FIXED: Removed trailing space in URL
-        const res = await fetch(`https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${schoolId}`);
-        const data = await res.json();
+      const data = await res.json();
+      console.log("📡 Full API Response:", data);
 
-        if (data.success) {
-          currentPlan = data.plan; // 'basic' or 'pro'
-        } else {
-          console.warn("Plan load failed:", data.message);
-        }
-      } catch (err) {
-        console.error("Error:", err);
+      if (data.success && data.plan) {
+        currentPlan = data.plan;
+        console.log("✅ Plan successfully loaded:", currentPlan);
+      } else {
+        console.warn("⚠️ API returned success:false or missing plan");
       }
+    } catch (err) {
+      console.error("❌ Failed to fetch subscription plan:", err);
+    }
 
-      // ✅ Update UI
+    // ✅ Update UI with delay to ensure DOM ready
+    setTimeout(() => {
       const badge = document.getElementById('planBadge');
-      badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-      badge.className = `plan-badge ${currentPlan}`;
-
+      if (badge) {
+        badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+        badge.className = `plan-badge ${currentPlan}`;
+        console.log("🎨 Plan badge updated to:", currentPlan);
+      }
       applyPlanRestrictions();
+    }, 100);
+  });
 
-      document.getElementById("logoutBtn").addEventListener("click", () => {
-        if (confirm("Are you sure you want to logout?")) {
-          localStorage.clear();
-          sessionStorage.clear();
-          window.location.href = "index.html";
-        }
-      });
+  function applyPlanRestrictions() {
+    const proCards = document.querySelectorAll('.pro-only');
+    if (currentPlan === 'basic') {
+      proCards.forEach(card => card.classList.add('disabled'));
+      const container = document.getElementById('dashboardContainer');
+      if (!document.querySelector('.upgrade-prompt')) {
+        const upgradeCard = document.createElement('div');
+        upgradeCard.className = 'upgrade-prompt';
+        upgradeCard.innerHTML = `
+          <div class="icon">✨</div>
+          <h3>Upgrade to Pro!</h3>
+          <p>Unlock bulk student upload, custom subjects, class management & PDF reports.</p>
+        `;
+        upgradeCard.onclick = () => window.location.href = 'subscription.html?plan=pro';
+        container.appendChild(upgradeCard);
+      }
+    } else {
+      proCards.forEach(card => card.classList.remove('disabled'));
+      document.querySelector('.upgrade-prompt')?.remove();
+    }
+  }
+
+  function handleProFeature(url) {
+    if (currentPlan === 'pro') {
+      window.location.href = url;
+    } else {
+      alert("💡 This feature is available only on Pro plan. Upgrade to unlock!");
+    }
+  }
+
+  function goTo(page) {
+    window.location.href = page;
+  }
+
+  // Logout
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById("logoutBtn")?.addEventListener("click", () => {
+      if (confirm("Are you sure you want to logout?")) {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = "index.html";
+      }
     });
-
-    function applyPlanRestrictions() {
-      const proCards = document.querySelectorAll('.pro-only');
-      if (currentPlan === 'basic') {
-        proCards.forEach(card => card.classList.add('disabled'));
-        
-        const container = document.getElementById('dashboardContainer');
-        if (!document.querySelector('.upgrade-prompt')) {
-          const upgradeCard = document.createElement('div');
-          upgradeCard.className = 'upgrade-prompt';
-          upgradeCard.innerHTML = `
-            <div class="icon">✨</div>
-            <h3>Upgrade to Pro!</h3>
-            <p>Unlock bulk student upload, custom subjects, class management & PDF reports.</p>
-          `;
-          upgradeCard.onclick = () => window.location.href = 'subscription.html?plan=pro';
-          container.appendChild(upgradeCard);
-        }
-      } else {
-        proCards.forEach(card => card.classList.remove('disabled'));
-        const prompt = document.querySelector('.upgrade-prompt');
-        if (prompt) prompt.remove();
-      }
-    }
-
-    function handleProFeature(url) {
-      if (currentPlan === 'pro') {
-        window.location.href = url;
-      } else {
-        alert("💡 This feature is available only on Pro plan. Upgrade to unlock!");
-      }
-    }
-
-    function goTo(page) {
-      window.location.href = page;
-    }
-  </script>
+  });
+</script>
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
