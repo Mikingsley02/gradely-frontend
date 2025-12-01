@@ -132,14 +132,15 @@
   </div>
 
   <script>
+    // ✅ FIXED: Use absolute backend URL
+    const API_BASE = "https://gradely-backend-1.onrender.com";
     let school_id = null;
 
-    // Get school_id from URL or session
     window.addEventListener("DOMContentLoaded", () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      school_id = urlParams.get('school_id') || localStorage.getItem('school_id');
+      // Get school_id from session (not URL — more secure)
+      school_id = sessionStorage.getItem('school_id');
       if (!school_id) {
-        alert("School ID not found. Please log in again.");
+        alert("Session expired. Please log in again.");
         window.location.href = 'admin-login.html';
         return;
       }
@@ -148,7 +149,7 @@
 
     async function loadAnnouncements() {
       try {
-        const res = await fetch(`/api/announcements/${school_id}`);
+        const res = await fetch(`${API_BASE}/api/announcements/${school_id}`);
         const data = await res.json();
         if (data.success) {
           const list = document.getElementById('announcementsList');
@@ -179,7 +180,7 @@
       if (!title || !message) return alert("Please fill all fields.");
 
       try {
-        const res = await fetch('/api/announcements', {
+        const res = await fetch(`${API_BASE}/api/announcements`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ school_id, title, message })
@@ -188,11 +189,12 @@
         if (data.success) {
           document.getElementById('title').value = '';
           document.getElementById('message').value = '';
-          loadAnnouncements(); // refresh
+          loadAnnouncements();
         } else {
-          alert(data.message);
+          alert(data.message || "Failed to post announcement.");
         }
       } catch (err) {
+        console.error("Post error:", err);
         alert("Failed to post announcement.");
       }
     }
@@ -200,18 +202,16 @@
     async function deleteAnnouncement(id) {
       if (!confirm("Archive this announcement?")) return;
       try {
-        await fetch(`/api/announcements/${id}`, { method: 'DELETE' });
+        await fetch(`${API_BASE}/api/announcements/${id}`, { method: 'DELETE' });
         loadAnnouncements();
       } catch (err) {
+        console.error("Delete error:", err);
         alert("Failed to archive.");
       }
     }
   </script>
 
-
   <script src="js/kaima-chatbot.js"></script> 
-<script src="js/session-timeout.js"></script>
-
-
+  <script src="js/session-timeout.js"></script>
 </body>
 </html>
