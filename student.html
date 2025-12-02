@@ -254,6 +254,9 @@
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("p", "mm", "a4");
+  const pageHeight = 297; // A4 height in mm
+  const margin = 20;      // page margin
+  const lineHeight = 8;   // row height
 
   const schoolName = currentData.school_name || "Gradely School";
   const student = currentData.student;
@@ -266,38 +269,64 @@
   // Header
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text(schoolName, 105, 20, null, null, "center");
-  doc.text("RESULT REPORT CARD", 105, 30, null, null, "center");
+  doc.text(schoolName, 105, margin, null, null, "center");
+  doc.text("RESULT REPORT CARD", 105, margin + 10, null, null, "center");
 
   // Student info
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
-  doc.text(`Student Name: ${name}`, 20, 45);
-  doc.text(`Student ID: ${id}`, 20, 53);
-  doc.text(`Class: ${student.class || "N/A"}`, 20, 61);
-  doc.text(`Term: ${term}`, 20, 69);
-  doc.text(`Academic Year: ${year}`, 20, 77);
+  let y = margin + 25;
+  doc.text(`Student Name: ${name}`, margin, y);
+  doc.text(`Student ID: ${id}`, margin, y + 8);
+  doc.text(`Class: ${student.class || "N/A"}`, margin, y + 16);
+  doc.text(`Term: ${term}`, margin, y + 24);
+  doc.text(`Academic Year: ${year}`, margin, y + 32);
+
+  y += 45;
 
   // Table header
   doc.setFillColor(37, 117, 252);
   doc.setTextColor(255, 255, 255);
-  doc.rect(20, 87, 170, 8, "F");
-  doc.text("Subject", 25, 93);
-  doc.text("Score", 85, 93);
-  doc.text("Total", 110, 93);
-  doc.text("Grade", 135, 93);
-  doc.text("Remarks", 155, 93);
+  doc.rect(margin, y, 170, lineHeight, "F");
+  doc.text("Subject", margin + 5, y + 6);
+  doc.text("Score", margin + 60, y + 6);
+  doc.text("Total", margin + 90, y + 6);
+  doc.text("Grade", margin + 120, y + 6);
+  doc.text("Remarks", margin + 145, y + 6);
+
+  y += lineHeight + 2;
 
   // Table rows
-  let y = 103;
-  currentData.results.forEach(r => {
-    doc.setTextColor(0, 0, 0);
-    doc.text(r.subject || "", 25, y);
-    doc.text(String(r.score || ""), 87, y);
-    doc.text(String(r.total_marks || ""), 112, y);
-    doc.text(r.grade || "", 137, y);
-    doc.text(doc.splitTextToSize(r.remarks || "", 50), 155, y);
-    y += 10;
+  doc.setTextColor(0, 0, 0);
+  currentData.results.forEach((r, i) => {
+    const remarksLines = doc.splitTextToSize(r.remarks || "-", 50);
+    const rowHeight = Math.max(lineHeight, remarksLines.length * 5);
+
+    // Check if we need a new page
+    if (y + rowHeight + 20 > pageHeight) {
+      doc.addPage();
+      y = margin;
+
+      // Repeat table header on new page
+      doc.setFillColor(37, 117, 252);
+      doc.setTextColor(255, 255, 255);
+      doc.rect(margin, y, 170, lineHeight, "F");
+      doc.text("Subject", margin + 5, y + 6);
+      doc.text("Score", margin + 60, y + 6);
+      doc.text("Total", margin + 90, y + 6);
+      doc.text("Grade", margin + 120, y + 6);
+      doc.text("Remarks", margin + 145, y + 6);
+      y += lineHeight + 2;
+      doc.setTextColor(0, 0, 0);
+    }
+
+    doc.text(r.subject || "", margin + 5, y + 5);
+    doc.text(String(r.score || ""), margin + 60, y + 5);
+    doc.text(String(r.total_marks || ""), margin + 90, y + 5);
+    doc.text(r.grade || "", margin + 120, y + 5);
+    doc.text(remarksLines, margin + 145, y + 5);
+
+    y += rowHeight + 2;
   });
 
   // Chart
@@ -305,22 +334,22 @@
   if (canvas) {
     await new Promise(resolve => setTimeout(resolve, 100));
     const chartImg = canvas.toDataURL("image/png", 1.0);
-    // Add chart with fixed size
-    doc.addImage(chartImg, "PNG", 20, y + 10, 170, 60);
-    y = y + 10 + 60; // chart height = 60
+
+    if (y + 60 + 20 > pageHeight) doc.addPage(); // new page if chart doesn't fit
+    doc.addImage(chartImg, "PNG", margin, y, 170, 60);
+    y += 60 + 10;
   }
 
-  // ✅ Add extra space BEFORE signature
-  y += 13; // ← this creates clean space below the chart
-
   // Principal signature
-  doc.text("Principal Signature: _______________________", 20, y);
+  if (y + 15 > pageHeight) doc.addPage();
+  doc.text("Principal Signature: _______________________", margin, y);
   doc.setFontSize(10);
   doc.setTextColor(100);
-  doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, y + 8);
+  doc.text(`Generated on: ${new Date().toLocaleString()}`, margin, y + 8);
 
   doc.save(`${id}_Report.pdf`);
 }
+
   </script>
 </body>
 </html>
