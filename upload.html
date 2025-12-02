@@ -331,6 +331,7 @@ document.getElementById("resultForm").addEventListener("submit", async (e) => {
 
       if (resData.success) {
         alert("✅ " + (resData.message || "Upload complete!"));
+        document.getElementById("resultForm").reset();
       } else {
         alert("⚠️ " + (resData.message || "Upload failed."));
       }
