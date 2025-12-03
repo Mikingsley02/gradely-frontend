@@ -15,12 +15,12 @@
       background: linear-gradient(135deg, #6a11cb, #2575fc);
       color: #fff;
       min-height: 100vh;
-      padding: 20px;
+      padding: 15px;
     }
 
     .container {
       max-width: 1000px;
-      margin: 30px auto;
+      margin: 20px auto;
       background: rgba(31, 3, 3, 0.1);
       backdrop-filter: blur(10px);
       border-radius: 20px;
@@ -30,24 +30,24 @@
 
     header {
       text-align: center;
-      padding: 30px;
+      padding: 25px 20px;
       background: rgba(0, 0, 0, 0.1);
       border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     header h1 {
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       margin-bottom: 8px;
       color: #00ffb3;
     }
 
     header p {
       opacity: 0.9;
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
 
     .content {
-      padding: 30px;
+      padding: 20px;
     }
 
     /* Add Subject Form */
@@ -55,14 +55,20 @@
       background: rgba(97, 16, 16, 0.1);
       padding: 20px;
       border-radius: 12px;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
     }
 
     .form-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: 1fr; /* ✅ Mobile-first: single column */
       gap: 15px;
       margin-bottom: 15px;
+    }
+
+    @media (min-width: 600px) {
+      .form-row {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      }
     }
 
     label {
@@ -90,12 +96,22 @@
     }
 
     button {
-      padding: 10px 16px;
+      padding: 12px 20px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       font-weight: 600;
       transition: all 0.3s ease;
+      font-size: 1rem;
+      width: 100%; /* ✅ Full-width on mobile */
+      margin: 6px 0;
+    }
+
+    @media (min-width: 600px) {
+      button {
+        width: auto;
+        margin: 0;
+      }
     }
 
     .btn-primary {
@@ -126,18 +142,32 @@
     }
 
     /* Subjects Table */
+    .table-container {
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       background: rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       overflow: hidden;
+      min-width: 500px; /* Prevent collapse on small screens */
     }
 
     th, td {
-      padding: 14px 12px;
+      padding: 12px;
       text-align: left;
       border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 0.9rem;
+    }
+
+    @media (min-width: 600px) {
+      th, td {
+        padding: 14px 12px;
+        font-size: 1rem;
+      }
     }
 
     th {
@@ -149,16 +179,31 @@
       background: rgba(255, 255, 255, 0.1);
     }
 
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     .actions button {
-      margin-right: 5px;
-      padding: 6px 10px;
-      font-size: 0.85rem;
+      flex: 1;
+      min-width: 80px;
+      padding: 8px;
+      font-size: 0.8rem;
+    }
+
+    @media (min-width: 600px) {
+      .actions button {
+        flex: none;
+        padding: 6px 10px;
+        font-size: 0.85rem;
+      }
     }
 
     /* Messages */
     .message {
       margin-top: 15px;
-      padding: 10px;
+      padding: 12px;
       border-radius: 6px;
       text-align: center;
       font-size: 0.95rem;
@@ -172,11 +217,19 @@
       display: inline-block;
       background: #0c2461;
       color: white;
-      padding: 10px 20px;
+      padding: 12px 24px;
       border-radius: 6px;
       text-decoration: none;
       font-weight: 600;
       margin-top: 20px;
+      text-align: center;
+      width: 100%;
+    }
+
+    @media (min-width: 600px) {
+      .back-link {
+        width: auto;
+      }
     }
 
     .back-link:hover {
@@ -190,7 +243,7 @@
       font-size: 0.9rem;
       color: #eee;
       background: rgba(0, 0, 0, 0.1);
-      margin-top: 40px;
+      margin-top: 30px;
       border-top: 1px solid rgba(255, 255, 255, 0.2);
     }
 
@@ -198,13 +251,6 @@
       color: #00d2ff;
       text-decoration: none;
       margin: 0 6px;
-    }
-
-    @media (max-width: 600px) {
-      .container { margin: 20px; }
-      .form-row { grid-template-columns: 1fr; }
-      .actions { text-align: right; }
-      .actions button { display: block; width: 100%; margin: 5px 0; }
     }
   </style>
 </head>
@@ -220,7 +266,7 @@
 
       <!-- Add New Subject Form -->
       <div class="add-subject-form">
-        <h2 style="color: #00d2ff; margin-bottom: 15px;">➕ Add New Subject</h2>
+        <h2 style="color: #00d2ff; margin-bottom: 15px; text-align: center;">➕ Add New Subject</h2>
         <form id="addSubjectForm">
           <div class="form-row">
             <div>
@@ -242,25 +288,26 @@
       </div>
 
       <!-- Subjects List -->
-      <h2 style="color: #00d2ff; margin-bottom: 15px;">📋 Existing Subjects</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Subject</th>
-            <th>Class</th>
-            <th>Teacher</th>
-            <th>Student Count</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="subjectsTableBody">
-          <!-- Dynamically populated -->
-          <tr><td colspan="6" style="text-align:center; padding:20px;">Loading subjects...</td></tr>
-        </tbody>
-      </table>
+      <h2 style="color: #00d2ff; margin-bottom: 15px; text-align: center;">📋 Existing Subjects</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Subject</th>
+              <th>Class</th>
+              <th>Teacher</th>
+              <th>Students</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="subjectsTableBody">
+            <tr><td colspan="6" style="text-align:center; padding:20px;">Loading subjects...</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-      <div style="text-align: center; margin-top: 30px;">
+      <div style="text-align: center; margin-top: 20px;">
         <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
       </div>
     </div>
@@ -275,9 +322,9 @@
   </footer>
 
   <script>
+    // ✅ FIXED: Removed trailing space
     const API_BASE = "https://gradely-backend-1.onrender.com";
 
-    // Load subjects on page load
     document.addEventListener("DOMContentLoaded", () => {
       fetchSubjects();
     });
@@ -319,7 +366,6 @@
       }
     }
 
-    // Add new subject
     document.getElementById("addSubjectForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = document.getElementById("subjectName").value.trim();
@@ -343,7 +389,7 @@
         if (result.success) {
           showMessage("success", "✅ Subject added successfully!");
           document.getElementById("addSubjectForm").reset();
-          fetchSubjects(); // Refresh list
+          fetchSubjects();
         } else {
           showMessage("error", "❌ " + (result.message || "Failed to add subject"));
         }
@@ -385,10 +431,7 @@
     }
   </script>
 
-<script src="js/kaima-chatbot.js"></script>
-<script src="js/session-timeout.js"></script>
-
-
-
+  <script src="js/kaima-chatbot.js"></script>
+  <script src="js/session-timeout.js"></script>
 </body>
 </html>
