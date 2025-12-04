@@ -180,34 +180,36 @@
 
   <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const schoolId = sessionStorage.getItem("school_id");
   const tableBody = document.querySelector("#studentsTableBody");
   const searchInput = document.querySelector("#searchInput");
   const searchBtn = document.querySelector("#searchBtn");
   const editModal = new bootstrap.Modal(document.getElementById("editStudentModal"));
   const saveEditBtn = document.getElementById("saveEditBtn");
 
-  async function loadStudents() {
+  // ✅ Get school_id from sessionStorage
+  let schoolId = sessionStorage.getItem("school_id");
+
   if (!schoolId) {
-    tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">❌ Missing school ID</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">❌ Missing school ID. Please log in or select a school.</td></tr>`;
     return;
   }
 
-  try {
-    const res = await fetch(`/api/students/${schoolId}`);
-    const data = await res.json();
+  async function loadStudents() {
+    try {
+      const res = await fetch(`/manage-students/${encodeURIComponent(schoolId)}`);
+      const data = await res.json();
 
-    if (!data.success || !data.students.length) {
-      tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-warning">⚠️ No students found.</td></tr>`;
-      return;
+      if (!data.success || !data.students.length) {
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-warning">⚠️ No students found.</td></tr>`;
+        return;
+      }
+
+      renderTable(data.students);
+    } catch (err) {
+      console.error("Error loading students:", err);
+      tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">⚠️ Failed to load students.</td></tr>`;
     }
-
-    renderTable(data.students);
-  } catch (err) {
-    console.error("Error loading students:", err);
-    tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">⚠️ Failed to load students.</td></tr>`;
   }
-}
 
   function renderTable(students) {
     tableBody.innerHTML = students.map(student => `
@@ -229,22 +231,12 @@ document.addEventListener("DOMContentLoaded", () => {
     attachDeleteHandlers();
   }
 
-  // ✅ SEARCH BY BUTTON CLICK
-  searchBtn.addEventListener("click", handleSearch);
-
-  // ✅ SEARCH BY ENTER KEY
-  searchInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  });
-
   async function handleSearch() {
     const query = searchInput.value.trim();
     if (!query) return loadStudents();
 
     try {
-      const res = await fetch(`/api/students/${schoolId}/search/${query}`);
+      const res = await fetch(`/manage-students/${encodeURIComponent(schoolId)}/search/${encodeURIComponent(query)}`);
       const data = await res.json();
 
       if (!data.success || !data.students.length) {
@@ -259,90 +251,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function attachEditHandlers() {
-    document.querySelectorAll(".edit-btn").forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        const id = e.target.dataset.id;
-        openEditModal(id);
-      });
-    });
-  }
-
-  function attachDeleteHandlers() {
-    document.querySelectorAll(".delete-btn").forEach(btn => {
-      btn.addEventListener("click", async (e) => {
-        const id = e.target.dataset.id;
-        if (confirm("Are you sure you want to delete this student?")) {
-          try {
-            const res = await fetch(`/api/students/${id}`, { method: "DELETE" });
-            const data = await res.json();
-            if (data.success) loadStudents();
-          } catch (err) {
-            console.error("Delete error:", err);
-          }
-        }
-      });
-    });
-  }
-
-  async function openEditModal(studentId) {
-    try {
-      const res = await fetch(`/api/students/${schoolId}/search/${studentId}`);
-      const data = await res.json();
-      if (!data.success || !data.students.length) return alert("⚠️ Student not found");
-      const s = data.students[0];
-
-      document.getElementById("editStudentId").value = s.student_id;
-      document.getElementById("editFirstName").value = s.first_name || "";
-      document.getElementById("editMiddleName").value = s.middle_name || "";
-      document.getElementById("editLastName").value = s.last_name || "";
-      document.getElementById("editClass").value = s.class || "";
-      document.getElementById("editSection").value = s.section || "";
-      document.getElementById("editPhone").value = s.phone || "";
-      document.getElementById("editParentEmail").value = s.parent_email || "";
-
-      editModal.show();
-    } catch (err) {
-      console.error("Error opening edit modal:", err);
-    }
-  }
-
-  saveEditBtn.addEventListener("click", async () => {
-    const id = document.getElementById("editStudentId").value;
-    const updatedData = {
-      first_name: document.getElementById("editFirstName").value.trim(),
-      middle_name: document.getElementById("editMiddleName").value.trim(),
-      last_name: document.getElementById("editLastName").value.trim(),
-      class: document.getElementById("editClass").value.trim(),
-      section: document.getElementById("editSection").value.trim(),
-      phone: document.getElementById("editPhone").value.trim(),
-      parent_email: document.getElementById("editParentEmail").value.trim()
-    };
-
-    try {
-      const res = await fetch(`/api/students/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedData)
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        alert("✅ Student updated successfully!");
-        editModal.hide();
-        loadStudents();
-      } else {
-        alert("⚠️ " + data.message);
-      }
-    } catch (err) {
-      console.error("Error saving student:", err);
-      alert("❌ Failed to save changes.");
-    }
+  searchBtn.addEventListener("click", handleSearch);
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleSearch();
   });
 
   loadStudents();
 });
-  </script>
+</script>
+
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
