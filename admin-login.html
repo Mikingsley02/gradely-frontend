@@ -287,12 +287,8 @@ function toggleAdminPassword() {
 
   const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
   passwordInput.setAttribute("type", type);
-  icon.textContent = type === "text" ? "🙈" : "👁️";
-}
 
-// Forgot password
-function resetAdminPassword() {
-  alert("Password reset not yet implemented. Contact support.");
+  icon.textContent = type === "text" ? "🙈" : "👁️";
 }
 
 document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
@@ -300,11 +296,6 @@ document.getElementById("adminLoginForm").addEventListener("submit", async (e) =
 
   const admin_id = document.getElementById("adminId").value.trim();
   const password = document.getElementById("adminPassword").value.trim();
-
-  if (!admin_id || !password) {
-    alert("❌ Please fill in all fields.");
-    return;
-  }
 
   const btn = e.target.querySelector("button");
   const text = btn.querySelector(".text");
@@ -314,8 +305,9 @@ document.getElementById("adminLoginForm").addEventListener("submit", async (e) =
   text.style.opacity = "0";
   spinner.style.display = "block";
 
-  
-  const API_BASE = "https://api.gradely.info";
+  const API_BASE = window.location.hostname.includes("localhost")
+    ? "http://localhost:5000"
+    : "https://gradely-backend-1.onrender.com";
 
   try {
     const res = await fetch(`${API_BASE}/api/auth/login`, {
@@ -327,21 +319,22 @@ document.getElementById("adminLoginForm").addEventListener("submit", async (e) =
     const data = await res.json();
 
     if (!res.ok) {
-      alert("❌ " + (data.error || data.message || "Login failed. Check credentials."));
+      alert("❌ " + (data.message || "Login failed."));
       return;
     }
 
     if (data.success) {
-      // ✅ Store ONLY what’s needed — school_id MUST come from backend
-      sessionStorage.setItem("adminId", admin_id);
-      sessionStorage.setItem("school_id", data.school_id); // ← Critical fix
-      sessionStorage.setItem("school_name", data.school_name || "Gradely School");
-      sessionStorage.setItem("subscription_plan", data.subscription_plan || "basic");
-      
       alert("✅ Login successful!");
+
+      sessionStorage.setItem("adminId", data.admin.admin_id);
+      sessionStorage.setItem("school_id", data.admin.admin_id);
+      sessionStorage.setItem("school_name", data.admin.school_name || "");
+      sessionStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
+      window.location.href = "dashboard.html";
+
       window.location.href = "dashboard.html";
     } else {
-      alert("❌ Login failed: " + (data.message || "Unknown error"));
+      alert("❌ " + (data.message || "Login failed."));
     }
 
   } catch (err) {
