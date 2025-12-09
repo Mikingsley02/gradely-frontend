@@ -26,12 +26,13 @@
       backdrop-filter: blur(10px);
       border-radius: 20px;
       overflow: hidden;
+      padding-bottom: 40px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
 
     header {
       text-align: center;
-      padding: 40px 30px;
+      padding: 50px 30px;
       background: rgba(0, 0, 0, 0.1);
     }
 
@@ -47,19 +48,20 @@
     }
 
     .content {
-      padding: 30px;
+      padding: 40px 30px;
     }
 
     .contact-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 30px;
+      gap: 35px;
     }
 
     .contact-info {
       background: rgba(255, 255, 255, 0.1);
-      padding: 20px;
+      padding: 25px;
       border-radius: 12px;
+      min-height: 100%;
     }
 
     .contact-info h2 {
@@ -69,7 +71,7 @@
     }
 
     .contact-info p {
-      margin: 10px 0;
+      margin: 12px 0;
       font-size: 1rem;
     }
 
@@ -82,81 +84,84 @@
       text-decoration: underline;
     }
 
+    .contact-form {
+      min-height: 100%;
+    }
+
     .contact-form input,
     .contact-form textarea {
       width: 100%;
-      padding: 12px 14px;
-      margin: 8px 0;
+      padding: 14px 16px;
+      margin: 10px 0;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       background: rgba(255, 255, 255, 0.2);
       color: #ffffff;
       font-family: inherit;
       font-size: 1rem;
-      transition: all 0.3s ease;
-      max-width: 100%;
-    }
-
-    .contact-form input::placeholder,
-    .contact-form textarea::placeholder {
-      color: rgba(255, 255, 255, 0.8);
-      font-weight: 500;
-    }
-
-    .contact-form input:focus,
-    .contact-form textarea:focus {
-      outline: 2px solid #00d2ff;
-      background: rgba(255, 255, 255, 0.3);
-      box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+      transition: all 0.3s;
     }
 
     .contact-form textarea {
-      height: 150px;
+      height: 160px;
       resize: vertical;
-      max-width: 100%;
     }
 
     .contact-form button {
       background: #00d2ff;
       color: white;
       border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
+      padding: 14px 20px;
+      border-radius: 10px;
       cursor: pointer;
       font-weight: 600;
-      transition: all 0.3s ease;
       width: 100%;
-      max-width: 100%;
     }
 
     .contact-form button:hover {
       background: #0a84ff;
-      transform: scale(1.03);
     }
 
     footer {
       text-align: center;
-      padding: 20px;
+      padding: 30px 10px;
+      margin-top: 20px;
       font-size: 0.9rem;
       color: #eee;
-      opacity: 0.8;
+      opacity: 0.9;
     }
 
     footer img {
-      height: 24px;
+      height: 26px;
       vertical-align: middle;
       margin-right: 6px;
     }
 
     @media (max-width: 600px) {
-      .container { margin: 20px; }
-      header h1 { font-size: 1.8rem; }
-      .content { padding: 20px; }
-      .contact-grid { grid-template-columns: 1fr; gap: 20px; }
+      .container { margin: 20px; padding-bottom: 50px; }
+      header { padding: 40px 20px; }
+      header h1 { font-size: 1.9rem; }
+      .content { padding: 25px 20px; }
+      .contact-grid { gap: 25px; }
       .contact-form input,
-      .contact-form textarea { padding: 10px; font-size: 0.95rem; }
-      .contact-form button { padding: 10px; font-size: 0.95rem; }
+      .contact-form textarea { font-size: 1rem; }
+      .contact-form button { font-size: 1rem; padding: 12px; }
     }
+
+      /* Make placeholders visible */
+      ::placeholder {
+       color: #d9d9d9 !important;
+      opacity: 1 !important;
+      }
+
+      /* For cross-browser compatibility */
+      input::placeholder,
+      textarea::placeholder {
+       color: #d9d9d9 !important;
+       opacity: 1 !important;
+      }
+
+
   </style>
 </head>
 
@@ -182,16 +187,14 @@
           <p>Remit Integrated Services<br>25 Josephat Mojekwu Street, Along Living Faith Church, Ext 3, FO1,<br>Kubwa, Abuja, F.C.T, Nigeria</p>
 
           <h2 style="margin-top: 20px;">💬 Quick Help</h2>
-          <p>For immediate assistance, use our <a href="help-support.html" style="color:#00d2ff;">Help & Support</a> page or visit the <a href="faq.html" style="color:#00d2ff;">FAQ</a>.</p>
+          <p>For immediate assistance, use our <a href="help-support.html">Help & Support</a> page or visit the <a href="faq.html">FAQ</a>.</p>
         </div>
 
-        <!-- Contact Form (Web3Forms Enabled) -->
+        <!-- Contact Form -->
         <div class="contact-form">
           <h2 style="color: #00d2ff; margin-bottom: 15px;">Send Us a Message</h2>
           
           <form id="contactForm" action="https://api.web3forms.com/submit" method="POST">
-
-            <!-- Required Access Key -->
             <input type="hidden" name="access_key" value="ec6c6d80-4d94-4f65-8a49-66785a4042e0">
 
             <input type="text" name="name" placeholder="Your Name" required />
@@ -205,7 +208,7 @@
 
       </div>
 
-      <div style="text-align: center; margin-top: 30px;">
+      <div style="text-align: center; margin-top: 40px;">
         <a href="index.html" style="color: #00d2ff; text-decoration: none; font-weight: 600;">← Back to Homepage</a>
       </div>
     </div>
@@ -215,13 +218,12 @@
     <img src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" alt="RIS Logo" />
     <strong>© 2025 Gradely.info</strong> | Powered by RIS
     <div style="margin-top: 10px;">
-      <a href="terms.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Terms</a> •
-      <a href="privacy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Privacy</a> •
-      <a href="refund-policy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Refund Policy</a>
+      <a href="terms.html" style="color: #00d2ff;">Terms</a> •
+      <a href="privacy.html" style="color: #00d2ff;">Privacy</a> •
+      <a href="refund-policy.html" style="color: #00d2ff;">Refund Policy</a>
     </div>
   </footer>
 
-  <!-- Web3Forms submit handler -->
   <script>
   document.getElementById("contactForm").addEventListener("submit", function(e) {
     e.preventDefault();
