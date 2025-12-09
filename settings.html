@@ -181,30 +181,24 @@
   </div>
 
   <script>
-    const API_BASE = "https://gradely-backend-1.onrender.com";
+    const API_BASE = "https://api.gradely.info";
 
     document.addEventListener("DOMContentLoaded", loadSchoolData);
 
     async function loadSchoolData() {
-      const msgEl = document.getElementById("message");
-      msgEl.textContent = "⏳ Loading settings...";
-      try {
-        const res = await fetch(`${API_BASE}/api/admin/school-info`);
-        const data = await res.json();
-        if (data.success) {
-          document.getElementById("school_name").value = data.school?.school_name || "";
-          document.getElementById("email").value = data.school?.email || "";
-          document.getElementById("phone_number").value = data.school?.phone_number || "";
-          msgEl.textContent = "";
-        } else {
-          msgEl.className = "message error";
-          msgEl.textContent = "⚠️ Failed to load school info.";
-        }
-      } catch {
-        msgEl.className = "message error";
-        msgEl.textContent = "🚫 Unable to connect to server.";
-      }
-    }
+  const msgEl = document.getElementById("message");
+  msgEl.textContent = "⏳ Loading test...";
+  try {
+    const res = await fetch("https://jsonplaceholder.typicode.com/todos/1");
+    const data = await res.json();
+    console.log(data);
+    msgEl.textContent = "✅ Fetch works!";
+  } catch {
+    msgEl.className = "message error";
+    msgEl.textContent = "🚫 Unable to connect to server.";
+  }
+}
+
 
     document.getElementById("settingsForm").onsubmit = async (e) => {
       e.preventDefault();
