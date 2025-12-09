@@ -148,6 +148,23 @@
       .contact-form button { font-size: 1rem; padding: 12px; }
     }
 
+
+      /* Mobile-only placeholder size fix */
+      @media (max-width: 480px) {
+      input::placeholder,
+       textarea::placeholder {
+        font-size: 14px !important;
+        line-height: 1.2 !important;
+    }
+
+    /* brighter placeholder color */
+      input::placeholder,
+      textarea::placeholder {
+       color: rgba(255, 255, 255, 0.85) !important;
+}
+
+}
+
       /* Make placeholders visible */
       ::placeholder {
        color: #d9d9d9 !important;
