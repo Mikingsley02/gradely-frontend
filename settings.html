@@ -181,109 +181,116 @@
   </div>
 
   <script>
-  const API_BASE = "https://api.gradely.info";
-  const token = localStorage.getItem("token");
+const API_BASE = "https://api.gradely.info";
 
-  // Redirect to login if token is missing
-  if (!token) {
-    alert("You must log in first!");
-    window.location.href = "login.html";
-  }
+// Get session data
+const adminId = sessionStorage.getItem("adminId");
+const schoolId = sessionStorage.getItem("school_id");
+const token = sessionStorage.getItem("token");
 
-  document.addEventListener("DOMContentLoaded", loadSchoolData);
+if (!adminId || !schoolId || !token) {
+  alert("⚠️ You are not logged in!");
+  window.location.href = "admin-login.html";
+}
 
-  async function loadSchoolData() {
-    const msgEl = document.getElementById("message");
-    msgEl.textContent = "⏳ Loading settings...";
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/school-info`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
+// Pre-fill form with session values or fetch from API
+document.addEventListener("DOMContentLoaded", loadSchoolData);
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+async function loadSchoolData() {
+  const msgEl = document.getElementById("message");
+  msgEl.textContent = "⏳ Loading settings...";
+  msgEl.className = "message";
 
-      const data = await res.json();
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/school-info`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
 
-      if (data.success) {
-        // Pre-fill form fields with current values
-        document.getElementById("school_name").value = data.school?.school_name || "";
-        document.getElementById("email").value = data.school?.email || "";
-        document.getElementById("phone_number").value = data.school?.phone_number || "";
-        msgEl.textContent = "";
-      } else {
-        msgEl.className = "message error";
-        msgEl.textContent = "⚠️ Failed to load school info.";
-      }
-    } catch (err) {
-      console.error(err);
-      msgEl.className = "message error";
-      msgEl.textContent = "🚫 Unable to connect to server or unauthorized.";
-    }
-  }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-  document.getElementById("settingsForm").onsubmit = async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const msgEl = document.getElementById("message");
-    msgEl.textContent = "⏳ Updating settings...";
-    msgEl.className = "message";
+    const data = await res.json();
 
-    // Only include fields the user actually entered
-    const payload = {};
-    if (form.school_name.value.trim()) payload.school_name = form.school_name.value.trim();
-    if (form.email.value.trim()) payload.email = form.email.value.trim();
-    if (form.phone_number.value.trim()) payload.phone_number = form.phone_number.value.trim();
-    if (form.new_password.value) {
-      if (!form.current_password.value) {
-        msgEl.className = "message error";
-        msgEl.textContent = "⚠️ Enter current password to change password.";
-        return;
-      }
-      payload.current_password = form.current_password.value;
-      payload.new_password = form.new_password.value;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/update-settings`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await res.json().catch(() => ({ success: false, message: "Invalid response" }));
-
-      if (result.success) {
-        msgEl.className = "message success";
-        msgEl.textContent = "✅ Settings updated successfully!";
-        // Clear password fields after success
-        form.current_password.value = "";
-        form.new_password.value = "";
-      } else {
-        msgEl.className = "message error";
-        msgEl.textContent = "❌ " + (result.message || "Update failed.");
-      }
-    } catch (err) {
-      console.error(err);
-      msgEl.className = "message error";
-      msgEl.textContent = "🚫 Server connection failed or unauthorized.";
-    }
-  };
-
-  function togglePassword(fieldId, icon) {
-    const input = document.getElementById(fieldId);
-    if (input.type === "password") {
-      input.type = "text";
-      icon.textContent = "🙈";
+    if (data.success) {
+      document.getElementById("school_name").value =
+        data.school?.school_name || sessionStorage.getItem("school_name") || "";
+      document.getElementById("email").value = data.school?.email || "";
+      document.getElementById("phone_number").value = data.school?.phone_number || "";
+      msgEl.textContent = "";
     } else {
-      input.type = "password";
-      icon.textContent = "👁️";
+      msgEl.className = "message error";
+      msgEl.textContent = "⚠️ Failed to load school info.";
     }
+  } catch (err) {
+    console.error(err);
+    msgEl.className = "message error";
+    msgEl.textContent = "🚫 Unable to connect to server or unauthorized.";
   }
+}
+
+// Handle form submit
+document.getElementById("settingsForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const msgEl = document.getElementById("message");
+  msgEl.textContent = "⏳ Updating settings...";
+  msgEl.className = "message";
+
+  const payload = {};
+  if (form.school_name.value.trim()) payload.school_name = form.school_name.value.trim();
+  if (form.email.value.trim()) payload.email = form.email.value.trim();
+  if (form.phone_number.value.trim()) payload.phone_number = form.phone_number.value.trim();
+  if (form.new_password.value) {
+    if (!form.current_password.value) {
+      msgEl.className = "message error";
+      msgEl.textContent = "⚠️ Enter current password to change password.";
+      return;
+    }
+    payload.current_password = form.current_password.value;
+    payload.new_password = form.new_password.value;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/update-settings`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await res.json().catch(() => ({ success: false, message: "Invalid response" }));
+
+    if (result.success) {
+      msgEl.className = "message success";
+      msgEl.textContent = "✅ Settings updated successfully!";
+      form.current_password.value = "";
+      form.new_password.value = "";
+
+      // Update session if school name changed
+      if (payload.school_name) sessionStorage.setItem("school_name", payload.school_name);
+    } else {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ " + (result.message || "Update failed.");
+    }
+  } catch (err) {
+    console.error(err);
+    msgEl.className = "message error";
+    msgEl.textContent = "🚫 Server connection failed or unauthorized.";
+  }
+};
+
+// Toggle password visibility
+function togglePassword(fieldId, icon) {
+  const input = document.getElementById(fieldId);
+  if (input.type === "password") {
+    input.type = "text";
+    icon.textContent = "🙈";
+  } else {
+    input.type = "password";
+    icon.textContent = "👁️";
+  }
+}
 </script>
 
 
