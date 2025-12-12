@@ -347,14 +347,15 @@
     try {
       // ✅ FIXED: Removed trailing space in production URL
       const API_BASE = window.location.hostname.includes("localhost")
-        ? "http://localhost:5000"
-        : "https://api.gradely.info";
+  ? "http://localhost:5000"
+  : "https://api.gradely.info";
 
-      const response = await fetch(`${API_BASE}/api/auth/parent-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ student_id, password })
-      });
+    const response = await fetch(`${API_BASE}/auth/parent-login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ student_id, password })
+    });
+
 
       let data;
       if (response.ok) {
