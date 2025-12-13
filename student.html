@@ -167,55 +167,79 @@
     let currentData = null; // ✅ Store data for PDF
 
     document.addEventListener("DOMContentLoaded", async () => {
-      const studentId = localStorage.getItem("studentId");
-      if (!studentId) {
-        alert("❌ You are not logged in. Please log in first.");
-        window.location.href = "index.html";
-        return;
-      }
+  const studentId = localStorage.getItem("studentId");
 
-      try {
-        const response = await fetch(`${backendUrl}/api/result/student/${studentId}`);
-        const data = await response.json();
+  if (!studentId) {
+    alert("❌ You are not logged in. Please log in first.");
+    window.location.href = "index.html";
+    return;
+  }
 
-        if (!data.success) {
-          document.getElementById("resultsBody").innerHTML = 
-            `<tr><td colspan="5" class="message">${data.message || "Failed to load data."}</td></tr>`;
-          return;
-        }
+  try {
+    const response = await fetch(`${backendUrl}/api/result/student/${studentId}`);
 
-        // ✅ Store data for PDF
-        currentData = data;
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
 
-        document.getElementById("studentId").textContent = studentId;
-        document.getElementById("studentName").textContent = 
-          `${data.student.first_name} ${data.student.middle_name || ""} ${data.student.last_name}`;
-        document.getElementById("studentClass").textContent = data.student.class || "N/A";
-        document.getElementById("schoolName").textContent = data.school_name || "Gradely School";
+    const data = await response.json();
 
-        const firstResult = data.results[0];
-        if (firstResult) {
-          document.getElementById("studentTerm").textContent = firstResult.term || "N/A";
-          document.getElementById("studentAcademicYear").textContent = firstResult.academic_year || "N/A";
-        }
+    if (!data.success) {
+      document.getElementById("resultsBody").innerHTML =
+        `<tr><td colspan="5" class="message">${data.message || "No results available."}</td></tr>`;
+      return;
+    }
 
-        document.getElementById("resultsBody").innerHTML = data.results.map(r => `
-          <tr>
-            <td>${r.subject}</td>
-            <td>${r.score}</td>
-            <td>${r.total_marks}</td>
-            <td>${r.grade}</td>
-            <td>${r.remarks || '-'}</td>
-          </tr>
-        `).join("");
+    // ✅ Save for PDF
+    currentData = data;
 
-        renderChart(data.results);
-      } catch (err) {
-        console.error("Error:", err);
-        document.getElementById("resultsBody").innerHTML = 
-          `<tr><td colspan="5" class="message">⚠️ Failed to load results.</td></tr>`;
-      }
-    });
+    // ✅ Header + student info
+    document.getElementById("schoolName").textContent =
+      data.school_name || "Gradely School";
+
+    document.getElementById("studentId").textContent = studentId;
+
+    document.getElementById("studentName").textContent =
+      `${data.student.first_name} ${data.student.middle_name || ""} ${data.student.last_name}`.trim();
+
+    document.getElementById("studentClass").textContent =
+      data.student.class || "N/A";
+
+    // ✅ Handle empty results safely
+    if (!data.results || data.results.length === 0) {
+      document.getElementById("resultsBody").innerHTML =
+        `<tr><td colspan="5" class="message">⚠️ No results uploaded yet.</td></tr>`;
+      return;
+    }
+
+    // ✅ Term & academic year from first result
+    document.getElementById("studentTerm").textContent =
+      data.results[0].term || "N/A";
+
+    document.getElementById("studentAcademicYear").textContent =
+      data.results[0].academic_year || "N/A";
+
+    // ✅ Render results table
+    document.getElementById("resultsBody").innerHTML = data.results.map(r => `
+      <tr>
+        <td>${r.subject}</td>
+        <td>${r.score}</td>
+        <td>${r.total_marks}</td>
+        <td>${r.grade}</td>
+        <td>${r.remarks || "-"}</td>
+      </tr>
+    `).join("");
+
+    // ✅ Chart
+    renderChart(data.results);
+
+  } catch (err) {
+    console.error("Fetch error:", err);
+    document.getElementById("resultsBody").innerHTML =
+      `<tr><td colspan="5" class="message">⚠️ Failed to load results.</td></tr>`;
+  }
+  });
+
 
     function renderChart(results) {
       const ctx = document.getElementById("performanceChart").getContext("2d");
