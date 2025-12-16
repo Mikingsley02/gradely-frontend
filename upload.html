@@ -265,12 +265,13 @@ function showLoader(show) {
 function downloadTemplate() {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([
-    ["student_id", "subject", "score", "total_marks", "grade", "remarks"],
-    ["STU001", "Mathematics", "85", "100", "A", "Excellent"]
+    ["student_id", "student_class", "subject", "score", "grade", "remarks"],
+    ["STU001", "JSS 1", "Mathematics", "85", "A", "Excellent"]
   ]);
   XLSX.utils.book_append_sheet(wb, ws, "Result Template");
   XLSX.writeFile(wb, "Gradely_Result_Template.xlsx");
 }
+
 
 document.getElementById("resultForm").addEventListener("submit", async (e) => {
   e.preventDefault();
