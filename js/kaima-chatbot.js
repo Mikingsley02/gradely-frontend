@@ -267,7 +267,7 @@
       const lower = text.toLowerCase();
 
       if (lower.includes('password')) reply = "To reset your password, go to Settings → Change Password.";
-      else if (lower.includes('result')) reply = "Login as admin, Click on 'Upload results'";
+      else if (lower.includes('result')) reply = "Login as a parent, Click on 'download PDF'";
       else if (lower.includes('school')) reply = "Yes! You can register as a new school via the Home page.";
       else if (lower.includes('plan') || lower.includes('subscription')) reply = "Our subscription plans are shown on the 'Billing' page — basic & pro options available.";
       else if (lower.includes('support') || lower.includes('contact')) reply = "📧 You can reach support at support@gradely.info";
