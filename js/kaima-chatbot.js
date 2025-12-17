@@ -205,11 +205,11 @@
         </div>
         <div class="quick-replies" id="quickReplies">
           <div class="quick-reply" onclick="askQuick('How do I reset my password?')">🔑 Reset password</div>
-          <div class="quick-reply" onclick="askQuick('Where is the result upload section?')">📤 Result upload</div>
+          <div class="quick-reply" onclick="askQuick('How do I download result?')">📥 Download Result</div>
           <div class="quick-reply" onclick="askQuick('What are the subscription plans?')">💳 Plans</div>
           <div class="quick-reply" onclick="askQuick('Can I add new schools?')">🏫 Add schools</div>
           <div class="quick-reply" onclick="askQuick('Contact support')">📞 Contact support</div>
-          <div class="quick-reply" onclick="askQuick('How do I download result?')">📥 Download Result</div>
+          <div class="quick-reply" onclick="askQuick('Where is the result upload section?')">📤 Result upload</div>
           <!-- ✅ NEW: Register Student -->
           <div class="quick-reply" onclick="askQuick('How do I register student?')">📝 Register Student</div>
         </div>
@@ -267,12 +267,12 @@
       const lower = text.toLowerCase();
 
       if (lower.includes('password')) reply = "To reset your password, go to Settings → Change Password.";
-      else if (lower.includes('result')) reply = "Login as a parent, Click on 'download PDF'";
+      else if (lower.includes('download')) reply = "Login as a parent, Click on 'download PDF' to get your child's result as a printable PDF.";
       else if (lower.includes('school')) reply = "Yes! You can register as a new school via the Home page.";
       else if (lower.includes('plan') || lower.includes('subscription')) reply = "Our subscription plans are shown on the 'Billing' page — basic & pro options available.";
       else if (lower.includes('support') || lower.includes('contact')) reply = "📧 You can reach support at support@gradely.info";
       else if (lower.includes('hello') || lower.includes('hi')) reply = "Hi there! 😊 How can I assist you today?";
-      else if (lower.includes('download') && lower.includes('result')) reply = "After logging in, go to your dashboard → Click 'Download PDF' to get your child's result as a printable PDF.";
+      else if (lower.includes('result') && lower.includes('result')) reply = "Login as admin, go to your dashboard → Click 'Upload results'";
       else if (lower.includes('register') && lower.includes('student')) reply = "To register a student, go to the Admin Dashboard → Use 'Add New Student' or 'Bulk Upload' feature.";
 
       setTimeout(() => appendMessage('kaima', reply), 700);
