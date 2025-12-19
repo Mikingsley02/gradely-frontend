@@ -266,17 +266,46 @@
     });
 
     // ✅ NEW: Upgrade function
-    function upgradeToPro() {
-      const urlParams = new URLSearchParams(window.location.search);
-      let school_id = urlParams.get('school_id') 
-        || localStorage.getItem('school_id') 
-        || sessionStorage.getItem('school_id');
-      let redirectUrl = "register-school.html?plan=pro";
-      if (school_id) {
-        redirectUrl += `&school_id=${encodeURIComponent(school_id)}`;
-      }
-      window.location.href = redirectUrl;
+    async function upgradeToPro() {
+  const msgEl = document.getElementById("message");
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const admin_id =
+    urlParams.get("school_id") ||
+    localStorage.getItem("school_id") ||
+    sessionStorage.getItem("school_id");
+
+  if (!admin_id) {
+    msgEl.className = "message error";
+    msgEl.textContent = "⚠️ School ID not found.";
+    return;
+  }
+
+  if (!confirm("✨ Upgrade to PRO plan now?")) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/subscription/upgrade`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ admin_id }),
+    });
+
+    const result = await res.json();
+
+    if (result.success) {
+      msgEl.className = "message success";
+      msgEl.textContent = "🚀 Successfully upgraded to PRO!";
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      throw new Error(result.message || "Upgrade failed");
     }
+  } catch (err) {
+    console.error("Upgrade error:", err);
+    msgEl.className = "message error";
+    msgEl.textContent = "❌ " + err.message;
+  }
+}
+
 
     // Renew subscription
     async function renewSubscription() {
