@@ -310,7 +310,6 @@
     // Renew subscription
     async function renewSubscription() {
   const msgEl = document.getElementById("message");
-  const btn = document.getElementById("renewBtn");
 
   const urlParams = new URLSearchParams(window.location.search);
   const school_id =
@@ -320,39 +319,35 @@
 
   if (!school_id) {
     msgEl.className = "message error";
-    msgEl.textContent = "⚠️ School ID not found. Please log in again.";
+    msgEl.textContent = "School ID missing";
     return;
   }
-
-  const originalText = btn.innerHTML;
-  btn.disabled = true;
-  btn.style.opacity = "0.7";
-  btn.innerHTML = "⏳ Processing...";
 
   try {
     const res = await fetch(`${API_BASE}/api/subscription/renew`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ school_id }) // ✅ THIS FIXES THE ERROR
+      body: JSON.stringify({ school_id })
     });
 
     const result = await res.json();
 
+    // 🚀 BASIC → REDIRECT TO PAYMENT
+    if (result.upgrade_required) {
+      window.location.href = `register-school.html?plan=pro&school_id=${school_id}`;
+      return;
+    }
+
     if (result.success) {
       msgEl.className = "message success";
-      msgEl.textContent = "✅ Subscription renewed successfully!";
+      msgEl.textContent = "✅ Subscription renewed!";
       setTimeout(() => location.reload(), 1500);
     } else {
-      throw new Error(result.message || "Renewal failed");
+      throw new Error(result.message);
     }
   } catch (err) {
-    console.error("Renew error:", err);
     msgEl.className = "message error";
-    msgEl.textContent = "❌ " + err.message;
-  } finally {
-    btn.disabled = false;
-    btn.style.opacity = "1";
-    btn.innerHTML = originalText;
+    msgEl.textContent = err.message;
   }
 }
 
