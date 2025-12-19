@@ -164,6 +164,18 @@
           <span class="toggle-password" onclick="togglePassword('new_password', this)">👁️</span>
         </div>
 
+        <div class="form-group">
+      <label>Confirm New Password</label>
+      <input
+        type="password"
+        name="confirm_new_password"
+        id="confirm_new_password"
+       placeholder="Re-enter new password"
+     />
+     <span class="toggle-password"
+        onclick="togglePassword('confirm_new_password', this)">👁️</span>
+    </div>
+
         <button type="submit">💾 Save Changes</button>
 
         <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
@@ -239,15 +251,24 @@ document.getElementById("settingsForm").onsubmit = async (e) => {
   if (form.school_name.value.trim()) payload.school_name = form.school_name.value.trim();
   if (form.email.value.trim()) payload.email = form.email.value.trim();
   if (form.phone_number.value.trim()) payload.phone_number = form.phone_number.value.trim();
+  
   if (form.new_password.value) {
-    if (!form.current_password.value) {
-      msgEl.className = "message error";
-      msgEl.textContent = "⚠️ Enter current password to change password.";
-      return;
-    }
-    payload.current_password = form.current_password.value;
-    payload.new_password = form.new_password.value;
+  if (!form.current_password.value) {
+    msgEl.className = "message error";
+    msgEl.textContent = "⚠️ Enter current password to change password.";
+    return;
   }
+
+  if (form.new_password.value !== form.confirm_new_password.value) {
+    msgEl.className = "message error";
+    msgEl.textContent = "❌ New passwords do not match.";
+    return;
+  }
+
+  payload.current_password = form.current_password.value;
+  payload.new_password = form.new_password.value;
+}
+
 
   try {
     const res = await fetch(`${API_BASE}/api/admin/update-settings`, {
