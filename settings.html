@@ -252,18 +252,19 @@ document.getElementById("settingsForm").onsubmit = async (e) => {
   if (form.email.value.trim()) payload.email = form.email.value.trim();
   if (form.phone_number.value.trim()) payload.phone_number = form.phone_number.value.trim();
   
-  if (form.new_password.value) {
-  if (!form.current_password.value) {
-    msgEl.className = "message error";
-    msgEl.textContent = "⚠️ Enter current password to change password.";
-    return;
-  }
+  const newPass = form.new_password.value.trim();
+const confirmPass = form.confirm_new_password.value.trim();
 
-  if (form.new_password.value !== form.confirm_new_password.value) {
-    msgEl.className = "message error";
-    msgEl.textContent = "❌ New passwords do not match.";
-    return;
-  }
+if (!confirmPass) {
+  msgEl.className = "message error";
+  msgEl.textContent = "⚠️ Please confirm your new password.";
+  return;
+}
+
+if (newPass !== confirmPass) {
+  msgEl.className = "message error";
+  msgEl.textContent = "❌ New passwords do not match.";
+  return;
 
   payload.current_password = form.current_password.value;
   payload.new_password = form.new_password.value;
