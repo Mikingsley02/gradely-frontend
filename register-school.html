@@ -143,11 +143,12 @@
       <label>Subscription Plan *</label>
       <select id="plan" required>
         <option value="">-- Select Plan --</option>
-        <option value="basic">Basic - ₦16,800/month</option>
-        <option value="pro">Pro - ₦19,200/month</option>
+        <option value="basic">Basic</option> <!-- Put this price alongside with basic to display cost - ₦16,800/month -->
+        <option value="pro">Pro</option> <!-- Put this price alongside with basic to display cost - ₦19,200/month -->
       </select>
 
-      <button type="submit" id="submitBtn">✅ Proceed to Payment</button>
+    <!-- Comment out the button bellow to ✅ Proceed to Payment</button> -->
+     <!-- <button type="submit" id="submitBtn">✅ Proceed to Payment</button> -->
 
       <button type="button" id="skipPaymentBtn">
         🚀 Register Without Payment
@@ -182,7 +183,7 @@
       const skipBtn = document.getElementById("skipPaymentBtn");
 
       if (testMode) {
-        skipBtn.textContent = "🚀 Registering (Test Mode)...";
+        skipBtn.textContent = "🚀 Registering...";
         skipBtn.disabled = true;
       } else {
         submitBtn.textContent = "⏳ Registering...";
