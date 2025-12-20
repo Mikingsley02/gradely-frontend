@@ -252,32 +252,54 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   if (form.email.value.trim()) payload.email = form.email.value.trim();
   if (form.phone_number.value.trim()) payload.phone_number = form.phone_number.value.trim();
 
-  const currentPassword = form.current_password.value;
-  const newPassword = form.new_password.value;
-  const confirmPassword = form.confirm_new_password.value;
+  // PASSWORD FIELDS (SAFE & CLEAR)
+const currentPassword = form.current_password.value.trim();
+const newPassword = form.new_password.value.trim();
+const confirmPassword = form.confirm_new_password.value.trim();
 
-  if (newPassword || confirmPassword) {
-    if (!currentPassword) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ Enter your current password.";
-      return;
-    }
+// User wants to change password ONLY if all three are touched
+const wantsPasswordChange =
+  currentPassword.length > 0 ||
+  newPassword.length > 0 ||
+  confirmPassword.length > 0;
 
-    if (newPassword !== confirmPassword) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ New passwords do not match.";
-      return;
-    }
+if (wantsPasswordChange) {
 
-    if (newPassword.length < 8) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ Password must be at least 8 characters.";
-      return;
-    }
-
-    payload.current_password = currentPassword;
-    payload.new_password = newPassword;
+  if (!currentPassword) {
+    msgEl.className = "message error";
+    msgEl.textContent = "❌ Enter your current password.";
+    return;
   }
+
+  if (!newPassword) {
+    msgEl.className = "message error";
+    msgEl.textContent = "❌ Enter a new password.";
+    return;
+  }
+
+  if (!confirmPassword) {
+    msgEl.className = "message error";
+    msgEl.textContent = "❌ Confirm your new password.";
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    console.log("DEBUG:", newPassword, confirmPassword);
+    msgEl.className = "message error";
+    msgEl.textContent = "❌ New passwords do not match.";
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    msgEl.className = "message error";
+    msgEl.textContent = "❌ Password must be at least 8 characters.";
+    return;
+  }
+
+  payload.current_password = currentPassword;
+  payload.new_password = newPassword;
+}
+
 
   if (Object.keys(payload).length === 0) {
     msgEl.className = "message error";
