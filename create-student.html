@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>➕ Create Student | Gradely Info</title>
-  <!-- Load xlsx from CDN -->
+
+  <!-- Load xlsx -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -35,23 +37,23 @@
     }
     .form-header h2 { font-size: 1.5rem; font-weight: 600; }
     .form-body { padding: 25px; }
-    .form-group { margin-bottom: 18px; }
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-      font-size: 0.9rem;
-      color: #2c3e50;
-    }
-    input, select {
+    .form-group { margin-bottom: 18px; position: relative; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; }
+    input {
       width: 100%;
       padding: 12px;
       border: 1px solid #bdc3c7;
       border-radius: 6px;
       font-size: 1rem;
-      transition: 0.3s;
     }
-    input:focus { border-color: #3498db; outline: none; }
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 38px;
+      cursor: pointer;
+      user-select: none;
+      color: #777;
+    }
     .form-actions { display: flex; gap: 10px; margin-top: 10px; }
     button {
       flex: 1;
@@ -61,21 +63,15 @@
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.3s;
     }
     .btn-submit { background: #3498db; color: #fff; }
     .btn-submit:hover { background: #2980b9; }
     .btn-cancel { background: #95a5a6; color: #fff; }
     .btn-cancel:hover { background: #7f8c8d; }
-    .message {
-      margin-top: 15px;
-      font-size: 0.95rem;
-      text-align: center;
-      min-height: 20px;
-    }
+    .message { margin-top: 15px; text-align: center; min-height: 20px; }
     .error { color: #e74c3c; }
     .success { color: #27ae60; }
-    /* Bulk Upload Section */
+
     .bulk-upload {
       background: white;
       border-radius: 12px;
@@ -84,39 +80,7 @@
       width: 100%;
       padding: 25px;
     }
-    .bulk-upload h3 {
-      color: #0c2461;
-      font-size: 1.3rem;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-    .bulk-upload p {
-      font-size: 0.9rem;
-      color: #555;
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    .bulk-upload input[type="file"] {
-      width: 100%;
-      height: 45px;
-      border-radius: 6px;
-      border: 1px solid #bdc3c7;
-      padding: 10px;
-      cursor: pointer;
-      margin-bottom: 15px;
-    }
-    .bulk-upload button {
-      width: 100%;
-      height: 45px;
-      margin-bottom: 10px;
-      background: #0a84ff;
-      color: #fff;
-      border-radius: 6px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .bulk-upload button:hover { background: #006edc; }
+
     .footer {
       text-align: center;
       padding: 15px;
@@ -125,228 +89,191 @@
     }
   </style>
 </head>
+
 <body>
 
-  <!-- Single Student Registration -->
-  <div class="form-card">
-    <div class="form-header">
-      <h2>➕ Create Student Account</h2>
-      <p>Register a new student</p>
-    </div>
-
-    <div class="form-body">
-      <form id="createForm">
-        <div class="form-group">
-          <label>Student ID *</label>
-          <input type="text" name="student_id" placeholder="e.g., STD001" required />
-        </div>
-        <div class="form-group">
-          <label>First Name *</label>
-          <input type="text" name="first_name" placeholder="Amina" required />
-        </div>
-        <div class="form-group">
-          <label>Middle Name</label>
-          <input type="text" name="middle_name" placeholder="Fatimah" />
-        </div>
-        <div class="form-group">
-          <label>Last Name *</label>
-          <input type="text" name="last_name" placeholder="Johnson" required />
-        </div>
-        <div class="form-group">
-          <label>Class *</label>
-          <input type="text" name="class" placeholder="JSS 3" required />
-        </div>
-        <div class="form-group">
-          <label>Section</label>
-          <input type="text" name="section" placeholder="B" />
-        </div>
-        <div class="form-group">
-          <label>Phone Number *</label>
-          <input type="text" name="phone_number" placeholder="e.g., 08012345678" required />
-        </div>
-        <div class="form-group">
-          <label>Parent Email</label>
-          <input type="email" name="parent_email" placeholder="parent@mail.com" />
-        </div>
-        <div class="form-group">
-          <label>Password *</label>
-          <input type="text" name="password" placeholder="Enter password" required />
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="btn-cancel" onclick="goBack()">Cancel</button>
-          <button type="submit" class="btn-submit">Create Account</button>
-        </div>
-
-        <div class="message" id="message"></div>
-      </form>
-    </div>
+<!-- ================= SINGLE STUDENT ================= -->
+<div class="form-card">
+  <div class="form-header">
+    <h2>➕ Create Student Account</h2>
+    <p>Register a new student</p>
   </div>
 
-  <!-- Bulk Upload Section -->
-  <div class="bulk-upload">
-    <h3>📂 Bulk Upload Students</h3>
-    <p>Download the Excel template and upload student data in bulk.</p>
+  <div class="form-body">
+    <form id="createForm">
 
-    <input type="file" id="bulkFile" accept=".csv, .xls, .xlsx" />
-    <button onclick="downloadStudentTemplate()">⬇️ Download Template</button>
-    <button onclick="uploadBulkStudents()">📤 Upload Students</button>
+      <div class="form-group">
+        <label>Student ID *</label>
+        <input type="text" name="student_id" required />
+      </div>
 
-    <!-- Back to Manage Students -->
-    <div style="text-align:center; margin-top:10px;">
-      <a href="manage-students.html"
-         style="display:inline-block; background:#0c2461; color:white; padding:10px 20px; border-radius:6px; text-decoration:none; font-weight:600;">
-         ← Back to Manage Students
-      </a>
-    </div>
+      <div class="form-group">
+        <label>First Name *</label>
+        <input type="text" name="first_name" required />
+      </div>
 
-    <div class="message" id="bulkMessage"></div>
+      <div class="form-group">
+        <label>Middle Name</label>
+        <input type="text" name="middle_name" />
+      </div>
+
+      <div class="form-group">
+        <label>Last Name *</label>
+        <input type="text" name="last_name" required />
+      </div>
+
+      <div class="form-group">
+        <label>Phone Number *</label>
+        <input type="text" name="phone_number" required />
+      </div>
+
+      <div class="form-group">
+        <label>Parent Email</label>
+        <input type="email" name="parent_email" />
+      </div>
+
+      <div class="form-group">
+        <label>Password *</label>
+        <input type="password" id="password" name="password" required />
+        <span class="toggle-password" onclick="togglePassword('password', this)">👁️</span>
+      </div>
+
+      <div class="form-group">
+        <label>Confirm Password *</label>
+        <input type="password" id="confirm_password" required />
+        <span class="toggle-password" onclick="togglePassword('confirm_password', this)">👁️</span>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="goBack()">Cancel</button>
+        <button type="submit" class="btn-submit">Create Account</button>
+      </div>
+
+      <div class="message" id="message"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= BULK UPLOAD ================= -->
+<div class="bulk-upload">
+  <h3>📂 Bulk Upload Students</h3>
+  <p>Download the Excel template and upload student data in bulk.</p>
+
+  <input type="file" id="bulkFile" accept=".csv,.xls,.xlsx" />
+
+  <button style="margin-bottom: 10px;" onclick="downloadStudentTemplate()">
+  ⬇️ Download Template
+  </button>
+
+    <button onclick="uploadBulkStudents()">
+    📤 Upload Students
+    </button>
+
+
+  <div style="text-align:center; margin-top:10px;">
+    <a href="manage-students.html"
+       style="display:inline-block; background:#0c2461; color:white; padding:10px 10px; border-radius:6px; text-decoration:none; font-weight:600;">
+       ← Back to Manage Students
+    </a>
   </div>
 
-  <div class="footer">
-    &copy; 2025 <strong>gradely.info</strong>. All rights reserved.
-    <div style="margin-top: 10px;">
-      <a href="terms.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Terms</a> •
-      <a href="privacy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Privacy</a> •
-      <a href="refund-policy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Refund Policy</a>
-    </div>
-  </div>
+  <div class="message" id="bulkMessage"></div>
+</div>
 
-  <script>
-// ✅ Fixed: Removed trailing space
+<div class="footer">
+  &copy; 2025 <strong>gradely.info</strong>. All rights reserved.
+  <div style="margin-top: 10px;">
+    <a href="terms.html" style="color:#00d2ff; margin:0 10px;">Terms</a> •
+    <a href="privacy.html" style="color:#00d2ff; margin:0 10px;">Privacy</a> •
+    <a href="refund-policy.html" style="color:#00d2ff; margin:0 10px;">Refund Policy</a>
+  </div>
+</div>
+
+<script>
 const API_BASE = "https://gradely-backend-1.onrender.com";
 
-// ✅ Create Single Student
-document.getElementById('createForm').onsubmit = async (e) => {
-  e.preventDefault();
-  const msgEl = document.getElementById('message');
+// TOGGLE PASSWORD
+function togglePassword(id, icon) {
+  const input = document.getElementById(id);
+  input.type = input.type === "password" ? "text" : "password";
+  icon.textContent = input.type === "password" ? "👁️" : "🙈";
+}
 
-  const school_id = sessionStorage.getItem("school_id");
-  if (!school_id) {
-    alert("⚠️ School not found. Please log in again.");
-    window.location.href = "admin-login.html";
+// CREATE STUDENT
+document.getElementById("createForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById("message");
+
+  const password = document.getElementById("password").value;
+  const confirm = document.getElementById("confirm_password").value;
+
+  if (password !== confirm) {
+    msg.className = "message error";
+    msg.textContent = "❌ Passwords do not match.";
     return;
   }
 
-  const data = { ...Object.fromEntries(new FormData(e.target)), school_id };
+  const data = Object.fromEntries(new FormData(e.target));
+  data.school_id = sessionStorage.getItem("school_id");
 
-  msgEl.textContent = "⏳ Creating student...";
-  msgEl.className = "message";
+  msg.textContent = "⏳ Creating student...";
+  msg.className = "message";
 
-  try {
-    // ✅ Single student
-    const res = await fetch(`${API_BASE}/api/students/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify(data)
-    });
+  const res = await fetch(`${API_BASE}/api/students/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
 
+  const result = await res.json();
 
-    let result;
-    if (res.ok) {
-      result = await res.json();
-    } else {
-      try {
-        result = await res.json();
-      } catch {
-        throw new Error(`Server returned error ${res.status}`);
-      }
-    }
+  msg.className = result.success ? "message success" : "message error";
+  msg.textContent = result.message || "Completed.";
 
-    if (result.success) {
-      msgEl.className = 'message success';
-      msgEl.textContent = result.message || '✅ Student created successfully!';
-      e.target.reset();
-      setTimeout(() => window.location.href = 'manage-students.html', 1500);
-    } else {
-      msgEl.className = 'message error';
-      msgEl.textContent = '❌ ' + (result.message || 'Failed to create student.');
-    }
-  } catch (err) {
-    console.error("Student creation error:", err);
-    msgEl.className = 'message error';
-    msgEl.textContent = '⚠️ ' + (err.message || 'Could not connect to server.');
+  if (result.success) {
+    setTimeout(() => window.location.href = "manage-students.html", 1500);
   }
 };
 
-// ✅ Bulk Upload
+// BULK UPLOAD
 async function uploadBulkStudents() {
-  const fileInput = document.getElementById('bulkFile');
-  const file = fileInput.files[0];
-  const msgEl = document.getElementById('bulkMessage');
-
-  const school_id = sessionStorage.getItem("school_id");
-  if (!school_id) {
-    alert("⚠️ School not found. Please log in again.");
-    window.location.href = "admin-login.html";
-    return;
-  }
+  const file = document.getElementById("bulkFile").files[0];
+  const msg = document.getElementById("bulkMessage");
 
   if (!file) {
-    msgEl.className = 'message error';
-    msgEl.textContent = '⚠️ Please select a file first.';
+    msg.className = "message error";
+    msg.textContent = "⚠️ Please select a file.";
     return;
   }
-
-  msgEl.textContent = "⏳ Uploading file...";
-  msgEl.className = "message";
 
   const reader = new FileReader();
   reader.onload = async (e) => {
-    try {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(sheet);
+    const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+    const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
-      if (!jsonData.length) {
-        msgEl.className = 'message error';
-        msgEl.textContent = '⚠️ File is empty.';
-        return;
-      }
-
-      // ✅ Bulk upload
-      const res = await fetch(`${API_BASE}/api/students/bulk-upload`, {
-      method: 'POST',
-     headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify({ school_id, students: jsonData })
+    const res = await fetch(`${API_BASE}/api/students/bulk-upload`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        school_id: sessionStorage.getItem("school_id"),
+        students: sheet
+      })
     });
 
-      let result;
-      if (res.ok) {
-        result = await res.json();
-      } else {
-        try {
-          result = await res.json();
-        } catch {
-          throw new Error(`Upload failed (${res.status})`);
-        }
-      }
-
-      if (result.success) {
-        msgEl.className = 'message success';
-        msgEl.textContent = `✅ Successfully uploaded ${jsonData.length} student(s)!`;
-        fileInput.value = "";
-      } else {
-        msgEl.className = 'message error';
-        msgEl.textContent = '❌ ' + (result.message || "Upload failed.");
-      }
-    } catch (err) {
-      console.error("Bulk upload error:", err);
-      msgEl.className = 'message error';
-      msgEl.textContent = '⚠️ ' + (err.message || 'Upload failed. Check console.');
-    }
+    const result = await res.json();
+    msg.className = result.success ? "message success" : "message error";
+    msg.textContent = result.success ? "✅ Upload successful" : "❌ Upload failed";
   };
   reader.readAsArrayBuffer(file);
 }
 
-// ✅ Template
+// TEMPLATE (NO CLASS / SECTION)
 function downloadStudentTemplate() {
-  const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([
-    ["student_id", "first_name", "middle_name", "last_name", "class", "section", "phone_number", "parent_email", "password"],
-    ["STD001", "Amina", "Fatimah", "Johnson", "JSS 1", "B", "08012345678", "parent@mail.com", "12345"]
+    ["student_id","first_name","middle_name","last_name","phone_number","parent_email","password"],
+    ["STD001","Amina","","Johnson","08012345678","parent@mail.com","12345678"]
   ]);
+  const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Students");
   XLSX.writeFile(wb, "Student_Bulk_Template.xlsx");
 }
