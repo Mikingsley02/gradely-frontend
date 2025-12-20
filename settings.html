@@ -192,7 +192,8 @@
     <a href="refund-policy.html">Refund Policy</a>
   </div>
 
-  <script>
+
+<script>
 const API_BASE = "https://api.gradely.info";
 
 // Get session data
@@ -205,7 +206,7 @@ if (!adminId || !schoolId || !token) {
   window.location.href = "admin-login.html";
 }
 
-// Pre-fill form with session values or fetch from API
+// Load school data
 document.addEventListener("DOMContentLoaded", loadSchoolData);
 
 async function loadSchoolData() {
@@ -215,92 +216,101 @@ async function loadSchoolData() {
 
   try {
     const res = await fetch(`${API_BASE}/api/admin/school-info`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` }
     });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
 
     if (data.success) {
-      document.getElementById("school_name").value =
-        data.school?.school_name || sessionStorage.getItem("school_name") || "";
-      document.getElementById("email").value = data.school?.email || "";
-      document.getElementById("phone_number").value = data.school?.phone_number || "";
+      document.getElementById("school_name").value = data.school.school_name || "";
+      document.getElementById("email").value = data.school.email || "";
+      document.getElementById("phone_number").value = data.school.phone_number || "";
       msgEl.textContent = "";
     } else {
       msgEl.className = "message error";
       msgEl.textContent = "⚠️ Failed to load school info.";
     }
   } catch (err) {
-    console.error(err);
     msgEl.className = "message error";
-    msgEl.textContent = "🚫 Unable to connect to server or unauthorized.";
+    msgEl.textContent = "🚫 Unable to connect to server.";
   }
 }
 
 // Handle form submit
-document.getElementById("settingsForm").onsubmit = async (e) => {
+document.getElementById("settingsForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const form = e.target;
   const msgEl = document.getElementById("message");
-  msgEl.textContent = "⏳ Updating settings...";
+
   msgEl.className = "message";
+  msgEl.textContent = "⏳ Saving changes...";
 
   const payload = {};
+
   if (form.school_name.value.trim()) payload.school_name = form.school_name.value.trim();
   if (form.email.value.trim()) payload.email = form.email.value.trim();
   if (form.phone_number.value.trim()) payload.phone_number = form.phone_number.value.trim();
-  
-  const newPass = form.new_password.value.trim();
-const confirmPass = form.confirm_new_password.value.trim();
 
-if (!confirmPass) {
-  msgEl.className = "message error";
-  msgEl.textContent = "⚠️ Please confirm your new password.";
-  return;
-}
+  const currentPassword = form.current_password.value;
+  const newPassword = form.new_password.value;
+  const confirmPassword = form.confirm_new_password.value;
 
-if (newPass !== confirmPass) {
-  msgEl.className = "message error";
-  msgEl.textContent = "❌ New passwords do not match.";
-  return;
+  if (newPassword || confirmPassword) {
+    if (!currentPassword) {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ Enter your current password.";
+      return;
+    }
 
-  payload.current_password = form.current_password.value;
-  payload.new_password = form.new_password.value;
-}
+    if (newPassword !== confirmPassword) {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ New passwords do not match.";
+      return;
+    }
 
+    if (newPassword.length < 8) {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ Password must be at least 8 characters.";
+      return;
+    }
+
+    payload.current_password = currentPassword;
+    payload.new_password = newPassword;
+  }
+
+  if (Object.keys(payload).length === 0) {
+    msgEl.className = "message error";
+    msgEl.textContent = "⚠️ Nothing to update.";
+    return;
+  }
 
   try {
     const res = await fetch(`${API_BASE}/api/admin/update-settings`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });
 
-    const result = await res.json().catch(() => ({ success: false, message: "Invalid response" }));
+    const data = await res.json();
 
-    if (result.success) {
-      msgEl.className = "message success";
-      msgEl.textContent = "✅ Settings updated successfully!";
-      form.current_password.value = "";
-      form.new_password.value = "";
+    if (!res.ok) throw new Error(data.message || "Update failed");
 
-      // Update session if school name changed
-      if (payload.school_name) sessionStorage.setItem("school_name", payload.school_name);
-    } else {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ " + (result.message || "Update failed.");
-    }
+    msgEl.className = "message success";
+    msgEl.textContent = "✅ Settings saved successfully.";
+
+    form.current_password.value = "";
+    form.new_password.value = "";
+    form.confirm_new_password.value = "";
+
   } catch (err) {
-    console.error(err);
     msgEl.className = "message error";
-    msgEl.textContent = "🚫 Server connection failed or unauthorized.";
+    msgEl.textContent = "❌ " + err.message;
   }
-};
+});
 
 // Toggle password visibility
 function togglePassword(fieldId, icon) {
