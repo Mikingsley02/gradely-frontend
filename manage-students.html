@@ -123,76 +123,77 @@ const searchInput = document.getElementById("searchInput");
 const searchBtn = document.getElementById("searchBtn");
 const modal = new bootstrap.Modal(document.getElementById("editStudentModal"));
 
+const schoolId = sessionStorage.getItem("school_id");
 let allStudents = [];
-const school_id = sessionStorage.getItem("school_id") || localStorage.getItem("school_id");
 
-if (!school_id) {
+if (!schoolId) {
   tableBody.innerHTML = `<tr><td colspan="5" class="text-danger text-center">❌ School not found</td></tr>`;
 }
 
 /* LOAD STUDENTS */
 async function loadStudents() {
   try {
-    const res = await fetch(
-      `${API_BASE}/api/students?school_id=${encodeURIComponent(schoolId)}`
-    );
-
+    const res = await fetch(`${API_BASE}/api/manage-students/${encodeURIComponent(schoolId)}`);
     const data = await res.json();
 
-    if (!data.success || !data.students || !data.students.length) {
-      tableBody.innerHTML = `
-        <tr>
-          <td colspan="5" class="text-center text-warning">
-            ⚠️ No students found.
-          </td>
-        </tr>`;
+    if (!data.success || !data.students.length) {
+      tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-warning">⚠️ No students found.</td></tr>`;
       return;
     }
 
     allStudents = data.students;
     renderTable(allStudents);
-
   } catch (err) {
-    console.error("Error loading students:", err);
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="5" class="text-center text-danger">
-          ❌ Failed to load students.
-        </td>
-      </tr>`;
+    console.error(err);
+    tableBody.innerHTML = `<tr><td colspan="5" class="text-danger text-center">❌ Failed to load students</td></tr>`;
   }
 }
 
-
-/* RENDER */
-function render(list) {
-  if (!list.length) {
-    tableBody.innerHTML = `<tr><td colspan="5" class="text-center">No students found</td></tr>`;
-    return;
-  }
-
+/* RENDER TABLE */
+function renderTable(list) {
   tableBody.innerHTML = list.map(s => `
     <tr>
       <td>${s.student_id}</td>
       <td>${s.first_name} ${s.middle_name || ""} ${s.last_name}</td>
-      <td>${s.phone_number || "-"}</td>
+      <td>${s.phone || "-"}</td>
       <td>${s.parent_email || "-"}</td>
       <td>
         <button class="btn btn-sm btn-primary" onclick="editStudent('${s.student_id}')">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteStudent('${s.student_id}')">Delete</button>
       </td>
     </tr>
   `).join("");
 }
 
 /* SEARCH */
-searchBtn.onclick = () => {
-  const q = searchInput.value.toLowerCase();
-  const filtered = allStudents.filter(s =>
-    s.student_id.toLowerCase().includes(q) ||
-    `${s.first_name} ${s.last_name}`.toLowerCase().includes(q)
-  );
-  render(filtered);
-};
+async function handleSearch() {
+  const query = searchInput.value.trim();
+
+  if (!query) {
+    loadStudents();
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/manage-students/${encodeURIComponent(schoolId)}/search/${encodeURIComponent(query)}`
+    );
+    const data = await res.json();
+
+    if (!data.success || !data.students.length) {
+      tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-warning">⚠️ No student found.</td></tr>`;
+      return;
+    }
+
+    allStudents = data.students;
+    renderTable(allStudents);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+searchBtn.onclick = handleSearch;
+searchInput.onkeydown = e => { if (e.key === "Enter") handleSearch(); };
 
 /* EDIT */
 function editStudent(id) {
@@ -203,7 +204,7 @@ function editStudent(id) {
   editFirstName.value = s.first_name;
   editMiddleName.value = s.middle_name || "";
   editLastName.value = s.last_name;
-  editPhone.value = s.phone_number || "";
+  editPhone.value = s.phone || "";
   editParentEmail.value = s.parent_email || "";
 
   modal.show();
@@ -215,7 +216,7 @@ saveEditBtn.onclick = async () => {
     first_name: editFirstName.value,
     middle_name: editMiddleName.value,
     last_name: editLastName.value,
-    phone_number: editPhone.value,
+    phone: editPhone.value,
     parent_email: editParentEmail.value
   };
 
@@ -232,6 +233,23 @@ saveEditBtn.onclick = async () => {
     alert("❌ Failed to update student");
   }
 };
+
+/* DELETE WITH CONFIRMATION */
+async function deleteStudent(id) {
+  if (!confirm("⚠️ Are you sure you want to delete this student? This action cannot be undone.")) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/students/${id}`, { method: "DELETE" });
+
+    if (!res.ok) throw new Error("Delete failed");
+
+    loadStudents();
+  } catch (err) {
+    alert("❌ Failed to delete student");
+  }
+}
 
 loadStudents();
 </script>
