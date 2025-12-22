@@ -132,11 +132,37 @@ if (!school_id) {
 
 /* LOAD STUDENTS */
 async function loadStudents() {
-  const res = await fetch(`${API_BASE}/api/students/${school_id}`);
-  const data = await res.json();
-  allStudents = data.students || [];
-  render(allStudents);
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/students?school_id=${encodeURIComponent(schoolId)}`
+    );
+
+    const data = await res.json();
+
+    if (!data.success || !data.students || !data.students.length) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center text-warning">
+            ⚠️ No students found.
+          </td>
+        </tr>`;
+      return;
+    }
+
+    allStudents = data.students;
+    renderTable(allStudents);
+
+  } catch (err) {
+    console.error("Error loading students:", err);
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-danger">
+          ❌ Failed to load students.
+        </td>
+      </tr>`;
+  }
 }
+
 
 /* RENDER */
 function render(list) {
