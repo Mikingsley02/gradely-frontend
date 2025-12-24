@@ -122,10 +122,11 @@
         <input type="text" name="last_name" required />
       </div>
 
-      <div class="form-group">
-        <label>Phone Number *</label>
-        <input type="text" name="phone_number" required />
-      </div>
+    <div class="form-group">
+      <label>Phone Number *</label>
+      <input type="text" name="phone" required />
+    </div>
+
 
       <div class="form-group">
         <label>Parent Email</label>
@@ -216,10 +217,6 @@ document.getElementById("createForm").onsubmit = async (e) => {
   const data = Object.fromEntries(new FormData(e.target));
   data.school_id = sessionStorage.getItem("school_id");
 
-  // 🔧 Normalize field names for backend
-data.phone = data.phone_number;
-delete data.phone_number;
-
 
   msg.textContent = "⏳ Creating student...";
   msg.className = "message";
@@ -257,11 +254,11 @@ async function uploadBulkStudents() {
     const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
     // 🔧 Normalize bulk student fields
-const normalized = sheet.map(s => ({
+  const normalized = sheet.map(s => ({
   ...s,
-  phone: s.phone_number,
   school_id: sessionStorage.getItem("school_id")
-}));
+  }));
+
 
 
     const res = await fetch(`${API_BASE}/api/students/bulk-upload`, {
@@ -283,8 +280,8 @@ const normalized = sheet.map(s => ({
 // TEMPLATE (NO CLASS / SECTION)
 function downloadStudentTemplate() {
   const ws = XLSX.utils.aoa_to_sheet([
-    ["student_id","first_name","middle_name","last_name","phone_number","parent_email","password"],
-    ["STD001","Amina","","Johnson","08012345678","parent@mail.com","12345678"]
+    ["student_id","first_name","middle_name","last_name","phone","parent_email","password"]
+    ["STU001","Kaima","","Ifeanyi","08012345678","parent@mail.com","12345678"]
   ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Students");
