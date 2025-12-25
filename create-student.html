@@ -250,44 +250,43 @@ async function uploadBulkStudents() {
 
   const reader = new FileReader();
   reader.onload = async (e) => {
-    const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
-    const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+  const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+  const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
-    // 🔧 Normalize bulk student fields
   const normalized = sheet.map(s => ({
-  student_id: s.student_id,
-  first_name: s.first_name,
-  middle_name: s.middle_name || null,
-  last_name: s.last_name,
-  phone_number: s.phone,          // 🔥 FIX
-  parent_email: s.parent_email || null,
-  password: s.password,
-  school_id: sessionStorage.getItem("school_id")
-}));
+    student_id: s.student_id,
+    first_name: s.first_name,
+    middle_name: s.middle_name || null,
+    last_name: s.last_name,
+    phone_number: s.phone,
+    parent_email: s.parent_email || null,
+    password: s.password,
+    school_id: sessionStorage.getItem("school_id")
+  }));
 
+  const res = await fetch(`${API_BASE}/api/students/bulk-upload`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      school_id: sessionStorage.getItem("school_id"),
+      students: normalized
+    })
+  });
 
+  const result = await res.json();
 
+  msg.className = result.success ? "message success" : "message error";
+  msg.textContent = result.success
+    ? "✅ Upload successful"
+    : result.message || "❌ Upload failed";
 
-    const res = await fetch(`${API_BASE}/api/students/bulk-upload`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        school_id: sessionStorage.getItem("school_id"),
-        students: normalized
-      })
-    });
+  if (result.success) {
+    setTimeout(() => {
+      window.location.href = "manage-students.html";
+    }, 1500);
+  }
+};
 
-    const result = await res.json();
-    msg.className = result.success ? "message success" : "message error";
-    msg.textContent = result.success ? "✅ Upload successful" : "❌ Upload failed";
-  };
-
-
-    if (result.success) {
-  setTimeout(() => {
-    window.location.href = "manage-students.html";
-  }, 1500);
-}
 
 
 
