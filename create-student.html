@@ -255,9 +255,16 @@ async function uploadBulkStudents() {
 
     // 🔧 Normalize bulk student fields
   const normalized = sheet.map(s => ({
-  ...s,
+  student_id: s.student_id,
+  first_name: s.first_name,
+  middle_name: s.middle_name || null,
+  last_name: s.last_name,
+  phone_number: s.phone,          // 🔥 FIX
+  parent_email: s.parent_email || null,
+  password: s.password,
   school_id: sessionStorage.getItem("school_id")
-  }));
+}));
+
 
 
 
@@ -274,15 +281,25 @@ async function uploadBulkStudents() {
     msg.className = result.success ? "message success" : "message error";
     msg.textContent = result.success ? "✅ Upload successful" : "❌ Upload failed";
   };
+
+
+    if (result.success) {
+  setTimeout(() => {
+    window.location.href = "manage-students.html";
+  }, 1500);
+}
+
+
+
   reader.readAsArrayBuffer(file);
 }
 
 // TEMPLATE (NO CLASS / SECTION)
 function downloadStudentTemplate() {
   const ws = XLSX.utils.aoa_to_sheet([
-    ["student_id","first_name","middle_name","last_name","phone","parent_email","password"]
-    ["STU001","Kaima","","Ifeanyi","08012345678","parent@mail.com","12345678"]
-  ]);
+  ["student_id","first_name","middle_name","last_name","phone","parent_email","password"],
+  ["STU001","Kaima","","Ifeanyi","08012345678","parent@mail.com","12345678"]
+]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Students");
   XLSX.writeFile(wb, "Student_Bulk_Template.xlsx");
