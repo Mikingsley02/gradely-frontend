@@ -254,15 +254,16 @@ async function uploadBulkStudents() {
   const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
   const normalized = sheet.map(s => ({
-    student_id: s.student_id,
-    first_name: s.first_name,
-    middle_name: s.middle_name || null,
-    last_name: s.last_name,
-    phone_number: s.phone,
-    parent_email: s.parent_email || null,
-    password: s.password,
-    school_id: sessionStorage.getItem("school_id")
-  }));
+  student_id: s.student_id,
+  first_name: s.first_name,
+  middle_name: s.middle_name || null,
+  last_name: s.last_name,
+  phone: s.phone || s.phone_number,   // ✅ handles both
+  parent_email: s.parent_email || null,
+  password: s.password,
+  school_id: sessionStorage.getItem("school_id")
+}));
+
 
   const res = await fetch(`${API_BASE}/api/students/bulk-upload`, {
     method: "POST",
