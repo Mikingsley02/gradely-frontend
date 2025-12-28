@@ -176,7 +176,7 @@
   }
 
   try {
-    const response = await fetch(`${backendUrl}/api/results/student/${studentId}`);
+    const response = await fetch(`${backendUrl}/api/result/student/${studentId}`);
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
