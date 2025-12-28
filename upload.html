@@ -265,7 +265,7 @@ function showLoader(show) {
 function downloadTemplate() {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([
-    ["student_id", "student_class", "subject", "score", "grade", "remarks"],
+    ["student_id", "class", "subject", "score", "grade", "remarks"],
     ["STU001", "JSS 1", "Mathematics", "85", "A", "Excellent"]
   ]);
   XLSX.utils.book_append_sheet(wb, ws, "Result Template");
