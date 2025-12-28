@@ -302,32 +302,37 @@ document.getElementById("resultForm").addEventListener("submit", async (e) => {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       let results = XLSX.utils.sheet_to_json(sheet);
 
-      // ✅ NORMALIZE ALL FIELDS
+      // ✅ CORRECTED: Parse class and section from Excel
       results = results.map(r => ({
-        student_id: r.student_id?.toString().trim().toUpperCase(),
-        subject: r.subject?.toString().trim(),
+        student_id: (r.student_id ?? '').toString().trim().toUpperCase(),
+        class: (r.class ?? '').toString().trim(),          // ← critical
+        section: (r.section ?? '').toString().trim(),      // ← critical
+        subject: (r.subject ?? '').toString().trim(),
         score: Number(r.score),
-        total_marks: Number(r.total_marks || 100),
         grade: r.grade || null,
-        remarks: r.remarks?.toString().trim() || "",
-        term: term.toLowerCase().replace(/\s+/g, ' '),               // normalized
-        academic_year: academic_year.trim(),
-        school_id
-      })).filter(r => r.student_id && r.subject && !isNaN(r.score)); // filter invalid rows
+        remarks: (r.remarks ?? '').toString().trim() || ""
+      })).filter(r => 
+        r.student_id && 
+        r.class && r.section &&        // ← must have class & section
+        r.subject && 
+        !isNaN(r.score) && 
+        r.score >= 0
+      );
 
       if (results.length === 0) {
         showLoader(false);
-        alert("⚠️ No valid rows found in the Excel file.");
+        alert("⚠️ No valid rows found. Ensure columns are: student_id, class, section, subject, score");
         return;
       }
 
+      // ✅ Send to /api/result (singular — matches server.js)
       const response = await fetch(`${backendUrl}/api/result/upload-results`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ term, academic_year, results, school_id }),
       });
 
-      const resData = await response.json().catch(() => ({ success: false, message: "Invalid JSON response" }));
+      const resData = await response.json().catch(() => ({ success: false, message: "Invalid JSON" }));
       showLoader(false);
 
       if (resData.success) {
@@ -341,8 +346,8 @@ document.getElementById("resultForm").addEventListener("submit", async (e) => {
     reader.readAsArrayBuffer(file);
   } catch (err) {
     showLoader(false);
-    console.error("🚫 Upload error:", err);
-    alert("⚠️ Failed to connect to server. Please check your internet or backend status.");
+    console.error("Upload error:", err);
+    alert("⚠️ Upload failed. Check console for details.");
   }
 });
 
