@@ -264,10 +264,11 @@ function showLoader(show) {
 
 function downloadTemplate() {
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([
-    ["student_id", "class", "subject", "score", "grade", "remarks"],
-    ["STU001", "JSS 1", "Mathematics", "85", "A", "Excellent"]
-  ]);
+  // ✅ EXACT HEADER NAMES — lowercase, no spaces
+  const headers = ["student_id", "class", "section", "subject", "score", "grade", "remarks"];
+  const example = ["STU001", "JSS 1", "A", "Mathematics", 85, "A", "Excellent"];
+  
+  const ws = XLSX.utils.aoa_to_sheet([headers, example]);
   XLSX.utils.book_append_sheet(wb, ws, "Result Template");
   XLSX.writeFile(wb, "Gradely_Result_Template.xlsx");
 }
