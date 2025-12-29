@@ -221,7 +221,7 @@ saveEditBtn.onclick = async () => {
 };
 
 
-  const res = await fetch(`${API_BASE}/api/manage-students/${editStudentId.value}`, {
+  const res = await fetch(`${API_BASE}/api/students/${editStudentId.value}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
@@ -242,7 +242,10 @@ async function deleteStudent(id) {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/manage-students/${id}`, { method: "DELETE" });
+    const res = await fetch(`${API_BASE}/api/students/${id}`, {
+  method: "DELETE"
+});
+
 
     if (!res.ok) throw new Error("Delete failed");
 
