@@ -213,14 +213,15 @@ function editStudent(id) {
 /* SAVE EDIT */
 saveEditBtn.onclick = async () => {
   const payload = {
-    first_name: editFirstName.value,
-    middle_name: editMiddleName.value,
-    last_name: editLastName.value,
-    parent_phone: editPhone.value,
-    parent_email: editParentEmail.value
-  };
+  first_name: editFirstName.value,
+  middle_name: editMiddleName.value,
+  last_name: editLastName.value,
+  phone: editPhone.value,
+  parent_email: editParentEmail.value
+};
 
-  const res = await fetch(`${API_BASE}/api/students/${editStudentId.value}`, {
+
+  const res = await fetch(`${API_BASE}/api/manage-students/${editStudentId.value}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
@@ -241,7 +242,7 @@ async function deleteStudent(id) {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/students/${id}`, { method: "DELETE" });
+    const res = await fetch(`${API_BASE}/api/manage-students/${id}`, { method: "DELETE" });
 
     if (!res.ok) throw new Error("Delete failed");
 
