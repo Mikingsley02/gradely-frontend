@@ -4,280 +4,439 @@
   <meta charset="UTF-8" />
   <title>Create Timetable — Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="https://gradely.info/favicon.ico" />
 
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       background: #f6f7fb;
-      padding: 20px;
+      color: #333;
+      line-height: 1.6;
+      padding: 16px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
     }
 
     h1 {
-      margin-bottom: 10px;
+      font-size: 1.5rem;
+      margin-bottom: 12px;
     }
 
     .pro-badge {
-      color: #fff;
       background: #6c3cff;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      margin-left: 8px;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-left: 6px;
+      vertical-align: middle;
     }
 
     .card {
       background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 900px;
-      margin: auto;
-      box-shadow: 0 10px 30px rgba(0,0,0,.05);
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 15px;
-      margin-bottom: 15px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
     }
 
     select, input, button {
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
       width: 100%;
+      font-size: 0.95rem;
+      background: #fafafa;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: #6c3cff;
+      background: #fff;
     }
 
     button {
       background: #6c3cff;
-      color: #fff;
+      color: white;
       border: none;
       cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
     }
 
     button:hover {
-      opacity: 0.9;
+      background: #5a32d6;
+    }
+
+    button:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 25px;
+      margin-top: 20px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
     th, td {
-      padding: 10px;
-      border-bottom: 1px solid #eee;
+      padding: 12px 10px;
       text-align: left;
+      border-bottom: 1px solid #eee;
     }
 
     th {
-      background: #fafafa;
+      background: #f9f9ff;
+      font-weight: 600;
+      color: #555;
     }
 
     .danger {
       background: #ff4d4f;
+      color: white;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+
+    .danger:hover {
+      background: #e63946;
     }
 
     .locked {
       text-align: center;
-      padding: 50px;
+      padding: 40px 20px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .locked h2 {
+      margin-bottom: 12px;
+      color: #ff6b6b;
+    }
+
+    .locked a {
+      color: #6c3cff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .locked a:hover {
+      text-decoration: underline;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 30px;
+      color: #666;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      padding: 15px 0;
+      color: #666;
+      font-size: 0.85rem;
+      border-top: 1px solid #eee;
+    }
+
+    footer a {
+      color: #6c3cff;
+      text-decoration: none;
+      margin: 0 6px;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 600px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 1.35rem;
+      }
+
+      th, td {
+        font-size: 0.85rem;
+        padding: 10px 6px;
+      }
+
+      button {
+        padding: 12px;
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
 <body>
-
-<div id="app"></div>
-
-<script>
-/* ===============================
-   AUTH / PLAN CHECK
-================================ */
-const school_id = localStorage.getItem("school_id");
-const userPlan  = localStorage.getItem("plan"); // MUST be set at login
-
-if (!school_id) {
-  document.body.innerHTML = "<h2>Unauthorized</h2>";
-  throw new Error("No school ID");
-}
-
-if (userPlan !== "pro") {
-  document.getElementById("app").innerHTML = `
-    <div class="card locked">
-      <h2>🚫 Pro Feature</h2>
-      <p>Timetable creation is available on the <strong>Pro Plan</strong>.</p>
-      <a href="/upgrade.html">Upgrade Now</a>
-    </div>
-  `;
-  throw new Error("Not Pro");
-}
-
-/* ===============================
-   UI
-================================ */
-document.getElementById("app").innerHTML = `
-  <div class="card">
-    <h1>Create Timetable <span class="pro-badge">PRO</span></h1>
-
-    <div class="grid">
-      <input id="className" placeholder="Class (e.g. JSS 1)" />
-
-      <select id="day">
-        <option value="">Day</option>
-        <option>Monday</option>
-        <option>Tuesday</option>
-        <option>Wednesday</option>
-        <option>Thursday</option>
-        <option>Friday</option>
-      </select>
-
-      <select id="timeSlot">
-        <option value="">Time Slot</option>
-        <option>8:00 - 9:00</option>
-        <option>9:00 - 10:00</option>
-        <option>10:00 - 11:00</option>
-        <option>11:00 - 12:00</option>
-        <option>12:00 - 1:00</option>
-      </select>
-
-      <select id="subject"></select>
-
-      <input id="teacher" placeholder="Teacher (optional)" />
+  <div class="container">
+    <div id="app">
+      <div class="loading">Verifying your Pro access…</div>
     </div>
 
-    <button onclick="addSlot()">➕ Add to Timetable</button>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Day</th>
-          <th>Time</th>
-          <th>Subject</th>
-          <th>Teacher</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="timetable"></tbody>
-    </table>
+    <footer>
+      © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br>
+      <a href="terms.html">Terms</a> • 
+      <a href="privacy.html">Privacy</a> • 
+      <a href="refund-policy.html">Refund Policy</a>
+    </footer>
   </div>
-`;
 
-/* ===============================
-   LOAD SUBJECTS
-================================ */
-async function loadSubjects() {
-  const res = await fetch(
-    `/api/subjects/subjects?school_id=${school_id}`
-  );
-  const data = await res.json();
+  <script>
+    // ✅ Get school_id from localStorage (set at login)
+    const school_id = localStorage.getItem("school_id");
+    
+    if (!school_id) {
+      document.getElementById("app").innerHTML = `
+        <div class="locked">
+          <h2>🔑 Session Expired</h2>
+          <p>Please log in to access this feature.</p>
+          <a href="admin-login.html">Go to Login</a>
+        </div>
+      `;
+      throw new Error("No school_id in localStorage");
+    }
 
-  const subjectSelect = document.getElementById("subject");
-  subjectSelect.innerHTML = `<option value="">Subject</option>`;
+    // ✅ Verify Pro plan via backend
+    async function checkProAccess() {
+      try {
+        const res = await fetch(`https://api.gradely.info/api/school/plan?school_id=${encodeURIComponent(school_id)}`);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
 
-  data.subjects.forEach(s => {
-    subjectSelect.innerHTML += `
-      <option value="${s.id}">${s.subject_name}</option>
-    `;
-  });
-}
+        const data = await res.json();
 
-/* ===============================
-   LOAD TIMETABLE
-================================ */
-async function loadTimetable() {
-  const className = document.getElementById("className").value;
-  if (!className) return;
+        if (!data.success || data.plan !== "pro") {
+          document.getElementById("app").innerHTML = `
+            <div class="locked">
+              <h2>🚫 Pro Feature</h2>
+              <p>Timetable creation is only available on the <strong>Pro Plan</strong>.</p>
+              <a href="upgrade.html">Upgrade Now</a>
+            </div>
+          `;
+          return;
+        }
 
-  const res = await fetch(
-    `/api/timetable?school_id=${school_id}&class=${encodeURIComponent(className)}`
-  );
-  const data = await res.json();
+        // ✅ Render UI if Pro
+        renderTimetableUI();
+        await loadSubjects();
+        document.getElementById("className")?.addEventListener("input", loadTimetable);
 
-  const tbody = document.getElementById("timetable");
-  tbody.innerHTML = "";
+      } catch (err) {
+        console.error("Access verification failed:", err);
+        document.getElementById("app").innerHTML = `
+          <div class="locked">
+            <h2>⚠️ Verification Failed</h2>
+            <p>Unable to verify your account. Please log in again.</p>
+            <a href="admin-login.html">Reload Login</a>
+          </div>
+        `;
+      }
+    }
 
-  data.timetable.forEach(row => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${row.day}</td>
-        <td>${row.time_slot}</td>
-        <td>${row.subject}</td>
-        <td>${row.teacher || "-"}</td>
-        <td>
-          <button class="danger" onclick="deleteSlot(${row.id})">Delete</button>
-        </td>
-      </tr>
-    `;
-  });
-}
+    function renderTimetableUI() {
+      document.getElementById("app").innerHTML = `
+        <div class="card">
+          <h1>Create Timetable <span class="pro-badge">PRO</span></h1>
 
-/* ===============================
-   ADD SLOT
-================================ */
-async function addSlot() {
-  const payload = {
-    school_id,
-    class: document.getElementById("className").value,
-    day: document.getElementById("day").value,
-    time_slot: document.getElementById("timeSlot").value,
-    subject_id: document.getElementById("subject").value,
-    teacher: document.getElementById("teacher").value
-  };
+          <div class="grid">
+            <input type="text" id="className" placeholder="Class (e.g. JSS 1)" />
+            <select id="day">
+              <option value="">Day</option>
+              <option>Monday</option>
+              <option>Tuesday</option>
+              <option>Wednesday</option>
+              <option>Thursday</option>
+              <option>Friday</option>
+            </select>
+            <select id="timeSlot">
+              <option value="">Time Slot</option>
+              <option>8:00 - 9:00</option>
+              <option>9:00 - 10:00</option>
+              <option>10:00 - 11:00</option>
+              <option>11:00 - 12:00</option>
+              <option>12:00 - 13:00</option>
+              <option>13:00 - 14:00</option>
+            </select>
+            <select id="subject">
+              <option value="">Subject</option>
+            </select>
+            <input type="text" id="teacher" placeholder="Teacher (optional)" />
+          </div>
 
-  if (!payload.class || !payload.day || !payload.time_slot || !payload.subject_id) {
-    alert("Please fill all required fields");
-    return;
-  }
+          <button onclick="addSlot()">➕ Add to Timetable</button>
 
-  const res = await fetch("/api/timetable", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
+          <table>
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Time</th>
+                <th>Subject</th>
+                <th>Teacher</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="timetable">
+              <tr><td colspan="5" style="text-align:center;color:#888;">Enter class name to load timetable</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
 
-  const data = await res.json();
+    // ===== API FUNCTIONS =====
+    async function loadSubjects() {
+      try {
+        const res = await fetch(`https://api.gradely.info/api/subjects/subjects?school_id=${encodeURIComponent(school_id)}`);
+        const data = await res.json();
+        const select = document.getElementById("subject");
+        if (!select) return;
 
-  if (!data.success) {
-    alert(data.message || "Failed to add slot");
-    return;
-  }
+        select.innerHTML = '<option value="">Subject</option>';
+        if (data.success && Array.isArray(data.subjects)) {
+          data.subjects.forEach(s => {
+            select.innerHTML += `<option value="${s.id}">${s.subject_name}</option>`;
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load subjects:", err);
+      }
+    }
 
-  loadTimetable();
-}
+    async function loadTimetable() {
+      const className = document.getElementById("className")?.value?.trim();
+      const tbody = document.getElementById("timetable");
+      if (!className || !tbody) return;
 
-/* ===============================
-   DELETE SLOT
-================================ */
-async function deleteSlot(id) {
-  if (!confirm("Delete this timetable slot?")) return;
+      try {
+        const res = await fetch(
+          `https://api.gradely.info/api/timetable?school_id=${encodeURIComponent(school_id)}&class=${encodeURIComponent(className)}`
+        );
+        const data = await res.json();
 
-  await fetch(`/api/timetable/${id}?school_id=${school_id}`, {
-    method: "DELETE"
-  });
+        if (!data.success || !Array.isArray(data.timetable)) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#f66;">Failed to load timetable</td></tr>`;
+          return;
+        }
 
-  loadTimetable();
-}
+        if (data.timetable.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#888;">No timetable entries yet</td></tr>`;
+          return;
+        }
 
-/* ===============================
-   INIT
-================================ */
-loadSubjects();
-document.getElementById("className").addEventListener("change", loadTimetable);
-</script>
+        tbody.innerHTML = data.timetable.map(row => `
+          <tr>
+            <td>${row.day}</td>
+            <td>${row.time_slot}</td>
+            <td>${row.subject || '-'}</td>
+            <td>${row.teacher || '-'}</td>
+            <td>
+              <button class="danger" onclick="deleteSlot(${row.id})">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error("Timetable load error:", err);
+        document.getElementById("timetable").innerHTML = `<tr><td colspan="5" style="text-align:center;color:#f66;">Error loading timetable</td></tr>`;
+      }
+    }
 
+    async function addSlot() {
+      const className = document.getElementById("className")?.value?.trim();
+      const day = document.getElementById("day")?.value;
+      const timeSlot = document.getElementById("timeSlot")?.value;
+      const subjectId = document.getElementById("subject")?.value;
+      const teacher = document.getElementById("teacher")?.value?.trim();
+
+      if (!className || !day || !timeSlot || !subjectId) {
+        alert("Please fill: Class, Day, Time Slot, and Subject");
+        return;
+      }
+
+      const payload = {
+        school_id,
+        class: className,
+        day,
+        time_slot: timeSlot,
+        subject_id: subjectId,
+        teacher: teacher || null
+      };
+
+      try {
+        const res = await fetch("https://api.gradely.info/api/timetable", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+          alert(data.message || "Failed to add timetable slot");
+          return;
+        }
+
+        loadTimetable();
+        // Reset form (optional)
+        document.getElementById("day").value = "";
+        document.getElementById("timeSlot").value = "";
+        document.getElementById("subject").value = "";
+        document.getElementById("teacher").value = "";
+      } catch (err) {
+        console.error("Add slot error:", err);
+        alert("Failed to connect to server");
+      }
+    }
+
+    async function deleteSlot(id) {
+      if (!confirm("Are you sure you want to delete this timetable entry?")) return;
+
+      try {
+        const res = await fetch(`https://api.gradely.info/api/timetable/${id}?school_id=${encodeURIComponent(school_id)}`, {
+          method: "DELETE"
+        });
+
+        if (res.ok) {
+          loadTimetable();
+        } else {
+          alert("Failed to delete slot");
+        }
+      } catch (err) {
+        console.error("Delete error:", err);
+        alert("Network error");
+      }
+    }
+
+    // ✅ Start verification
+    checkProAccess();
+  </script>
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
-
-  <!-- Footer -->
-  <footer>
-    © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br>
-    <a href="terms.html">Terms</a> • 
-    <a href="privacy.html">Privacy</a> • 
-    <a href="refund-policy.html">Refund Policy</a>
-  </footer>
-
-
-
 </body>
 </html>
