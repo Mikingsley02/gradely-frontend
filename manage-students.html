@@ -242,9 +242,11 @@ async function deleteStudent(id) {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/students/${id}`, {
-  method: "DELETE"
-});
+  const res = await fetch(
+  `${API_BASE}/api/students/${id}?school_id=${encodeURIComponent(schoolId)}`,
+  { method: "DELETE" }
+);
+
 
 
     if (!res.ok) throw new Error("Delete failed");
