@@ -217,8 +217,10 @@ saveEditBtn.onclick = async () => {
   middle_name: editMiddleName.value,
   last_name: editLastName.value,
   phone: editPhone.value,
-  parent_email: editParentEmail.value
+  parent_email: editParentEmail.value,
+  school_id: schoolId
 };
+
 
 
   const res = await fetch(`${API_BASE}/api/students/${editStudentId.value}`, {
