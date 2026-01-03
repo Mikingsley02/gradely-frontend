@@ -2,442 +2,321 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📚 Manage Classes | Gradely.info</title>
+  <title>Manage Class Timetables — Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="https://gradely.info/favicon.ico" />
+
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #6a11cb, #2575fc);
-      color: #fff;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f6f7fb;
+      color: #333;
+      padding: 16px;
       min-height: 100vh;
-      padding: 15px;
     }
-
-    .container {
-      max-width: 1000px;
-      margin: 20px auto;
-      background: rgba(31, 3, 3, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-
-    header {
-      text-align: center;
-      padding: 25px 20px;
-      background: rgba(0, 0, 0, 0.1);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    header h1 {
-      font-size: 1.6rem;
-      margin-bottom: 8px;
-      color: #00ffb3;
-    }
-
-    header p {
-      opacity: 0.9;
-      font-size: 0.95rem;
-    }
-
-    .content {
-      padding: 20px;
-    }
-
-    /* Add Subject Form */
-    .add-subject-form {
-      background: rgba(97, 16, 16, 0.1);
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 25px;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr; /* ✅ Mobile-first: single column */
-      gap: 15px;
-      margin-bottom: 15px;
-    }
-
-    @media (min-width: 600px) {
-      .form-row {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      }
-    }
-
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 5px;
-      font-size: 0.95rem;
-      color: #e8f4fc;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #bdc3c7;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.2);
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; margin: 16px 0; }
+    .pro-badge {
+      background: #6c3cff;
       color: white;
-      font-size: 1rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      margin-left: 6px;
     }
-
-    input::placeholder,
-    textarea::placeholder {
-      color: rgba(255, 255, 255, 0.9);
-      font-weight: 500;
+    .card {
+      background: #fff;
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
     }
-
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: #fafafa;
+    }
     button {
-      padding: 12px 20px;
+      background: #6c3cff;
+      color: white;
       border: none;
-      border-radius: 6px;
       cursor: pointer;
       font-weight: 600;
-      transition: all 0.3s ease;
-      font-size: 1rem;
-      width: 100%; /* ✅ Full-width on mobile */
-      margin: 6px 0;
     }
-
-    @media (min-width: 600px) {
-      button {
-        width: auto;
-        margin: 0;
-      }
-    }
-
-    .btn-primary {
-      background: #00d2ff;
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: #0a84ff;
-    }
-
-    .btn-danger {
-      background: #e74c3c;
-      color: white;
-    }
-
-    .btn-danger:hover {
-      background: #c0392b;
-    }
-
-    .btn-warning {
-      background: #f39c12;
-      color: white;
-    }
-
-    .btn-warning:hover {
-      background: #e67e22;
-    }
-
-    /* Subjects Table */
-    .table-container {
-      overflow-x: auto;
-      margin: 20px 0;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      overflow: hidden;
-      min-width: 500px; /* Prevent collapse on small screens */
-    }
-
+    button:hover { background: #5a32d6; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td {
-      padding: 12px;
+      padding: 12px 10px;
       text-align: left;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      font-size: 0.9rem;
+      border-bottom: 1px solid #eee;
     }
-
-    @media (min-width: 600px) {
-      th, td {
-        padding: 14px 12px;
-        font-size: 1rem;
-      }
-    }
-
-    th {
-      background: #0c2461;
-      color: #00d2ff;
-    }
-
-    tr:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .actions button {
-      flex: 1;
-      min-width: 80px;
-      padding: 8px;
-      font-size: 0.8rem;
-    }
-
-    @media (min-width: 600px) {
-      .actions button {
-        flex: none;
-        padding: 6px 10px;
-        font-size: 0.85rem;
-      }
-    }
-
-    /* Messages */
-    .message {
-      margin-top: 15px;
-      padding: 12px;
-      border-radius: 6px;
-      text-align: center;
-      font-size: 0.95rem;
-    }
-
-    .success { background: rgba(39, 174, 96, 0.3); color: #27ae60; }
-    .error { background: rgba(231, 76, 60, 0.3); color: #e74c3c; }
-
-    /* Back Link */
-    .back-link {
-      display: inline-block;
-      background: #0c2461;
+    th { background: #f9f9ff; font-weight: 600; }
+    .danger {
+      background: #ff4d4f;
       color: white;
-      padding: 12px 24px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: 600;
-      margin-top: 20px;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .locked {
       text-align: center;
-      width: 100%;
+      padding: 40px 20px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
-
-    @media (min-width: 600px) {
-      .back-link {
-        width: auto;
-      }
-    }
-
-    .back-link:hover {
-      background: #1e3799;
-    }
-
-    /* Footer */
+    .loading { text-align: center; padding: 30px; color: #666; }
     footer {
       text-align: center;
-      padding: 20px;
-      font-size: 0.9rem;
-      color: #eee;
-      background: rgba(0, 0, 0, 0.1);
       margin-top: 30px;
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 15px 0;
+      color: #666;
+      font-size: 0.85rem;
+      border-top: 1px solid #eee;
     }
-
     footer a {
-      color: #00d2ff;
+      color: #6c3cff;
       text-decoration: none;
       margin: 0 6px;
+    }
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 1.4rem; }
+      th, td { font-size: 0.85rem; padding: 10px 6px; }
     }
   </style>
 </head>
 <body>
-
   <div class="container">
-    <header>
-      <h1>📚 Manage Classes</h1>
-      <p>Create, edit, and organize classes for your school</p>
-    </header>
-
-    <div class="content">
-
-      <!-- Add New Subject Form -->
-      <div class="add-subject-form">
-        <h2 style="color: #00d2ff; margin-bottom: 15px; text-align: center;">➕ Add New Subject</h2>
-        <form id="addSubjectForm">
-          <div class="form-row">
-            <div>
-              <label>Subject Name *</label>
-              <input type="text" id="subjectName" placeholder="e.g., Mathematics" required />
-            </div>
-            <div>
-              <label>Class (Optional)</label>
-              <input type="text" id="subjectClass" placeholder="e.g., JSS 1, SS 2" />
-            </div>
-            <div>
-              <label>Teacher (Optional)</label>
-              <input type="text" id="subjectTeacher" placeholder="Mrs. Amina" />
-            </div>
-          </div>
-          <button type="submit" class="btn-primary">Add Subject</button>
-        </form>
-        <div class="message" id="formMessage" style="display: none;"></div>
-      </div>
-
-      <!-- Subjects List -->
-      <h2 style="color: #00d2ff; margin-bottom: 15px; text-align: center;">📋 Existing Subjects</h2>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Subject</th>
-              <th>Class</th>
-              <th>Teacher</th>
-              <th>Students</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="subjectsTableBody">
-            <tr><td colspan="6" style="text-align:center; padding:20px;">Loading subjects...</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div style="text-align: center; margin-top: 20px;">
-        <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
-      </div>
+    <div id="app">
+      <div class="loading">Loading your class timetables…</div>
     </div>
+
+    <footer>
+      © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br>
+      <a href="terms.html">Terms</a> • 
+      <a href="privacy.html">Privacy</a> • 
+      <a href="refund-policy.html">Refund Policy</a>
+    </footer>
   </div>
 
-  <!-- Footer -->
-  <footer>
-    © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br>
-    <a href="terms.html">Terms</a> • 
-    <a href="privacy.html">Privacy</a> • 
-    <a href="refund-policy.html">Refund Policy</a>
-  </footer>
-
   <script>
-    // ✅ FIXED: Removed trailing space
-    const API_BASE = "https://gradely-backend-1.onrender.com";
+    const school_id = localStorage.getItem("school_id");
+    if (!school_id) {
+      document.getElementById("app").innerHTML = `
+        <div class="locked">
+          <h2>🔑 Session Expired</h2>
+          <p>Please log in to manage classes.</p>
+          <a href="admin-login.html">Go to Login</a>
+        </div>
+      `;
+      throw new Error("No school_id");
+    }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      fetchSubjects();
-    });
-
-    async function fetchSubjects() {
+    // ✅ Verify Pro access via backend
+    async function initPage() {
       try {
-        const res = await fetch(
-  `${API_BASE}/api/admin/subjects?school_id=${encodeURIComponent(schoolId)}`
-);
-        const data = await res.json();
+        const planRes = await fetch(`/api/school/plan?school_id=${encodeURIComponent(school_id)}`);
+        const planData = await planRes.json();
 
-        const tbody = document.getElementById("subjectsTableBody");
-        
-        if (!data.success || !Array.isArray(data.subjects)) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">❌ Failed to load subjects</td></tr>`;
+        if (!planData.success || planData.plan !== "pro") {
+          document.getElementById("app").innerHTML = `
+            <div class="locked">
+              <h2>🎓 Pro Feature: Manage Class Timetables</h2>
+              <p>Create and manage weekly timetables for all your classes.</p>
+              <p><strong>Available only on the Pro Plan.</strong></p>
+              <a href="upgrade.html">Upgrade to Pro Now</a>
+            </div>
+          `;
           return;
         }
 
-        if (data.subjects.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No subjects found. Add one above.</td></tr>`;
-          return;
-        }
-
-        tbody.innerHTML = data.subjects.map(subj => `
-          <tr>
-            <td>${subj.id}</td>
-            <td>${subj.subject_name}</td>
-            <td>${subj.class || "-"}</td>
-            <td>${subj.teacher || "-"}</td>
-            <td>${subj.student_count || 0}</td>
-            <td class="actions">
-              <button class="btn-warning" onclick="editSubject(${subj.id})">Edit</button>
-              <button class="btn-danger" onclick="deleteSubject(${subj.id})">Delete</button>
-            </td>
-          </tr>
-        `).join("");
+        renderTimetableUI();
+        loadSubjects();
+        document.getElementById("className")?.addEventListener("input", loadTimetable);
       } catch (err) {
-        console.error("Error fetching subjects:", err);
-        document.getElementById("subjectsTableBody").innerHTML = 
-          `<tr><td colspan="6" style="text-align:center;">⚠️ Connection error</td></tr>`;
+        console.error("Init failed:", err);
+        document.getElementById("app").innerHTML = `
+          <div class="locked">
+            <h2>⚠️ Error</h2>
+            <p>Could not load timetable manager. Please try again.</p>
+          </div>
+        `;
       }
     }
 
-    document.getElementById("addSubjectForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("subjectName").value.trim();
-      const cls = document.getElementById("subjectClass").value.trim();
-      const teacher = document.getElementById("subjectTeacher").value.trim();
-      const msgEl = document.getElementById("formMessage");
+    function renderTimetableUI() {
+      document.getElementById("app").innerHTML = `
+        <div class="card">
+          <h1>Manage Class Timetables <span class="pro-badge">PRO</span></h1>
+          <p style="margin:8px 0;color:#666;">Select a class and add weekly schedule slots.</p>
 
-      if (!name) {
-        showMessage("error", "Subject name is required.");
+          <div class="grid">
+            <input type="text" id="className" placeholder="Class Name (e.g. JSS 1)" />
+            <select id="day">
+              <option value="">Day</option>
+              <option>Monday</option>
+              <option>Tuesday</option>
+              <option>Wednesday</option>
+              <option>Thursday</option>
+              <option>Friday</option>
+            </select>
+            <select id="timeSlot">
+              <option value="">Time</option>
+              <option>8:00 - 9:00</option>
+              <option>9:00 - 10:00</option>
+              <option>10:00 - 11:00</option>
+              <option>11:00 - 12:00</option>
+              <option>12:00 - 13:00</option>
+              <option>13:00 - 14:00</option>
+            </select>
+            <select id="subject">
+              <option value="">Subject</option>
+            </select>
+            <input type="text" id="teacher" placeholder="Teacher (optional)" />
+          </div>
+
+          <button onclick="addSlot()">➕ Add Timetable Slot</button>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Time</th>
+                <th>Subject</th>
+                <th>Teacher</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="timetable">
+              <tr><td colspan="5" style="text-align:center;color:#888;">Enter a class name to load its timetable</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ===== API FUNCTIONS =====
+    async function loadSubjects() {
+      try {
+        const res = await fetch(`/api/subjects/subjects?school_id=${encodeURIComponent(school_id)}`);
+        const data = await res.json();
+        const select = document.getElementById("subject");
+        if (!select) return;
+        select.innerHTML = '<option value="">Subject</option>';
+        if (data.success && Array.isArray(data.subjects)) {
+          data.subjects.forEach(s => {
+            select.innerHTML += `<option value="${s.id}">${s.subject_name}</option>`;
+          });
+        }
+      } catch (err) {
+        console.error("Subjects load failed:", err);
+      }
+    }
+
+    async function loadTimetable() {
+      const className = document.getElementById("className")?.value?.trim();
+      const tbody = document.getElementById("timetable");
+      if (!className || !tbody) return;
+
+      try {
+        const res = await fetch(
+          `/api/timetable?school_id=${encodeURIComponent(school_id)}&class=${encodeURIComponent(className)}`
+        );
+        const data = await res.json();
+
+        if (!data.success || !Array.isArray(data.timetable)) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#f66;">Failed to load</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.timetable.length ? 
+          data.timetable.map(row => `
+            <tr>
+              <td>${row.day}</td>
+              <td>${row.time_slot}</td>
+              <td>${row.subject || '-'}</td>
+              <td>${row.teacher || '-'}</td>
+              <td><button class="danger" onclick="deleteSlot(${row.id})">Delete</button></td>
+            </tr>
+          `).join('') :
+          `<tr><td colspan="5" style="text-align:center;color:#888;">No timetable yet</td></tr>`;
+      } catch (err) {
+        console.error("Timetable load error:", err);
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#f66;">Error loading</td></tr>`;
+      }
+    }
+
+    async function addSlot() {
+      const fields = {
+        className: document.getElementById("className")?.value?.trim(),
+        day: document.getElementById("day")?.value,
+        timeSlot: document.getElementById("timeSlot")?.value,
+        subjectId: document.getElementById("subject")?.value,
+        teacher: document.getElementById("teacher")?.value?.trim()
+      };
+
+      if (!fields.className || !fields.day || !fields.timeSlot || !fields.subjectId) {
+        alert("Please fill: Class, Day, Time, and Subject");
         return;
       }
 
       try {
-        const res = await fetch(`${API_BASE}/api/admin/create-subject`, {
+        const res = await fetch("/api/timetable", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-  subject_name: name,
-  class: cls,
-  teacher,
-  school_id: schoolId
-})
-
+            school_id,
+            class: fields.className,
+            day: fields.day,
+            time_slot: fields.timeSlot,
+            subject_id: fields.subjectId,
+            teacher: fields.teacher || null
+          })
         });
 
-        const result = await res.json();
-        if (result.success) {
-          showMessage("success", "✅ Subject added successfully!");
-          document.getElementById("addSubjectForm").reset();
-          fetchSubjects();
-        } else {
-          showMessage("error", "❌ " + (result.message || "Failed to add subject"));
+        const data = await res.json();
+        if (!data.success) {
+          alert(data.message || "Failed to add slot");
+          return;
         }
+
+        loadTimetable();
+        // Reset form fields (optional)
+        document.getElementById("day").value = "";
+        document.getElementById("timeSlot").value = "";
+        document.getElementById("subject").value = "";
+        document.getElementById("teacher").value = "";
       } catch (err) {
-        showMessage("error", "⚠️ Connection error. Please try again.");
+        alert("Network error. Check your connection.");
       }
-    });
-
-    function showMessage(type, message) {
-      const el = document.getElementById("formMessage");
-      el.style.display = "block";
-      el.className = `message ${type}`;
-      el.textContent = message;
-      setTimeout(() => el.style.display = "none", 5000);
     }
 
-    function editSubject(id) {
-      alert(`Edit subject ID: ${id}\n👉 This would open an edit modal in full version.`);
-    }
-
-    async function deleteSubject(id) {
-      if (!confirm("Are you sure you want to delete this subject? All associated data will be lost.")) return;
-
+    async function deleteSlot(id) {
+      if (!confirm("Delete this timetable entry?")) return;
       try {
-        const res = await fetch(
-  `${API_BASE}/api/admin/delete-subject/${id}?school_id=${encodeURIComponent(schoolId)}`,
-  { method: "DELETE" }
-);
-
-        const result = await res.json();
-        if (result.success) {
-          showMessage("success", "🗑️ Subject deleted!");
-          fetchSubjects();
-        } else {
-          showMessage("error", "❌ Delete failed: " + result.message);
-        }
+        const res = await fetch(`/api/timetable/${id}?school_id=${encodeURIComponent(school_id)}`, {
+          method: "DELETE"
+        });
+        if (res.ok) loadTimetable();
       } catch (err) {
-        showMessage("error", "⚠️ Delete failed. Check connection.");
+        alert("Failed to delete");
       }
     }
+
+    // ✅ Start
+    initPage();
   </script>
 
   <script src="js/kaima-chatbot.js"></script>
