@@ -120,11 +120,14 @@ async function initTimetable() {
       credentials: "include"
     });
 
-    if (!res.ok) throw new Error("Unauthorized");
+    // ← THIS IS THE FIX: check res.ok immediately
+    if (!res.ok) {
+      if (res.status === 401) throw new Error("SESSION_EXPIRED");
+      if (res.status === 403) throw new Error("PLAN_RESTRICTED");
+      throw new Error("API_ERROR");
+    }
 
     const data = await res.json();
-
-    if (!data.success) throw new Error("Invalid session");
 
     if (data.subscription_plan !== "pro") {
       document.getElementById("app").innerHTML = `
@@ -153,33 +156,6 @@ async function initTimetable() {
   }
 }
 
-async function loadSubjects() {
-  try {
-    const res = await fetch(
-      `${BACKEND_URL}/api/subjects/subjects?school_id=${encodeURIComponent(window.school_id)}`,
-      { credentials: "include" }
-    );
-    const data = await res.json();
-
-    const select = document.getElementById("subject");
-    select.innerHTML = `<option value="">Subject</option>`;
-
-    if (data.success) {
-      data.subjects.forEach(s => {
-        select.innerHTML += `<option value="${s.id}">${s.subject_name}</option>`;
-      });
-    }
-  } catch (err) {
-  if (err.message === "SESSION_EXPIRED") {
-    showLoginExpired();
-  } else if (err.message === "PLAN_RESTRICTED") {
-    showUpgradeMessage();
-  } else {
-    showSystemError();
-  }
-}
-
-}
 
 async function loadTimetable() {
   const className = document.getElementById("className").value.trim();
