@@ -112,239 +112,159 @@
   </div>
 
   <script>
-  const BACKEND_URL = "https://api.gradely.info";
+const BACKEND_URL = "https://api.gradely.info";
 
-  async function initTimetable() {
-    const token = localStorage.getItem("admin_token");
-    if (!token) {
+async function initTimetable() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/admin/me`, {
+      credentials: "include"
+    });
+
+    if (!res.ok) throw new Error("Unauthorized");
+
+    const data = await res.json();
+
+    if (!data.success) throw new Error("Invalid session");
+
+    if (data.subscription_plan !== "pro") {
       document.getElementById("app").innerHTML = `
         <div class="locked">
-          <h2>🔑 Please Log In</h2>
-          <p>No authentication token found.</p>
-          <a href="admin-login.html">Go to Login</a>
+          <h2>🎓 Pro Feature</h2>
+          <p>Timetable management is available on the Pro plan.</p>
+          <a href="upgrade.html">Upgrade to Pro</a>
         </div>
       `;
       return;
     }
 
-    try {
-      // ✅ Use token to get school info
-      const sessionRes = await fetch(`${BACKEND_URL}/api/session/info`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
+    window.school_id = data.admin_id;
 
-      if (!sessionRes.ok) {
-        throw new Error("Invalid or expired token");
-      }
+    renderTimetableUI();
+    loadSubjects();
 
-      const sessionData = await sessionRes.json();
-      if (!sessionData.success) {
-        throw new Error("Failed to load school info");
-      }
-
-      const { school_id, plan } = sessionData;
-
-      if (plan !== "pro") {
-        document.getElementById("app").innerHTML = `
-          <div class="locked">
-            <h2>🎓 Pro Feature: Manage Class Timetables</h2>
-            <p>Create and manage weekly timetables for all your classes.</p>
-            <p><strong>Available only on the Pro Plan.</strong></p>
-            <a href="upgrade.html">Upgrade to Pro Now</a>
-          </div>
-        `;
-        return;
-      }
-
-      renderTimetableUI();
-      window.school_id = school_id;
-      loadSubjects(token);
-      document.getElementById("className")?.addEventListener("input", () => loadTimetable(token));
-
-    } catch (err) {
-      console.error("Auth failed:", err);
-      localStorage.removeItem("admin_token"); // clear invalid token
-      document.getElementById("app").innerHTML = `
-        <div class="locked">
-          <h2>🔑 Session Expired</h2>
-          <p>Please log in again.</p>
-          <a href="admin-login.html">Go to Login</a>
-        </div>
-      `;
-    }
-  }
-
-  // Pass token to all API calls
-  async function loadSubjects(token) {
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/subjects/subjects?school_id=${encodeURIComponent(window.school_id)}`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const data = await res.json();
-      const select = document.getElementById("subject");
-      if (!select) return;
-      select.innerHTML = '<option value="">Subject</option>';
-      if (data.success && Array.isArray(data.subjects)) {
-        data.subjects.forEach(s => {
-          select.innerHTML += `<option value="${s.id}">${s.subject_name}</option>`;
-        });
-      }
-    } catch (err) {
-      console.error("Subjects load failed:", err);
-    }
-  }
-
-  async function loadTimetable(token) {
-    const className = document.getElementById("className")?.value?.trim();
-    const tbody = document.getElementById("timetable");
-    if (!className || !tbody) return;
-
-    try {
-      const res = await fetch(
-        `${BACKEND_URL}/api/timetable?school_id=${encodeURIComponent(window.school_id)}&class=${encodeURIComponent(className)}`,
-        { headers: { "Authorization": `Bearer ${token}` } }
-      );
-      const data = await res.json();
-
-      if (!data.success || !Array.isArray(data.timetable)) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#f66;">Failed to load</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = data.timetable.length ? 
-        data.timetable.map(row => `
-          <tr>
-            <td>${row.day}</td>
-            <td>${row.time_slot}</td>
-            <td>${row.subject || '-'}</td>
-            <td>${row.teacher || '-'}</td>
-            <td><button class="danger" onclick="deleteSlot(${row.id}, '${token}')">Delete</button></td>
-          </tr>
-        `).join('') :
-        `<tr><td colspan="5" style="text-align:center;color:#888;">No timetable yet</td></tr>`;
-    } catch (err) {
-      console.error("Timetable load error:", err);
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#f66;">Error loading</td></tr>`;
-    }
-  }
-
-  async function addSlot(token) {
-    const fields = {
-      className: document.getElementById("className")?.value?.trim(),
-      day: document.getElementById("day")?.value,
-      timeSlot: document.getElementById("timeSlot")?.value,
-      subjectId: document.getElementById("subject")?.value,
-      teacher: document.getElementById("teacher")?.value?.trim()
-    };
-
-    if (!fields.className || !fields.day || !fields.timeSlot || !fields.subjectId) {
-      alert("Please fill: Class, Day, Time, and Subject");
-      return;
-    }
-
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/timetable`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          school_id: window.school_id,
-          class: fields.className,
-          day: fields.day,
-          time_slot: fields.timeSlot,
-          subject_id: fields.subjectId,
-          teacher: fields.teacher || null
-        })
-      });
-
-      const data = await res.json();
-      if (!data.success) {
-        alert(data.message || "Failed to add slot");
-        return;
-      }
-
-      loadTimetable(token);
-      // reset form
-      document.getElementById("day").value = "";
-      document.getElementById("timeSlot").value = "";
-      document.getElementById("subject").value = "";
-      document.getElementById("teacher").value = "";
-    } catch (err) {
-      alert("Network error");
-    }
-  }
-
-  async function deleteSlot(id, token) {
-    if (!confirm("Delete this timetable entry?")) return;
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/timetable/${id}?school_id=${encodeURIComponent(window.school_id)}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (res.ok) loadTimetable(token);
-    } catch (err) {
-      alert("Failed to delete");
-    }
-  }
-
-  function renderTimetableUI() {
-    // ... (same as before)
+  } catch (err) {
     document.getElementById("app").innerHTML = `
-      <div class="card">
-        <h1>Manage Class Timetables <span class="pro-badge">PRO</span></h1>
-        <p style="margin:8px 0;color:#666;">Select a class and add weekly schedule slots.</p>
-
-        <div class="grid">
-          <input type="text" id="className" placeholder="Class Name (e.g. JSS 1)" />
-          <select id="day">
-            <option value="">Day</option>
-            <option>Monday</option>
-            <option>Tuesday</option>
-            <option>Wednesday</option>
-            <option>Thursday</option>
-            <option>Friday</option>
-          </select>
-          <select id="timeSlot">
-            <option value="">Time</option>
-            <option>8:00 - 9:00</option>
-            <option>9:00 - 10:00</option>
-            <option>10:00 - 11:00</option>
-            <option>11:00 - 12:00</option>
-            <option>12:00 - 13:00</option>
-            <option>13:00 - 14:00</option>
-          </select>
-          <select id="subject">
-            <option value="">Subject</option>
-          </select>
-          <input type="text" id="teacher" placeholder="Teacher (optional)" />
-        </div>
-
-        <button onclick="addSlot(localStorage.getItem('admin_token'))">➕ Add Timetable Slot</button>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Day</th>
-              <th>Time</th>
-              <th>Subject</th>
-              <th>Teacher</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="timetable">
-            <tr><td colspan="5" style="text-align:center;color:#888;">Enter a class name to load its timetable</td></tr>
-          </tbody>
-        </table>
+      <div class="locked">
+        <h2>🔑 Session Timed Out</h2>
+        <p>Please log in again.</p>
+        <a href="admin-login.html">Go to Login</a>
       </div>
     `;
   }
+}
 
-  initTimetable();
+async function loadSubjects() {
+  try {
+    const res = await fetch(
+      `${BACKEND_URL}/api/subjects/subjects?school_id=${encodeURIComponent(window.school_id)}`,
+      { credentials: "include" }
+    );
+    const data = await res.json();
+
+    const select = document.getElementById("subject");
+    select.innerHTML = `<option value="">Subject</option>`;
+
+    if (data.success) {
+      data.subjects.forEach(s => {
+        select.innerHTML += `<option value="${s.id}">${s.subject_name}</option>`;
+      });
+    }
+  } catch (err) {
+    console.error("Failed to load subjects");
+  }
+}
+
+async function loadTimetable() {
+  const className = document.getElementById("className").value.trim();
+  if (!className) return;
+
+  const res = await fetch(
+    `${BACKEND_URL}/api/timetable?school_id=${window.school_id}&class=${encodeURIComponent(className)}`,
+    { credentials: "include" }
+  );
+
+  const data = await res.json();
+  const tbody = document.getElementById("timetable");
+
+  tbody.innerHTML = data.timetable?.length
+    ? data.timetable.map(row => `
+        <tr>
+          <td>${row.day}</td>
+          <td>${row.time_slot}</td>
+          <td>${row.subject || "-"}</td>
+          <td>${row.teacher || "-"}</td>
+          <td>
+            <button class="danger" onclick="deleteSlot(${row.id})">Delete</button>
+          </td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="5" style="text-align:center;">No timetable yet</td></tr>`;
+}
+
+async function addSlot() {
+  const payload = {
+    school_id: window.school_id,
+    class: document.getElementById("className").value.trim(),
+    day: document.getElementById("day").value,
+    time_slot: document.getElementById("timeSlot").value,
+    subject_id: document.getElementById("subject").value,
+    teacher: document.getElementById("teacher").value || null
+  };
+
+  await fetch(`${BACKEND_URL}/api/timetable`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  loadTimetable();
+}
+
+async function deleteSlot(id) {
+  await fetch(
+    `${BACKEND_URL}/api/timetable/${id}?school_id=${window.school_id}`,
+    { method: "DELETE", credentials: "include" }
+  );
+  loadTimetable();
+}
+
+function renderTimetableUI() {
+  document.getElementById("app").innerHTML = `
+    <div class="card">
+      <h1>Manage Class Timetables <span class="pro-badge">PRO</span></h1>
+
+      <div class="grid">
+        <input id="className" placeholder="Class Name (e.g. JSS 1)" oninput="loadTimetable()" />
+        <select id="day">
+          <option>Monday</option><option>Tuesday</option>
+          <option>Wednesday</option><option>Thursday</option><option>Friday</option>
+        </select>
+        <select id="timeSlot">
+          <option>8:00 - 9:00</option><option>9:00 - 10:00</option>
+          <option>10:00 - 11:00</option><option>11:00 - 12:00</option>
+        </select>
+        <select id="subject"></select>
+        <input id="teacher" placeholder="Teacher (optional)" />
+      </div>
+
+      <button onclick="addSlot()">➕ Add Slot</button>
+
+      <table>
+        <thead>
+          <tr><th>Day</th><th>Time</th><th>Subject</th><th>Teacher</th><th>Action</th></tr>
+        </thead>
+        <tbody id="timetable">
+          <tr><td colspan="5" style="text-align:center;">Enter class name</td></tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+initTimetable();
 </script>
+
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
