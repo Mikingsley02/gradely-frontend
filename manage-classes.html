@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Manage Class Timetables — Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="https://gradely.info/favicon.ico" />
+  <link rel="icon" href="https://gradely.info/favicon.ico"/>
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -112,23 +112,36 @@
   </div>
 
   <script>
-  // ✅ Use full backend URL + credentials: "include"
   const BACKEND_URL = "https://gradely-backend-1.onrender.com";
 
   async function initTimetable() {
+    const token = localStorage.getItem("admin_token");
+    if (!token) {
+      document.getElementById("app").innerHTML = `
+        <div class="locked">
+          <h2>🔑 Please Log In</h2>
+          <p>No authentication token found.</p>
+          <a href="admin-login.html">Go to Login</a>
+        </div>
+      `;
+      return;
+    }
+
     try {
-      // ✅ Fetch session info from backend WITH credentials
+      // ✅ Use token to get school info
       const sessionRes = await fetch(`${BACKEND_URL}/api/session/info`, {
-        credentials: "include" // ← SENDS SESSION COOKIE
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
       });
-      
+
       if (!sessionRes.ok) {
-        throw new Error("Not logged in");
+        throw new Error("Invalid or expired token");
       }
-      
+
       const sessionData = await sessionRes.json();
       if (!sessionData.success) {
-        throw new Error("Session invalid");
+        throw new Error("Failed to load school info");
       }
 
       const { school_id, plan } = sessionData;
@@ -147,25 +160,27 @@
 
       renderTimetableUI();
       window.school_id = school_id;
-      loadSubjects();
-      document.getElementById("className")?.addEventListener("input", loadTimetable);
+      loadSubjects(token);
+      document.getElementById("className")?.addEventListener("input", () => loadTimetable(token));
 
     } catch (err) {
       console.error("Auth failed:", err);
+      localStorage.removeItem("admin_token"); // clear invalid token
       document.getElementById("app").innerHTML = `
         <div class="locked">
-          <h2>🔑 Please Log In</h2>
-          <p>Your session has expired. Please log in again.</p>
+          <h2>🔑 Session Expired</h2>
+          <p>Please log in again.</p>
           <a href="admin-login.html">Go to Login</a>
         </div>
       `;
     }
   }
 
-  async function loadSubjects() {
+  // Pass token to all API calls
+  async function loadSubjects(token) {
     try {
       const res = await fetch(`${BACKEND_URL}/api/subjects/subjects?school_id=${encodeURIComponent(window.school_id)}`, {
-        credentials: "include"
+        headers: { "Authorization": `Bearer ${token}` }
       });
       const data = await res.json();
       const select = document.getElementById("subject");
@@ -181,7 +196,7 @@
     }
   }
 
-  async function loadTimetable() {
+  async function loadTimetable(token) {
     const className = document.getElementById("className")?.value?.trim();
     const tbody = document.getElementById("timetable");
     if (!className || !tbody) return;
@@ -189,7 +204,7 @@
     try {
       const res = await fetch(
         `${BACKEND_URL}/api/timetable?school_id=${encodeURIComponent(window.school_id)}&class=${encodeURIComponent(className)}`,
-        { credentials: "include" }
+        { headers: { "Authorization": `Bearer ${token}` } }
       );
       const data = await res.json();
 
@@ -205,7 +220,7 @@
             <td>${row.time_slot}</td>
             <td>${row.subject || '-'}</td>
             <td>${row.teacher || '-'}</td>
-            <td><button class="danger" onclick="deleteSlot(${row.id})">Delete</button></td>
+            <td><button class="danger" onclick="deleteSlot(${row.id}, '${token}')">Delete</button></td>
           </tr>
         `).join('') :
         `<tr><td colspan="5" style="text-align:center;color:#888;">No timetable yet</td></tr>`;
@@ -215,7 +230,7 @@
     }
   }
 
-  async function addSlot() {
+  async function addSlot(token) {
     const fields = {
       className: document.getElementById("className")?.value?.trim(),
       day: document.getElementById("day")?.value,
@@ -232,8 +247,10 @@
     try {
       const res = await fetch(`${BACKEND_URL}/api/timetable`, {
         method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           school_id: window.school_id,
           class: fields.className,
@@ -250,30 +267,32 @@
         return;
       }
 
-      loadTimetable();
+      loadTimetable(token);
+      // reset form
       document.getElementById("day").value = "";
       document.getElementById("timeSlot").value = "";
       document.getElementById("subject").value = "";
       document.getElementById("teacher").value = "";
     } catch (err) {
-      alert("Network error. Check your connection.");
+      alert("Network error");
     }
   }
 
-  async function deleteSlot(id) {
+  async function deleteSlot(id, token) {
     if (!confirm("Delete this timetable entry?")) return;
     try {
       const res = await fetch(`${BACKEND_URL}/api/timetable/${id}?school_id=${encodeURIComponent(window.school_id)}`, {
         method: "DELETE",
-        credentials: "include"
+        headers: { "Authorization": `Bearer ${token}` }
       });
-      if (res.ok) loadTimetable();
+      if (res.ok) loadTimetable(token);
     } catch (err) {
       alert("Failed to delete");
     }
   }
 
   function renderTimetableUI() {
+    // ... (same as before)
     document.getElementById("app").innerHTML = `
       <div class="card">
         <h1>Manage Class Timetables <span class="pro-badge">PRO</span></h1>
@@ -304,7 +323,7 @@
           <input type="text" id="teacher" placeholder="Teacher (optional)" />
         </div>
 
-        <button onclick="addSlot()">➕ Add Timetable Slot</button>
+        <button onclick="addSlot(localStorage.getItem('admin_token'))">➕ Add Timetable Slot</button>
 
         <table>
           <thead>
@@ -324,7 +343,6 @@
     `;
   }
 
-  // ✅ Start
   initTimetable();
 </script>
 
