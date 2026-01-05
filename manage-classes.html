@@ -112,7 +112,10 @@
   </div>
 
   <script>
-const BACKEND_URL = "https://api.gradely.info";
+fetch("https://api.gradely.info/api/admin/me", {
+  credentials: "include"
+})
+
 
 async function initTimetable() {
   try {
