@@ -123,27 +123,19 @@ async function initTimetable() {
     const res = await fetch(`${BACKEND_URL}/api/admin/me`, {
       method: "GET",
       credentials: "include",
-      headers: {
-        "Accept": "application/json"
-      }
+      headers: { "Accept": "application/json" }
     });
 
     console.log("📡 /me status:", res.status);
 
-    if (res.status === 401) {
-      throw new Error("SESSION_EXPIRED");
-    }
-
-    if (!res.ok) {
-      throw new Error("API_ERROR");
-    }
+    if (res.status === 401) throw new Error("SESSION_EXPIRED");
+    if (!res.ok) throw new Error("API_ERROR");
 
     const data = await res.json();
     console.log("✅ Admin session data:", data);
 
-    if (!data.school_id) {
-      throw new Error("INVALID_SESSION");
-    }
+    if (!data.school_id) throw new Error("INVALID_SESSION");
+    window.school_id = data.school_id;
 
     if (data.subscription_plan !== "pro") {
       app.innerHTML = `
@@ -155,8 +147,6 @@ async function initTimetable() {
       `;
       return;
     }
-
-    window.school_id = data.school_id;
 
     renderTimetableUI();
     loadSubjects();
@@ -177,30 +167,37 @@ async function initTimetable() {
 }
 
 async function loadTimetable() {
-  const className = document.getElementById("className").value.trim();
+  const className = document.getElementById("className")?.value.trim();
   if (!className || !window.school_id) return;
 
-  const res = await fetch(
-    `${BACKEND_URL}/api/timetable?school_id=${window.school_id}&class=${encodeURIComponent(className)}`,
-    { credentials: "include" }
-  );
+  try {
+    const res = await fetch(
+      `${BACKEND_URL}/api/timetable?school_id=${window.school_id}&class=${encodeURIComponent(className)}`,
+      { credentials: "include" }
+    );
 
-  const data = await res.json();
-  const tbody = document.getElementById("timetable");
+    if (!res.ok) throw new Error("Failed to load timetable");
 
-  tbody.innerHTML = data.timetable?.length
-    ? data.timetable.map(row => `
-        <tr>
-          <td>${row.day}</td>
-          <td>${row.time_slot}</td>
-          <td>${row.subject || "-"}</td>
-          <td>${row.teacher || "-"}</td>
-          <td>
-            <button class="danger" onclick="deleteSlot(${row.id})">Delete</button>
-          </td>
-        </tr>
-      `).join("")
-    : `<tr><td colspan="5" style="text-align:center;">No timetable yet</td></tr>`;
+    const data = await res.json();
+    const tbody = document.getElementById("timetable");
+
+    tbody.innerHTML = data.timetable?.length
+      ? data.timetable.map(row => `
+          <tr>
+            <td>${row.day}</td>
+            <td>${row.time_slot}</td>
+            <td>${row.subject || "-"}</td>
+            <td>${row.teacher || "-"}</td>
+            <td>
+              <button class="danger" onclick="deleteSlot(${row.id})">Delete</button>
+            </td>
+          </tr>
+        `).join("")
+      : `<tr><td colspan="5" style="text-align:center;">No timetable yet</td></tr>`;
+
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 async function addSlot() {
@@ -213,22 +210,30 @@ async function addSlot() {
     teacher: document.getElementById("teacher").value || null
   };
 
-  await fetch(`${BACKEND_URL}/api/timetable`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
+  try {
+    await fetch(`${BACKEND_URL}/api/timetable`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
 
-  loadTimetable();
+    loadTimetable();
+  } catch (err) {
+    console.error("❌ Failed to add slot:", err);
+  }
 }
 
 async function deleteSlot(id) {
-  await fetch(
-    `${BACKEND_URL}/api/timetable/${id}?school_id=${window.school_id}`,
-    { method: "DELETE", credentials: "include" }
-  );
-  loadTimetable();
+  try {
+    await fetch(`${BACKEND_URL}/api/timetable/${id}?school_id=${window.school_id}`, {
+      method: "DELETE",
+      credentials: "include"
+    });
+    loadTimetable();
+  } catch (err) {
+    console.error("❌ Failed to delete slot:", err);
+  }
 }
 
 function renderTimetableUI() {
@@ -264,8 +269,11 @@ function renderTimetableUI() {
   `;
 }
 
+// Initialize
 initTimetable();
 </script>
+
+
 
 
   <script src="js/timetable-core.js"></script>
