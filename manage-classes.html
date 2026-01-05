@@ -115,7 +115,7 @@
 const BACKEND_URL = "https://api.gradely.info";
 
 async function initTimetable() {
-  const token = localStorage.getItem("admin_token");
+  const token = sessionStorage.getItem("admin_token");
   if (!token) {
     document.getElementById("app").innerHTML = `
       <div class="locked">
