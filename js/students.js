@@ -274,7 +274,7 @@ router.put("/:student_id", async (req, res) => {
 });
 
 
-localStorage.setItem("firstLogin", data.first_login ? "true" : "false");
+
 
 
 /**

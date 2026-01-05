@@ -117,29 +117,6 @@
       <p>Review your child’s academic performance below</p>
     </header>
 
-
-<!-- 🔐 FIRST LOGIN CHANGE PASSWORD PROMPT -->
-<div id="changePasswordPrompt" style="display:none; padding:20px; background:#fff3cd; border-radius:8px; margin:20px;">
-  <p><strong>⚠️ First Time Login</strong></p>
-  <p>You must change your password before continuing.</p>
-  <button class="btn btn-download" onclick="showChangePasswordForm()">Change Password</button>
-</div>
-
-<!-- 🔐 CHANGE PASSWORD FORM -->
-<div id="changePasswordForm" style="display:none; padding:20px; background:#f8f9fa; border-radius:8px; margin:20px;">
-  <h3>🔐 Change Password</h3>
-  <form onsubmit="handleChangePassword(event)">
-    <input type="password" id="currentPassword" placeholder="Current Password" required style="width:100%; padding:10px; margin:8px 0;">
-    <input type="password" id="newPassword" placeholder="New Password" required style="width:100%; padding:10px; margin:8px 0;">
-    <input type="password" id="confirmPassword" placeholder="Confirm New Password" required style="width:100%; padding:10px; margin:8px 0;">
-    <button type="submit" class="btn btn-download">Update Password</button>
-    <button type="button" class="btn btn-logout" onclick="hideChangePasswordForm()">Cancel</button>
-  </form>
-  <p id="changePassMsg" style="margin-top:10px;"></p>
-</div>
-
-
-
     <div class="student-info">
       <p><strong>Name:</strong> <span id="studentName">Loading...</span></p>
       <p><strong>Student ID:</strong> <span id="studentId">Loading...</span></p>
@@ -172,6 +149,23 @@
       <button class="btn btn-logout" onclick="logout()">🔐 Logout</button>
     </div>
   </div>
+
+<!-- Password Prompt -->
+  <div id="changePasswordPrompt">
+    <h3>🔐 Secure Your Account</h3>
+    <p>If this is your first login, please change your default password for security.</p>
+    <button style="background:#e65100; color:white;" onclick="showChangePasswordForm()">Change Password</button>
+  </div>
+
+  <!-- Change Password Form -->
+  <div id="changePasswordForm">
+    <h3>Change Your Password</h3>
+…      <button type="submit" style="background:#3498db;color:white;">💾 Save</button>
+      <button type="button" style="background:#95a5a6;color:white;" onclick="hideChangePasswordForm()">Cancel</button>
+    </form>
+    <p id="changePassMsg"></p>
+  </div>
+
 
   <footer>
     © 2025 gradely.info. All rights reserved. | Powered by RIS<br>
