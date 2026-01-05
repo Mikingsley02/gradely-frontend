@@ -374,6 +374,51 @@
   doc.save(`${id}_Report.pdf`);
 }
 
+
+function showChangePasswordForm() {
+      document.getElementById("changePasswordPrompt").style.display = "none";
+      document.getElementById("changePasswordForm").style.display = "block";
+    }
+
+    function hideChangePasswordForm() {
+      document.getElementById("changePasswordForm").style.display = "none";
+    }
+
+    async function handleChangePassword(e) {
+      e.preventDefault();
+      const studentId = localStorage.getItem("studentId");
+      const currentPassword = document.getElementById("currentPassword").value;
+      const newPassword = document.getElementById("newPassword").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+
+      if (newPassword !== confirmPassword) {
+        document.getElementById("changePassMsg").textContent = "❌ Passwords do not match";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${backendUrl}/api/change-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ studentId, currentPassword, newPassword }),
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById("changePassMsg").textContent = "✅ Password changed successfully!";
+          localStorage.setItem("firstLogin", "false"); // ✅ Mark as not first login
+          setTimeout(() => hideChangePasswordForm(), 2000);
+        } else {
+          document.getElementById("changePassMsg").textContent = `❌ ${data.message}`;
+        }
+      } catch (err) {
+        console.error("Password change error:", err);
+        document.getElementById("changePassMsg").textContent = "⚠️ Failed to update password";
+      }
+    }
+
+
+
   </script>
 </body>
 </html>
