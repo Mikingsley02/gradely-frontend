@@ -112,186 +112,36 @@
   </div>
 
 <script>
-// ✅ FIX 1: Remove trailing spaces
 const BACKEND_URL = "https://api.gradely.info";
 
-async function initTimetable() {
-  const app = document.getElementById("app");
-
-  try {
-    // ✅ FIX 2: Use credentials: "include" for session cookies
-    const res = await fetch(`${BACKEND_URL}/api/admin/me`, {
-      method: "GET",
-      credentials: "include", // ← SENDS SESSION COOKIE
-      headers: { "Accept": "application/json" }
+// Test session
+fetch(`${BACKEND_URL}/api/admin/me`, {
+  credentials: "include"
+})
+.then(res => {
+  if (res.ok) {
+    return res.json().then(data => {
+      if (data.subscription_plan === "pro") {
+        document.getElementById("app").innerHTML = "<h2>Welcome, Pro User!</h2>";
+        // ... render full UI
+      } else {
+        document.getElementById("app").innerHTML = "<h2>Upgrade to Pro</h2>";
+      }
     });
-
-    if (res.status === 401) {
-      throw new Error("SESSION_EXPIRED");
-    }
-    if (!res.ok) {
-      throw new Error("API_ERROR");
-    }
-
-    const data = await res.json();
-    if (!data.success || !data.school_id) {
-      throw new Error("INVALID_SESSION");
-    }
-
-    window.school_id = data.school_id;
-
-    if (data.subscription_plan !== "pro") {
-      app.innerHTML = `
-        <div class="locked">
-          <h2>🎓 Pro Feature</h2>
-          <p>Timetable management is available on the Pro plan.</p>
-          <a href="upgrade.html">Upgrade to Pro</a>
-        </div>
-      `;
-      return;
-    }
-
-    renderTimetableUI();
-    loadSubjects();
-
-  } catch (err) {
-    console.error("❌ Timetable init failed:", err.message);
-    app.innerHTML = `
+  } else {
+    document.getElementById("app").innerHTML = `
       <div class="locked">
-        <h2>🔑 ${err.message === "SESSION_EXPIRED" ? "Session Expired" : "Auth Error"}</h2>
-        <p>${err.message === "SESSION_EXPIRED" ? "Please log in again." : "Access denied."}</p>
-        <a href="admin-login.html">Go to Login</a>
+        <h2>🔑 Session Expired</h2>
+        <a href="admin-login.html">Login</a>
       </div>
     `;
   }
-}
-
-async function loadSubjects() {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/subjects/subjects?school_id=${encodeURIComponent(window.school_id)}`, {
-      credentials: "include"
-    });
-    const data = await res.json();
-    const select = document.getElementById("subject");
-    if (!select) return;
-    select.innerHTML = '<option value="">Subject</option>';
-    if (data.success && Array.isArray(data.subjects)) {
-      data.subjects.forEach(s => {
-        select.innerHTML += `<option value="${s.id}">${s.subject_name}</option>`;
-      });
-    }
-  } catch (err) {
-    console.error("Subjects load failed:", err);
-  }
-}
-
-async function loadTimetable() {
-  const className = document.getElementById("className")?.value.trim();
-  if (!className) return;
-
-  try {
-    const res = await fetch(
-      `${BACKEND_URL}/api/timetable?school_id=${encodeURIComponent(window.school_id)}&class=${encodeURIComponent(className)}`,
-      { credentials: "include" }
-    );
-
-    if (!res.ok) throw new Error("Failed to load timetable");
-
-    const data = await res.json();
-    const tbody = document.getElementById("timetable");
-
-    tbody.innerHTML = data.timetable?.length
-      ? data.timetable.map(row => `
-          <tr>
-            <td>${row.day}</td>
-            <td>${row.time_slot}</td>
-            <td>${row.subject || "-"}</td>
-            <td>${row.teacher || "-"}</td>
-            <td>
-              <button class="danger" onclick="deleteSlot(${row.id})">Delete</button>
-            </td>
-          </tr>
-        `).join("")
-      : `<tr><td colspan="5" style="text-align:center;">No timetable yet</td></tr>`;
-
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-async function addSlot() {
-  const payload = {
-    school_id: window.school_id,
-    class: document.getElementById("className").value.trim(),
-    day: document.getElementById("day").value,
-    time_slot: document.getElementById("timeSlot").value,
-    subject_id: document.getElementById("subject").value,
-    teacher: document.getElementById("teacher").value || null
-  };
-
-  try {
-    await fetch(`${BACKEND_URL}/api/timetable`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    loadTimetable();
-  } catch (err) {
-    console.error("❌ Failed to add slot:", err);
-  }
-}
-
-async function deleteSlot(id) {
-  try {
-    await fetch(`${BACKEND_URL}/api/timetable/${id}?school_id=${encodeURIComponent(window.school_id)}`, {
-      method: "DELETE",
-      credentials: "include"
-    });
-    loadTimetable();
-  } catch (err) {
-    console.error("❌ Failed to delete slot:", err);
-  }
-}
-
-function renderTimetableUI() {
-  document.getElementById("app").innerHTML = `
-    <div class="card">
-      <h1>Manage Class Timetables <span class="pro-badge">PRO</span></h1>
-
-      <div class="grid">
-        <input id="className" placeholder="Class Name (e.g. JSS 1)" oninput="loadTimetable()" />
-        <select id="day">
-          <option>Monday</option><option>Tuesday</option>
-          <option>Wednesday</option><option>Thursday</option><option>Friday</option>
-        </select>
-        <select id="timeSlot">
-          <option>8:00 - 9:00</option><option>9:00 - 10:00</option>
-          <option>10:00 - 11:00</option><option>11:00 - 12:00</option>
-          <option>12:00 - 13:00</option><option>13:00 - 14:00</option>
-        </select>
-        <select id="subject"></select>
-        <input id="teacher" placeholder="Teacher (optional)" />
-      </div>
-
-      <button onclick="addSlot()">➕ Add Slot</button>
-
-      <table>
-        <thead>
-          <tr><th>Day</th><th>Time</th><th>Subject</th><th>Teacher</th><th>Action</th></tr>
-        </thead>
-        <tbody id="timetable">
-          <tr><td colspan="5" style="text-align:center;">Enter class name</td></tr>
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
-// Initialize
-initTimetable();
+})
+.catch(err => {
+  console.error("Fetch error:", err);
+  document.getElementById("app").innerHTML = "<h2>Network Error</h2>";
+});
 </script>
-
 
   <script src="js/timetable-core.js"></script>
   <script src="js/kaima-chatbot.js"></script>
