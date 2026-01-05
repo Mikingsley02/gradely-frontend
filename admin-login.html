@@ -327,11 +327,11 @@ document.getElementById("adminLoginForm").addEventListener("submit", async (e) =
     if (data.success) {
       alert("✅ Login successful!");
 
-      localStorage.setItem("adminId", data.admin.admin_id);
-      localStorage.setItem("school_id", data.admin.admin_id);
-      localStorage.setItem("school_name", data.admin.school_name || "");
-      localStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
-      localStorage.setItem("admin_token", data.token); // ← use "admin_token" (not "token")
+      sessionStorage.setItem("adminId", data.admin.admin_id);
+      sessionStorage.setItem("school_id", data.admin.admin_id);
+      sessionStorage.setItem("school_name", data.admin.school_name || "");
+      sessionStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
+      sessionStorage.setItem("token", data.token);
       
 
       window.location.href = "dashboard.html";
