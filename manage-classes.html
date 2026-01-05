@@ -111,29 +111,42 @@
     </footer>
   </div>
 
-  <script>
-fetch("https://api.gradely.info/api/admin/me", {
-  credentials: "include"
-})
-
+<script>
+const BACKEND_URL = "https://api.gradely.info";
 
 async function initTimetable() {
+  const app = document.getElementById("app");
+
   try {
+    console.log("🔍 Checking admin session…");
+
     const res = await fetch(`${BACKEND_URL}/api/admin/me`, {
-      credentials: "include"
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Accept": "application/json"
+      }
     });
 
-    // ← THIS IS THE FIX: check res.ok immediately
+    console.log("📡 /me status:", res.status);
+
+    if (res.status === 401) {
+      throw new Error("SESSION_EXPIRED");
+    }
+
     if (!res.ok) {
-      if (res.status === 401) throw new Error("SESSION_EXPIRED");
-      if (res.status === 403) throw new Error("PLAN_RESTRICTED");
       throw new Error("API_ERROR");
     }
 
     const data = await res.json();
+    console.log("✅ Admin session data:", data);
+
+    if (!data.school_id) {
+      throw new Error("INVALID_SESSION");
+    }
 
     if (data.subscription_plan !== "pro") {
-      document.getElementById("app").innerHTML = `
+      app.innerHTML = `
         <div class="locked">
           <h2>🎓 Pro Feature</h2>
           <p>Timetable management is available on the Pro plan.</p>
@@ -149,20 +162,23 @@ async function initTimetable() {
     loadSubjects();
 
   } catch (err) {
-    document.getElementById("app").innerHTML = `
+    console.error("❌ Timetable init failed:", err.message);
+
+    app.innerHTML = `
       <div class="locked">
         <h2>🔑 Session Timed Out</h2>
-        <p>Please log in again.</p>
+        <p>${err.message === "SESSION_EXPIRED"
+          ? "Your login session has expired."
+          : "Unable to reach server."}</p>
         <a href="admin-login.html">Go to Login</a>
       </div>
     `;
   }
 }
 
-
 async function loadTimetable() {
   const className = document.getElementById("className").value.trim();
-  if (!className) return;
+  if (!className || !window.school_id) return;
 
   const res = await fetch(
     `${BACKEND_URL}/api/timetable?school_id=${window.school_id}&class=${encodeURIComponent(className)}`,
@@ -249,8 +265,8 @@ function renderTimetableUI() {
 }
 
 initTimetable();
-
 </script>
+
 
   <script src="js/timetable-core.js"></script>
   <script src="js/kaima-chatbot.js"></script>
