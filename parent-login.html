@@ -368,10 +368,15 @@
       }
 
       if (data.success) {
-        console.log('✅ Parent login successful! Redirecting...');
-        localStorage.setItem('studentId', student_id);
-        localStorage.setItem('school_id', data.parent.school_id); // store for results
-        window.location.href = 'student.html';
+  console.log('✅ Parent login successful! Redirecting...');
+  localStorage.setItem('studentId', student_id);
+  localStorage.setItem('school_id', data.parent.school_id);
+
+  // ✅ CRITICAL: Set firstLogin flag based on backend response
+  const isFirstLogin = data.firstLogin === true; // data.password_reset_required, etc.
+  localStorage.setItem('firstLogin', isFirstLogin ? 'true' : 'false');
+
+  window.location.href = 'student.html';
       } else {
         console.warn('❌ Parent login failed:', data.message);
         alert('❌ ' + (data.message || 'Login failed.'));
