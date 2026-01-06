@@ -124,44 +124,7 @@
       <p>Review your child’s academic performance below</p>
     </header>
 
-    <!-- ✅ INSERTED: Integrated Change Password UI -->
-    <div id="changePasswordSection" class="change-password-section" style="display: none; padding: 25px; background: #fff8e1; border-bottom: 1px solid #ffe082;">
-      <h3 style="margin-top: 0; color: #e65100; display: flex; align-items: center; gap: 8px;">
-        🔐 Secure Your Account
-      </h3>
-      <p style="margin-bottom: 16px; color: #5d4037;">
-        This appears to be your first login. Please set a new password for security.
-      </p>
-      <button class="btn" style="background: #e65100; color: white;" onclick="showChangePasswordForm()">
-        Change Password
-      </button>
-    </div>
-
-    <div id="changePasswordForm" class="change-password-form" style="display: none; padding: 25px; background: #f9f9f9; border-top: 1px solid #eee;">
-      <h3 style="margin-top: 0; color: var(--dark-text);">Change Your Password</h3>
-      <form onsubmit="handleChangePassword(event)">
-        <div style="margin-bottom: 12px;">
-          <label for="currentPassword" style="display: block; margin-bottom: 4px; font-weight: 500;">Current Password</label>
-          <input type="password" id="currentPassword" required
-            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;">
-        </div>
-        <div style="margin-bottom: 12px;">
-          <label for="newPassword" style="display: block; margin-bottom: 4px; font-weight: 500;">New Password</label>
-          <input type="password" id="newPassword" required
-            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;">
-        </div>
-        <div style="margin-bottom: 16px;">
-          <label for="confirmPassword" style="display: block; margin-bottom: 4px; font-weight: 500;">Confirm New Password</label>
-          <input type="password" id="confirmPassword" required
-            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;">
-        </div>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <button type="submit" class="btn" style="background: #3498db; color: white; flex: 1; min-width: 120px;">💾 Save</button>
-          <button type="button" class="btn" style="background: #95a5a6; color: white; flex: 1; min-width: 120px;" onclick="hideChangePasswordForm()">Cancel</button>
-        </div>
-      </form>
-      <p id="changePassMsg" style="margin-top: 12px; min-height: 20px; font-weight: 500;"></p>
-    </div>
+    
 
     <div class="student-info">
       <p><strong>Name:</strong> <span id="studentName">Loading...</span></p>
@@ -196,6 +159,56 @@
     </div>
   </div>
 
+
+  <!-- Change Password Trigger -->
+<div id="changePasswordSection" class="change-password-section" style="padding: 25px; background: #fff8e1; border-bottom: 1px solid #ffe082;">
+  <h3 style="margin-top: 0; color: #e65100; display: flex; align-items: center; gap: 8px;">
+    🔐 Secure Your Account
+  </h3>
+  <p style="margin-bottom: 16px; color: #5d4037;">
+    Change your password anytime for better security.
+  </p>
+  <button class="btn" style="background: #e65100; color: white;" onclick="openPasswordModal()">
+    Change Password
+  </button>
+</div>
+
+<!-- Password Modal -->
+<div id="passwordModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:#fff; padding:25px; width:100%; max-width:420px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+    <h3 style="margin-top:0;">🔐 Change Your Password</h3>
+
+    <form onsubmit="handleChangePassword(event)">
+      <div style="margin-bottom:12px; position:relative;">
+        <label>Current Password</label>
+        <input type="password" id="currentPassword" required style="width:100%; padding:10px 40px 10px 10px; border:1px solid #ccc; border-radius:6px;">
+        <span onclick="togglePwd('currentPassword', this)" style="position:absolute; right:12px; top:34px; cursor:pointer;">👁️</span>
+      </div>
+
+      <div style="margin-bottom:12px; position:relative;">
+        <label>New Password</label>
+        <input type="password" id="newPassword" required style="width:100%; padding:10px 40px 10px 10px; border:1px solid #ccc; border-radius:6px;">
+        <span onclick="togglePwd('newPassword', this)" style="position:absolute; right:12px; top:34px; cursor:pointer;">👁️</span>
+      </div>
+
+      <div style="margin-bottom:16px; position:relative;">
+        <label>Confirm New Password</label>
+        <input type="password" id="confirmPassword" required style="width:100%; padding:10px 40px 10px 10px; border:1px solid #ccc; border-radius:6px;">
+        <span onclick="togglePwd('confirmPassword', this)" style="position:absolute; right:12px; top:34px; cursor:pointer;">👁️</span>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button type="submit" class="btn" style="background:#3498db; color:white; flex:1;">💾 Save</button>
+        <button type="button" class="btn" style="background:#95a5a6; color:white; flex:1;" onclick="closePasswordModal()">Cancel</button>
+      </div>
+    </form>
+
+    <p id="changePassMsg" style="margin-top:12px; min-height:20px; font-weight:500;"></p>
+  </div>
+</div>
+
+    
+
   <footer>
     © 2025 gradely.info. All rights reserved. | Powered by RIS<br>
     <a href="terms.html">Terms</a> • 
@@ -207,10 +220,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   
   <script>
-    // ✅ FIXED: Removed trailing space
     const backendUrl = "https://api.gradely.info";
     let chartInstance = null;
-    let currentData = null; // ✅ Store data for PDF
+    let currentData = null;
 
     document.addEventListener("DOMContentLoaded", async () => {
       const studentId = localStorage.getItem("studentId");
@@ -236,10 +248,8 @@
           return;
         }
 
-        // ✅ Save for PDF
         currentData = data;
 
-        // ✅ Header + student info
         document.getElementById("schoolName").textContent =
           data.school_name || "Gradely School";
 
@@ -251,21 +261,18 @@
         document.getElementById("studentClass").textContent =
           data.student.class || "N/A";
 
-        // ✅ Handle empty results safely
         if (!data.results || data.results.length === 0) {
           document.getElementById("resultsBody").innerHTML =
             `<tr><td colspan="5" class="message">⚠️ No results uploaded yet.</td></tr>`;
           return;
         }
 
-        // ✅ Term & academic year from first result
         document.getElementById("studentTerm").textContent =
           data.results[0].term || "N/A";
 
         document.getElementById("studentAcademicYear").textContent =
           data.results[0].academic_year || "N/A";
 
-        // ✅ Render results table
         document.getElementById("resultsBody").innerHTML = data.results.map(r => `
           <tr>
             <td>${r.subject}</td>
@@ -276,19 +283,12 @@
           </tr>
         `).join("");
 
-        // ✅ Chart
         renderChart(data.results);
 
       } catch (err) {
         console.error("Fetch error:", err);
         document.getElementById("resultsBody").innerHTML =
           `<tr><td colspan="5" class="message">⚠️ Failed to load results.</td></tr>`;
-      }
-
-      // ✅ Check first login AFTER DOM is ready
-      const firstLogin = localStorage.getItem("firstLogin") === "true";
-      if (firstLogin) {
-        document.getElementById("changePasswordSection").style.display = "block";
       }
     });
 
@@ -328,9 +328,9 @@
 
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF("p", "mm", "a4");
-      const pageHeight = 297; // A4 height in mm
-      const margin = 20;      // page margin
-      const lineHeight = 8;   // row height
+      const pageHeight = 297;
+      const margin = 20;
+      const lineHeight = 8;
 
       const schoolName = currentData.school_name || "Gradely School";
       const student = currentData.student;
@@ -340,13 +340,11 @@
       const term = firstResult?.term || "N/A";
       const year = firstResult?.academic_year || "N/A";
 
-      // Header
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
       doc.text(schoolName, 105, margin, null, null, "center");
       doc.text("RESULT REPORT CARD", 105, margin + 10, null, null, "center");
 
-      // Student info
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
       let y = margin + 25;
@@ -358,7 +356,6 @@
 
       y += 45;
 
-      // Table header
       doc.setFillColor(37, 117, 252);
       doc.setTextColor(255, 255, 255);
       doc.rect(margin, y, 170, lineHeight, "F");
@@ -370,18 +367,15 @@
 
       y += lineHeight + 2;
 
-      // Table rows
       doc.setTextColor(0, 0, 0);
       currentData.results.forEach((r, i) => {
         const remarksLines = doc.splitTextToSize(r.remarks || "-", 50);
         const rowHeight = Math.max(lineHeight, remarksLines.length * 5);
 
-        // Check if we need a new page
         if (y + rowHeight + 20 > pageHeight) {
           doc.addPage();
           y = margin;
 
-          // Repeat table header on new page
           doc.setFillColor(37, 117, 252);
           doc.setTextColor(255, 255, 255);
           doc.rect(margin, y, 170, lineHeight, "F");
@@ -403,18 +397,16 @@
         y += rowHeight + 2;
       });
 
-      // Chart
       const canvas = document.getElementById("performanceChart");
       if (canvas) {
         await new Promise(resolve => setTimeout(resolve, 100));
         const chartImg = canvas.toDataURL("image/png", 1.0);
 
-        if (y + 60 + 20 > pageHeight) doc.addPage(); // new page if chart doesn't fit
+        if (y + 60 + 20 > pageHeight) doc.addPage();
         doc.addImage(chartImg, "PNG", margin, y, 170, 60);
         y += 60 + 10;
       }
 
-      // Principal signature
       if (y + 15 > pageHeight) doc.addPage();
       doc.text("Principal Signature: _______________________", margin, y);
       doc.setFontSize(10);
@@ -431,40 +423,89 @@
 
     function hideChangePasswordForm() {
       document.getElementById("changePasswordForm").style.display = "none";
+      document.getElementById("changePasswordSection").style.display = "block";
     }
 
     async function handleChangePassword(e) {
-      e.preventDefault();
-      const studentId = localStorage.getItem("studentId");
-      const currentPassword = document.getElementById("currentPassword").value;
-      const newPassword = document.getElementById("newPassword").value;
-      const confirmPassword = document.getElementById("confirmPassword").value;
+  e.preventDefault();
 
-      if (newPassword !== confirmPassword) {
-        document.getElementById("changePassMsg").textContent = "❌ Passwords do not match";
-        return;
-      }
+  const studentId = localStorage.getItem("studentId");
+  const currentPassword = document.getElementById("currentPassword").value;
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
 
-      try {
-        const res = await fetch(`${backendUrl}/api/change-password`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ studentId, currentPassword, newPassword }),
-        });
+  if (newPassword !== confirmPassword) {
+    document.getElementById("changePassMsg").textContent = "❌ Passwords do not match";
+    return;
+  }
 
-        const data = await res.json();
-        if (data.success) {
-          document.getElementById("changePassMsg").textContent = "✅ Password changed successfully!";
-          localStorage.setItem("firstLogin", "false"); // ✅ Mark as not first login
-          setTimeout(() => hideChangePasswordForm(), 2000);
-        } else {
-          document.getElementById("changePassMsg").textContent = `❌ ${data.message}`;
-        }
-      } catch (err) {
-        console.error("Password change error:", err);
-        document.getElementById("changePassMsg").textContent = "⚠️ Failed to update password";
-      }
+  try {
+    const res = await fetch(`${backendUrl}/api/change-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentId, currentPassword, newPassword }),
+    });
+
+    const text = await res.text();
+    console.log("SERVER RESPONSE:", text);
+
+    if (!res.ok) {
+      document.getElementById("changePassMsg").textContent =
+        "❌ Password service not available. Contact admin.";
+      return;
     }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      document.getElementById("changePassMsg").textContent =
+        "❌ Invalid server response.";
+      return;
+    }
+
+    if (data.success) {
+      document.getElementById("changePassMsg").textContent =
+        "✅ Password changed successfully!";
+      setTimeout(() => {
+        closePasswordModal();
+      }, 2000);
+    } else {
+      document.getElementById("changePassMsg").textContent =
+        `❌ ${data.message || "Password change failed"}`;
+    }
+
+  } catch (err) {
+    console.error("Password change error:", err);
+    document.getElementById("changePassMsg").textContent =
+      "⚠️ Network or server error";
+  }
+}
+
+
+  function openPasswordModal() {
+    document.getElementById("passwordModal").style.display = "flex";
+  }
+
+  function closePasswordModal() {
+    document.getElementById("passwordModal").style.display = "none";
+    document.getElementById("changePassMsg").textContent = "";
+  }
+
+  function togglePwd(id, el) {
+    const input = document.getElementById(id);
+    if (input.type === "password") {
+      input.type = "text";
+      el.textContent = "🙈";
+    } else {
+      input.type = "password";
+      el.textContent = "👁️";
+    }
+  }
+
+
+
+
   </script>
 </body>
 </html>
