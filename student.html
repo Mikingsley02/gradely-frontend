@@ -102,6 +102,13 @@
       color: #777;
       font-style: italic;
     }
+
+    /* Added for password section */
+    .change-password-section,
+    .change-password-form {
+      transition: all 0.3s ease;
+    }
+
     @media (max-width: 600px) {
       th, td { font-size: 0.85rem; }
       header h1, header .school-name { font-size: 1.3rem; }
@@ -116,6 +123,45 @@
       <h2>📘 Student Term Results</h2>
       <p>Review your child’s academic performance below</p>
     </header>
+
+    <!-- ✅ INSERTED: Integrated Change Password UI -->
+    <div id="changePasswordSection" class="change-password-section" style="display: none; padding: 25px; background: #fff8e1; border-bottom: 1px solid #ffe082;">
+      <h3 style="margin-top: 0; color: #e65100; display: flex; align-items: center; gap: 8px;">
+        🔐 Secure Your Account
+      </h3>
+      <p style="margin-bottom: 16px; color: #5d4037;">
+        This appears to be your first login. Please set a new password for security.
+      </p>
+      <button class="btn" style="background: #e65100; color: white;" onclick="showChangePasswordForm()">
+        Change Password
+      </button>
+    </div>
+
+    <div id="changePasswordForm" class="change-password-form" style="display: none; padding: 25px; background: #f9f9f9; border-top: 1px solid #eee;">
+      <h3 style="margin-top: 0; color: var(--dark-text);">Change Your Password</h3>
+      <form onsubmit="handleChangePassword(event)">
+        <div style="margin-bottom: 12px;">
+          <label for="currentPassword" style="display: block; margin-bottom: 4px; font-weight: 500;">Current Password</label>
+          <input type="password" id="currentPassword" required
+            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label for="newPassword" style="display: block; margin-bottom: 4px; font-weight: 500;">New Password</label>
+          <input type="password" id="newPassword" required
+            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;">
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label for="confirmPassword" style="display: block; margin-bottom: 4px; font-weight: 500;">Confirm New Password</label>
+          <input type="password" id="confirmPassword" required
+            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;">
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button type="submit" class="btn" style="background: #3498db; color: white; flex: 1; min-width: 120px;">💾 Save</button>
+          <button type="button" class="btn" style="background: #95a5a6; color: white; flex: 1; min-width: 120px;" onclick="hideChangePasswordForm()">Cancel</button>
+        </div>
+      </form>
+      <p id="changePassMsg" style="margin-top: 12px; min-height: 20px; font-weight: 500;"></p>
+    </div>
 
     <div class="student-info">
       <p><strong>Name:</strong> <span id="studentName">Loading...</span></p>
@@ -150,23 +196,6 @@
     </div>
   </div>
 
-<!-- Password Prompt -->
-  <div id="changePasswordPrompt">
-    <h3>🔐 Secure Your Account</h3>
-    <p>If this is your first login, please change your default password for security.</p>
-    <button style="background:#e65100; color:white;" onclick="showChangePasswordForm()">Change Password</button>
-  </div>
-
-  <!-- Change Password Form -->
-  <div id="changePasswordForm">
-    <h3>Change Your Password</h3>
-…      <button type="submit" style="background:#3498db;color:white;">💾 Save</button>
-      <button type="button" style="background:#95a5a6;color:white;" onclick="hideChangePasswordForm()">Cancel</button>
-    </form>
-    <p id="changePassMsg"></p>
-  </div>
-
-
   <footer>
     © 2025 gradely.info. All rights reserved. | Powered by RIS<br>
     <a href="terms.html">Terms</a> • 
@@ -184,79 +213,84 @@
     let currentData = null; // ✅ Store data for PDF
 
     document.addEventListener("DOMContentLoaded", async () => {
-  const studentId = localStorage.getItem("studentId");
+      const studentId = localStorage.getItem("studentId");
 
-  if (!studentId) {
-    alert("❌ You are not logged in. Please log in first.");
-    window.location.href = "index.html";
-    return;
-  }
+      if (!studentId) {
+        alert("❌ You are not logged in. Please log in first.");
+        window.location.href = "index.html";
+        return;
+      }
 
-  try {
-    const response = await fetch(`${backendUrl}/api/result/student/${studentId}`);
+      try {
+        const response = await fetch(`${backendUrl}/api/result/student/${studentId}`);
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
 
-    const data = await response.json();
+        const data = await response.json();
 
-    if (!data.success) {
-      document.getElementById("resultsBody").innerHTML =
-        `<tr><td colspan="5" class="message">${data.message || "No results available."}</td></tr>`;
-      return;
-    }
+        if (!data.success) {
+          document.getElementById("resultsBody").innerHTML =
+            `<tr><td colspan="5" class="message">${data.message || "No results available."}</td></tr>`;
+          return;
+        }
 
-    // ✅ Save for PDF
-    currentData = data;
+        // ✅ Save for PDF
+        currentData = data;
 
-    // ✅ Header + student info
-    document.getElementById("schoolName").textContent =
-      data.school_name || "Gradely School";
+        // ✅ Header + student info
+        document.getElementById("schoolName").textContent =
+          data.school_name || "Gradely School";
 
-    document.getElementById("studentId").textContent = studentId;
+        document.getElementById("studentId").textContent = studentId;
 
-    document.getElementById("studentName").textContent =
-      `${data.student.first_name} ${data.student.middle_name || ""} ${data.student.last_name}`.trim();
+        document.getElementById("studentName").textContent =
+          `${data.student.first_name} ${data.student.middle_name || ""} ${data.student.last_name}`.trim();
 
-    document.getElementById("studentClass").textContent =
-      data.student.class || "N/A";
+        document.getElementById("studentClass").textContent =
+          data.student.class || "N/A";
 
-    // ✅ Handle empty results safely
-    if (!data.results || data.results.length === 0) {
-      document.getElementById("resultsBody").innerHTML =
-        `<tr><td colspan="5" class="message">⚠️ No results uploaded yet.</td></tr>`;
-      return;
-    }
+        // ✅ Handle empty results safely
+        if (!data.results || data.results.length === 0) {
+          document.getElementById("resultsBody").innerHTML =
+            `<tr><td colspan="5" class="message">⚠️ No results uploaded yet.</td></tr>`;
+          return;
+        }
 
-    // ✅ Term & academic year from first result
-    document.getElementById("studentTerm").textContent =
-      data.results[0].term || "N/A";
+        // ✅ Term & academic year from first result
+        document.getElementById("studentTerm").textContent =
+          data.results[0].term || "N/A";
 
-    document.getElementById("studentAcademicYear").textContent =
-      data.results[0].academic_year || "N/A";
+        document.getElementById("studentAcademicYear").textContent =
+          data.results[0].academic_year || "N/A";
 
-    // ✅ Render results table
-    document.getElementById("resultsBody").innerHTML = data.results.map(r => `
-      <tr>
-        <td>${r.subject}</td>
-        <td>${r.score}</td>
-        <td>${r.total_marks}</td>
-        <td>${r.grade}</td>
-        <td>${r.remarks || "-"}</td>
-      </tr>
-    `).join("");
+        // ✅ Render results table
+        document.getElementById("resultsBody").innerHTML = data.results.map(r => `
+          <tr>
+            <td>${r.subject}</td>
+            <td>${r.score}</td>
+            <td>${r.total_marks}</td>
+            <td>${r.grade}</td>
+            <td>${r.remarks || "-"}</td>
+          </tr>
+        `).join("");
 
-    // ✅ Chart
-    renderChart(data.results);
+        // ✅ Chart
+        renderChart(data.results);
 
-  } catch (err) {
-    console.error("Fetch error:", err);
-    document.getElementById("resultsBody").innerHTML =
-      `<tr><td colspan="5" class="message">⚠️ Failed to load results.</td></tr>`;
-  }
-});
+      } catch (err) {
+        console.error("Fetch error:", err);
+        document.getElementById("resultsBody").innerHTML =
+          `<tr><td colspan="5" class="message">⚠️ Failed to load results.</td></tr>`;
+      }
 
+      // ✅ Check first login AFTER DOM is ready
+      const firstLogin = localStorage.getItem("firstLogin") === "true";
+      if (firstLogin) {
+        document.getElementById("changePasswordSection").style.display = "block";
+      }
+    });
 
     function renderChart(results) {
       const ctx = document.getElementById("performanceChart").getContext("2d");
@@ -286,69 +320,45 @@
       window.location.href = "index.html";
     }
 
-    // ✅ FULLY FIXED PDF DOWNLOAD
     async function downloadPDF() {
-  if (!currentData) {
-    alert("⚠️ Please wait for results to load before downloading.");
-    return;
-  }
+      if (!currentData) {
+        alert("⚠️ Please wait for results to load before downloading.");
+        return;
+      }
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("p", "mm", "a4");
-  const pageHeight = 297; // A4 height in mm
-  const margin = 20;      // page margin
-  const lineHeight = 8;   // row height
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF("p", "mm", "a4");
+      const pageHeight = 297; // A4 height in mm
+      const margin = 20;      // page margin
+      const lineHeight = 8;   // row height
 
-  const schoolName = currentData.school_name || "Gradely School";
-  const student = currentData.student;
-  const name = `${student.first_name} ${student.middle_name || ""} ${student.last_name}`;
-  const id = localStorage.getItem("studentId");
-  const firstResult = currentData.results[0];
-  const term = firstResult?.term || "N/A";
-  const year = firstResult?.academic_year || "N/A";
+      const schoolName = currentData.school_name || "Gradely School";
+      const student = currentData.student;
+      const name = `${student.first_name} ${student.middle_name || ""} ${student.last_name}`;
+      const id = localStorage.getItem("studentId");
+      const firstResult = currentData.results[0];
+      const term = firstResult?.term || "N/A";
+      const year = firstResult?.academic_year || "N/A";
 
-  // Header
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text(schoolName, 105, margin, null, null, "center");
-  doc.text("RESULT REPORT CARD", 105, margin + 10, null, null, "center");
+      // Header
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text(schoolName, 105, margin, null, null, "center");
+      doc.text("RESULT REPORT CARD", 105, margin + 10, null, null, "center");
 
-  // Student info
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "normal");
-  let y = margin + 25;
-  doc.text(`Student Name: ${name}`, margin, y);
-  doc.text(`Student ID: ${id}`, margin, y + 8);
-  doc.text(`Class: ${student.class || "N/A"}`, margin, y + 16);
-  doc.text(`Term: ${term}`, margin, y + 24);
-  doc.text(`Academic Year: ${year}`, margin, y + 32);
+      // Student info
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      let y = margin + 25;
+      doc.text(`Student Name: ${name}`, margin, y);
+      doc.text(`Student ID: ${id}`, margin, y + 8);
+      doc.text(`Class: ${student.class || "N/A"}`, margin, y + 16);
+      doc.text(`Term: ${term}`, margin, y + 24);
+      doc.text(`Academic Year: ${year}`, margin, y + 32);
 
-  y += 45;
+      y += 45;
 
-  // Table header
-  doc.setFillColor(37, 117, 252);
-  doc.setTextColor(255, 255, 255);
-  doc.rect(margin, y, 170, lineHeight, "F");
-  doc.text("Subject", margin + 5, y + 6);
-  doc.text("Score", margin + 60, y + 6);
-  doc.text("Total", margin + 90, y + 6);
-  doc.text("Grade", margin + 120, y + 6);
-  doc.text("Remarks", margin + 145, y + 6);
-
-  y += lineHeight + 2;
-
-  // Table rows
-  doc.setTextColor(0, 0, 0);
-  currentData.results.forEach((r, i) => {
-    const remarksLines = doc.splitTextToSize(r.remarks || "-", 50);
-    const rowHeight = Math.max(lineHeight, remarksLines.length * 5);
-
-    // Check if we need a new page
-    if (y + rowHeight + 20 > pageHeight) {
-      doc.addPage();
-      y = margin;
-
-      // Repeat table header on new page
+      // Table header
       doc.setFillColor(37, 117, 252);
       doc.setTextColor(255, 255, 255);
       doc.rect(margin, y, 170, lineHeight, "F");
@@ -357,43 +367,65 @@
       doc.text("Total", margin + 90, y + 6);
       doc.text("Grade", margin + 120, y + 6);
       doc.text("Remarks", margin + 145, y + 6);
+
       y += lineHeight + 2;
+
+      // Table rows
       doc.setTextColor(0, 0, 0);
+      currentData.results.forEach((r, i) => {
+        const remarksLines = doc.splitTextToSize(r.remarks || "-", 50);
+        const rowHeight = Math.max(lineHeight, remarksLines.length * 5);
+
+        // Check if we need a new page
+        if (y + rowHeight + 20 > pageHeight) {
+          doc.addPage();
+          y = margin;
+
+          // Repeat table header on new page
+          doc.setFillColor(37, 117, 252);
+          doc.setTextColor(255, 255, 255);
+          doc.rect(margin, y, 170, lineHeight, "F");
+          doc.text("Subject", margin + 5, y + 6);
+          doc.text("Score", margin + 60, y + 6);
+          doc.text("Total", margin + 90, y + 6);
+          doc.text("Grade", margin + 120, y + 6);
+          doc.text("Remarks", margin + 145, y + 6);
+          y += lineHeight + 2;
+          doc.setTextColor(0, 0, 0);
+        }
+
+        doc.text(r.subject || "", margin + 5, y + 5);
+        doc.text(String(r.score || ""), margin + 60, y + 5);
+        doc.text(String(r.total_marks || ""), margin + 90, y + 5);
+        doc.text(r.grade || "", margin + 120, y + 5);
+        doc.text(remarksLines, margin + 145, y + 5);
+
+        y += rowHeight + 2;
+      });
+
+      // Chart
+      const canvas = document.getElementById("performanceChart");
+      if (canvas) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const chartImg = canvas.toDataURL("image/png", 1.0);
+
+        if (y + 60 + 20 > pageHeight) doc.addPage(); // new page if chart doesn't fit
+        doc.addImage(chartImg, "PNG", margin, y, 170, 60);
+        y += 60 + 10;
+      }
+
+      // Principal signature
+      if (y + 15 > pageHeight) doc.addPage();
+      doc.text("Principal Signature: _______________________", margin, y);
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, margin, y + 8);
+
+      doc.save(`${id}_Report.pdf`);
     }
 
-    doc.text(r.subject || "", margin + 5, y + 5);
-    doc.text(String(r.score || ""), margin + 60, y + 5);
-    doc.text(String(r.total_marks || ""), margin + 90, y + 5);
-    doc.text(r.grade || "", margin + 120, y + 5);
-    doc.text(remarksLines, margin + 145, y + 5);
-
-    y += rowHeight + 2;
-  });
-
-  // Chart
-  const canvas = document.getElementById("performanceChart");
-  if (canvas) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    const chartImg = canvas.toDataURL("image/png", 1.0);
-
-    if (y + 60 + 20 > pageHeight) doc.addPage(); // new page if chart doesn't fit
-    doc.addImage(chartImg, "PNG", margin, y, 170, 60);
-    y += 60 + 10;
-  }
-
-  // Principal signature
-  if (y + 15 > pageHeight) doc.addPage();
-  doc.text("Principal Signature: _______________________", margin, y);
-  doc.setFontSize(10);
-  doc.setTextColor(100);
-  doc.text(`Generated on: ${new Date().toLocaleString()}`, margin, y + 8);
-
-  doc.save(`${id}_Report.pdf`);
-}
-
-
-function showChangePasswordForm() {
-      document.getElementById("changePasswordPrompt").style.display = "none";
+    function showChangePasswordForm() {
+      document.getElementById("changePasswordSection").style.display = "none";
       document.getElementById("changePasswordForm").style.display = "block";
     }
 
@@ -433,16 +465,6 @@ function showChangePasswordForm() {
         document.getElementById("changePassMsg").textContent = "⚠️ Failed to update password";
       }
     }
-
-
-// 🔐 SHOW CHANGE PASSWORD ON FIRST LOGIN
-const firstLogin = localStorage.getItem("firstLogin");
-if (firstLogin === "true") {
-  document.getElementById("changePasswordPrompt").style.display = "block";
-}
-
-
-
   </script>
 </body>
 </html>
