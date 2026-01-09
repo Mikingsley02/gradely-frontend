@@ -195,18 +195,15 @@
 <script>
 const API_BASE = "https://gradely-backend-1.onrender.com";
 
-// ✅ SAME AUTH STYLE AS TIMETABLE PAGE
-const adminToken =
-  localStorage.getItem("admin_token") || sessionStorage.getItem("admin_token");
-const schoolId =
-  localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+// ✅ Match dashboard.html: use sessionStorage only
+const adminId = sessionStorage.getItem("adminId");
+const schoolId = sessionStorage.getItem("school_id");
 
-if (!adminToken || !schoolId) {
-  alert("⚠️ Session expired. Please log in again.");
+if (!adminId || !schoolId) {
+  alert("⚠️ You are not logged in!");
   window.location.href = "admin-login.html";
 }
 
-// ---------------- LOAD SCHOOL SETTINGS ----------------
 document.addEventListener("DOMContentLoaded", loadSchoolData);
 
 async function loadSchoolData() {
@@ -216,30 +213,31 @@ async function loadSchoolData() {
 
   try {
     const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
-      headers: {
-        "Authorization": `Bearer ${adminToken}`
-      }
+      method: "GET",
+      credentials: "include"
     });
 
     if (!res.ok) {
-      throw new Error("Unauthorized");
+      throw new Error("Failed to load settings");
     }
 
     const data = await res.json();
 
-    document.getElementById("school_name").value = data.school?.school_name || "";
-    document.getElementById("email").value = data.school?.email || "";
-    document.getElementById("phone_number").value = data.school?.phone_number || "";
-
-    msgEl.textContent = "";
+    if (data.success) {
+      document.getElementById("school_name").value = data.school.school_name || "";
+      document.getElementById("email").value = data.school.email || "";
+      document.getElementById("phone_number").value = data.school.phone_number || "";
+      msgEl.textContent = "";
+    } else {
+      msgEl.className = "message error";
+      msgEl.textContent = "⚠️ Failed to load school info.";
+    }
   } catch (err) {
     msgEl.className = "message error";
-    msgEl.textContent = "❌ Failed to load settings. Please log in again.";
-    console.error(err);
+    msgEl.textContent = "🚫 Unable to connect to server.";
   }
 }
 
-// ---------------- SAVE SETTINGS ----------------
 document.getElementById("settingsForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -251,28 +249,35 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
 
   const payload = {};
 
-  if (form.school_name.value.trim())
-    payload.school_name = form.school_name.value.trim();
-
-  if (form.email.value.trim())
-    payload.email = form.email.value.trim();
-
-  if (form.phone_number.value.trim())
-    payload.phone_number = form.phone_number.value.trim();
+  if (form.school_name.value.trim()) payload.school_name = form.school_name.value.trim();
+  if (form.email.value.trim()) payload.email = form.email.value.trim();
+  if (form.phone_number.value.trim()) payload.phone_number = form.phone_number.value.trim();
 
   const currentPassword = form.current_password.value.trim();
   const newPassword = form.new_password.value.trim();
   const confirmPassword = form.confirm_new_password.value.trim();
 
-  if (currentPassword || newPassword || confirmPassword) {
-    if (!currentPassword || !newPassword || !confirmPassword) {
+  const wantsPasswordChange = currentPassword || newPassword || confirmPassword;
+
+  if (wantsPasswordChange) {
+    if (!currentPassword) {
       msgEl.className = "message error";
-      msgEl.textContent = "❌ Fill all password fields.";
+      msgEl.textContent = "❌ Enter your current password.";
+      return;
+    }
+    if (!newPassword) {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ Enter a new password.";
+      return;
+    }
+    if (!confirmPassword) {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ Confirm your new password.";
       return;
     }
     if (newPassword !== confirmPassword) {
       msgEl.className = "message error";
-      msgEl.textContent = "❌ Passwords do not match.";
+      msgEl.textContent = "❌ New passwords do not match.";
       return;
     }
     if (newPassword.length < 8) {
@@ -294,17 +299,16 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   try {
     const res = await fetch(`${API_BASE}/api/admin/settings/update-settings`, {
       method: "PUT",
+      credentials: "include",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${adminToken}`
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
-
     if (!res.ok) {
-      throw new Error(data.message || "Update failed");
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || "Update failed");
     }
 
     msgEl.className = "message success";
@@ -320,7 +324,6 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   }
 });
 
-// ---------------- PASSWORD TOGGLE ----------------
 function togglePassword(fieldId, icon) {
   const input = document.getElementById(fieldId);
   if (input.type === "password") {
@@ -332,7 +335,6 @@ function togglePassword(fieldId, icon) {
   }
 }
 </script>
-
 
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
