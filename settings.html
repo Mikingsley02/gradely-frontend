@@ -194,17 +194,23 @@
 
 
 <script>
-const API_BASE = "https://api.gradely.info";
+const API_BASE = "https://gradely-backend-1.onrender.com";
 
-// Get session data
-const adminId = sessionStorage.getItem("adminId");
-const schoolId = sessionStorage.getItem("school_id");
-const token = sessionStorage.getItem("token");
+
+// Get session data from localStorage (primary) or sessionStorage (fallback)
+const adminId = localStorage.getItem("adminId") || sessionStorage.getItem("adminId");
+const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+const token = localStorage.getItem("token") || sessionStorage.getItem("token");
 
 if (!adminId || !schoolId || !token) {
   alert("⚠️ You are not logged in!");
   window.location.href = "admin-login.html";
 }
+
+// Optional: Sync to sessionStorage for compatibility with older pages
+sessionStorage.setItem("adminId", adminId);
+sessionStorage.setItem("school_id", schoolId);
+sessionStorage.setItem("token", token);
 
 // Load school data
 document.addEventListener("DOMContentLoaded", loadSchoolData);
