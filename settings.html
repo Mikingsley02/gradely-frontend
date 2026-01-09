@@ -193,23 +193,20 @@
   </div>
 
 <script>
-// ✅ CORRECT API BASE — no trailing spaces
 const API_BASE = "https://gradely-backend-1.onrender.com";
 
-// ✅ Auth: check localStorage first (persistent), fallback to sessionStorage
-const adminId = localStorage.getItem("adminId") || sessionStorage.getItem("adminId");
-const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+// ✅ SAME AUTH STYLE AS TIMETABLE PAGE
+const adminToken =
+  localStorage.getItem("admin_token") || sessionStorage.getItem("admin_token");
+const schoolId =
+  localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
 
-if (!adminId || !schoolId) {
-  alert("⚠️ You are not logged in!");
+if (!adminToken || !schoolId) {
+  alert("⚠️ Session expired. Please log in again.");
   window.location.href = "admin-login.html";
 }
 
-// Sync to sessionStorage for compatibility (optional but safe)
-sessionStorage.setItem("adminId", adminId);
-sessionStorage.setItem("school_id", schoolId);
-
-// ✅ Load school data using SESSION COOKIES (not tokens)
+// ---------------- LOAD SCHOOL SETTINGS ----------------
 document.addEventListener("DOMContentLoaded", loadSchoolData);
 
 async function loadSchoolData() {
@@ -218,37 +215,31 @@ async function loadSchoolData() {
   msgEl.className = "message";
 
   try {
-    // ✅ Remove Authorization header — use session cookie instead
     const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
-      method: "GET",
-      credentials: "include" // ✅ SENDS SESSION COOKIE
+      headers: {
+        "Authorization": `Bearer ${adminToken}`
+      }
     });
 
     if (!res.ok) {
-      const errorText = await res.text();
-      console.error("API Error:", errorText);
-      throw new Error("Failed to load settings");
+      throw new Error("Unauthorized");
     }
 
     const data = await res.json();
 
-    if (data.success) {
-      document.getElementById("school_name").value = data.school.school_name || "";
-      document.getElementById("email").value = data.school.email || "";
-      document.getElementById("phone_number").value = data.school.phone_number || "";
-      msgEl.textContent = "";
-    } else {
-      msgEl.className = "message error";
-      msgEl.textContent = "⚠️ Failed to load school info.";
-    }
+    document.getElementById("school_name").value = data.school?.school_name || "";
+    document.getElementById("email").value = data.school?.email || "";
+    document.getElementById("phone_number").value = data.school?.phone_number || "";
+
+    msgEl.textContent = "";
   } catch (err) {
     msgEl.className = "message error";
-    msgEl.textContent = "🚫 Unable to connect to server.";
-    console.error("Load settings error:", err);
+    msgEl.textContent = "❌ Failed to load settings. Please log in again.";
+    console.error(err);
   }
 }
 
-// ✅ Handle form submit with session cookie
+// ---------------- SAVE SETTINGS ----------------
 document.getElementById("settingsForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -260,35 +251,28 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
 
   const payload = {};
 
-  if (form.school_name.value.trim()) payload.school_name = form.school_name.value.trim();
-  if (form.email.value.trim()) payload.email = form.email.value.trim();
-  if (form.phone_number.value.trim()) payload.phone_number = form.phone_number.value.trim();
+  if (form.school_name.value.trim())
+    payload.school_name = form.school_name.value.trim();
+
+  if (form.email.value.trim())
+    payload.email = form.email.value.trim();
+
+  if (form.phone_number.value.trim())
+    payload.phone_number = form.phone_number.value.trim();
 
   const currentPassword = form.current_password.value.trim();
   const newPassword = form.new_password.value.trim();
   const confirmPassword = form.confirm_new_password.value.trim();
 
-  const wantsPasswordChange = currentPassword || newPassword || confirmPassword;
-
-  if (wantsPasswordChange) {
-    if (!currentPassword) {
+  if (currentPassword || newPassword || confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
       msgEl.className = "message error";
-      msgEl.textContent = "❌ Enter your current password.";
-      return;
-    }
-    if (!newPassword) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ Enter a new password.";
-      return;
-    }
-    if (!confirmPassword) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ Confirm your new password.";
+      msgEl.textContent = "❌ Fill all password fields.";
       return;
     }
     if (newPassword !== confirmPassword) {
       msgEl.className = "message error";
-      msgEl.textContent = "❌ New passwords do not match.";
+      msgEl.textContent = "❌ Passwords do not match.";
       return;
     }
     if (newPassword.length < 8) {
@@ -310,23 +294,22 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   try {
     const res = await fetch(`${API_BASE}/api/admin/settings/update-settings`, {
       method: "PUT",
-      credentials: "include", // ✅ SEND SESSION COOKIE
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${adminToken}`
       },
       body: JSON.stringify(payload)
     });
 
+    const data = await res.json();
+
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || "Update failed");
+      throw new Error(data.message || "Update failed");
     }
 
-    const data = await res.json();
     msgEl.className = "message success";
     msgEl.textContent = "✅ Settings saved successfully.";
 
-    // Clear password fields
     form.current_password.value = "";
     form.new_password.value = "";
     form.confirm_new_password.value = "";
@@ -337,7 +320,7 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   }
 });
 
-// Toggle password visibility
+// ---------------- PASSWORD TOGGLE ----------------
 function togglePassword(fieldId, icon) {
   const input = document.getElementById(fieldId);
   if (input.type === "password") {
@@ -349,6 +332,7 @@ function togglePassword(fieldId, icon) {
   }
 }
 </script>
+
 
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
