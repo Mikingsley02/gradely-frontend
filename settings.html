@@ -165,16 +165,16 @@
         </div>
 
         <div class="form-group">
-      <label>Confirm New Password</label>
-      <input
-        type="password"
-        name="confirm_new_password"
-        id="confirm_new_password"
-       placeholder="Re-enter new password"
-     />
-     <span class="toggle-password"
-        onclick="togglePassword('confirm_new_password', this)">👁️</span>
-    </div>
+          <label>Confirm New Password</label>
+          <input
+            type="password"
+            name="confirm_new_password"
+            id="confirm_new_password"
+            placeholder="Re-enter new password"
+          />
+          <span class="toggle-password"
+            onclick="togglePassword('confirm_new_password', this)">👁️</span>
+        </div>
 
         <button type="submit">💾 Save Changes</button>
 
@@ -192,27 +192,24 @@
     <a href="refund-policy.html">Refund Policy</a>
   </div>
 
-
 <script>
+// ✅ CORRECT API BASE — no trailing spaces
 const API_BASE = "https://gradely-backend-1.onrender.com";
 
-
-// Get session data from localStorage (primary) or sessionStorage (fallback)
+// ✅ Auth: check localStorage first (persistent), fallback to sessionStorage
 const adminId = localStorage.getItem("adminId") || sessionStorage.getItem("adminId");
 const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
-const token = localStorage.getItem("token") || sessionStorage.getItem("token");
 
-if (!adminId || !schoolId || !token) {
+if (!adminId || !schoolId) {
   alert("⚠️ You are not logged in!");
   window.location.href = "admin-login.html";
 }
 
-// Optional: Sync to sessionStorage for compatibility with older pages
+// Sync to sessionStorage for compatibility (optional but safe)
 sessionStorage.setItem("adminId", adminId);
 sessionStorage.setItem("school_id", schoolId);
-sessionStorage.setItem("token", token);
 
-// Load school data
+// ✅ Load school data using SESSION COOKIES (not tokens)
 document.addEventListener("DOMContentLoaded", loadSchoolData);
 
 async function loadSchoolData() {
@@ -221,9 +218,17 @@ async function loadSchoolData() {
   msgEl.className = "message";
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/school-info`, {
-      headers: { Authorization: `Bearer ${token}` }
+    // ✅ Remove Authorization header — use session cookie instead
+    const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
+      method: "GET",
+      credentials: "include" // ✅ SENDS SESSION COOKIE
     });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("API Error:", errorText);
+      throw new Error("Failed to load settings");
+    }
 
     const data = await res.json();
 
@@ -239,10 +244,11 @@ async function loadSchoolData() {
   } catch (err) {
     msgEl.className = "message error";
     msgEl.textContent = "🚫 Unable to connect to server.";
+    console.error("Load settings error:", err);
   }
 }
 
-// Handle form submit
+// ✅ Handle form submit with session cookie
 document.getElementById("settingsForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -258,54 +264,42 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   if (form.email.value.trim()) payload.email = form.email.value.trim();
   if (form.phone_number.value.trim()) payload.phone_number = form.phone_number.value.trim();
 
-  // PASSWORD FIELDS (SAFE & CLEAR)
-const currentPassword = form.current_password.value.trim();
-const newPassword = form.new_password.value.trim();
-const confirmPassword = form.confirm_new_password.value.trim();
+  const currentPassword = form.current_password.value.trim();
+  const newPassword = form.new_password.value.trim();
+  const confirmPassword = form.confirm_new_password.value.trim();
 
-// User wants to change password ONLY if all three are touched
-const wantsPasswordChange =
-  currentPassword.length > 0 ||
-  newPassword.length > 0 ||
-  confirmPassword.length > 0;
+  const wantsPasswordChange = currentPassword || newPassword || confirmPassword;
 
-if (wantsPasswordChange) {
+  if (wantsPasswordChange) {
+    if (!currentPassword) {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ Enter your current password.";
+      return;
+    }
+    if (!newPassword) {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ Enter a new password.";
+      return;
+    }
+    if (!confirmPassword) {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ Confirm your new password.";
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ New passwords do not match.";
+      return;
+    }
+    if (newPassword.length < 8) {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ Password must be at least 8 characters.";
+      return;
+    }
 
-  if (!currentPassword) {
-    msgEl.className = "message error";
-    msgEl.textContent = "❌ Enter your current password.";
-    return;
+    payload.current_password = currentPassword;
+    payload.new_password = newPassword;
   }
-
-  if (!newPassword) {
-    msgEl.className = "message error";
-    msgEl.textContent = "❌ Enter a new password.";
-    return;
-  }
-
-  if (!confirmPassword) {
-    msgEl.className = "message error";
-    msgEl.textContent = "❌ Confirm your new password.";
-    return;
-  }
-
-  if (newPassword !== confirmPassword) {
-    console.log("DEBUG:", newPassword, confirmPassword);
-    msgEl.className = "message error";
-    msgEl.textContent = "❌ New passwords do not match.";
-    return;
-  }
-
-  if (newPassword.length < 8) {
-    msgEl.className = "message error";
-    msgEl.textContent = "❌ Password must be at least 8 characters.";
-    return;
-  }
-
-  payload.current_password = currentPassword;
-  payload.new_password = newPassword;
-}
-
 
   if (Object.keys(payload).length === 0) {
     msgEl.className = "message error";
@@ -314,22 +308,25 @@ if (wantsPasswordChange) {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/update-settings`, {
+    const res = await fetch(`${API_BASE}/api/admin/settings/update-settings`, {
       method: "PUT",
+      credentials: "include", // ✅ SEND SESSION COOKIE
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
     });
 
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || "Update failed");
+    }
+
     const data = await res.json();
-
-    if (!res.ok) throw new Error(data.message || "Update failed");
-
     msgEl.className = "message success";
     msgEl.textContent = "✅ Settings saved successfully.";
 
+    // Clear password fields
     form.current_password.value = "";
     form.new_password.value = "";
     form.confirm_new_password.value = "";
@@ -353,10 +350,8 @@ function togglePassword(fieldId, icon) {
 }
 </script>
 
-
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
-
 
 </body>
 </html>
