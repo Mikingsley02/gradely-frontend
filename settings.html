@@ -208,138 +208,91 @@ if (!adminId || !schoolId) {
 sessionStorage.setItem("adminId", adminId);
 sessionStorage.setItem("school_id", schoolId);
 
-
 document.addEventListener("DOMContentLoaded", loadSchoolData);
 
-async function loadSchoolData() {
-  const msgEl = document.getElementById("message");
-  msgEl.textContent = "⏳ Loading settings...";
-  msgEl.className = "message";
-
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
-      method: "GET",
-      credentials: "include"
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to load settings");
+    async function loadSchoolData() {
+      const msgEl = document.getElementById("message");
+      msgEl.textContent = "⏳ Loading settings...";
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/school-info`);
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById("school_name").value = data.school?.school_name || "";
+          document.getElementById("email").value = data.school?.email || "";
+          document.getElementById("phone_number").value = data.school?.phone_number || "";
+          msgEl.textContent = "";
+        } else {
+          msgEl.className = "message error";
+          msgEl.textContent = "⚠️ Failed to load school info.";
+        }
+      } catch {
+        msgEl.className = "message error";
+        msgEl.textContent = "🚫 Unable to connect to server.";
+      }
     }
 
-    const data = await res.json();
+    document.getElementById("settingsForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const msgEl = document.getElementById("message");
+      msgEl.textContent = "⏳ Updating settings...";
+      msgEl.className = "message";
 
-    if (data.success) {
-      document.getElementById("school_name").value = data.school.school_name || "";
-      document.getElementById("email").value = data.school.email || "";
-      document.getElementById("phone_number").value = data.school.phone_number || "";
-      msgEl.textContent = "";
-    } else {
-      msgEl.className = "message error";
-      msgEl.textContent = "⚠️ Failed to load school info.";
+      const payload = {
+        school_name: form.school_name.value.trim(),
+        email: form.email.value.trim(),
+        phone_number: form.phone_number.value.trim(),
+        current_password: form.current_password.value,
+        new_password: form.new_password.value
+      };
+
+      Object.keys(payload).forEach(key => {
+        if (!payload[key]) delete payload[key];
+      });
+
+      if (payload.new_password && !payload.current_password) {
+        msgEl.className = "message error";
+        msgEl.textContent = "⚠️ Enter current password to change password.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/update-settings`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await res.json().catch(() => ({ success: false, message: "Invalid response" }));
+
+        if (result.success) {
+          msgEl.className = "message success";
+          msgEl.textContent = "✅ Settings updated successfully!";
+          form.current_password.value = "";
+          form.new_password.value = "";
+        } else {
+          msgEl.className = "message error";
+          msgEl.textContent = "❌ " + (result.message || "Update failed.");
+        }
+      } catch {
+        msgEl.className = "message error";
+        msgEl.textContent = "🚫 Server connection failed.";
+      }
+    };
+
+    function togglePassword(fieldId, icon) {
+      const input = document.getElementById(fieldId);
+      if (input.type === "password") {
+        input.type = "text";
+        icon.textContent = "🙈";
+      } else {
+        input.type = "password";
+        icon.textContent = "👁️";
+      }
     }
-  } catch (err) {
-    msgEl.className = "message error";
-    msgEl.textContent = "🚫 Unable to connect to server.";
-  }
-}
+  </script>
 
-document.getElementById("settingsForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
 
-  const form = e.target;
-  const msgEl = document.getElementById("message");
-
-  msgEl.className = "message";
-  msgEl.textContent = "⏳ Saving changes...";
-
-  const payload = {};
-
-  if (form.school_name.value.trim()) payload.school_name = form.school_name.value.trim();
-  if (form.email.value.trim()) payload.email = form.email.value.trim();
-  if (form.phone_number.value.trim()) payload.phone_number = form.phone_number.value.trim();
-
-  const currentPassword = form.current_password.value.trim();
-  const newPassword = form.new_password.value.trim();
-  const confirmPassword = form.confirm_new_password.value.trim();
-
-  const wantsPasswordChange = currentPassword || newPassword || confirmPassword;
-
-  if (wantsPasswordChange) {
-    if (!currentPassword) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ Enter your current password.";
-      return;
-    }
-    if (!newPassword) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ Enter a new password.";
-      return;
-    }
-    if (!confirmPassword) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ Confirm your new password.";
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ New passwords do not match.";
-      return;
-    }
-    if (newPassword.length < 8) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ Password must be at least 8 characters.";
-      return;
-    }
-
-    payload.current_password = currentPassword;
-    payload.new_password = newPassword;
-  }
-
-  if (Object.keys(payload).length === 0) {
-    msgEl.className = "message error";
-    msgEl.textContent = "⚠️ Nothing to update.";
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/settings/update-settings`, {
-      method: "PUT",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || "Update failed");
-    }
-
-    msgEl.className = "message success";
-    msgEl.textContent = "✅ Settings saved successfully.";
-
-    form.current_password.value = "";
-    form.new_password.value = "";
-    form.confirm_new_password.value = "";
-
-  } catch (err) {
-    msgEl.className = "message error";
-    msgEl.textContent = "❌ " + err.message;
-  }
-});
-
-function togglePassword(fieldId, icon) {
-  const input = document.getElementById(fieldId);
-  if (input.type === "password") {
-    input.type = "text";
-    icon.textContent = "🙈";
-  } else {
-    input.type = "password";
-    icon.textContent = "👁️";
-  }
-}
-</script>
 
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
