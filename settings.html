@@ -195,14 +195,19 @@
 <script>
 const API_BASE = "https://gradely-backend-1.onrender.com";
 
-// ✅ Match dashboard.html: use sessionStorage only
-const adminId = sessionStorage.getItem("adminId");
-const schoolId = sessionStorage.getItem("school_id");
+// ✅ Check localStorage first (persistent), fallback to sessionStorage
+const adminId = localStorage.getItem("adminId") || sessionStorage.getItem("adminId");
+const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
 
 if (!adminId || !schoolId) {
   alert("⚠️ You are not logged in!");
   window.location.href = "admin-login.html";
 }
+
+// Optional: sync to sessionStorage for compatibility
+sessionStorage.setItem("adminId", adminId);
+sessionStorage.setItem("school_id", schoolId);
+
 
 document.addEventListener("DOMContentLoaded", loadSchoolData);
 
