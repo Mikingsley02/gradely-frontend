@@ -333,6 +333,7 @@ document.getElementById("adminLoginForm").addEventListener("submit", async (e) =
   localStorage.setItem("school_name", data.admin.school_name || "");
   localStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
   localStorage.setItem("token", data.token);
+  localStorage.setItem("admin_token", data.token);
 
   window.location.href = "dashboard.html";
 } else {
