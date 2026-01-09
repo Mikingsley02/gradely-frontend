@@ -302,14 +302,23 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/settings/update-settings`, {
-      method: "PUT",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
+    const token = localStorage.getItem("token");
+
+if (!token) {
+  alert("⚠️ Session expired. Please log in again.");
+  window.location.href = "admin-login.html";
+  return;
+}
+
+fetch(`${API_BASE}/api/settings/update-settings`, {
+  method: "PUT",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+  },
+  body: JSON.stringify(payload)
+});
+
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
