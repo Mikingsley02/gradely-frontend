@@ -287,7 +287,7 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/settings/update-settings`, {
+    const res = await fetch(`${API_BASE}/api/admin/settings/update-settings`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
