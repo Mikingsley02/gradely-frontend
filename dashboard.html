@@ -217,14 +217,20 @@
   let currentPlan = 'basic';
 
   document.addEventListener("DOMContentLoaded", async () => {
-    const schoolId = sessionStorage.getItem("school_id");
-    console.log("🔍 school_id from session:", schoolId);
-    
-    if (!schoolId) {
-      alert("⚠️ Session expired. Please log in again.");
-      window.location.href = "admin-login.html";
-      return;
-    }
+  // ✅ Check localStorage FIRST (since login now uses it)
+  const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+  console.log("🔍 school_id from storage:", schoolId);
+  
+  if (!schoolId) {
+    alert("⚠️ Session expired. Please log in again.");
+    window.location.href = "admin-login.html";
+    return;
+  }
+
+  // ✅ Also sync to sessionStorage if missing (optional compatibility)
+  if (!sessionStorage.getItem("school_id")) {
+    sessionStorage.setItem("school_id", schoolId);
+  }
 
     // ✅ Build clean URL
     const apiUrl = `https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;

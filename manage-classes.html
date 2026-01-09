@@ -1,82 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Manage Class Timetables — Pro</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="https://gradely.info/favicon.ico"/>
-
+  <meta charset="UTF-8">
+  <title>📅 School Timetable — Editable</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="https://gradely.info/favicon.ico "/>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #f6f7fb;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f4f7fa;
       color: #333;
-      padding: 16px;
-      min-height: 100vh;
+      margin: 0;
+      padding: 0;
     }
-    .container { max-width: 900px; margin: 0 auto; }
-    h1 { font-size: 1.6rem; margin: 16px 0; }
-    .pro-badge {
-      background: #6c3cff;
-      color: white;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 0.85rem;
-      margin-left: 6px;
+
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 20px;
     }
-    .card {
-      background: #fff;
-      padding: 18px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-      margin-bottom: 20px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin: 16px 0;
-    }
-    select, input, button {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      background: #fafafa;
-    }
-    button {
-      background: #6c3cff;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    button:hover { background: #5a32d6; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td {
-      padding: 12px 10px;
-      text-align: left;
-      border-bottom: 1px solid #eee;
-    }
-    th { background: #f9f9ff; font-weight: 600; }
-    .danger {
-      background: #ff4d4f;
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .locked {
+
+    h1 {
       text-align: center;
-      padding: 40px 20px;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #1f2937;
     }
-    .loading { text-align: center; padding: 30px; color: #666; }
+
+    .class-selects {
+      margin-bottom: 20px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    select {
+      padding: 10px 15px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .timetable {
+      display: grid;
+      grid-template-columns: 150px repeat(5, 1fr);
+      gap: 1px;
+      background: #ccc;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .timetable div {
+      background: #fff;
+      padding: 12px;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: 500;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: default;
+    }
+
+    .timetable div.header {
+      background: #6c5ce7;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .timetable div.time-slot {
+      background: #ffeaa7;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .timetable div:hover.editable,
+    .timetable div:hover.time-slot {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .editable:hover::after,
+    .time-slot:hover::after {
+      content: "Double click to edit";
+      font-size: 0.7rem;
+      color: #555;
+      position: absolute;
+      bottom: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .export-btn {
+      margin-top: 20px;
+      display: block;
+      background: #6c5ce7;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .export-btn:hover { background: #5a3ecf; }
+
     footer {
       text-align: center;
       margin-top: 30px;
@@ -90,181 +126,204 @@
       text-decoration: none;
       margin: 0 6px;
     }
-    @media (max-width: 600px) {
-      .grid { grid-template-columns: 1fr; }
-      h1 { font-size: 1.4rem; }
-      th, td { font-size: 0.85rem; padding: 10px 6px; }
+
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .back-btn {
+      margin-top: 20px;
+      display: block;
+      background: #209c49;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .back-btn:hover {
+      background: #17855d;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div id="app">
-      <div class="loading">Loading your class timetables…</div>
-    </div>
 
-    <footer>
-      © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br>
-      <a href="terms.html">Terms</a> • 
-      <a href="privacy.html">Privacy</a> • 
-      <a href="refund-policy.html">Refund Policy</a>
-    </footer>
+<div class="container">
+  <h1>📅 Weekly Timetable</h1>
+
+  <div class="class-selects">
+    <div>
+      <label for="className">Select Class: </label>
+      <select id="className">
+        <option value="JSS1">JSS 1</option>
+        <option value="JSS2">JSS 2</option>
+        <option value="JSS3">JSS 3</option>
+        <option value="SSS1">SSS 1</option>
+        <option value="SSS2">SSS 2</option>
+        <option value="SSS3">SSS 3</option>
+      </select>
+    </div>
+    <div>
+      <label for="groupName">Select Group: </label>
+      <select id="groupName">
+        <option value="A">Group A</option>
+        <option value="B">Group B</option>
+        <option value="C">Group C</option>
+      </select>
+    </div>
   </div>
 
-<script>
-const BACKEND_URL = "https://api.gradely.info";
+  <div class="timetable" id="timetableGrid"></div>
 
-async function initTimetable() {
-  const token = sessionStorage.getItem("admin_token");
-  if (!token) {
-    document.getElementById("app").innerHTML = `
-      <div class="locked">
-        <h2>🔑 Not Logged In</h2>
-        <p>Please log in to access timetable management.</p>
-        <a href="admin-login.html">Go to Login</a>
-      </div>
-    `;
+  <div class="action-buttons">
+    <button class="export-btn" onclick="exportPDF()">📄 Export as PDF</button>
+    <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+  </div>
+</div>
+
+<footer>
+  © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br>
+  <a href="terms.html">Terms</a> • 
+  <a href="privacy.html">Privacy</a> • 
+  <a href="refund-policy.html">Refund Policy</a>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js "></script>
+
+<script>
+// 👇 SESSION VALIDATION ADDED HERE 👇
+document.addEventListener("DOMContentLoaded", () => {
+  const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+  if (!schoolId) {
+    alert("⚠️ Session expired. Please log in again.");
+    window.location.href = "admin-login.html";
     return;
   }
+});
 
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/admin/me`, {
-      headers: { "Authorization": `Bearer ${token}` }
+const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+let times = ["08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00"];
+
+// Object to store timetable per class & group
+let timetableData = {};
+
+function initTimetableData(className, groupName) {
+  if (!timetableData[className]) timetableData[className] = {};
+  if (!timetableData[className][groupName]) {
+    timetableData[className][groupName] = {};
+    days.forEach(day => {
+      timetableData[className][groupName][day] = times.map(() => ({subject: "-", teacher: "-"}));
     });
-
-    if (res.status === 401) {
-      localStorage.removeItem("admin_token");
-      throw new Error();
-    }
-
-    const data = await res.json();
-    window.school_id = data.school_id;
-
-    if (data.subscription_plan !== "pro") {
-      document.getElementById("app").innerHTML = `
-        <div class="locked">
-          <h2>🎓 Pro Feature</h2>
-          <p>Timetable management requires a Pro subscription.</p>
-          <a href="upgrade.html">Upgrade to Pro</a>
-        </div>
-      `;
-      return;
-    }
-
-    renderUI();
-    loadSubjects(token);
-    document.getElementById("className")?.addEventListener("input", () => loadTimetable(token));
-
-  } catch (err) {
-    document.getElementById("app").innerHTML = `
-      <div class="locked">
-        <h2>🔑 Session Expired</h2>
-        <p>Please log in again.</p>
-        <a href="admin-login.html">Go to Login</a>
-      </div>
-    `;
   }
 }
 
-async function loadSubjects(token) {
-  const res = await fetch(`${BACKEND_URL}/api/subjects/subjects?school_id=${encodeURIComponent(window.school_id)}`, {
-    headers: { "Authorization": `Bearer ${token}` }
+const timetableGrid = document.getElementById("timetableGrid");
+
+function renderTimetable() {
+  const className = document.getElementById("className").value;
+  const groupName = document.getElementById("groupName").value;
+
+  initTimetableData(className, groupName);
+
+  timetableGrid.innerHTML = "";
+  const gridData = timetableData[className][groupName];
+
+  // Render header row
+  timetableGrid.appendChild(document.createElement("div")).textContent = "Time / Day";
+  days.forEach(day => {
+    const header = document.createElement("div");
+    header.classList.add("header");
+    header.textContent = day;
+    timetableGrid.appendChild(header);
   });
-  const data = await res.json();
-  const select = document.getElementById("subject");
-  select.innerHTML = '<option value="">Subject</option>';
-  data.subjects?.forEach(s => {
-    select.innerHTML += `<option value="${s.id}">${s.subject_name}</option>`;
+
+  // Render rows
+  times.forEach((time, rowIndex) => {
+    const timeDiv = document.createElement("div");
+    timeDiv.classList.add("time-slot");
+    timeDiv.textContent = time;
+    timeDiv.addEventListener("dblclick", () => {
+      const newTime = prompt("Edit time slot:", times[rowIndex]) || times[rowIndex];
+      times[rowIndex] = newTime;
+      renderTimetable();
+    });
+    timetableGrid.appendChild(timeDiv);
+
+    days.forEach(day => {
+      const cell = document.createElement("div");
+      cell.classList.add("editable");
+
+      const sub = gridData[day][rowIndex].subject;
+      const teach = gridData[day][rowIndex].teacher;
+
+      cell.innerHTML = `<strong>${sub}</strong><br><em>${teach}</em>`;
+
+      cell.addEventListener("dblclick", () => {
+        const newSub = prompt("Enter subject:", gridData[day][rowIndex].subject) || "-";
+        const newTeach = prompt("Enter teacher:", gridData[day][rowIndex].teacher) || "-";
+        gridData[day][rowIndex].subject = newSub;
+        gridData[day][rowIndex].teacher = newTeach;
+        renderTimetable();
+      });
+
+      timetableGrid.appendChild(cell);
+    });
   });
 }
 
-async function loadTimetable(token) {
-  const className = document.getElementById("className")?.value?.trim();
-  if (!className) return;
-  const res = await fetch(
-    `${BACKEND_URL}/api/timetable?school_id=${encodeURIComponent(window.school_id)}&class=${encodeURIComponent(className)}`,
-    { headers: { "Authorization": `Bearer ${token}` } }
-  );
-  const data = await res.json();
-  const tbody = document.getElementById("timetable");
-  tbody.innerHTML = data.timetable?.length
-    ? data.timetable.map(row => `
-        <tr>
-          <td>${row.day}</td>
-          <td>${row.time_slot}</td>
-          <td>${row.subject || "-"}</td>
-          <td>${row.teacher || "-"}</td>
-          <td><button class="danger" onclick="deleteSlot(${row.id}, '${token}')">Delete</button></td>
-        </tr>
-      `).join("")
-    : `<tr><td colspan="5" style="text-align:center;">No timetable yet</td></tr>`;
-}
+// Re-render when class or group changes
+document.getElementById("className").addEventListener("change", renderTimetable);
+document.getElementById("groupName").addEventListener("change", renderTimetable);
 
-async function addSlot(token) {
-  const payload = {
-    school_id: window.school_id,
-    class: document.getElementById("className").value.trim(),
-    day: document.getElementById("day").value,
-    time_slot: document.getElementById("timeSlot").value,
-    subject_id: document.getElementById("subject").value,
-    teacher: document.getElementById("teacher").value || null
-  };
+renderTimetable();
 
-  await fetch(`${BACKEND_URL}/api/timetable`, {
-    method: "POST",
-    headers: { 
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify(payload)
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p", "mm", "a4");
+  let y = 20;
+  const className = document.getElementById("className").value;
+  const groupName = document.getElementById("groupName").value;
+
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Timetable — ${className} ${groupName}`, 105, y, null, null, "center");
+  y += 10;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+
+  const gridData = timetableData[className][groupName];
+
+  const table = [ ["Time/Day", ...days] ];
+  times.forEach((time, i) => {
+    const row = [time];
+    days.forEach(day => {
+      const cell = gridData[day][i];
+      row.push(`${cell.subject}\n(${cell.teacher})`);
+    });
+    table.push(row);
   });
-  loadTimetable(token);
-}
 
-async function deleteSlot(id, token) {
-  await fetch(`${BACKEND_URL}/api/timetable/${id}?school_id=${encodeURIComponent(window.school_id)}`, {
-    method: "DELETE",
-    headers: { "Authorization": `Bearer ${token}` }
+  doc.autoTable({
+    startY: y,
+    head: [table[0]],
+    body: table.slice(1),
+    theme: 'grid',
+    styles: { fontSize: 9, halign: 'center', valign: 'middle' },
+    headStyles: { fillColor: [108, 92, 231], textColor: 255 }
   });
-  loadTimetable(token);
-}
 
-function renderUI() {
-  document.getElementById("app").innerHTML = `
-    <div class="card">
-      <h1>Manage Class Timetables <span class="pro-badge">PRO</span></h1>
-      <div class="grid">
-        <input id="className" placeholder="Class Name (e.g. JSS 1)" />
-        <select id="day">
-          <option>Monday</option><option>Tuesday</option>
-          <option>Wednesday</option><option>Thursday</option><option>Friday</option>
-        </select>
-        <select id="timeSlot">
-          <option>8:00 - 9:00</option><option>9:00 - 10:00</option>
-          <option>10:00 - 11:00</option><option>11:00 - 12:00</option>
-          <option>12:00 - 13:00</option><option>13:00 - 14:00</option>
-        </select>
-        <select id="subject"></select>
-        <input id="teacher" placeholder="Teacher (optional)" />
-      </div>
-      <button onclick="addSlot(localStorage.getItem('admin_token'))">➕ Add Slot</button>
-      <table>
-        <thead>
-          <tr><th>Day</th><th>Time</th><th>Subject</th><th>Teacher</th><th>Action</th></tr>
-        </thead>
-        <tbody id="timetable">
-          <tr><td colspan="5" style="text-align:center;">Enter class name</td></tr>
-        </tbody>
-      </table>
-    </div>
-  `;
+  doc.save(`Timetable_${className}_${groupName}.pdf`);
 }
-
-initTimetable();
 </script>
 
-  <script src="js/timetable-core.js"></script>
-  <script src="js/kaima-chatbot.js"></script>
-  <script src="js/session-timeout.js"></script>
 </body>
 </html>
