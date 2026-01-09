@@ -193,7 +193,10 @@
   </div>
 
 <script>
-const API_BASE = "https://api.gradely.info";
+const API_BASE = window.location.hostname.includes("localhost")
+  ? "http://localhost:5000"
+  : "https://api.gradely.info";
+
 
 // ✅ Check localStorage first (persistent), fallback to sessionStorage
 const adminId = localStorage.getItem("adminId") || sessionStorage.getItem("adminId");
@@ -246,48 +249,36 @@ async function loadSchoolData() {
 document.getElementById("settingsForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const form = e.target;
   const msgEl = document.getElementById("message");
-
   msgEl.className = "message";
   msgEl.textContent = "⏳ Saving changes...";
 
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("⚠️ Session expired. Please log in again.");
+    window.location.href = "admin-login.html";
+    return;
+  }
+
   const payload = {};
 
-  if (form.school_name.value.trim()) payload.school_name = form.school_name.value.trim();
-  if (form.email.value.trim()) payload.email = form.email.value.trim();
-  if (form.phone_number.value.trim()) payload.phone_number = form.phone_number.value.trim();
+  if (school_name.value.trim()) payload.school_name = school_name.value.trim();
+  if (email.value.trim()) payload.email = email.value.trim();
+  if (phone_number.value.trim()) payload.phone_number = phone_number.value.trim();
 
-  const currentPassword = form.current_password.value.trim();
-  const newPassword = form.new_password.value.trim();
-  const confirmPassword = form.confirm_new_password.value.trim();
+  const currentPassword = current_password.value.trim();
+  const newPassword = new_password.value.trim();
+  const confirmPassword = confirm_new_password.value.trim();
 
-  const wantsPasswordChange = currentPassword || newPassword || confirmPassword;
-
-  if (wantsPasswordChange) {
-    if (!currentPassword) {
+  if (currentPassword || newPassword || confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
       msgEl.className = "message error";
-      msgEl.textContent = "❌ Enter your current password.";
-      return;
-    }
-    if (!newPassword) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ Enter a new password.";
-      return;
-    }
-    if (!confirmPassword) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ Confirm your new password.";
+      msgEl.textContent = "❌ Fill all password fields.";
       return;
     }
     if (newPassword !== confirmPassword) {
       msgEl.className = "message error";
-      msgEl.textContent = "❌ New passwords do not match.";
-      return;
-    }
-    if (newPassword.length < 8) {
-      msgEl.className = "message error";
-      msgEl.textContent = "❌ Password must be at least 8 characters.";
+      msgEl.textContent = "❌ Passwords do not match.";
       return;
     }
 
@@ -295,48 +286,36 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
     payload.new_password = newPassword;
   }
 
-  if (Object.keys(payload).length === 0) {
-    msgEl.className = "message error";
-    msgEl.textContent = "⚠️ Nothing to update.";
-    return;
-  }
-
   try {
-    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_BASE}/api/settings/update-settings`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
 
-if (!token) {
-  alert("⚠️ Session expired. Please log in again.");
-  window.location.href = "admin-login.html";
-  return;
-}
-
-fetch(`${API_BASE}/api/settings/update-settings`, {
-  method: "PUT",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`
-  },
-  body: JSON.stringify(payload)
-});
-
+    const data = await res.json();
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || "Update failed");
+      throw new Error(data.message || "Update failed");
     }
 
     msgEl.className = "message success";
-    msgEl.textContent = "✅ Settings saved successfully.";
+    msgEl.textContent = "✅ Settings updated successfully";
 
-    form.current_password.value = "";
-    form.new_password.value = "";
-    form.confirm_new_password.value = "";
+    current_password.value = "";
+    new_password.value = "";
+    confirm_new_password.value = "";
 
   } catch (err) {
     msgEl.className = "message error";
     msgEl.textContent = "❌ " + err.message;
+    console.error(err);
   }
 });
+
 
 function togglePassword(fieldId, icon) {
   const input = document.getElementById(fieldId);
