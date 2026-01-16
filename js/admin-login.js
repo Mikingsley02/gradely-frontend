@@ -36,10 +36,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (data.success) {
         alert("✅ Login successful!");
-        localStorage.setItem("adminToken", data.token);
+        localStorage.setItem("token", data.token);
         sessionStorage.setItem("adminId", admin_id);
         sessionStorage.setItem("school_id", data.admin.school_id);
-        window.location.href = "dashboard.html"; // redirect to dashboard
+        window.location.href = "dashboard.html";
       } else {
         alert(`❌ ${data.message || "Login failed"}`);
       }
