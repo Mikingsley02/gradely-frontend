@@ -349,6 +349,37 @@ document.getElementById("adminLoginForm").addEventListener("submit", async (e) =
     spinner.style.display = "none";
   }
 });
+
+
+function resetAdminPassword() {
+  const adminId = prompt("Enter your Admin ID to reset your password:");
+  if (!adminId) return; // user cancelled
+
+  const API_BASE = window.location.hostname.includes("localhost")
+    ? "http://localhost:5000"
+    : "https://api.gradely.info";
+
+  fetch(`${API_BASE}/api/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ admin_id: adminId })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert("✅ " + (data.message || "Check your email for password reset instructions."));
+    } else {
+      alert("❌ " + (data.message || "Failed to send reset email."));
+    }
+  })
+  .catch(err => {
+    console.error("❌ Forgot password error:", err);
+    alert("❌ Network or server error. Please try again.");
+  });
+}
+
+
+
 </script>
 
 
