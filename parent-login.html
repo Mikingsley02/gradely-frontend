@@ -358,14 +358,13 @@
 
 
 
-      let data;
-      if (response.ok) {
-        data = await response.json();
-      } else {
-        // Handle non-JSON errors gracefully
-        const text = await response.text();
-        data = { success: false, message: `Server error (${response.status})` };
-      }
+      let data = await response.json();
+
+if (!response.ok) {
+  alert('❌ ' + (data.message || 'Login failed.'));
+  return;
+}
+
 
       if (data.success) {
   console.log('✅ Parent login successful! Redirecting...');
