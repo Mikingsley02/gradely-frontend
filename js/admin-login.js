@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch(`${API_BASE}/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // ✅ allows cookies
         body: JSON.stringify({ admin_id, password }),
       });
 
