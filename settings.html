@@ -220,10 +220,8 @@ async function loadSchoolData() {
   msgEl.className = "message";
 
   const token = localStorage.getItem("token");
-
   if (!token) {
-    msgEl.className = "message error";
-    msgEl.textContent = "⚠️ Session expired. Please log in again.";
+    alert("⚠️ Session expired. Please log in again.");
     window.location.href = "admin-login.html";
     return;
   }
@@ -236,30 +234,93 @@ async function loadSchoolData() {
       }
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || "Failed to load settings");
-    }
-
     const data = await res.json();
 
-    if (data.success) {
-      document.getElementById("school_name").value = data.school.school_name || "";
-      document.getElementById("email").value = data.school.email || "";
-      document.getElementById("phone_number").value = data.school.phone_number || "";
-      msgEl.textContent = "";
-    } else {
-      msgEl.className = "message error";
-      msgEl.textContent = "⚠️ Failed to load school info.";
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to load settings");
     }
 
+    document.getElementById("school_name").value = data.school.school_name || "";
+    document.getElementById("email").value = data.school.email || "";
+    document.getElementById("phone_number").value = data.school.phone_number || "";
+
+    msgEl.textContent = "";
   } catch (err) {
-    console.error("Load settings error:", err);
+    console.error(err);
     msgEl.className = "message error";
     msgEl.textContent = "🚫 Unable to connect to server.";
   }
 }
 
+document.getElementById("settingsForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const msgEl = document.getElementById("message");
+  msgEl.className = "message";
+  msgEl.textContent = "⏳ Saving changes...";
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("⚠️ Session expired. Please log in again.");
+    window.location.href = "admin-login.html";
+    return;
+  }
+
+  const payload = {};
+
+  if (school_name.value.trim()) payload.school_name = school_name.value.trim();
+  if (email.value.trim()) payload.email = email.value.trim();
+  if (phone_number.value.trim()) payload.phone_number = phone_number.value.trim();
+
+  const currentPassword = current_password.value.trim();
+  const newPassword = new_password.value.trim();
+  const confirmPassword = confirm_new_password.value.trim();
+
+  if (currentPassword || newPassword || confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ Fill all password fields.";
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      msgEl.className = "message error";
+      msgEl.textContent = "❌ Passwords do not match.";
+      return;
+    }
+
+    payload.current_password = currentPassword;
+    payload.new_password = newPassword;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/settings/update-settings`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Update failed");
+    }
+
+    msgEl.className = "message success";
+    msgEl.textContent = "✅ Settings updated successfully";
+
+    current_password.value = "";
+    new_password.value = "";
+    confirm_new_password.value = "";
+
+  } catch (err) {
+    msgEl.className = "message error";
+    msgEl.textContent = "❌ " + err.message;
+    console.error(err);
+  }
+});
 
 
 function togglePassword(fieldId, icon) {
