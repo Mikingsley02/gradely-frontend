@@ -266,11 +266,11 @@
       let reply = "I'm not sure, but you can reach support for help.";
       const lower = text.toLowerCase();
 
-      if (lower.includes('password')) reply = "To reset your password, go to Settings → Change Password.";
+      if (lower.includes('password')) reply = "To reset your password as admin, go to Settings → Change Password. To reset your password as student, login and click on → Change Password ";
       else if (lower.includes('download')) reply = "Login as a parent, Click on 'download PDF' to get your child's result as a printable PDF.";
       else if (lower.includes('school')) reply = "Yes! You can register as a new school via the Home page.";
       else if (lower.includes('plan') || lower.includes('subscription')) reply = "Our subscription plans are shown on the 'Billing' page — basic & pro options available.";
-      else if (lower.includes('support') || lower.includes('contact')) reply = "📧 You can reach support at support@gradely.info";
+      else if (lower.includes('support') || lower.includes('contact')) reply = "You can reach support at 📧 support@gradely.info";
       else if (lower.includes('hello') || lower.includes('hi')) reply = "Hi there! 😊 How can I assist you today?";
       else if (lower.includes('result') && lower.includes('result')) reply = "Login as admin, go to your dashboard → Click 'Upload results'";
       else if (lower.includes('register') && lower.includes('student')) reply = "To register a student, go to the Admin Dashboard → Use 'Add New Student' or 'Bulk Upload' feature.";
