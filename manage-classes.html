@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>📅 School Timetable — Editable</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="https://gradely.info/favicon.ico "/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="https://gradely.info/favicon.ico" />
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, sans-serif;
@@ -16,28 +16,42 @@
 
     .container {
       max-width: 1100px;
-      margin: 30px auto;
-      padding: 20px;
+      margin: 20px auto;
+      padding: 15px;
     }
 
     h1 {
       text-align: center;
-      font-size: 2rem;
-      margin-bottom: 20px;
+      font-size: 1.6rem;
+      margin-bottom: 16px;
       color: #1f2937;
     }
 
     .class-selects {
       margin-bottom: 20px;
-      text-align: center;
       display: flex;
-      justify-content: center;
-      gap: 15px;
-      flex-wrap: wrap;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .class-selects > div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .class-selects label {
+      font-weight: 600;
+      font-size: 0.95rem;
     }
 
     select {
-      padding: 10px 15px;
+      width: 100%;
+      padding: 10px 12px;
       font-size: 1rem;
       border-radius: 8px;
       border: 1px solid #ccc;
@@ -45,19 +59,26 @@
       cursor: pointer;
     }
 
+    /* Responsive timetable container */
+    .timetable-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+
     .timetable {
       display: grid;
-      grid-template-columns: 150px repeat(5, 1fr);
+      grid-template-columns: 140px repeat(5, 1fr);
       gap: 1px;
       background: #ccc;
-      border-radius: 8px;
-      overflow: hidden;
+      min-width: 600px; /* ensures horizontal scroll on small screens */
     }
 
     .timetable div {
       background: #fff;
-      padding: 12px;
-      min-height: 60px;
+      padding: 10px;
+      min-height: 50px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -66,13 +87,14 @@
       position: relative;
       transition: transform 0.2s, box-shadow 0.2s;
       cursor: default;
+      font-size: 0.85rem;
     }
 
     .timetable div.header {
       background: #6c5ce7;
       color: #fff;
       font-weight: 700;
-      font-size: 0.95rem;
+      font-size: 0.85rem;
     }
 
     .timetable div.time-slot {
@@ -81,249 +103,269 @@
       cursor: pointer;
     }
 
-    .timetable div:hover.editable,
-    .timetable div:hover.time-slot {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    /* Hide edit hint on mobile (touch doesn't support double-click well) */
+    @media (min-width: 768px) {
+      .editable:hover::after,
+      .time-slot:hover::after {
+        content: "Double click to edit";
+        font-size: 0.65rem;
+        color: #555;
+        position: absolute;
+        bottom: 2px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
     }
 
-    .editable:hover::after,
-    .time-slot:hover::after {
-      content: "Double click to edit";
-      font-size: 0.7rem;
-      color: #555;
-      position: absolute;
-      bottom: 2px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    .export-btn {
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
       margin-top: 20px;
-      display: block;
-      background: #6c5ce7;
-      color: white;
-      border: none;
-      padding: 12px 20px;
+    }
+
+    .export-btn,
+    .back-btn {
+      width: 100%;
+      max-width: 300px;
+      padding: 12px;
       font-size: 1rem;
+      border: none;
       border-radius: 8px;
       cursor: pointer;
       text-align: center;
+      text-decoration: none;
+      font-weight: 600;
     }
 
-    .export-btn:hover { background: #5a3ecf; }
+    .export-btn {
+      background: #6c5ce7;
+      color: white;
+    }
+
+    .export-btn:hover {
+      background: #5a3ecf;
+    }
+
+    .back-btn {
+      background: #209c49;
+      color: white;
+      display: inline-block;
+    }
+
+    .back-btn:hover {
+      background: #17855d;
+    }
 
     footer {
       text-align: center;
       margin-top: 30px;
       padding: 15px 0;
       color: #666;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       border-top: 1px solid #eee;
     }
+
     footer a {
       color: #6c3cff;
       text-decoration: none;
       margin: 0 6px;
     }
 
-    .action-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin-top: 24px;
-    }
+    /* Tablet and up */
+    @media (min-width: 768px) {
+      .class-selects {
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
+      }
 
-    .back-btn {
-      margin-top: 20px;
-      display: block;
-      background: #209c49;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      text-align: center;
-      text-decoration: none;
-    }
+      .action-buttons {
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
+      }
 
-    .back-btn:hover {
-      background: #17855d;
+      .export-btn,
+      .back-btn {
+        width: auto;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>📅 Weekly Timetable</h1>
 
-<div class="container">
-  <h1>📅 Weekly Timetable</h1>
-
-  <div class="class-selects">
-    <div>
-      <label for="className">Select Class: </label>
-      <select id="className">
-        <option value="JSS1">JSS 1</option>
-        <option value="JSS2">JSS 2</option>
-        <option value="JSS3">JSS 3</option>
-        <option value="SSS1">SSS 1</option>
-        <option value="SSS2">SSS 2</option>
-        <option value="SSS3">SSS 3</option>
-      </select>
+    <div class="class-selects">
+      <div>
+        <label for="className">Select Class:</label>
+        <select id="className">
+          <option value="JSS1">JSS 1</option>
+          <option value="JSS2">JSS 2</option>
+          <option value="JSS3">JSS 3</option>
+          <option value="SSS1">SSS 1</option>
+          <option value="SSS2">SSS 2</option>
+          <option value="SSS3">SSS 3</option>
+        </select>
+      </div>
+      <div>
+        <label for="groupName">Select Group:</label>
+        <select id="groupName">
+          <option value="A">Group A</option>
+          <option value="B">Group B</option>
+          <option value="C">Group C</option>
+        </select>
+      </div>
     </div>
-    <div>
-      <label for="groupName">Select Group: </label>
-      <select id="groupName">
-        <option value="A">Group A</option>
-        <option value="B">Group B</option>
-        <option value="C">Group C</option>
-      </select>
+
+    <!-- Scrollable wrapper for mobile -->
+    <div class="timetable-wrapper">
+      <div class="timetable" id="timetableGrid"></div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="export-btn" onclick="exportPDF()">📄 Export as PDF</button>
+      <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
     </div>
   </div>
 
-  <div class="timetable" id="timetableGrid"></div>
+  <footer>
+    © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br />
+    <a href="terms.html">Terms</a> • 
+    <a href="privacy.html">Privacy</a> • 
+    <a href="refund-policy.html">Refund Policy</a>
+  </footer>
 
-  <div class="action-buttons">
-    <button class="export-btn" onclick="exportPDF()">📄 Export as PDF</button>
-    <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
-  </div>
-</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-<footer>
-  © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br>
-  <a href="terms.html">Terms</a> • 
-  <a href="privacy.html">Privacy</a> • 
-  <a href="refund-policy.html">Refund Policy</a>
-</footer>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js "></script>
-
-<script>
-// 👇 SESSION VALIDATION ADDED HERE 👇
-document.addEventListener("DOMContentLoaded", () => {
-  const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
-  if (!schoolId) {
-    alert("⚠️ Session expired. Please log in again.");
-    window.location.href = "admin-login.html";
-    return;
-  }
-});
-
-const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-let times = ["08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00"];
-
-// Object to store timetable per class & group
-let timetableData = {};
-
-function initTimetableData(className, groupName) {
-  if (!timetableData[className]) timetableData[className] = {};
-  if (!timetableData[className][groupName]) {
-    timetableData[className][groupName] = {};
-    days.forEach(day => {
-      timetableData[className][groupName][day] = times.map(() => ({subject: "-", teacher: "-"}));
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+      if (!schoolId) {
+        alert("⚠️ Session expired. Please log in again.");
+        window.location.href = "admin-login.html";
+        return;
+      }
     });
-  }
-}
 
-const timetableGrid = document.getElementById("timetableGrid");
+    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+    let times = ["08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00"];
+    let timetableData = {};
 
-function renderTimetable() {
-  const className = document.getElementById("className").value;
-  const groupName = document.getElementById("groupName").value;
+    function initTimetableData(className, groupName) {
+      if (!timetableData[className]) timetableData[className] = {};
+      if (!timetableData[className][groupName]) {
+        timetableData[className][groupName] = {};
+        days.forEach(day => {
+          timetableData[className][groupName][day] = times.map(() => ({ subject: "-", teacher: "-" }));
+        });
+      }
+    }
 
-  initTimetableData(className, groupName);
+    const timetableGrid = document.getElementById("timetableGrid");
 
-  timetableGrid.innerHTML = "";
-  const gridData = timetableData[className][groupName];
+    function renderTimetable() {
+      const className = document.getElementById("className").value;
+      const groupName = document.getElementById("groupName").value;
 
-  // Render header row
-  timetableGrid.appendChild(document.createElement("div")).textContent = "Time / Day";
-  days.forEach(day => {
-    const header = document.createElement("div");
-    header.classList.add("header");
-    header.textContent = day;
-    timetableGrid.appendChild(header);
-  });
+      initTimetableData(className, groupName);
+      const gridData = timetableData[className][groupName];
 
-  // Render rows
-  times.forEach((time, rowIndex) => {
-    const timeDiv = document.createElement("div");
-    timeDiv.classList.add("time-slot");
-    timeDiv.textContent = time;
-    timeDiv.addEventListener("dblclick", () => {
-      const newTime = prompt("Edit time slot:", times[rowIndex]) || times[rowIndex];
-      times[rowIndex] = newTime;
-      renderTimetable();
-    });
-    timetableGrid.appendChild(timeDiv);
+      timetableGrid.innerHTML = "";
 
-    days.forEach(day => {
-      const cell = document.createElement("div");
-      cell.classList.add("editable");
+      // Header row
+      const headerCell = document.createElement("div");
+      headerCell.classList.add("header");
+      headerCell.textContent = "Time / Day";
+      timetableGrid.appendChild(headerCell);
 
-      const sub = gridData[day][rowIndex].subject;
-      const teach = gridData[day][rowIndex].teacher;
-
-      cell.innerHTML = `<strong>${sub}</strong><br><em>${teach}</em>`;
-
-      cell.addEventListener("dblclick", () => {
-        const newSub = prompt("Enter subject:", gridData[day][rowIndex].subject) || "-";
-        const newTeach = prompt("Enter teacher:", gridData[day][rowIndex].teacher) || "-";
-        gridData[day][rowIndex].subject = newSub;
-        gridData[day][rowIndex].teacher = newTeach;
-        renderTimetable();
+      days.forEach(day => {
+        const header = document.createElement("div");
+        header.classList.add("header");
+        header.textContent = day;
+        timetableGrid.appendChild(header);
       });
 
-      timetableGrid.appendChild(cell);
-    });
-  });
-}
+      // Time rows
+      times.forEach((time, rowIndex) => {
+        const timeDiv = document.createElement("div");
+        timeDiv.classList.add("time-slot");
+        timeDiv.textContent = time;
+        timeDiv.addEventListener("dblclick", () => {
+          const newTime = prompt("Edit time slot:", times[rowIndex]) || times[rowIndex];
+          times[rowIndex] = newTime;
+          renderTimetable();
+        });
+        timetableGrid.appendChild(timeDiv);
 
-// Re-render when class or group changes
-document.getElementById("className").addEventListener("change", renderTimetable);
-document.getElementById("groupName").addEventListener("change", renderTimetable);
+        days.forEach(day => {
+          const cell = document.createElement("div");
+          cell.classList.add("editable");
 
-renderTimetable();
+          const sub = gridData[day][rowIndex].subject;
+          const teach = gridData[day][rowIndex].teacher;
 
-function exportPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("p", "mm", "a4");
-  let y = 20;
-  const className = document.getElementById("className").value;
-  const groupName = document.getElementById("groupName").value;
+          cell.innerHTML = `<strong>${sub}</strong><br><em>${teach}</em>`;
 
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text(`Timetable — ${className} ${groupName}`, 105, y, null, null, "center");
-  y += 10;
+          cell.addEventListener("dblclick", () => {
+            const newSub = prompt("Enter subject:", gridData[day][rowIndex].subject) || "-";
+            const newTeach = prompt("Enter teacher:", gridData[day][rowIndex].teacher) || "-";
+            gridData[day][rowIndex].subject = newSub;
+            gridData[day][rowIndex].teacher = newTeach;
+            renderTimetable();
+          });
 
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
+          timetableGrid.appendChild(cell);
+        });
+      });
+    }
 
-  const gridData = timetableData[className][groupName];
+    document.getElementById("className").addEventListener("change", renderTimetable);
+    document.getElementById("groupName").addEventListener("change", renderTimetable);
 
-  const table = [ ["Time/Day", ...days] ];
-  times.forEach((time, i) => {
-    const row = [time];
-    days.forEach(day => {
-      const cell = gridData[day][i];
-      row.push(`${cell.subject}\n(${cell.teacher})`);
-    });
-    table.push(row);
-  });
+    renderTimetable();
 
-  doc.autoTable({
-    startY: y,
-    head: [table[0]],
-    body: table.slice(1),
-    theme: 'grid',
-    styles: { fontSize: 9, halign: 'center', valign: 'middle' },
-    headStyles: { fillColor: [108, 92, 231], textColor: 255 }
-  });
+    function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF("p", "mm", "a4");
+      let y = 20;
+      const className = document.getElementById("className").value;
+      const groupName = document.getElementById("groupName").value;
 
-  doc.save(`Timetable_${className}_${groupName}.pdf`);
-}
-</script>
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Timetable — ${className} ${groupName}`, 105, y, null, null, "center");
+      y += 10;
 
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+
+      const gridData = timetableData[className][groupName];
+
+      const table = [["Time/Day", ...days]];
+      times.forEach((time, i) => {
+        const row = [time];
+        days.forEach(day => {
+          const cell = gridData[day][i];
+          row.push(`${cell.subject}\n(${cell.teacher})`);
+        });
+        table.push(row);
+      });
+
+      doc.autoTable({
+        startY: y,
+        head: [table[0]],
+        body: table.slice(1),
+        theme: 'grid',
+        styles: { fontSize: 9, halign: 'center', valign: 'middle' },
+        headStyles: { fillColor: [108, 92, 231], textColor: 255 }
+      });
+
+      doc.save(`Timetable_${className}_${groupName}.pdf`);
+    }
+  </script>
 </body>
 </html>
