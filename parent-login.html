@@ -277,28 +277,11 @@
       </form>
       
       <p style="font-size: 0.9rem; margin-top: 15px;">
-        <a href="#" onclick="resetPassword()" style="color: #3498db; text-decoration: none;">🔐 Forgot password?</a>
-      </p>
+  <a href="forgot-password.html" style="color: #3498db; text-decoration: none;">🔐 Forgot password?</a>
+</p>
 
-      <script>
-        function resetPassword() {
-          const studentId = prompt("Enter your child's Student ID to reset password:");
-          if (!studentId) return;
 
-          fetch('/api/forgot-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ student_id: studentId })
-          })
-          .then(res => res.json())
-          .then(data => {
-            alert(data.message);
-          })
-          .catch(err => {
-            alert("Connection error. Check that the server is running?");
-          });
-        }
-      </script>
+    
 
       <div class="admin-link">
         <a href="index.html">← Back to Home</a>
@@ -345,7 +328,6 @@
     console.log('🟢 Attempting parent login for:', student_id);
 
     try {
-      // ✅ FIXED: Removed trailing space in production URL
       const API_BASE = window.location.hostname.includes("localhost")
   ? "http://localhost:5000"
   : "https://api.gradely.info";
@@ -389,6 +371,65 @@ if (!response.ok) {
       spinner.style.display = 'none';
     }
   }
+
+
+
+async function resetPassword() {
+  const studentId = prompt("Enter your child's Student ID to reset password:");
+  if (!studentId) return;
+
+  const API_BASE = window.location.hostname.includes("localhost")
+    ? "http://localhost:3001/api/auth"
+    : "https://api.gradely.info/api/auth";
+
+  try {
+    // Step 1: Request reset code
+    let res = await fetch(`${API_BASE}/forgot-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: studentId }) // backend should accept userId for both students/admins
+    });
+
+    let data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alert("❌ " + (data.message || "Failed to send reset code."));
+      return;
+    }
+
+    alert("✅ Reset code sent! Check your SMS/email.");
+
+    // Step 2: Ask for code
+    const code = prompt("Enter the reset code you received:");
+    if (!code) return;
+
+    // Step 3: Ask for new password
+    const newPassword = prompt("Enter your new password (min 6 characters):");
+    if (!newPassword) return;
+
+    // Step 4: Reset password
+    res = await fetch(`${API_BASE}/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: studentId, code, newPassword })
+    });
+
+    data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alert("❌ " + (data.message || "Failed to reset password."));
+      return;
+    }
+
+    alert("✅ Password reset successfully! You can now login with your new password.");
+  } catch (err) {
+    console.error("❌ Forgot password/reset error:", err);
+    alert("❌ Network or server error. Please try again.");
+  }
+}
+
+
+
 </script>
    
   <script src="js/kaima-chatbot.js"></script>

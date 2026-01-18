@@ -261,8 +261,9 @@
       </form>
 
       <p style="font-size: 0.9rem; margin-top: 15px;">
-        <a href="#" onclick="resetAdminPassword()" style="color: #3498db; text-decoration: none;">🔐 Forgot password?</a>
-      </p>
+  <a href="forgot-password.html" style="color: #3498db; text-decoration: none;">🔐 Forgot password?</a>
+</p>
+
 
       <div class="admin-link">
         <a href="index.html">← Back to Home</a>
@@ -351,31 +352,58 @@ document.getElementById("adminLoginForm").addEventListener("submit", async (e) =
 });
 
 
-function resetAdminPassword() {
+async function resetAdminPassword() {
   const adminId = prompt("Enter your Admin ID to reset your password:");
-  if (!adminId) return; // user cancelled
+  if (!adminId) return;
 
   const API_BASE = window.location.hostname.includes("localhost")
-    ? "http://localhost:5000"
-    : "https://api.gradely.info";
+    ? "http://localhost:3001/api/auth"
+    : "https://api.gradely.info/api/auth";
 
-  fetch(`${API_BASE}/api/auth/forgot-password`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ admin_id: adminId })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      alert("✅ " + (data.message || "Check your email for password reset instructions."));
-    } else {
-      alert("❌ " + (data.message || "Failed to send reset email."));
+  try {
+    // Step 1: Request reset code
+    let res = await fetch(`${API_BASE}/forgot-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: adminId })
+    });
+
+    let data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alert("❌ " + (data.message || "Failed to send reset code."));
+      return;
     }
-  })
-  .catch(err => {
-    console.error("❌ Forgot password error:", err);
+
+    alert("✅ Reset code sent! Check your email/SMS.");
+
+    // Step 2: Ask for code
+    const code = prompt("Enter the reset code you received:");
+    if (!code) return;
+
+    // Step 3: Ask for new password
+    const newPassword = prompt("Enter your new password (min 6 characters):");
+    if (!newPassword) return;
+
+    // Step 4: Reset password
+    res = await fetch(`${API_BASE}/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: adminId, code, newPassword })
+    });
+
+    data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alert("❌ " + (data.message || "Failed to reset password."));
+      return;
+    }
+
+    alert("✅ Password reset successfully! You can now login with your new password.");
+  } catch (err) {
+    console.error("❌ Forgot password/reset error:", err);
     alert("❌ Network or server error. Please try again.");
-  });
+  }
 }
 
 
