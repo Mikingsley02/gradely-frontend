@@ -219,14 +219,6 @@ async function postAnnouncement() {
   const title = document.getElementById("title").value.trim();
   const message = document.getElementById("message").value.trim();
 
-  const school_id = sessionStorage.getItem("school_id");
-
-  if (!school_id) {
-    alert("School session missing. Please log in again.");
-    window.location.href = "admin-login.html";
-    return;
-  }
-
   if (!title || !message) {
     alert("Please fill in all fields.");
     return;
@@ -235,9 +227,11 @@ async function postAnnouncement() {
   try {
     const res = await fetch(`${API_BASE}/api/announcements`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      credentials: "include", // ✅ must include session cookie
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
-        school_id: parseInt(school_id, 10),
         title,
         message
       })
@@ -261,6 +255,7 @@ async function postAnnouncement() {
     alert("Server error posting announcement.");
   }
 }
+
 
 
   async function deleteAnnouncement(id) {
