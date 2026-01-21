@@ -214,43 +214,54 @@
     }
   }
 
-  async function postAnnouncement() {
-    const title = document.getElementById("title").value.trim();
-    const message = document.getElementById("message").value.trim();
 
-    if (!title || !message) {
-      alert("Please fill in all fields.");
+async function postAnnouncement() {
+  const title = document.getElementById("title").value.trim();
+  const message = document.getElementById("message").value.trim();
+
+  const school_id = sessionStorage.getItem("school_id");
+
+  if (!school_id) {
+    alert("School session missing. Please log in again.");
+    window.location.href = "admin-login.html";
+    return;
+  }
+
+  if (!title || !message) {
+    alert("Please fill in all fields.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/announcements`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        school_id: parseInt(school_id, 10),
+        title,
+        message
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Failed to post announcement.");
       return;
     }
 
-    try {
-      const res = await fetch(`${API_BASE}/api/announcements`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          school_id: Number(school_id), // FIXED (backend requires integer)
-          title,
-          message
-        })
-      });
+    // Clear form
+    document.getElementById("title").value = "";
+    document.getElementById("message").value = "";
 
-      const data = await res.json();
+    loadAnnouncements();
 
-      if (!data.success) {
-        alert(data.message || "Failed to post announcement.");
-        return;
-      }
-
-      document.getElementById("title").value = "";
-      document.getElementById("message").value = "";
-
-      loadAnnouncements();
-
-    } catch (err) {
-      console.error("Post error:", err);
-      alert("Failed to post announcement.");
-    }
+  } catch (err) {
+    console.error("Post error:", err);
+    alert("Server error posting announcement.");
   }
+}
+
 
   async function deleteAnnouncement(id) {
     if (!confirm("Archive this announcement?")) return;
