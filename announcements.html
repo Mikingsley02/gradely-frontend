@@ -29,40 +29,43 @@
     h1 {
       color: #0c2461;
       margin-bottom: 25px;
-      text-align: left;
+      text-align: center;
     }
 
-    /* Full-width clean form */
     .form-section {
-      width: 100%;
-      margin: 0 auto 30px;
+      max-width: 600px;
+      margin: 0 auto 40px;
     }
 
     .form-group {
       margin-bottom: 20px;
-      width: 100%;
     }
 
-    /* Left-aligned text + placeholders */
     input, textarea {
       width: 100%;
       padding: 12px;
       border: 1px solid #ddd;
       border-radius: 6px;
       font-family: inherit;
-      text-align: left;  /* LEFT aligned text */
-      box-sizing: border-box;
-      display: block;
-    }
-
-    input::placeholder,
-    textarea::placeholder {
-      text-align: left;  /* LEFT aligned placeholder */
     }
 
     textarea {
-      height: 180px;
+      height: 160px;
       resize: vertical;
+    }
+
+    .toggle-row {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 15px 0 25px;
+      font-weight: 600;
+    }
+
+    .toggle-row label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     button {
@@ -81,7 +84,6 @@
       background: #2980b9;
     }
 
-    /* Centered "Back to Dashboard" */
     .back-link {
       display: block;
       text-align: center;
@@ -91,11 +93,6 @@
       font-weight: 600;
     }
 
-    .back-link:hover {
-      text-decoration: underline;
-    }
-
-    /* Announcements */
     .announcement {
       background: #f1f8ff;
       border-left: 4px solid #3498db;
@@ -104,30 +101,21 @@
       border-radius: 0 8px 8px 0;
     }
 
-    .announcement h3 {
-      margin: 0 0 8px;
-      color: #0c2461;
-    }
-
-    .announcement .date {
+    .date {
       font-size: 0.85rem;
       color: #666;
       margin-bottom: 8px;
     }
 
-    .delete-btn {
-      background: #e74c3c;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
+    .status {
+      margin-top: 10px;
       font-size: 0.9rem;
+      font-weight: bold;
     }
 
-    .delete-btn:hover {
-      background: #c0392b;
-    }
+    .ok { color: #27ae60; }
+    .warn { color: #f39c12; }
+    .fail { color: #e74c3c; }
 
     .footer {
       text-align: center;
@@ -136,143 +124,119 @@
       color: #555;
     }
   </style>
-
 </head>
+
 <body>
 
-  <div class="container">
-    <h1>📢 School Announcements</h1>
+<div class="container">
 
-    <div class="form-section">
-      <div class="form-group">
-        <input type="text" id="title" placeholder="Announcement Title" />
-      </div>
+  <h1>📢 School Announcements</h1>
 
-      <div class="form-group">
-        <textarea id="message" placeholder="Write your announcement..."></textarea>
-      </div>
-
-      <button onclick="postAnnouncement()">Post Announcement</button>
-      <a href="dashboard.html" class="back-link">⬅ Back to Dashboard</a>
+  <div class="form-section">
+    <div class="form-group">
+      <input type="text" id="title" placeholder="Announcement Title" />
     </div>
 
-    <div id="announcementsList" style="margin-top: 30px;"></div>
+    <div class="form-group">
+      <textarea id="message" placeholder="Write your announcement..."></textarea>
+    </div>
+
+    <div class="toggle-row">
+      <label>
+        <input type="checkbox" id="send_sms" checked />
+        SMS
+      </label>
+
+      <label>
+        <input type="checkbox" id="send_email" checked />
+        Email
+      </label>
+    </div>
+
+    <button onclick="postAnnouncement()">Post Announcement</button>
+    <a href="dashboard.html" class="back-link">⬅ Back to Dashboard</a>
   </div>
 
-  <div class="footer">
-    © 2026 <strong>gradely.info</strong>. All rights reserved.
-    <div style="margin-top: 10px;">
-      <a href="terms.html">Terms</a> •
-      <a href="privacy.html">Privacy</a> •
-      <a href="refund-policy.html">Refund Policy</a>
-    </div>
-  </div>
+  <div id="announcementsList"></div>
+
+</div>
+
+<div class="footer">
+  © 2026 <strong>gradely.info</strong>. All rights reserved.
+</div>
 
 <script>
-  const API_BASE = "https://gradely-backend-1.onrender.com";
-  let school_id = null;
+const API_BASE = "https://gradely-backend-1.onrender.com";
 
-  window.addEventListener("DOMContentLoaded", () => {
-    school_id = sessionStorage.getItem('school_id');
+window.addEventListener("DOMContentLoaded", () => {
+  if (!sessionStorage.getItem("school_id")) {
+    alert("Session expired. Please log in again.");
+    window.location.href = "admin-login.html";
+    return;
+  }
+  loadAnnouncements();
+});
 
-    if (!school_id) {
-      alert("Session expired. Please log in again.");
-      window.location.href = 'admin-login.html';
+async function loadAnnouncements() {
+  try {
+    const res = await fetch(`${API_BASE}/api/announcements`, {
+      credentials: "include"
+    });
+
+    const data = await res.json();
+    const container = document.getElementById("announcementsList");
+    container.innerHTML = "";
+
+    if (!data.length) {
+      container.innerHTML = "<p>No announcements yet.</p>";
       return;
     }
 
-    loadAnnouncements();
-  });
+    data.forEach(a => {
+      let statusHTML =
+        a.sms_sent && a.email_sent ? `<span class="ok">✔ SMS & Email delivered</span>` :
+        a.sms_sent || a.email_sent ? `<span class="warn">⚠ Partially delivered</span>` :
+        `<span class="fail">⏳ Pending / Failed</span>`;
 
-  async function loadAnnouncements() {
-    try {
-      const res = await fetch(`${API_BASE}/api/announcements/${school_id}`);
-      const data = await res.json();
+      const div = document.createElement("div");
+      div.className = "announcement";
+      div.innerHTML = `
+        <h3>${a.title}</h3>
+        <div class="date">${new Date(a.created_at).toLocaleString()}</div>
+        <p>${a.message}</p>
+        <div class="status">${statusHTML}</div>
+      `;
+      container.appendChild(div);
+    });
 
-      const list = document.getElementById("announcementsList");
-
-      if (!data.announcements || data.announcements.length === 0) {
-        list.innerHTML = `
-          <p style="text-align:center; color:#777;">No announcements available.</p>
-        `;
-        return;
-      }
-
-      list.innerHTML = data.announcements.map(a => `
-        <div class="announcement">
-          <div class="date">${new Date(a.created_at).toLocaleString()}</div>
-          <h3>${a.title}</h3>
-          <p>${a.message}</p>
-          <button class="delete-btn" onclick="deleteAnnouncement(${a.id})">Archive</button>
-        </div>
-      `).join("");
-
-    } catch (err) {
-      console.error("Load error:", err);
-      document.getElementById("announcementsList").innerHTML =
-        `<p style="text-align:center; color:#777;">No announcements available.</p>`;
-    }
+  } catch {
+    alert("Failed to load announcements");
   }
-
+}
 
 async function postAnnouncement() {
   const title = document.getElementById("title").value.trim();
   const message = document.getElementById("message").value.trim();
+  const send_sms = document.getElementById("send_sms").checked;
+  const send_email = document.getElementById("send_email").checked;
 
-  if (!title || !message) {
-    alert("Please fill in all fields.");
-    return;
-  }
+  if (!title || !message) return alert("Fill in all fields");
+  if (!send_sms && !send_email) return alert("Select at least one delivery method");
 
-  try {
-    const res = await fetch(`${API_BASE}/api/announcements`, {
-      method: "POST",
-      credentials: "include", // ✅ must include session cookie
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title,
-        message
-      })
-    });
+  const res = await fetch(`${API_BASE}/api/announcements`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, message, send_sms, send_email })
+  });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.message || "Failed to post announcement.");
-      return;
-    }
-
-    // Clear form
+  if (res.ok) {
     document.getElementById("title").value = "";
     document.getElementById("message").value = "";
-
     loadAnnouncements();
-
-  } catch (err) {
-    console.error("Post error:", err);
-    alert("Server error posting announcement.");
   }
 }
-
-
-
-  async function deleteAnnouncement(id) {
-    if (!confirm("Archive this announcement?")) return;
-
-    try {
-      await fetch(`${API_BASE}/api/announcements/${id}`, { method: "DELETE" });
-      loadAnnouncements();
-    } catch (err) {
-      console.error("Delete error:", err);
-      alert("Failed to archive announcement.");
-    }
-  }
 </script>
-
-<script src="js/kaima-chatbot.js"></script>
-<script src="js/session-timeout.js"></script>
 
 </body>
 </html>
