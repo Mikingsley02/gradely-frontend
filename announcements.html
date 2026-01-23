@@ -1,164 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📢 School Announcements | Gradely</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>📢 School Announcements | Gradely</title>
 
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f8f9fa;
-      margin: 0;
-      padding: 20px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+}
 
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 25px;
-      flex: 1;
-    }
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f8f9fa;
+  display: grid;
+  grid-template-rows: 1fr auto;
+}
 
-    h1 {
-      color: #0c2461;
-      margin-bottom: 25px;
-      text-align: center;
-    }
+/* Center page content */
+.page {
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
 
-    .form-section {
-      max-width: 600px;
-      margin: 0 auto 40px;
-    }
+/* Main card */
+.container {
+  width: 100%;
+  max-width: 820px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+}
 
-    .form-group {
-      margin-bottom: 20px;
-    }
+h1 {
+  text-align: center;
+  color: #0c2461;
+  margin-bottom: 20px;
+}
 
-    input, textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-family: inherit;
-    }
+/* Form */
+.form-section {
+  max-width: 600px;
+  margin: 0 auto;
+}
 
-    textarea {
-      height: 160px;
-      resize: vertical;
-    }
+.form-group {
+  margin-bottom: 16px;
+}
 
-    .toggle-row {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin: 15px 0 25px;
-      font-weight: 600;
-    }
+input, textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-family: inherit;
+}
 
-    .toggle-row label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+textarea {
+  height: 150px;
+  resize: none;
+}
 
-    button {
-      background: #3498db;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      display: block;
-      margin: 20px auto 0;
-    }
+/* Toggles */
+.toggle-row {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin: 16px 0 24px;
+  font-weight: 600;
+}
 
-    button:hover {
-      background: #2980b9;
-    }
+.toggle-row label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-    .back-link {
-      display: block;
-      text-align: center;
-      margin-top: 15px;
-      color: #3498db;
-      text-decoration: none;
-      font-weight: 600;
-    }
+/* Button */
+button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  display: block;
+  margin: 0 auto;
+}
 
-    .announcement {
-      background: #f1f8ff;
-      border-left: 4px solid #3498db;
-      padding: 15px;
-      margin: 20px 0;
-      border-radius: 0 8px 8px 0;
-    }
+button:hover {
+  background: #2980b9;
+}
 
-    .date {
-      font-size: 0.85rem;
-      color: #666;
-      margin-bottom: 8px;
-    }
+.back-link {
+  display: block;
+  text-align: center;
+  margin-top: 14px;
+  color: #3498db;
+  text-decoration: none;
+  font-weight: 600;
+}
 
-    .status {
-      margin-top: 10px;
-      font-size: 0.9rem;
-      font-weight: bold;
-    }
+/* Announcements list */
+#announcementsList {
+  margin-top: 25px;
+  overflow-y: auto;
+}
 
-    .ok { color: #27ae60; }
-    .warn { color: #f39c12; }
-    .fail { color: #e74c3c; }
+.announcement {
+  background: #f1f8ff;
+  border-left: 4px solid #3498db;
+  padding: 14px;
+  margin-bottom: 14px;
+  border-radius: 0 8px 8px 0;
+}
 
-    .footer {
-      text-align: center;
-      padding: 20px 0;
-      font-size: 0.9rem;
-      color: #555;
-    }
-  </style>
+.date {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.status {
+  margin-top: 8px;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
+.ok { color: #27ae60; }
+.warn { color: #f39c12; }
+.fail { color: #e74c3c; }
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 14px 0;
+  font-size: 0.85rem;
+  color: #555;
+}
+</style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="page">
+  <div class="container">
 
-  <h1>📢 School Announcements</h1>
+    <h1>📢 School Announcements</h1>
 
-  <div class="form-section">
-    <div class="form-group">
-      <input type="text" id="title" placeholder="Announcement Title" />
+    <div class="form-section">
+      <div class="form-group">
+        <input id="title" placeholder="Announcement Title">
+      </div>
+
+      <div class="form-group">
+        <textarea id="message" placeholder="Write your announcement..."></textarea>
+      </div>
+
+      <div class="toggle-row">
+        <label><input type="checkbox" id="send_sms" checked> SMS</label>
+        <label><input type="checkbox" id="send_email" checked> Email</label>
+      </div>
+
+      <button onclick="postAnnouncement()">Post Announcement</button>
+      <a class="back-link" href="dashboard.html">← Back to Dashboard</a>
     </div>
 
-    <div class="form-group">
-      <textarea id="message" placeholder="Write your announcement..."></textarea>
-    </div>
+    <div id="announcementsList"></div>
 
-    <div class="toggle-row">
-      <label>
-        <input type="checkbox" id="send_sms" checked />
-        SMS
-      </label>
-
-      <label>
-        <input type="checkbox" id="send_email" checked />
-        Email
-      </label>
-    </div>
-
-    <button onclick="postAnnouncement()">Post Announcement</button>
-    <a href="dashboard.html" class="back-link">⬅ Back to Dashboard</a>
   </div>
-
-  <div id="announcementsList"></div>
-
 </div>
 
 <div class="footer">
@@ -168,14 +185,7 @@
 <script>
 const API_BASE = "https://gradely-backend-1.onrender.com";
 
-window.addEventListener("DOMContentLoaded", () => {
-  if (!sessionStorage.getItem("school_id")) {
-    alert("Session expired. Please log in again.");
-    window.location.href = "admin-login.html";
-    return;
-  }
-  loadAnnouncements();
-});
+window.addEventListener("DOMContentLoaded", loadAnnouncements);
 
 async function loadAnnouncements() {
   try {
@@ -183,45 +193,53 @@ async function loadAnnouncements() {
       credentials: "include"
     });
 
+    if (res.status === 401) {
+      alert("Session expired. Please log in again.");
+      window.location.href = "admin-login.html";
+      return;
+    }
+
+    if (!res.ok) return;
+
     const data = await res.json();
-    const container = document.getElementById("announcementsList");
-    container.innerHTML = "";
+    const list = document.getElementById("announcementsList");
+    list.innerHTML = "";
 
     if (!data.length) {
-      container.innerHTML = "<p>No announcements yet.</p>";
+      list.innerHTML = "<p style='text-align:center'>No announcements yet.</p>";
       return;
     }
 
     data.forEach(a => {
-      let statusHTML =
-        a.sms_sent && a.email_sent ? `<span class="ok">✔ SMS & Email delivered</span>` :
-        a.sms_sent || a.email_sent ? `<span class="warn">⚠ Partially delivered</span>` :
-        `<span class="fail">⏳ Pending / Failed</span>`;
+      const status =
+        a.sms_sent && a.email_sent ? `<span class="ok">✔ Delivered</span>` :
+        a.sms_sent || a.email_sent ? `<span class="warn">⚠ Partial</span>` :
+        `<span class="fail">⏳ Pending</span>`;
 
-      const div = document.createElement("div");
-      div.className = "announcement";
-      div.innerHTML = `
-        <h3>${a.title}</h3>
-        <div class="date">${new Date(a.created_at).toLocaleString()}</div>
-        <p>${a.message}</p>
-        <div class="status">${statusHTML}</div>
+      list.innerHTML += `
+        <div class="announcement">
+          <strong>${a.title}</strong>
+          <div class="date">${new Date(a.created_at).toLocaleString()}</div>
+          <p>${a.message}</p>
+          <div class="status">${status}</div>
+        </div>
       `;
-      container.appendChild(div);
     });
 
   } catch {
-    alert("Failed to load announcements");
+    // ❌ DO NOT alert — silent fail for UX
+    console.warn("Announcements unavailable");
   }
 }
 
 async function postAnnouncement() {
-  const title = document.getElementById("title").value.trim();
-  const message = document.getElementById("message").value.trim();
-  const send_sms = document.getElementById("send_sms").checked;
-  const send_email = document.getElementById("send_email").checked;
+  const title = titleInput.value.trim();
+  const message = messageInput.value.trim();
+  const send_sms = sms.checked;
+  const send_email = email.checked;
 
-  if (!title || !message) return alert("Fill in all fields");
-  if (!send_sms && !send_email) return alert("Select at least one delivery method");
+  if (!title || !message) return alert("Fill all fields");
+  if (!send_sms && !send_email) return alert("Choose SMS or Email");
 
   const res = await fetch(`${API_BASE}/api/announcements`, {
     method: "POST",
@@ -231,11 +249,16 @@ async function postAnnouncement() {
   });
 
   if (res.ok) {
-    document.getElementById("title").value = "";
-    document.getElementById("message").value = "";
+    titleInput.value = "";
+    messageInput.value = "";
     loadAnnouncements();
   }
 }
+
+const titleInput = document.getElementById("title");
+const messageInput = document.getElementById("message");
+const sms = document.getElementById("send_sms");
+const email = document.getElementById("send_email");
 </script>
 
 </body>
