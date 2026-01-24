@@ -244,20 +244,37 @@ button:hover {
 <script>
 const API_BASE = "https://gradely-backend-1.onrender.com";
 
+/* ✅ CACHE ELEMENTS */
+const titleInput   = document.getElementById("title");
+const messageInput = document.getElementById("message");
+const sms           = document.getElementById("send_sms");
+const email         = document.getElementById("send_email");
+const list          = document.getElementById("announcementsList");
+
+/* 🔑 TOKEN */
+function getToken() {
+  return localStorage.getItem("admin_token");
+}
+
 window.addEventListener("DOMContentLoaded", loadAnnouncements);
 
+/* ===============================
+   LOAD ANNOUNCEMENTS
+================================ */
 async function loadAnnouncements() {
   try {
-    const res = await fetch(`${API_BASE}/api/announcements`, {
-      credentials: "include"
-    });
+    const token = getToken();
+    if (!token) return;
 
-    if (res.status === 401) return;
+    const res = await fetch(`${API_BASE}/api/announcements`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
 
     if (!res.ok) return;
 
     const data = await res.json();
-    const list = document.getElementById("announcementsList");
     list.innerHTML = "";
 
     if (!data.length) {
@@ -267,9 +284,11 @@ async function loadAnnouncements() {
 
     data.forEach(a => {
       const status =
-        a.sms_sent && a.email_sent ? `<span class="ok">✔ Delivered</span>` :
-        a.sms_sent || a.email_sent ? `<span class="warn">⚠ Partial</span>` :
-        `<span class="fail">⏳ Pending</span>`;
+        a.sms_sent && a.email_sent
+          ? `<span class="ok">✔ Delivered</span>`
+          : a.sms_sent || a.email_sent
+          ? `<span class="warn">⚠ Partial</span>`
+          : `<span class="fail">⏳ Pending</span>`;
 
       list.innerHTML += `
         <div class="announcement">
@@ -281,52 +300,54 @@ async function loadAnnouncements() {
       `;
     });
 
-  } catch {
-    console.warn("Announcements unavailable");
+  } catch (err) {
+    console.warn("Announcements unavailable", err);
   }
 }
 
+/* ===============================
+   POST ANNOUNCEMENT
+================================ */
 async function postAnnouncement() {
   try {
-    const title = document.getElementById("title").value.trim();
-    const message = document.getElementById("message").value.trim();
-    const send_sms = document.getElementById("send_sms").checked;
-    const send_email = document.getElementById("send_email").checked;
+    const title = titleInput.value.trim();
+    const message = messageInput.value.trim();
+    const send_sms = sms.checked;
+    const send_email = email.checked;
 
     if (!title || !message) {
-      alert("Please fill in title and message");
+      alert("Fill all fields");
       return;
     }
 
     if (!send_sms && !send_email) {
-      alert("Select SMS or Email");
+      alert("Choose SMS or Email");
+      return;
+    }
+
+    const token = getToken();
+    if (!token) {
+      alert("Session expired. Please log in again.");
+      window.location.href = "admin-login.html";
       return;
     }
 
     const res = await fetch(`${API_BASE}/api/announcements`, {
       method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify({ title, message, send_sms, send_email })
     });
 
-    if (res.status === 401) {
-      alert("Session expired. Please log in again.");
-      window.location.href = "login.html";
-      return;
-    }
-
     if (!res.ok) {
-      const text = await res.text();
-      alert("Failed to post announcement:\n" + text);
+      alert("Failed to post announcement");
       return;
     }
 
-    alert("Announcement posted successfully ✅");
-
-    document.getElementById("title").value = "";
-    document.getElementById("message").value = "";
-
+    titleInput.value = "";
+    messageInput.value = "";
     loadAnnouncements();
 
   } catch (err) {
@@ -334,8 +355,8 @@ async function postAnnouncement() {
     alert("Network error. Check backend connection.");
   }
 }
-
 </script>
+
 
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
