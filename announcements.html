@@ -6,47 +6,56 @@
 <title>📢 School Announcements | Gradely</title>
 
 <style>
+/* ---------- RESET ---------- */
+* {
+  box-sizing: border-box;
+}
+
 html, body {
   height: 100%;
   margin: 0;
 }
 
+/* ---------- PAGE LAYOUT ---------- */
 body {
   font-family: 'Segoe UI', sans-serif;
   background: #f8f9fa;
-  display: grid;
-  grid-template-rows: 1fr auto;
-}
-
-/* Center page content */
-.page {
-  display: grid;
-  place-items: center;
-  padding: 16px;
-}
-
-/* Main card */
-.container {
-  width: 100%;
-  max-width: 820px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  padding: 24px;
   display: flex;
   flex-direction: column;
-  max-height: 92vh;
 }
 
+/* Centers content with safe spacing */
+.page {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* ---------- MAIN CARD ---------- */
+.container {
+  width: 100%;
+  max-width: 760px;              /* ⬅ prevents over-stretching */
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 26px 24px 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- HEADER ---------- */
 h1 {
   text-align: center;
   color: #0c2461;
-  margin-bottom: 20px;
+  margin: 0 0 22px;
 }
 
-/* Form */
+/* ---------- FORM ---------- */
 .form-section {
-  max-width: 600px;
+  width: 100%;
+  max-width: 640px;              /* ⬅ keeps form centered */
   margin: 0 auto;
 }
 
@@ -56,23 +65,24 @@ h1 {
 
 input, textarea {
   width: 100%;
-  padding: 12px;
+  padding: 14px;                 /* ⬅ larger inputs */
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: 8px;
   font-family: inherit;
+  font-size: 1rem;
 }
 
 textarea {
-  height: 150px;
+  height: 190px;                 /* ⬅ expanded textarea */
   resize: none;
 }
 
-/* Toggles */
+/* ---------- TOGGLES ---------- */
 .toggle-row {
   display: flex;
   justify-content: center;
-  gap: 32px;
-  margin: 16px 0 24px;
+  gap: 36px;
+  margin: 18px 0 26px;
   font-weight: 600;
 }
 
@@ -82,13 +92,13 @@ textarea {
   gap: 8px;
 }
 
-/* Button */
+/* ---------- BUTTON ---------- */
 button {
   background: #3498db;
   color: white;
   border: none;
-  padding: 10px 22px;
-  border-radius: 6px;
+  padding: 12px 26px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
   display: block;
@@ -108,10 +118,12 @@ button:hover {
   font-weight: 600;
 }
 
-/* Announcements list */
+/* ---------- ANNOUNCEMENTS ---------- */
 #announcementsList {
-  margin-top: 25px;
+  margin-top: 28px;
+  max-height: 260px;             /* ⬅ prevents page scroll */
   overflow-y: auto;
+  padding-right: 4px;
 }
 
 .announcement {
@@ -125,7 +137,7 @@ button:hover {
 .date {
   font-size: 0.8rem;
   color: #666;
-  margin-bottom: 6px;
+  margin: 4px 0 6px;
 }
 
 .status {
@@ -134,16 +146,37 @@ button:hover {
   font-size: 0.85rem;
 }
 
-.ok { color: #27ae60; }
+.ok   { color: #27ae60; }
 .warn { color: #f39c12; }
 .fail { color: #e74c3c; }
 
-/* Footer */
+/* ---------- FOOTER ---------- */
 .footer {
   text-align: center;
-  padding: 14px 0;
+  padding: 18px 10px 22px;
   font-size: 0.85rem;
   color: #555;
+}
+
+.footer a {
+  color: #3498db;
+  text-decoration: none;
+  margin: 0 6px;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- MOBILE TWEAKS ---------- */
+@media (max-width: 480px) {
+  textarea {
+    height: 160px;
+  }
+
+  .toggle-row {
+    gap: 24px;
+  }
 }
 </style>
 </head>
@@ -179,7 +212,10 @@ button:hover {
 </div>
 
 <div class="footer">
-  © 2026 <strong>gradely.info</strong>. All rights reserved.
+  © 2026 <strong>gradely.info</strong>. All rights reserved.<br>
+  <a href="terms.html">Terms</a> •
+  <a href="privacy.html">Privacy</a> •
+  <a href="refund-policy.html">Refund Policy</a>
 </div>
 
 <script>
@@ -193,11 +229,7 @@ async function loadAnnouncements() {
       credentials: "include"
     });
 
-    if (res.status === 401) {
-      alert("Session expired. Please log in again.");
-      window.location.href = "admin-login.html";
-      return;
-    }
+    if (res.status === 401) return;
 
     if (!res.ok) return;
 
@@ -227,7 +259,6 @@ async function loadAnnouncements() {
     });
 
   } catch {
-    // ❌ DO NOT alert — silent fail for UX
     console.warn("Announcements unavailable");
   }
 }
@@ -260,6 +291,9 @@ const messageInput = document.getElementById("message");
 const sms = document.getElementById("send_sms");
 const email = document.getElementById("send_email");
 </script>
+
+<script src="js/kaima-chatbot.js"></script>
+<script src="js/session-timeout.js"></script>
 
 </body>
 </html>
