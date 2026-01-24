@@ -189,26 +189,45 @@ button:hover {
     <h1>📢 School Announcements</h1>
 
     <div class="form-section">
-      <div class="form-group">
-        <input id="title" placeholder="Announcement Title">
-      </div>
-
-      <div class="form-group">
-        <textarea id="message" placeholder="Write your announcement..."></textarea>
-      </div>
-
-      <div class="toggle-row">
-        <label><input type="checkbox" id="send_sms" checked> SMS</label>
-        <label><input type="checkbox" id="send_email" checked> Email</label>
-      </div>
-
-      <button onclick="postAnnouncement()">Post Announcement</button>
-      <a class="back-link" href="dashboard.html">← Back to Dashboard</a>
-    </div>
-
-    <div id="announcementsList"></div>
-
+  <div class="form-group">
+    <input
+      id="title"
+      type="text"
+      placeholder="Announcement Title"
+    />
   </div>
+
+  <div class="form-group">
+    <textarea
+      id="message"
+      placeholder="Write your announcement..."
+    ></textarea>
+  </div>
+
+  <div class="toggle-row">
+    <label>
+      <input type="checkbox" id="send_sms" checked>
+      SMS
+    </label>
+
+    <label>
+      <input type="checkbox" id="send_email" checked>
+      Email
+    </label>
+  </div>
+
+  <button
+    type="button"
+    onclick="postAnnouncement()"
+  >
+    Post Announcement
+  </button>
+
+  <a class="back-link" href="dashboard.html">
+    ← Back to Dashboard
+  </a>
+</div>
+
 </div>
 
 <div class="footer">
@@ -264,32 +283,53 @@ async function loadAnnouncements() {
 }
 
 async function postAnnouncement() {
-  const title = titleInput.value.trim();
-  const message = messageInput.value.trim();
-  const send_sms = sms.checked;
-  const send_email = email.checked;
+  try {
+    const title = document.getElementById("title").value.trim();
+    const message = document.getElementById("message").value.trim();
+    const send_sms = document.getElementById("send_sms").checked;
+    const send_email = document.getElementById("send_email").checked;
 
-  if (!title || !message) return alert("Fill all fields");
-  if (!send_sms && !send_email) return alert("Choose SMS or Email");
+    if (!title || !message) {
+      alert("Please fill in title and message");
+      return;
+    }
 
-  const res = await fetch(`${API_BASE}/api/announcements`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, message, send_sms, send_email })
-  });
+    if (!send_sms && !send_email) {
+      alert("Select SMS or Email");
+      return;
+    }
 
-  if (res.ok) {
-    titleInput.value = "";
-    messageInput.value = "";
+    const res = await fetch(`${API_BASE}/api/announcements`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, message, send_sms, send_email })
+    });
+
+    if (res.status === 401) {
+      alert("Session expired. Please log in again.");
+      window.location.href = "login.html";
+      return;
+    }
+
+    if (!res.ok) {
+      const text = await res.text();
+      alert("Failed to post announcement:\n" + text);
+      return;
+    }
+
+    alert("Announcement posted successfully ✅");
+
+    document.getElementById("title").value = "";
+    document.getElementById("message").value = "";
+
     loadAnnouncements();
+
+  } catch (err) {
+    console.error(err);
+    alert("Network error. Check backend connection.");
   }
 }
-
-const titleInput = document.getElementById("title");
-const messageInput = document.getElementById("message");
-const sms = document.getElementById("send_sms");
-const email = document.getElementById("send_email");
 </script>
 
 <script src="js/kaima-chatbot.js"></script>
