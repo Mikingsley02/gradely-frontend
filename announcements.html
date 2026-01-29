@@ -263,9 +263,10 @@ window.addEventListener("DOMContentLoaded", loadAnnouncements);
 ================================ */
 async function loadAnnouncements() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/announcements`, {
-  method: "GET",
-  credentials: "include"
+    const res = await fetch(`${API_BASE}/api/announcement`, {
+  headers: {
+    "Authorization": `Bearer ${token}`
+  }
 });
 
 
@@ -330,15 +331,14 @@ async function postAnnouncement() {
       return;
     }
 
-    const res = await fetch(`${API_BASE}/api/admin/announcements`, {
+    const res = await fetch(`${API_BASE}/api/announcement`, {
   method: "POST",
-  credentials: "include",
   headers: {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
   },
   body: JSON.stringify({ title, message, send_sms, send_email })
 });
-
 
 
 
