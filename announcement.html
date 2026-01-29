@@ -254,25 +254,28 @@ const list          = document.getElementById("announcementsList");
 
 window.addEventListener("DOMContentLoaded", loadAnnouncements);
 
+
 /* ===============================
    LOAD ANNOUNCEMENTS
 ================================ */
 async function loadAnnouncements() {
   try {
-
     const res = await fetch(`${API_BASE}/api/announcement`, {
-  method: "GET",
-  credentials: "include"
-});
+      method: "GET",
+      credentials: "include" // ✅ session cookie
+    });
 
-
-    if (!res.ok) return;
+    if (!res.ok) {
+      console.warn("Failed to load announcements");
+      return;
+    }
 
     const data = await res.json();
     list.innerHTML = "";
 
-    if (!data.length) {
-      list.innerHTML = "<p style='text-align:center'>No announcements yet.</p>";
+    if (!Array.isArray(data) || data.length === 0) {
+      list.innerHTML =
+        "<p style='text-align:center'>No announcements yet.</p>";
       return;
     }
 
@@ -293,7 +296,6 @@ async function loadAnnouncements() {
         </div>
       `;
     });
-
   } catch (err) {
     console.warn("Announcements unavailable", err);
   }
@@ -320,24 +322,25 @@ async function postAnnouncement() {
       return;
     }
 
-    const token = getToken();
-    if (!token) {
+    const res = await fetch(`${API_BASE}/api/announcement`, {
+      method: "POST",
+      credentials: "include", // ✅ session auth
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title,
+        message,
+        send_sms,
+        send_email
+      })
+    });
+
+    if (res.status === 401) {
       alert("Session expired. Please log in again.");
       window.location.href = "admin-login.html";
       return;
     }
-
-    const res = await fetch(`${API_BASE}/api/announcement`, {
-  method: "POST",
-  credentials: "include", // ✅ VERY IMPORTANT
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({ title, message, send_sms, send_email })
-});
-
-
-
 
     if (!res.ok) {
       alert("Failed to post announcement");
@@ -346,13 +349,16 @@ async function postAnnouncement() {
 
     titleInput.value = "";
     messageInput.value = "";
-    loadAnnouncements();
 
+    await loadAnnouncements(); // refresh list
   } catch (err) {
     console.error(err);
     alert("Network error. Check backend connection.");
   }
 }
+
+
+
 </script>
 
 
