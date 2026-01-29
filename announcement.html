@@ -251,10 +251,6 @@ const sms           = document.getElementById("send_sms");
 const email         = document.getElementById("send_email");
 const list          = document.getElementById("announcementsList");
 
-/* 🔑 TOKEN */
-function getToken() {
-  return localStorage.getItem("admin_token");
-}
 
 window.addEventListener("DOMContentLoaded", loadAnnouncements);
 
@@ -263,8 +259,6 @@ window.addEventListener("DOMContentLoaded", loadAnnouncements);
 ================================ */
 async function loadAnnouncements() {
   try {
-    const token = getToken();
-    if (!token) return;
 
     const res = await fetch(`${API_BASE}/api/announcement`, {
   method: "GET",
