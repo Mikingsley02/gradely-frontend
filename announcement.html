@@ -267,12 +267,10 @@ async function loadAnnouncements() {
     if (!token) return;
 
     const res = await fetch(`${API_BASE}/api/announcement`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`
-      },
-      credentials: "include"
-    });
+  method: "GET",
+  credentials: "include"
+});
+
 
     if (!res.ok) return;
 
@@ -337,12 +335,13 @@ async function postAnnouncement() {
 
     const res = await fetch(`${API_BASE}/api/announcement`, {
   method: "POST",
+  credentials: "include", // ✅ VERY IMPORTANT
   headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`
+    "Content-Type": "application/json"
   },
   body: JSON.stringify({ title, message, send_sms, send_email })
 });
+
 
 
 
