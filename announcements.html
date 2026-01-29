@@ -263,10 +263,11 @@ window.addEventListener("DOMContentLoaded", loadAnnouncements);
 ================================ */
 async function loadAnnouncements() {
   try {
-    const res = await fetch(`${API_BASE}/api/announcements`, {
-      method: "GET",
-      credentials: "include"
-    });
+    const res = await fetch(`${API_BASE}/api/admin/announcements`, {
+  method: "GET",
+  credentials: "include"
+});
+
 
     if (!res.ok) return;
 
@@ -329,19 +330,15 @@ async function postAnnouncement() {
       return;
     }
 
-    const res = await fetch(`${API_BASE}/api/announcements`, {
+    const res = await fetch(`${API_BASE}/api/admin/announcements`, {
   method: "POST",
   credentials: "include",
   headers: {
     "Content-Type": "application/json"
   },
-  body: JSON.stringify({
-    title,
-    message,
-    send_sms,
-    send_email
-  })
+  body: JSON.stringify({ title, message, send_sms, send_email })
 });
+
 
 
 
