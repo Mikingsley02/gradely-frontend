@@ -263,12 +263,16 @@ window.addEventListener("DOMContentLoaded", loadAnnouncements);
 ================================ */
 async function loadAnnouncements() {
   try {
-    const res = await fetch(`${API_BASE}/api/announcement`, {
-  headers: {
-    "Authorization": `Bearer ${token}`
-  }
-});
+    const token = getToken();
+    if (!token) return;
 
+    const res = await fetch(`${API_BASE}/api/announcement`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      },
+      credentials: "include"
+    });
 
     if (!res.ok) return;
 
