@@ -242,7 +242,7 @@ button:hover {
 </div>
 
 <script>
-const API_BASE = "https://gradely-backend-1.onrender.com";
+const API_BASE = "https://api.gradely.info";
 
 /* ✅ CACHE ELEMENTS */
 const titleInput   = document.getElementById("title");
@@ -263,13 +263,9 @@ window.addEventListener("DOMContentLoaded", loadAnnouncements);
 ================================ */
 async function loadAnnouncements() {
   try {
-    const token = getToken();
-    if (!token) return;
-
     const res = await fetch(`${API_BASE}/api/announcements`, {
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
+      method: "GET",
+      credentials: "include"
     });
 
     if (!res.ok) return;
@@ -305,6 +301,7 @@ async function loadAnnouncements() {
   }
 }
 
+
 /* ===============================
    POST ANNOUNCEMENT
 ================================ */
@@ -334,12 +331,18 @@ async function postAnnouncement() {
 
     const res = await fetch(`${API_BASE}/api/announcements`, {
   method: "POST",
+  credentials: "include",
   headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`
+    "Content-Type": "application/json"
   },
-  body: JSON.stringify({ title, message, send_sms, send_email })
+  body: JSON.stringify({
+    title,
+    message,
+    send_sms,
+    send_email
+  })
 });
+
 
 
     if (!res.ok) {
