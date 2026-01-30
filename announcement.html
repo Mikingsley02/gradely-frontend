@@ -259,104 +259,92 @@ window.addEventListener("DOMContentLoaded", loadAnnouncements);
    LOAD ANNOUNCEMENTS
 ================================ */
 async function loadAnnouncements() {
-  try {
-    const res = await fetch(`${API_BASE}/api/announcement`, {
-      method: "GET",
-      credentials: "include" // ✅ session cookie
-    });
+  const token = getToken();
+  if (!token) return;
 
-    if (!res.ok) {
-      console.warn("Failed to load announcements");
-      return;
+  const res = await fetch(`${API_BASE}/api/announcement`, {
+    headers: {
+      "Authorization": `Bearer ${token}`
     }
+  });
 
-    const data = await res.json();
-    list.innerHTML = "";
-
-    if (!Array.isArray(data) || data.length === 0) {
-      list.innerHTML =
-        "<p style='text-align:center'>No announcements yet.</p>";
-      return;
-    }
-
-    data.forEach(a => {
-      const status =
-        a.sms_sent && a.email_sent
-          ? `<span class="ok">✔ Delivered</span>`
-          : a.sms_sent || a.email_sent
-          ? `<span class="warn">⚠ Partial</span>`
-          : `<span class="fail">⏳ Pending</span>`;
-
-      list.innerHTML += `
-        <div class="announcement">
-          <strong>${a.title}</strong>
-          <div class="date">${new Date(a.created_at).toLocaleString()}</div>
-          <p>${a.message}</p>
-          <div class="status">${status}</div>
-        </div>
-      `;
-    });
-  } catch (err) {
-    console.warn("Announcements unavailable", err);
+  if (!res.ok) {
+    console.warn("Failed to load announcements");
+    return;
   }
+
+  const data = await res.json();
+  list.innerHTML = "";
+
+  if (!data.length) {
+    list.innerHTML = "<p style='text-align:center'>No announcements yet.</p>";
+    return;
+  }
+
+  data.forEach(a => {
+    const status =
+      a.sms_sent && a.email_sent
+        ? `<span class="ok">✔ Delivered</span>`
+        : a.sms_sent || a.email_sent
+        ? `<span class="warn">⚠ Partial</span>`
+        : `<span class="fail">⏳ Pending</span>`;
+
+    list.innerHTML += `
+      <div class="announcement">
+        <strong>${a.title}</strong>
+        <div class="date">${new Date(a.created_at).toLocaleString()}</div>
+        <p>${a.message}</p>
+        <div class="status">${status}</div>
+      </div>
+    `;
+  });
 }
 
 
 /* ===============================
-   POST ANNOUNCEMENT
+   POST ANNOUNCEMENTS
 ================================ */
+
 async function postAnnouncement() {
-  try {
-    const title = titleInput.value.trim();
-    const message = messageInput.value.trim();
-    const send_sms = sms.checked;
-    const send_email = email.checked;
-
-    if (!title || !message) {
-      alert("Fill all fields");
-      return;
-    }
-
-    if (!send_sms && !send_email) {
-      alert("Choose SMS or Email");
-      return;
-    }
-
-    const res = await fetch(`${API_BASE}/api/announcement`, {
-      method: "POST",
-      credentials: "include", // ✅ session auth
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        title,
-        message,
-        send_sms,
-        send_email
-      })
-    });
-
-    if (res.status === 401) {
-      alert("Session expired. Please log in again.");
-      window.location.href = "admin-login.html";
-      return;
-    }
-
-    if (!res.ok) {
-      alert("Failed to post announcement");
-      return;
-    }
-
-    titleInput.value = "";
-    messageInput.value = "";
-
-    await loadAnnouncements(); // refresh list
-  } catch (err) {
-    console.error(err);
-    alert("Network error. Check backend connection.");
+  const token = getToken();
+  if (!token) {
+    alert("Session expired. Please log in again.");
+    return;
   }
-}
 
+  const title = titleInput.value.trim();
+  const message = messageInput.value.trim();
+  const send_sms = sms.checked;
+  const send_email = email.checked;
+
+  if (!title || !message) {
+    alert("Fill all fields");
+    return;
+  }
+
+  if (!send_sms && !send_email) {
+    alert("Choose SMS or Email");
+    return;
+  }
+
+  const res = await fetch(`${API_BASE}/api/announcement`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ title, message, send_sms, send_email })
+  });
+
+  if (!res.ok) {
+    alert("Failed to post announcement");
+    return;
+  }
+
+  titleInput.value = "";
+  messageInput.value = "";
+  loadAnnouncements();
+}
 
 
 </script>
