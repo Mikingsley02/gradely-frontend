@@ -244,6 +244,11 @@ button:hover {
 <script>
 const API_BASE = "https://api.gradely.info";
 
+/* 🔑 JWT TOKEN HELPER */
+function getToken() {
+  return localStorage.getItem("admin_token");
+}
+
 /* ✅ CACHE ELEMENTS */
 const titleInput   = document.getElementById("title");
 const messageInput = document.getElementById("message");
