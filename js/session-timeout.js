@@ -6,7 +6,6 @@
   let timeout, warningTimer, countdownInterval;
   let countdown = 60;
 
-  // Save current URL before timeout
   function saveCurrentPage() {
     try {
       sessionStorage.setItem('redirectAfterLogin', window.location.href);
@@ -39,8 +38,17 @@
         font-family: 'Segoe UI', sans-serif;
       ">
         <h3 style="margin-bottom: 10px; color:#0c2461;">Session Expiring Soon</h3>
-        <p style="font-size: 0.95rem;">Your session will expire in <span id="countdownNum">60</span> seconds due to inactivity.</p>
-        <div style="margin-top:15px;">
+        <p style="font-size: 0.95rem;">
+          Your session will expire in <span id="countdownNum">60</span> seconds due to inactivity.
+        </p>
+
+        <!-- ✅ UPDATED BUTTON WRAPPER -->
+        <div style="
+          margin-top:20px;
+          display:flex;
+          justify-content:center;
+          gap:12px;
+        ">
           <button id="stayLoggedIn" style="
             background:#2575fc; 
             color:white; 
@@ -49,15 +57,17 @@
             border-radius:6px; 
             font-weight:600; 
             cursor:pointer;
+            min-width:140px;
           ">Stay Logged In</button>
+
           <button id="logoutNow" style="
             background:#999; 
             color:white; 
             border:none; 
             padding:10px 16px; 
             border-radius:6px; 
-            margin-left:8px; 
             cursor:pointer;
+            min-width:140px;
           ">Logout Now</button>
         </div>
       </div>
@@ -80,7 +90,7 @@
   }
 
   function showWarning() {
-    saveCurrentPage(); // ✅ Save where user is
+    saveCurrentPage();
     sessionWarning.style.display = "flex";
     countdown = 60;
     countdownNum.textContent = countdown;
@@ -88,9 +98,7 @@
     countdownInterval = setInterval(() => {
       countdown--;
       countdownNum.textContent = countdown;
-      if (countdown <= 0) {
-        clearInterval(countdownInterval);
-      }
+      if (countdown <= 0) clearInterval(countdownInterval);
     }, 1000);
   }
 
@@ -101,23 +109,21 @@
 
   function stayLoggedIn() {
     hideWarning();
-    // ✅ Ping backend to refresh session (if you have auth)
     fetch('/api/refresh-session', { method: 'POST' }).catch(() => {});
     startTimers();
   }
 
   function logoutUser() {
     hideWarning();
-    saveCurrentPage(); // ✅ Save even on auto-logout
+    saveCurrentPage();
     localStorage.clear();
     sessionStorage.clear();
     alert("⚠️ Session expired due to inactivity. Please log in again.");
 
-    // ✅ Redirect to correct login
     if (window.location.pathname.includes("admin")) {
       window.location.href = "admin-login.html";
     } else if (window.location.pathname.includes("student")) {
-      window.location.href = "parent-login.html"; // or student.html
+      window.location.href = "parent-login.html";
     } else {
       window.location.href = "index.html";
     }
@@ -126,24 +132,9 @@
   stayLoggedInBtn.addEventListener("click", stayLoggedIn);
   logoutNowBtn.addEventListener("click", logoutUser);
 
-  // ✅ Track activity
   ["click", "mousemove", "keypress", "scroll", "touchstart"].forEach(event => {
     document.addEventListener(event, startTimers, true);
   });
-
-  // ✅ On login pages, restore redirect
-  if (window.location.pathname.endsWith('admin-login.html') || 
-      window.location.pathname.endsWith('parent-login.html')) {
-    const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
-    if (redirectUrl) {
-      const loginForm = document.querySelector('form');
-      if (loginForm) {
-        loginForm.addEventListener('submit', () => {
-          sessionStorage.setItem('postLoginRedirect', redirectUrl);
-        });
-      }
-    }
-  }
 
   startTimers();
   console.log("✅ Session timeout active (15 mins)");
