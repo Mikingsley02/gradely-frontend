@@ -109,11 +109,14 @@
       color: #0077b6;
     }
   </style>
+  </div>
+</div>
+
 </head>
 <body>
   <div class="container">
     <h2>🏫 Register Your School</h2>
-    <p>Join hundreds of schools using <strong>Gradely.info</strong> to share results digitally.</p>
+    <p>Join hundreds of schools using <strong>gradely.info</strong> to share results digitally.</p>
 
     <form id="schoolForm">
       <label>School Name *</label>
@@ -146,6 +149,11 @@
         <option value="basic">Basic</option> <!-- Put this price alongside with basic to display cost - ₦16,800/month -->
         <option value="pro">Pro</option> <!-- Put this price alongside with basic to display cost - ₦19,200/month -->
       </select>
+
+
+      <button type="button" id="comparePlanBtn">
+        Compare plan
+      </button>
 
     <!-- Comment out the button bellow to ✅ Proceed to Payment</button> -->
      <!-- <button type="submit" id="submitBtn">✅ Proceed to Payment</button> -->
@@ -265,6 +273,11 @@
     document.getElementById("skipPaymentBtn").addEventListener("click", () => {
       handleRegistration(true);
     });
+
+    document.getElementById("comparePlanBtn").addEventListener("click", () => {
+    window.location.href = "plan-comparison.html";
+    });
+
   </script>
 
   <script src="js/kaima-chatbot.js"></script>
