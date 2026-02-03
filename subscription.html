@@ -206,197 +206,155 @@
   </footer>
 
   <script>
-    // ✅ Fixed: No extra spaces in URL
-    const API_BASE = "https://gradely-backend-1.onrender.com";
+let schoolId = null;
+let subscriptionData = null;
 
-    // Load subscription status on page load
-    document.addEventListener("DOMContentLoaded", async () => {
-      const msgEl = document.getElementById("message");
-
-      // ✅ Get school_id from URL, localStorage, OR sessionStorage
-      const urlParams = new URLSearchParams(window.location.search);
-      let school_id = urlParams.get('school_id') 
-        || localStorage.getItem('school_id') 
-        || sessionStorage.getItem('school_id');
-
-      if (!school_id) {
-        msgEl.className = "message error";
-        msgEl.textContent = "⚠️ School ID not found. Please log in again.";
-        return;
-      }
-
-      try {
-        // ✅ Pass school_id as query parameter
-        const res = await fetch(`${API_BASE}/api/subscription/status?school_id=${encodeURIComponent(school_id)}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" }
-        });
-
-        // 🔁 Handle non-JSON responses (like HTML errors)
-        let result;
-        try {
-          result = await res.json();
-        } catch (jsonError) {
-          const text = await res.text();
-          console.error("Not JSON:", text);
-          throw new Error("Server returned invalid response");
-        }
-
-        if (result.success) {
-          const plan = result.plan || "basic";
-          document.getElementById("plan").textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
-          document.getElementById("status").textContent = result.status || "Active";
-          document.getElementById("renewal").textContent = result.renewal_date || "N/A";
-
-          // ✅ Show "Upgrade to Pro" if Basic
-          if (plan === 'basic') {
-            document.getElementById("upgradeBtn").style.display = "block";
-          }
-        } else {
-          throw new Error(result.message || "Failed to load subscription");
-        }
-      } catch (err) {
-        console.error("Load subscription error:", err);
-        document.getElementById("plan").textContent = "Unknown";
-        document.getElementById("status").textContent = "Error";
-        document.getElementById("renewal").textContent = "N/A";
-        msgEl.className = "message error";
-        msgEl.textContent = "⚠️ Failed to connect to server.";
-      }
-    });
-
-    // ✅ NEW: Upgrade function
-    async function upgradeToPro() {
-  const msgEl = document.getElementById("message");
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const admin_id =
-    urlParams.get("school_id") ||
-    localStorage.getItem("school_id") ||
-    sessionStorage.getItem("school_id");
-
-  if (!admin_id) {
-    msgEl.className = "message error";
-    msgEl.textContent = "⚠️ School ID not found.";
+document.addEventListener("DOMContentLoaded", async () => {
+  schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+  
+  if (!schoolId) {
+    alert("Session expired. Please log in again.");
+    window.location.href = "admin-login.html";
     return;
   }
 
-  if (!confirm("✨ Upgrade to PRO plan now?")) return;
+  await fetchSubscriptionStatus();
+});
 
+async function fetchSubscriptionStatus() {
   try {
-    const res = await fetch(`${API_BASE}/api/subscription/upgrade`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ admin_id }),
-    });
+    // ✅ FIXED: Removed extra spaces in URL
+    const apiUrl = `https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
+    console.log("📡 Fetching subscription status from:", apiUrl);
+    
+    const res = await fetch(apiUrl);
+    
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    
+    const data = await res.json();
+    console.log("✅ Subscription data:", data);
 
-    const result = await res.json();
-
-    if (result.success) {
-      msgEl.className = "message success";
-      msgEl.textContent = "🚀 Successfully upgraded to PRO!";
-      setTimeout(() => location.reload(), 1500);
+    if (data.success) {
+      subscriptionData = data;
+      updateSubscriptionUI(data);
     } else {
-      throw new Error(result.message || "Upgrade failed");
+      document.getElementById('message').innerHTML = `<span class="error">Failed to load subscription details</span>`;
     }
   } catch (err) {
-    console.error("Upgrade error:", err);
-    msgEl.className = "message error";
-    msgEl.textContent = "❌ " + err.message;
+    console.error("❌ Error:", err);
+    document.getElementById('message').innerHTML = `<span class="error">Unable to load subscription: ${err.message || 'Network error'}</span>`;
   }
 }
 
+function updateSubscriptionUI(data) {
+  // ✅ FIXED: Correct element IDs matching your HTML
+  document.getElementById('plan').textContent = data.plan.charAt(0).toUpperCase() + data.plan.slice(1);
+  
+  const statusEl = document.getElementById('status');
+  statusEl.textContent = data.isActive ? 'Active' : 'Expired';
+  statusEl.className = data.isActive ? '' : 'error';
+  
+  // ✅ FIXED: Proper date formatting with fallback
+  const renewalEl = document.getElementById('renewal');
+  if (data.expiryDate && data.expiryDate !== 'null') {
+    renewalEl.textContent = new Date(data.expiryDate).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  } else {
+    renewalEl.textContent = 'Not set';
+  }
 
-    // Renew subscription
-    async function renewSubscription() {
-  const msgEl = document.getElementById("message");
+  // ✅ FIXED: Button visibility logic
+  const renewBtn = document.getElementById('renewBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const upgradeBtn = document.getElementById('upgradeBtn');
+  
+  if (data.plan === 'basic') {
+    renewBtn.style.display = 'none';
+    cancelBtn.style.display = 'none';
+    upgradeBtn.style.display = 'block';
+  } else if (data.plan === 'pro') {
+    upgradeBtn.style.display = 'none';
+    cancelBtn.style.display = 'block';
+    
+    if (data.isActive) {
+      renewBtn.style.display = 'block';
+      renewBtn.textContent = '🔄 Renew';
+    } else {
+      renewBtn.style.display = 'block';
+      renewBtn.textContent = '💳 Renew Expired Subscription';
+      cancelBtn.style.display = 'none';
+    }
+  }
+}
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const school_id =
-    urlParams.get("school_id") ||
-    localStorage.getItem("school_id") ||
-    sessionStorage.getItem("school_id");
-
-  if (!school_id) {
-    msgEl.className = "message error";
-    msgEl.textContent = "School ID missing";
+function cancelSubscription() {
+  if (!schoolId) {
+    alert("Error: School ID not found. Please log in again.");
     return;
   }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/subscription/renew`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ school_id })
-    });
-
-    const result = await res.json();
-
-    // 🚀 BASIC → REDIRECT TO PAYMENT
-    if (result.upgrade_required) {
-      window.location.href = `register-school.html?plan=pro&school_id=${school_id}`;
-      return;
-    }
-
-    if (result.success) {
-      msgEl.className = "message success";
-      msgEl.textContent = "✅ Subscription renewed!";
-      setTimeout(() => location.reload(), 1500);
-    } else {
-      throw new Error(result.message);
-    }
-  } catch (err) {
-    msgEl.className = "message error";
-    msgEl.textContent = err.message;
+  
+  if (!confirm("⚠️ Are you sure you want to cancel your subscription?\n\nYou will lose access to all Pro features immediately.")) {
+    return;
   }
+  
+  const btn = document.getElementById('cancelBtn');
+  btn.disabled = true;
+  btn.textContent = "Cancelling...";
+  document.getElementById('message').innerHTML = '';
+
+  // ✅ FIXED: Removed trailing spaces in URL
+  fetch('https://gradely-backend-1.onrender.com/api/subscription/cancel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ school_id: schoolId })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      document.getElementById('message').innerHTML = '<span class="success">✅ Subscription cancelled successfully!</span>';
+      setTimeout(() => window.location.href = 'dashboard.html', 1500);
+    } else {
+      throw new Error(data.message || "Cancellation failed");
+    }
+  })
+  .catch(err => {
+    console.error("Cancellation error:", err);
+    document.getElementById('message').innerHTML = `<span class="error">❌ ${err.message || 'Cancellation failed. Please try again.'}</span>`;
+  })
+  .finally(() => {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "✖ Cancel";
+    }
+  });
 }
 
+function renewSubscription() {
+  if (!schoolId) {
+    alert("Error: School ID not found. Please log in again.");
+    return;
+  }
+  
+  // Redirect to payment flow
+  const url = subscriptionData?.plan === 'basic' 
+    ? `paystack-payment.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`
+    : `paystack-payment.html?school_id=${encodeURIComponent(schoolId)}&plan=pro`;
+  
+  window.location.href = url;
+}
 
-    // Cancel subscription
-    async function cancelSubscription() {
-      if (!confirm("⚠️ Are you sure you want to cancel your subscription?")) return;
-
-      const msgEl = document.getElementById("message");
-      const btn = document.getElementById("cancelBtn");
-
-      const originalText = btn.innerHTML;
-      btn.disabled = true;
-      btn.style.opacity = "0.7";
-      btn.innerHTML = "⏳ Cancelling...";
-
-      try {
-        const res = await fetch(`${API_BASE}/api/subscription/cancel`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" }
-        });
-
-        const result = await res.json();
-
-        if (result.success) {
-          msgEl.className = "message success";
-          msgEl.textContent = "✅ Subscription cancelled successfully.";
-          setTimeout(() => location.reload(), 1500);
-        } else {
-          throw new Error(result.message || "Cancellation failed");
-        }
-      } catch (err) {
-        console.error("Cancel error:", err);
-        msgEl.className = "message error";
-        msgEl.textContent = "❌ " + (err.message || "Network error");
-      } finally {
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        btn.innerHTML = originalText;
-      }
-    }
-
-    // Logout function
-    function logout() {
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.href = "login.html";
-    }
-  </script>
+// ✅ ADDED: Required upgrade function for the upgrade button
+function upgradeToPro() {
+  if (!schoolId) {
+    alert("Error: School ID not found. Please log in again.");
+    return;
+  }
+  window.location.href = `paystack-payment.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
+}
+</script>
 
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
