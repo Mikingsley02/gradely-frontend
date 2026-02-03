@@ -332,20 +332,18 @@ function renewSubscription() {
     alert("Error: School ID not found. Please log in again.");
     return;
   }
-  
-  const schoolIdFromStorage = localStorage.getItem("school_id");
-  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolIdFromStorage)}&plan=pro`;
+
+  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro`;
 }
 
-// ✅ CORRECTED: Use pay.html and get school_id from localStorage
+
 function upgradeToPro() {
   if (!schoolId) {
     alert("Error: School ID not found. Please log in again.");
     return;
   }
   
-  const schoolIdFromStorage = localStorage.getItem("school_id");
-  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolIdFromStorage)}&plan=pro&upgrade=true`;
+  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
 }
 
 </script>
