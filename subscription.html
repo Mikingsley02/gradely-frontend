@@ -223,7 +223,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function fetchSubscriptionStatus() {
   try {
-    // ✅ FIXED: Removed extra spaces in URL
     const apiUrl = `https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
     console.log("📡 Fetching subscription status from:", apiUrl);
     
@@ -247,14 +246,12 @@ async function fetchSubscriptionStatus() {
 }
 
 function updateSubscriptionUI(data) {
-  // ✅ FIXED: Correct element IDs matching your HTML
   document.getElementById('plan').textContent = data.plan.charAt(0).toUpperCase() + data.plan.slice(1);
   
   const statusEl = document.getElementById('status');
   statusEl.textContent = data.isActive ? 'Active' : 'Expired';
   statusEl.className = data.isActive ? '' : 'error';
   
-  // ✅ FIXED: Proper date formatting with fallback
   const renewalEl = document.getElementById('renewal');
   if (data.expiryDate && data.expiryDate !== 'null') {
     renewalEl.textContent = new Date(data.expiryDate).toLocaleDateString('en-GB', {
@@ -266,7 +263,6 @@ function updateSubscriptionUI(data) {
     renewalEl.textContent = 'Not set';
   }
 
-  // ✅ FIXED: Button visibility logic
   const renewBtn = document.getElementById('renewBtn');
   const cancelBtn = document.getElementById('cancelBtn');
   const upgradeBtn = document.getElementById('upgradeBtn');
@@ -305,7 +301,6 @@ function cancelSubscription() {
   btn.textContent = "Cancelling...";
   document.getElementById('message').innerHTML = '';
 
-  // ✅ FIXED: Removed trailing spaces in URL
   fetch('https://gradely-backend-1.onrender.com/api/subscription/cancel', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -338,22 +333,21 @@ function renewSubscription() {
     return;
   }
   
-  // Redirect to payment flow
-  const url = subscriptionData?.plan === 'basic' 
-    ? `paystack-payment.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`
-    : `paystack-payment.html?school_id=${encodeURIComponent(schoolId)}&plan=pro`;
-  
-  window.location.href = url;
+  const schoolIdFromStorage = localStorage.getItem("school_id");
+  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolIdFromStorage)}&plan=pro`;
 }
 
-// ✅ ADDED: Required upgrade function for the upgrade button
+// ✅ CORRECTED: Use pay.html and get school_id from localStorage
 function upgradeToPro() {
   if (!schoolId) {
     alert("Error: School ID not found. Please log in again.");
     return;
   }
-  window.location.href = `paystack-payment.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
+  
+  const schoolIdFromStorage = localStorage.getItem("school_id");
+  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolIdFromStorage)}&plan=pro&upgrade=true`;
 }
+
 </script>
 
 <script src="js/kaima-chatbot.js"></script>

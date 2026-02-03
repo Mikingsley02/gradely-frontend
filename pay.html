@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>💳 Complete Your Payment | Gradely Info</title>
   <script src="https://js.paystack.co/v1/inline.js"></script>
+
   <style>
     body {
       font-family: "Segoe UI", sans-serif;
@@ -14,16 +15,19 @@
       align-items: center;
       min-height: 100vh;
       color: #fff;
+      padding: 20px;
     }
+
+    .container { max-width: 500px; width: 100%; }
     .box {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255,255,255,0.1);
       padding: 30px;
       border-radius: 20px;
-      width: 90%;
-      max-width: 400px;
       text-align: center;
       box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
     }
+
     button {
       background: #fff;
       color: #00b09b;
@@ -32,79 +36,229 @@
       border-radius: 10px;
       font-size: 1rem;
       cursor: pointer;
-      margin-top: 20px;
-      transition: 0.3s;
+      width: 100%;
+      font-weight: 600;
     }
-    button:hover {
-      background: #00d084;
-      color: white;
+
+    button:hover { background: #00d084; color: white; }
+
+    .btn-free {
+      background: #ffcc00;
+      color: #000;
+      font-weight: bold;
+    }
+
+    .btn-free:hover { background: #ffb300; }
+
+    .back-btn {
+      display: inline-block;
+      margin-top: 15px;
+      color: rgba(255,255,255,0.8);
+      text-decoration: underline;
+      font-size: 0.9rem;
+    }
+    
+    .error-box {
+      background: rgba(255, 0, 0, 0.2);
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      text-align: left;
+      font-size: 0.9rem;
     }
   </style>
 </head>
+
 <body>
+<div class="container">
 
   <div class="box">
-    <h2>Complete Your Subscription</h2>
+    <h2 id="pageTitle">💳 Complete Your Payment</h2>
     <p id="planDetails"></p>
-    <button id="payBtn">Proceed to Pay</button>
+
+    <div id="upgradeNotice" style="display:none; margin-top:15px;">
+      <strong>✨ Upgrade in Progress</strong><br>
+      Your account will be upgraded after payment.
+    </div>
   </div>
 
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const school_id = urlParams.get("school_id");
-    const plan = urlParams.get("plan");
+  <div class="box">
+    <h3>Choose Payment Method</h3>
 
-    const planPrices = {
-      basic: 12000,
-      pro: 19000
-    };
+    <button id="paystackBtn">Pay with Paystack</button>
+    <br><br>
+    <button id="freeBtn" class="btn-free">Renew for Free (TEST)</button>
+  </div>
 
-    document.getElementById("planDetails").textContent =
-      `You selected the ${plan.toUpperCase()} plan — ₦${planPrices[plan].toLocaleString()} per month.`;
+  <a href="subscription.html" class="back-btn">← Back</a>
+</div>
 
-    document.getElementById("payBtn").addEventListener("click", () => {
-      let handler = PaystackPop.setup({
-        key: "pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxx", // ✅ Replace with your Paystack public key
-        email: "schooladmin@example.com", // ideally from backend
-        amount: planPrices[plan] * 100, // amount in kobo
-        ref: "REF" + Math.floor(Math.random() * 1000000000),
-        metadata: {
-          custom_fields: [
-            { display_name: "School ID", variable_name: "school_id", value: school_id }
-          ]
-        },
-        callback: function (response) {
-          // ✅ Verify payment with backend
-          fetch("https://gradely-backend-1.onrender.com/api/verify-payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reference: response.reference, school_id })
+<script>
+/* ===================== DEBUG: Log everything on load ===================== */
+console.log("=== PAY.HTML DEBUG INFO ===");
+console.log("Full URL:", window.location.href);
+console.log("URL Search:", window.location.search);
+console.log("URL school_id param:", new URLSearchParams(window.location.search).get("school_id"));
+console.log("localStorage school_id:", localStorage.getItem("school_id"));
+console.log("sessionStorage school_id:", sessionStorage.getItem("school_id"));
+console.log("localStorage keys:", Object.keys(localStorage));
+console.log("sessionStorage keys:", Object.keys(sessionStorage));
+console.log("===========================");
+
+/* ===================== URL + STATE ===================== */
+
+const params = new URLSearchParams(window.location.search);
+const plan = params.get("plan") || "pro";
+const isUpgrade = params.get("upgrade") === "true";
+
+// Try all possible sources for school_id
+let school_id = params.get("school_id");
+
+if (!school_id) {
+  console.warn("⚠️ school_id not in URL, checking localStorage...");
+  school_id = localStorage.getItem("school_id");
+}
+
+if (!school_id) {
+  console.warn("⚠️ school_id not in localStorage, checking sessionStorage...");
+  school_id = sessionStorage.getItem("school_id");
+}
+
+if (!school_id) {
+  console.error("❌ school_id not found anywhere!");
+  
+  // Show detailed error on page
+  const errorHTML = `
+    <div class="error-box">
+      <strong>❌ Error: School ID not found</strong><br><br>
+      <strong>URL Parameters:</strong> ${JSON.stringify(Object.fromEntries(params))}<br><br>
+      <strong>localStorage:</strong><br>
+      ${Object.entries(localStorage).map(([k,v]) => `  ${k}: ${v}`).join('<br>') || '  (empty)'}<br><br>
+      <strong>sessionStorage:</strong><br>
+      ${Object.entries(sessionStorage).map(([k,v]) => `  ${k}: ${v}`).join('<br>') || '  (empty)'}<br><br>
+      <small>Please go back to the subscription page and try again.</small>
+    </div>
+  `;
+  
+  document.querySelector('.container').insertAdjacentHTML('afterbegin', errorHTML);
+  
+  // Auto-redirect after 5 seconds
+  setTimeout(() => {
+    location.href = "subscription.html";
+  }, 5000);
+  
+  // Stop script execution
+  throw new Error("School ID not found");
+}
+
+console.log("✅ school_id found:", school_id);
+
+const PRICES = { basic: 16800, pro: 19200 };
+const price = PRICES[plan];
+
+document.getElementById("planDetails").textContent =
+  `You selected ${plan.toUpperCase()} — ₦${price.toLocaleString()}`;
+
+if (isUpgrade) {
+  document.getElementById("upgradeNotice").style.display = "block";
+  document.getElementById("pageTitle").textContent = "✨ Upgrade to Pro Plan";
+}
+
+/* ===================== PAYSTACK KEY ===================== */
+
+let paystackKey = null;
+
+async function loadPaystackKey() {
+  if (paystackKey) return true;
+
+  try {
+    const res = await fetch(
+      "https://gradely-backend-1.onrender.com/api/config/paystack-key"
+    );
+    const data = await res.json();
+
+    if (!data.success) throw new Error("Key missing");
+
+    paystackKey = data.publicKey;
+    console.log("✅ Paystack key loaded");
+    return true;
+  } catch (e) {
+    console.error("❌ Paystack key error:", e);
+    alert("Payment configuration error.");
+    return false;
+  }
+}
+
+/* ===================== PAYSTACK ===================== */
+
+document.getElementById("paystackBtn").onclick = async () => {
+  if (!(await loadPaystackKey())) return;
+
+  const email =
+    localStorage.getItem("admin_email") ||
+    `school-${school_id}@gradely.app`;
+
+  PaystackPop.setup({
+    key: paystackKey,
+    email,
+    amount: price * 100,
+    ref: "GRAD_" + Date.now(),
+    metadata: {
+      school_id,
+      plan,
+      isUpgrade
+    },
+    callback: async (res) => {
+      const verify = await fetch(
+        "https://gradely-backend-1.onrender.com/api/verify-payment",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reference: res.reference,
+            school_id,
+            plan,
+            is_upgrade: isUpgrade
           })
-          .then(res => res.json())
-          .then(data => {
-            if (data.success) {
-              alert("✅ Payment successful! Your school is now active.");
-              window.location.href = "admin-login.html";
-            } else {
-              alert("⚠️ " + data.message);
-            }
-          })
-          .catch(err => {
-            console.error(err);
-            alert("⚠️ Could not verify payment.");
-          });
-        },
-        onClose: function () {
-          alert("Payment window closed.");
         }
-      });
+      ).then(r => r.json());
 
-      handler.openIframe();
-    });
-  </script>
+      if (verify.success) {
+        alert("Payment successful!");
+        location.href = "dashboard.html";
+      } else {
+        alert("Verification failed.");
+      }
+    }
+  }).openIframe();
+};
+
+/* ===================== FREE TEST ===================== */
+
+document.getElementById("freeBtn").onclick = async () => {
+  if (!confirm("Test renewal only. Continue?")) return;
+
+  // ✅ FIXED: Removed trailing spaces
+  const res = await fetch(
+    "https://gradely-backend-1.onrender.com/api/subscription/renew",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ school_id })
+    }
+  ).then(r => r.json());
+
+  if (res.success) {
+    alert("Test renewal successful.");
+    location.href = "dashboard.html";
+  } else {
+    alert("Test renewal failed.");
+  }
+};
+
+loadPaystackKey();
+</script>
 
 <script src="js/kaima-chatbot.js"></script>
-
-  
 </body>
 </html>
