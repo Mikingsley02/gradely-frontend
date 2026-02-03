@@ -26,6 +26,8 @@
       align-items: center;
       backdrop-filter: blur(10px);
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      position: relative;
     }
 
     header h1 {
@@ -45,6 +47,12 @@
 
     .plan-badge.basic { background: #ffcc00; color: #000; }
     .plan-badge.pro { background: #00e676; color: #000; }
+    .plan-badge.expired { background: #ff5252; color: #fff; animation: pulse 2s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
 
     .logout-btn {
       background: #ff5f6d;
@@ -55,6 +63,8 @@
       cursor: pointer;
       font-weight: 600;
       transition: all 0.3s ease;
+      z-index: 101;
+      position: relative;
     }
 
     .logout-btn:hover {
@@ -68,6 +78,8 @@
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 20px;
       padding: 40px 25px;
+      position: relative;
+      z-index: 1;
     }
 
     .card {
@@ -78,6 +90,8 @@
       backdrop-filter: blur(8px);
       transition: all 0.3s ease;
       cursor: pointer;
+      position: relative;
+      z-index: 2;
     }
 
     .card:hover {
@@ -149,12 +163,137 @@
       opacity: 0.8;
     }
 
+    /* Subscription Expired Overlay */
+    .subscription-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      flex-direction: column;
+    }
+
+    .subscription-overlay.active {
+      display: flex;
+    }
+
+    .subscription-modal {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: modalSlideIn 0.5s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .subscription-modal h2 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      color: #fff;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .subscription-modal p {
+      font-size: 1.1rem;
+      margin-bottom: 25px;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.6;
+    }
+
+    .subscription-modal .warning-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      color: #ff5252;
+      animation: shake 0.5s ease-in-out infinite;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .renew-btn {
+      background: linear-gradient(135deg, #ff5252, #ff1a1a);
+      border: none;
+      color: #fff;
+      padding: 15px 40px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(255, 82, 82, 0.4);
+      margin-top: 10px;
+    }
+
+    .renew-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(255, 82, 82, 0.6);
+      background: linear-gradient(135deg, #ff1a1a, #cc0000);
+    }
+
+    .renew-btn:active {
+      transform: scale(0.98);
+    }
+
+    .subscription-info {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 20px;
+      font-size: 0.95rem;
+    }
+
+    .subscription-info strong {
+      color: #ff5252;
+    }
+
+    /* Grayed out state for dashboard */
+    .dashboard-container.expired {
+      filter: grayscale(100%) blur(2px);
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    .dashboard-container.expired * {
+      pointer-events: none;
+    }
+
     @media (max-width: 600px) {
       .dashboard-container {
         padding: 25px 15px;
       }
       h3 {
         font-size: 1.1rem;
+      }
+      .subscription-modal {
+        padding: 30px 20px;
+      }
+      .subscription-modal h2 {
+        font-size: 1.5rem;
+      }
+      .subscription-modal .warning-icon {
+        font-size: 3rem;
       }
     }
   </style>
@@ -206,6 +345,19 @@
     </div>
   </main>
 
+  <!-- Subscription Expired Overlay -->
+  <div class="subscription-overlay" id="subscriptionOverlay">
+    <div class="subscription-modal">
+      <div class="warning-icon">⚠️</div>
+      <h2>Subscription Expired!</h2>
+      <p>Your Gradely subscription has expired. Please renew to continue using all features.</p>
+      <button class="renew-btn" onclick="renewSubscription()">Renew Subscription Now</button>
+      <div class="subscription-info">
+        <p><strong>Note:</strong> All dashboard features are temporarily disabled until renewal.</p>
+      </div>
+    </div>
+  </div>
+
   <footer>
     © 2026 gradely.info. All rights reserved. | Powered by RIS<br>
     <a href="terms.html">Terms</a> • 
@@ -215,22 +367,24 @@
 
   <script>
   let currentPlan = 'basic';
+  let isSubscriptionActive = true;
+  let subscriptionExpiryDate = null;
 
   document.addEventListener("DOMContentLoaded", async () => {
-  // ✅ Check localStorage FIRST (since login now uses it)
-  const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
-  console.log("🔍 school_id from storage:", schoolId);
-  
-  if (!schoolId) {
-    alert("⚠️ Session expired. Please log in again.");
-    window.location.href = "admin-login.html";
-    return;
-  }
+    // ✅ Check localStorage FIRST (since login now uses it)
+    const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+    console.log("🔍 school_id from storage:", schoolId);
+    
+    if (!schoolId) {
+      alert("⚠️ Session expired. Please log in again.");
+      window.location.href = "admin-login.html";
+      return;
+    }
 
-  // ✅ Also sync to sessionStorage if missing (optional compatibility)
-  if (!sessionStorage.getItem("school_id")) {
-    sessionStorage.setItem("school_id", schoolId);
-  }
+    // ✅ Also sync to sessionStorage if missing (optional compatibility)
+    if (!sessionStorage.getItem("school_id")) {
+      sessionStorage.setItem("school_id", schoolId);
+    }
 
     // ✅ Build clean URL
     const apiUrl = `https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
@@ -249,11 +403,21 @@
       const data = await res.json();
       console.log("📡 Full API Response:", data);
 
-      if (data.success && data.plan) {
-        currentPlan = data.plan;
-        console.log("✅ Plan successfully loaded:", currentPlan);
+      if (data.success) {
+        currentPlan = data.plan || 'basic';
+        isSubscriptionActive = data.isActive !== undefined ? data.isActive : true;
+        subscriptionExpiryDate = data.expiryDate || null;
+        
+        console.log("✅ Plan:", currentPlan);
+        console.log("✅ Subscription Active:", isSubscriptionActive);
+        console.log("✅ Expiry Date:", subscriptionExpiryDate);
+        
+        // Check if subscription is expired
+        if (!isSubscriptionActive) {
+          showSubscriptionExpired();
+        }
       } else {
-        console.warn("⚠️ API returned success:false or missing plan");
+        console.warn("⚠️ API returned success:false");
       }
     } catch (err) {
       console.error("❌ Failed to fetch subscription plan:", err);
@@ -263,37 +427,105 @@
     setTimeout(() => {
       const badge = document.getElementById('planBadge');
       if (badge) {
-        badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-        badge.className = `plan-badge ${currentPlan}`;
+        if (!isSubscriptionActive) {
+          badge.textContent = "EXPIRED";
+          badge.className = "plan-badge expired";
+        } else {
+          badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+          badge.className = `plan-badge ${currentPlan}`;
+        }
         console.log("🎨 Plan badge updated to:", currentPlan);
       }
       applyPlanRestrictions();
     }, 100);
   });
 
+  function showSubscriptionExpired() {
+    console.log("🔒 Subscription expired - locking dashboard");
+    
+    // Gray out the entire dashboard
+    const dashboard = document.getElementById('dashboardContainer');
+    dashboard.classList.add('expired');
+    
+    // Show the overlay modal
+    const overlay = document.getElementById('subscriptionOverlay');
+    overlay.classList.add('active');
+    
+    // Disable all card clicks
+    disableAllCards();
+  }
+
+  function disableAllCards() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+      card.onclick = null; // Remove all click handlers
+    });
+    
+    // Also disable pro-only card specifically
+    const proCards = document.querySelectorAll('.pro-only');
+    proCards.forEach(card => {
+      card.classList.add('disabled');
+    });
+  }
+
+  function renewSubscription() {
+    console.log("🔄 Redirecting to subscription page...");
+    window.location.href = 'subscription.html?renew=true';
+  }
+
   function applyPlanRestrictions() {
     const proCards = document.querySelectorAll('.pro-only');
-    if (currentPlan === 'basic') {
-      proCards.forEach(card => card.classList.add('disabled'));
-      const container = document.getElementById('dashboardContainer');
-      if (!document.querySelector('.upgrade-prompt')) {
-        const upgradeCard = document.createElement('div');
-        upgradeCard.className = 'upgrade-prompt';
-        upgradeCard.innerHTML = `
-          <div class="icon">✨</div>
-          <h3>Upgrade to Pro!</h3>
-          <p>Unlock bulk student upload, custom subjects, class management & PDF reports.</p>
-        `;
-        upgradeCard.onclick = () => window.location.href = 'subscription.html?plan=pro';
-        container.appendChild(upgradeCard);
+    const dashboard = document.getElementById('dashboardContainer');
+    
+    // Only apply restrictions if subscription is active
+    if (isSubscriptionActive) {
+      if (currentPlan === 'basic') {
+        proCards.forEach(card => {
+          card.classList.add('disabled');
+          // Keep original onclick but wrap it
+          const originalOnclick = card.onclick;
+          card.onclick = function() {
+            if (currentPlan === 'pro') {
+              originalOnclick.call(this);
+            } else {
+              alert("💡 This feature is available only on Pro plan. Upgrade to unlock!");
+            }
+          };
+        });
+        
+        const container = document.getElementById('dashboardContainer');
+        if (!document.querySelector('.upgrade-prompt')) {
+          const upgradeCard = document.createElement('div');
+          upgradeCard.className = 'upgrade-prompt';
+          upgradeCard.innerHTML = `
+            <div class="icon">✨</div>
+            <h3>Upgrade to Pro!</h3>
+            <p>Unlock bulk student upload, custom subjects, class management & PDF reports.</p>
+          `;
+          upgradeCard.onclick = () => window.location.href = 'subscription.html?plan=pro';
+          container.appendChild(upgradeCard);
+        }
+      } else {
+        proCards.forEach(card => {
+          card.classList.remove('disabled');
+          // Restore original functionality
+          card.onclick = function() {
+            window.location.href = this.getAttribute('data-url') || 
+              (this.id === 'manageClassesCard' ? 'manage-classes.html' : 'announcement.html');
+          };
+        });
+        document.querySelector('.upgrade-prompt')?.remove();
       }
-    } else {
-      proCards.forEach(card => card.classList.remove('disabled'));
-      document.querySelector('.upgrade-prompt')?.remove();
     }
+    // If subscription is expired, all cards are already disabled by showSubscriptionExpired()
   }
 
   function handleProFeature(url) {
+    if (!isSubscriptionActive) {
+      showSubscriptionExpired();
+      return;
+    }
+    
     if (currentPlan === 'pro') {
       window.location.href = url;
     } else {
@@ -302,6 +534,11 @@
   }
 
   function goTo(page) {
+    if (!isSubscriptionActive) {
+      showSubscriptionExpired();
+      return;
+    }
+    
     window.location.href = page;
   }
 
