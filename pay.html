@@ -94,6 +94,8 @@
   <a href="subscription.html" class="back-btn">← Back</a>
 </div>
 
+<script src="https://js.paystack.co/v1/inline.js"></script>
+
 <script>
 /* ===================== DEBUG: Log everything on load ===================== */
 console.log("=== PAY.HTML DEBUG INFO ===");
@@ -126,7 +128,6 @@ if (!school_id) {
 if (!school_id) {
   console.error("❌ school_id not found anywhere!");
   
-  // Show detailed error on page
   const errorHTML = `
     <div class="error-box">
       <strong>❌ Error: School ID not found</strong><br><br>
@@ -139,12 +140,10 @@ if (!school_id) {
   
   document.querySelector('.container').insertAdjacentHTML('afterbegin', errorHTML);
   
-  // Auto-redirect after 5 seconds
   setTimeout(() => {
     location.href = "subscription.html";
   }, 5000);
   
-  // Stop script execution
   throw new Error("School ID not found");
 }
 
@@ -170,7 +169,8 @@ async function loadPaystackKey() {
 
   try {
     const res = await fetch(
-      "https://gradely-backend-1.onrender.com/api/config/paystack-key"
+      "https://gradely-backend-1.onrender.com/api/config/paystack-key",
+      { credentials: 'include' }
     );
     const data = await res.json();
 
@@ -236,7 +236,6 @@ document.getElementById("paystackBtn").onclick = async () => {
 document.getElementById("freeBtn").onclick = async () => {
   if (!confirm("Test renewal only. Continue?")) return;
 
-  // ✅ FIXED: Removed trailing spaces
   const res = await fetch(
     "https://gradely-backend-1.onrender.com/api/subscription/renew",
     {
@@ -257,6 +256,7 @@ document.getElementById("freeBtn").onclick = async () => {
 
 loadPaystackKey();
 </script>
+
 
 <script src="js/kaima-chatbot.js"></script>
 </body>

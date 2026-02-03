@@ -371,75 +371,79 @@
   let subscriptionExpiryDate = null;
 
   document.addEventListener("DOMContentLoaded", async () => {
-    // ✅ Check localStorage FIRST (since login now uses it)
-    const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
-    console.log("🔍 school_id from storage:", schoolId);
+  // ✅ Check localStorage FIRST (since login now uses it)
+  const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+  console.log("🔍 school_id from storage:", schoolId);
+  
+  if (!schoolId) {
+    alert("⚠️ Session expired. Please log in again.");
+    window.location.href = "admin-login.html";
+    return;
+  }
+
+  // ✅ Also sync to sessionStorage if missing (optional compatibility)
+  if (!sessionStorage.getItem("school_id")) {
+    sessionStorage.setItem("school_id", schoolId);
+  }
+
+  // ✅ FIXED: Removed extra spaces in URL
+  const apiUrl = `https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
+  console.log("📡 Fetching plan from:", apiUrl);
+
+  try {
+    // ✅ CRITICAL: Added credentials: 'include'
+    const res = await fetch(apiUrl, {
+      credentials: 'include' // ✅ MUST HAVE THIS
+    });
     
-    if (!schoolId) {
-      alert("⚠️ Session expired. Please log in again.");
-      window.location.href = "admin-login.html";
-      return;
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("📡 API Error Body:", text);
+      throw new Error(`HTTP ${res.status}`);
     }
 
-    // ✅ Also sync to sessionStorage if missing (optional compatibility)
-    if (!sessionStorage.getItem("school_id")) {
-      sessionStorage.setItem("school_id", schoolId);
-    }
+    const data = await res.json();
+    console.log("📡 Full API Response:", data);
 
-    // ✅ Build clean URL
-    const apiUrl = `https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
-    console.log("📡 Fetching plan from:", apiUrl);
-
-    try {
-      const res = await fetch(apiUrl, {
-  credentials: 'include'
-});
+    if (data.success) {
+      currentPlan = data.plan || 'basic';
+      isSubscriptionActive = data.isActive !== undefined ? data.isActive : true;
+      subscriptionExpiryDate = data.expiryDate || null;
       
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("📡 API Error Body:", text);
-        throw new Error(`HTTP ${res.status}`);
+      console.log("✅ Plan:", currentPlan);
+      console.log("✅ Subscription Active:", isSubscriptionActive);
+      console.log("✅ Expiry Date:", subscriptionExpiryDate);
+      
+      // Check if subscription is expired
+      if (!isSubscriptionActive) {
+        showSubscriptionExpired();
       }
-
-      const data = await res.json();
-      console.log("📡 Full API Response:", data);
-
-      if (data.success) {
-        currentPlan = data.plan || 'basic';
-        isSubscriptionActive = data.isActive !== undefined ? data.isActive : true;
-        subscriptionExpiryDate = data.expiryDate || null;
-        
-        console.log("✅ Plan:", currentPlan);
-        console.log("✅ Subscription Active:", isSubscriptionActive);
-        console.log("✅ Expiry Date:", subscriptionExpiryDate);
-        
-        // Check if subscription is expired
-        if (!isSubscriptionActive) {
-          showSubscriptionExpired();
-        }
-      } else {
-        console.warn("⚠️ API returned success:false");
-      }
-    } catch (err) {
-      console.error("❌ Failed to fetch subscription plan:", err);
+    } else {
+      console.warn("⚠️ API returned success:false");
     }
+  } catch (err) {
+    console.error("❌ Failed to fetch subscription plan:", err);
+    // ✅ ADDED: User-friendly error message
+    document.getElementById('planBadge').textContent = "ERROR";
+    document.getElementById('planBadge').className = "plan-badge expired";
+  }
 
-    // ✅ Update UI with delay to ensure DOM ready
-    setTimeout(() => {
-      const badge = document.getElementById('planBadge');
-      if (badge) {
-        if (!isSubscriptionActive) {
-          badge.textContent = "EXPIRED";
-          badge.className = "plan-badge expired";
-        } else {
-          badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-          badge.className = `plan-badge ${currentPlan}`;
-        }
-        console.log("🎨 Plan badge updated to:", currentPlan);
+  // ✅ Update UI with delay to ensure DOM ready
+  setTimeout(() => {
+    const badge = document.getElementById('planBadge');
+    if (badge) {
+      if (!isSubscriptionActive) {
+        badge.textContent = "EXPIRED";
+        badge.className = "plan-badge expired";
+      } else {
+        badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+        badge.className = `plan-badge ${currentPlan}`;
       }
-      applyPlanRestrictions();
-    }, 100);
-  });
+      console.log("🎨 Plan badge updated to:", currentPlan);
+    }
+    applyPlanRestrictions();
+  }, 100);
+});
 
   function showSubscriptionExpired() {
     console.log("🔒 Subscription expired - locking dashboard");
@@ -501,7 +505,7 @@
           upgradeCard.innerHTML = `
             <div class="icon">✨</div>
             <h3>Upgrade to Pro!</h3>
-            <p>Unlock bulk student upload, custom subjects, class management & PDF reports.</p>
+            <p>Unlock bulk student registration, Class Management, School announcements & SMS features.</p>
           `;
           upgradeCard.onclick = () => window.location.href = 'subscription.html?plan=pro';
           container.appendChild(upgradeCard);
