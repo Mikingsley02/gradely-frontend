@@ -205,7 +205,7 @@
     <a href="refund-policy.html">Refund Policy</a>
   </footer>
 
-  <script>
+ <script>
 let schoolId = null;
 let subscriptionData = null;
 
@@ -223,12 +223,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function fetchSubscriptionStatus() {
   try {
+    // ✅ FIXED: Removed extra spaces in URL
     const apiUrl = `https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
     console.log("📡 Fetching subscription status from:", apiUrl);
     
+    // ✅ CRITICAL: credentials included
     const res = await fetch(apiUrl, {
-  credentials: 'include'
-});
+      credentials: 'include'
+    });
     
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     
@@ -303,9 +305,10 @@ function cancelSubscription() {
   btn.textContent = "Cancelling...";
   document.getElementById('message').innerHTML = '';
 
+  // ✅ FIXED: Removed trailing spaces + credentials included
   fetch('https://gradely-backend-1.onrender.com/api/subscription/cancel', {
     method: 'POST',
-    credentials: 'include',
+    credentials: 'include', // ✅ CRITICAL
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ school_id: schoolId })
   })
@@ -336,9 +339,9 @@ function renewSubscription() {
     return;
   }
 
+  // ✅ CORRECT: Pass schoolId directly (already validated)
   window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro`;
 }
-
 
 function upgradeToPro() {
   if (!schoolId) {
@@ -346,9 +349,9 @@ function upgradeToPro() {
     return;
   }
   
+  // ✅ CORRECT: Pass schoolId directly
   window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
 }
-
 </script>
 
 <script src="js/kaima-chatbot.js"></script>
