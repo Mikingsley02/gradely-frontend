@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>💳 Complete Your Payment | Gradely Info</title>
-  <!-- ✅ FIXED: Removed trailing spaces -->
+  
   <script src="https://js.paystack.co/v1/inline.js"></script>
 
   <style>
@@ -169,7 +169,6 @@ async function loadPaystackKey() {
   if (paystackKey) return true;
 
   try {
-    // ✅ FIXED: Removed trailing spaces
     const res = await fetch(
       "https://gradely-backend-1.onrender.com/api/config/paystack-key"
     );
@@ -201,18 +200,17 @@ document.getElementById("paystackBtn").onclick = async () => {
     email,
     amount: price * 100,
     ref: "GRAD_" + Date.now(),
-    // ✅ FIXED: Correct syntax (meta: not meta)
     meta: {
       school_id,
       plan,
       isUpgrade
     },
     callback: async (res) => {
-      // ✅ FIXED: Removed trailing spaces
       const verify = await fetch(
         "https://gradely-backend-1.onrender.com/api/verify-payment",
         {
           method: "POST",
+          credentials: 'include',
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             reference: res.reference,
@@ -243,6 +241,7 @@ document.getElementById("freeBtn").onclick = async () => {
     "https://gradely-backend-1.onrender.com/api/subscription/renew",
     {
       method: "POST",
+      credentials: 'include',
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ school_id })
     }

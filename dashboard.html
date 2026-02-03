@@ -391,8 +391,9 @@
     console.log("📡 Fetching plan from:", apiUrl);
 
     try {
-      const res = await fetch(apiUrl);
-      console.log("📡 Response status:", res.status);
+      const res = await fetch(apiUrl, {
+  credentials: 'include'
+});
       
       if (!res.ok) {
         const text = await res.text();

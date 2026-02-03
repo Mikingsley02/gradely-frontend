@@ -226,7 +226,9 @@ async function fetchSubscriptionStatus() {
     const apiUrl = `https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
     console.log("📡 Fetching subscription status from:", apiUrl);
     
-    const res = await fetch(apiUrl);
+    const res = await fetch(apiUrl, {
+  credentials: 'include'
+});
     
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     
@@ -303,6 +305,7 @@ function cancelSubscription() {
 
   fetch('https://gradely-backend-1.onrender.com/api/subscription/cancel', {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ school_id: schoolId })
   })
