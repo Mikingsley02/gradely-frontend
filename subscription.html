@@ -224,7 +224,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function fetchSubscriptionStatus() {
   try {
     // ✅ FIXED: Removed extra spaces in URL
-    const apiUrl = `https://gradely-backend-1.onrender.com/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
+    const apiUrl = `https://api.gradely.info/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
     console.log("📡 Fetching subscription status from:", apiUrl);
     
     // ✅ CRITICAL: credentials included
