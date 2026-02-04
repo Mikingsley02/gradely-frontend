@@ -227,6 +227,7 @@ async function fetchSubscriptionStatus() {
     
     // ✅ CRITICAL: credentials included
     const res = await fetch(apiUrl, {
+      method: "GET",
       credentials: 'include'
     });
     
