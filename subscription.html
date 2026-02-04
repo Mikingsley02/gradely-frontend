@@ -34,8 +34,6 @@
       font-size: 1.1rem;
     }
 
-    
-
     .logout-btn:hover {
       background: #e84141;
     }
@@ -306,12 +304,12 @@ function cancelSubscription() {
   document.getElementById('message').innerHTML = '';
 
   // ✅ FIXED: Removed trailing spaces + credentials included
-  fetch('https://gradely-backend-1.onrender.com/api/subscription/cancel', {
-    method: 'POST',
-    credentials: 'include', // ✅ CRITICAL
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ school_id: schoolId })
-  })
+fetch('https://api.gradely.info/api/subscription/cancel', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ school_id: schoolId })
+})
   .then(response => response.json())
   .then(data => {
     if (data.success) {
