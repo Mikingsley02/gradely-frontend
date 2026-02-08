@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Super Admin Login | Gradely</title>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e1b4b);
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Centered layout */
+    .page {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    /* Login Card */
+    .login-card {
+      background: #020617;
+      width: 100%;
+      max-width: 420px;
+      padding: 45px 35px;
+      border-radius: 18px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.45);
+      text-align: center;
+    }
+
+    .login-card h1 {
+      font-size: 2rem;
+      color: #a5b4fc;
+      margin-bottom: 6px;
+    }
+
+    .login-card p {
+      font-size: 0.95rem;
+      opacity: 0.85;
+      margin-bottom: 28px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.95rem;
+    }
+
+    input::placeholder {
+      color: #94a3b8;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.25);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      background: #6366f1;
+      color: #020617;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+      margin-bottom: 14px;
+    }
+
+    button:hover {
+      background: #4f46e5;
+    }
+
+    .forgot-password {
+      display: inline-block;
+      font-size: 0.9rem;
+      color: #a5b4fc;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .forgot-password:hover {
+      text-decoration: underline;
+    }
+
+    .message {
+      margin-top: 14px;
+      font-size: 0.9rem;
+      min-height: 18px;
+      color: #f87171;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 18px 10px;
+      font-size: 0.8rem;
+      color: #c7d2fe;
+      opacity: 0.85;
+    }
+
+    /* =====================
+       RESET PASSWORD MODAL
+    ====================== */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(2,6,23,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: #020617;
+      padding: 35px 30px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .modal-content h2 {
+      color: #a5b4fc;
+      margin-bottom: 12px;
+    }
+
+    .modal-content p {
+      font-size: 0.9rem;
+      opacity: 0.85;
+      margin-bottom: 20px;
+    }
+
+    .modal-actions {
+      margin-top: 14px;
+    }
+
+    .cancel-link {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #a5b4fc;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .cancel-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 38px 25px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page">
+    <div class="login-card">
+      <h1>gradely.info</h1>
+      <p>Super Admin Login</p>
+
+      <input id="email" type="email" placeholder="Email address" />
+      <input id="password" type="password" placeholder="Password" />
+
+      <button onclick="login()">Login</button>
+
+      <a class="forgot-password" onclick="openResetModal()">Forgot password?</a>
+
+      <div class="message" id="loginMessage"></div>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 Gradely.info — Super Admin Access
+  </footer>
+
+  <!-- RESET PASSWORD MODAL -->
+  <div class="modal" id="resetModal">
+    <div class="modal-content">
+      <h2>Reset Password</h2>
+      <p>Enter your Super Admin email to receive a reset link.</p>
+
+      <input id="resetEmail" type="email" placeholder="Admin email" />
+
+      <button onclick="sendReset()">Send reset link</button>
+
+      <div class="modal-actions">
+        <a class="cancel-link" onclick="closeResetModal()">Cancel</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openResetModal() {
+      document.getElementById("resetModal").style.display = "flex";
+    }
+
+    function closeResetModal() {
+      document.getElementById("resetModal").style.display = "none";
+    }
+
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const msg = document.getElementById("loginMessage");
+
+      msg.textContent = "";
+
+      try {
+        const res = await fetch("https://api.gradely.info/api/super-admin/auth/login", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          window.location.href = "dashboard.html";
+        } else {
+          msg.textContent = data.message || "Login failed";
+        }
+      } catch (err) {
+        msg.textContent = "Network error. Try again.";
+      }
+    }
+
+    async function sendReset() {
+      const email = document.getElementById("resetEmail").value;
+      if (!email) return;
+
+      await fetch("https://api.gradely.info/api/super-admin/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+
+      closeResetModal();
+      alert("If the email exists, a reset link has been sent.");
+    }
+  </script>
+
+</body>
+</html>

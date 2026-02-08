@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🛡️ Super Admin Dashboard | Gradely</title>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2rem;
+    }
+
+    /* KPI CARDS */
+    #stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .kpi-card {
+      flex: 1 1 150px;
+      background: #020617;
+      color: #38bdf8;
+      padding: 20px 15px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: default;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+    }
+
+    .kpi-value {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+      color: #22c55e;
+    }
+
+    .kpi-label {
+      font-size: 0.95rem;
+      opacity: 0.9;
+      color: #e5e7eb;
+    }
+
+    /* ===========================
+       Search Filters
+    ============================ */
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+      background: #1e293b;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    input, select, button {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+    }
+
+    input, select {
+      background: #dde0ec;
+      color: #e5e7eb;
+    }
+
+    input::placeholder {
+      color: #293545;
+      opacity: 1;
+    }
+
+    select option {
+      color: #000;
+    }
+
+    button {
+      background: #22c55e;
+      color: #052e16;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      background: #16a34a;
+    }
+
+    /* ===========================
+       School Table
+    ============================ */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #020617;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #1e293b;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #020617;
+      color: #38bdf8;
+      text-align: center;
+    }
+
+    tr:hover {
+      background: #020617aa;
+    }
+
+    /* ===========================
+       Status / Action Tags
+    ============================ */
+    .tag {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .ACTIVE { background: #22c55e; color: #052e16; }
+    .INACTIVE { background: #f87171; color: #7f1d1d; }
+    .SUSPENDED { background: #facc15; color: #78350f; }
+
+    .SUSPEND_SCHOOL { background: #7c2d12; color: #fed7aa; cursor: pointer; }
+    .UNSUSPEND { background: #1e40af; color: #bfdbfe; cursor: pointer; }
+    .SUSPEND_SCHOOL:hover { background: #9c3412; }
+    .UNSUSPEND:hover { background: #1e3a8a; }
+
+    /* ===========================
+       Stats Error
+    ============================ */
+    #statsError {
+      color: #f87171;
+      margin-bottom: 15px;
+    }
+
+    @media(max-width: 600px) {
+      #stats { flex-direction: column; }
+      .filters { flex-direction: column; }
+      input, select, button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🛡️ Super Admin Dashboard</h1>
+
+  <!-- KPI CARDS -->
+  <div id="stats">
+    <div class="kpi-card"><div class="kpi-value" id="totalSchools">0</div><div class="kpi-label">Total Schools</div></div>
+    <div class="kpi-card"><div class="kpi-value" id="activeSubs">0</div><div class="kpi-label">Active Subs</div></div>
+    <div class="kpi-card"><div class="kpi-value" id="inactiveSubs">0</div><div class="kpi-label">Inactive Subs</div></div>
+    <div class="kpi-card"><div class="kpi-value" id="suspendedSchools">0</div><div class="kpi-label">Suspended</div></div>
+    <div class="kpi-card"><div class="kpi-value" id="deletedSchools">0</div><div class="kpi-label">Deleted</div></div>
+  </div>
+
+  <div id="statsError"></div>
+
+  <!-- SEARCH -->
+  <div class="filters">
+    <input id="searchInput" placeholder="School name or ID" />
+    <button onclick="searchSchool()">🔍 Search</button>
+  </div>
+
+  <!-- SCHOOL TABLE -->
+  <table>
+    <thead>
+      <tr>
+        <th>School ID</th>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Plan</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="schoolTable">
+      <tr><td colspan="5">Loading schools...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    const API = "https://api.gradely.info/api/super-admin/dashboard";
+
+    // Load stats
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API}/stats`, { credentials: "include" });
+        const { data, success } = await res.json();
+
+        if (!success) throw new Error("Failed to fetch stats");
+
+        document.getElementById("totalSchools").textContent = data.total_schools;
+        document.getElementById("activeSubs").textContent = data.active_subscriptions;
+        document.getElementById("inactiveSubs").textContent = data.inactive_subscriptions;
+        document.getElementById("suspendedSchools").textContent = data.suspended_schools;
+        document.getElementById("deletedSchools").textContent = data.deleted_schools;
+      } catch (err) {
+        document.getElementById("statsError").textContent = "Failed to load stats";
+        console.error(err);
+      }
+    }
+
+    // Search school
+    async function searchSchool() {
+      const q = document.getElementById("searchInput").value;
+      const table = document.getElementById("schoolTable");
+      table.innerHTML = `<tr><td colspan="5">Loading schools...</td></tr>`;
+
+      try {
+        const res = await fetch(`${API}/schools/search?q=${q}`, { credentials: "include" });
+        const { data } = await res.json();
+
+        if (!data || data.length === 0) {
+          table.innerHTML = `<tr><td colspan="5">No schools found</td></tr>`;
+          return;
+        }
+
+        table.innerHTML = data.map(s => `
+          <tr>
+            <td>${s.school_id}</td>
+            <td>${s.school_name}</td>
+            <td><span class="tag ${s.account_status.toUpperCase()}">${s.account_status}</span></td>
+            <td>${s.subscription_plan}</td>
+            <td>
+              ${
+                s.account_status === "suspended"
+                  ? `<span class="tag UNSUSPEND" onclick="unsuspend('${s.school_id}')">Unsuspend</span>`
+                  : `<span class="tag SUSPEND_SCHOOL" onclick="suspend('${s.school_id}')">Suspend</span>`
+              }
+            </td>
+          </tr>
+        `).join("");
+
+      } catch (err) {
+        table.innerHTML = `<tr><td colspan="5">Error loading schools</td></tr>`;
+        console.error(err);
+      }
+    }
+
+    // Suspend / Unsuspend
+    async function suspend(id) {
+      await fetch(`${API}/schools/suspend`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ school_id: id })
+      });
+      searchSchool();
+    }
+
+    async function unsuspend(id) {
+      await fetch(`${API}/schools/unsuspend`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ school_id: id })
+      });
+      searchSchool();
+    }
+
+    loadStats();
+    searchSchool();
+  </script>
+
+</body>
+</html>
