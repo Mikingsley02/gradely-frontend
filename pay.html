@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>💳 Complete Your Payment | Gradely Info</title>
   
+  <!-- ✅ FIXED: Removed trailing spaces -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
 
   <style>
@@ -94,8 +95,7 @@
   <a href="subscription.html" class="back-btn">← Back</a>
 </div>
 
-<script src="https://js.paystack.co/v1/inline.js"></script>
-
+<!-- ✅ FIXED: Removed duplicate script + trailing spaces -->
 <script>
 /* ===================== DEBUG: Log everything on load ===================== */
 console.log("=== PAY.HTML DEBUG INFO ===");
@@ -111,6 +111,7 @@ console.log("===========================");
 const params = new URLSearchParams(window.location.search);
 const plan = params.get("plan") || "pro";
 const isUpgrade = params.get("upgrade") === "true";
+const isRenew = params.get("renew") === "true";
 
 // Try all possible sources for school_id
 let school_id = params.get("school_id");
@@ -158,6 +159,9 @@ document.getElementById("planDetails").textContent =
 if (isUpgrade) {
   document.getElementById("upgradeNotice").style.display = "block";
   document.getElementById("pageTitle").textContent = "✨ Upgrade to Pro Plan";
+} else if (isRenew) {
+  document.getElementById("upgradeNotice").style.display = "block";
+  document.getElementById("pageTitle").textContent = "💳 Renew Your Subscription";
 }
 
 /* ===================== PAYSTACK KEY ===================== */
@@ -168,8 +172,10 @@ async function loadPaystackKey() {
   if (paystackKey) return true;
 
   try {
+    // ✅ FIXED: Removed duplicate https:// and trailing spaces
+    const API_BASE = 'https://api.gradely.info';
     const res = await fetch(
-      "https://https://api.gradely.info/api/config/paystack-key",
+      `${API_BASE}/api/config/paystack-key`,
       { credentials: 'include' }
     );
     const data = await res.json();
@@ -177,11 +183,11 @@ async function loadPaystackKey() {
     if (!data.success) throw new Error("Key missing");
 
     paystackKey = data.publicKey;
-    console.log("✅ Paystack key loaded");
+    console.log("✅ Paystack key loaded:", paystackKey.substring(0, 10) + "...");
     return true;
   } catch (e) {
     console.error("❌ Paystack key error:", e);
-    alert("Payment configuration error.");
+    alert("Payment configuration error. Please contact support.");
     return false;
   }
 }
@@ -191,42 +197,57 @@ async function loadPaystackKey() {
 document.getElementById("paystackBtn").onclick = async () => {
   if (!(await loadPaystackKey())) return;
 
-  const email =
-    localStorage.getItem("admin_email") ||
-    `school-${school_id}@gradely.app`;
+  // ✅ Get school email from localStorage (set during login)
+  const schoolEmail = localStorage.getItem("school_email") || 
+                     localStorage.getItem("admin_email") ||
+                     `school-${school_id}@gradely.info`;
+
+  console.log("📧 Payment email:", schoolEmail);
 
   PaystackPop.setup({
     key: paystackKey,
-    email,
-    amount: price * 100,
-    ref: "GRAD_" + Date.now(),
-    meta: {
-      school_id,
-      plan,
-      isUpgrade
+    email: schoolEmail,
+    amount: price * 100, // Convert to kobo
+    currency: 'NGN',
+    ref: "GRAD_" + Date.now() + "_" + school_id,
+    channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money'],
+    metadata: {
+      school_id: school_id,
+      plan: plan,
+      is_upgrade: isUpgrade,
+      is_renew: isRenew
     },
-    callback: async (res) => {
+    callback: async (response) => {
+      console.log("✅ Payment successful:", response);
+      
+      // ✅ FIXED: Correct API URL + removed trailing spaces
+      const API_BASE = 'https://api.gradely.info';
       const verify = await fetch(
-        "https://gradely-backend-1.onrender.com/api/verify-payment",
+        `${API_BASE}/api/verify-payment`,
         {
           method: "POST",
           credentials: 'include',
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            reference: res.reference,
-            school_id,
-            plan,
-            is_upgrade: isUpgrade
+            reference: response.reference,
+            school_id: school_id,
+            plan: plan,
+            is_upgrade: isUpgrade,
+            is_renew: isRenew
           })
         }
       ).then(r => r.json());
 
       if (verify.success) {
-        alert("Payment successful!");
+        alert("✅ Payment successful! Your account has been updated.");
         location.href = "dashboard.html";
       } else {
-        alert("Verification failed.");
+        alert("⚠️ Payment verification failed. Please contact support with reference: " + response.reference);
       }
+    },
+    onClose: () => {
+      console.log("❌ Payment window closed");
+      alert("Payment cancelled.");
     }
   }).openIframe();
 };
@@ -234,29 +255,36 @@ document.getElementById("paystackBtn").onclick = async () => {
 /* ===================== FREE TEST ===================== */
 
 document.getElementById("freeBtn").onclick = async () => {
-  if (!confirm("Test renewal only. Continue?")) return;
+  if (!confirm("⚠️ This is a TEST renewal for development only. Continue?")) return;
 
+  // ✅ FIXED: Correct API URL + removed trailing spaces
+  const API_BASE = 'https://api.gradely.info';
   const res = await fetch(
-    "https://gradely-backend-1.onrender.com/api/subscription/renew",
+    `${API_BASE}/api/subscription/renew`,
     {
       method: "POST",
       credentials: 'include',
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ school_id })
+      body: JSON.stringify({ 
+        school_id: school_id,
+        plan: plan,
+        is_upgrade: isUpgrade,
+        is_renew: isRenew
+      })
     }
   ).then(r => r.json());
 
   if (res.success) {
-    alert("Test renewal successful.");
+    alert("✅ Test renewal successful!");
     location.href = "dashboard.html";
   } else {
-    alert("Test renewal failed.");
+    alert("❌ Test renewal failed: " + (res.message || "Unknown error"));
   }
 };
 
+// Load Paystack key on page load
 loadPaystackKey();
 </script>
-
 
 <script src="js/kaima-chatbot.js"></script>
 </body>

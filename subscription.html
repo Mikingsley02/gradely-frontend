@@ -109,7 +109,6 @@
       background: #cc0000;
     }
 
-    /* ✅ NEW: Upgrade button style */
     .btn-upgrade {
       background: #00e676;
       color: #000;
@@ -128,7 +127,6 @@
     .error { color: #e74c3c; }
     .success { color: #27ae60; }
 
-    /* Back to Dashboard Button */
     .back-btn {
       display: inline-block;
       background: #0c2461;
@@ -146,7 +144,6 @@
       transform: scale(1.05);
     }
 
-    /* Footer */
     footer {
       text-align: center;
       padding: 25px;
@@ -169,12 +166,11 @@
 
   <header>
     <div class="brand">🎓 Gradely.info — Subscription</div>
-    
   </header>
 
   <div class="container">
     <h2>📦 Your Subscription</h2>
-    <p>View your current plan details, renew, or cancel.</p>
+    <p>View your current plan details, renew, or upgrade.</p>
 
     <div class="details">
       <p><strong>Plan:</strong> <span id="plan">Loading...</span></p>
@@ -182,7 +178,6 @@
       <p><strong>Renewal Date:</strong> <span id="renewal">Loading...</span></p>
     </div>
 
-    <!-- ✅ Added "Upgrade to Pro" button (hidden by default) -->
     <div class="btn-group">
       <button class="btn btn-renew" onclick="renewSubscription()" id="renewBtn">🔄 Renew</button>
       <button class="btn btn-cancel" onclick="cancelSubscription()" id="cancelBtn">✖ Cancel</button>
@@ -190,12 +185,9 @@
     </div>
 
     <div class="message" id="message"></div>
-
-    <!-- Back to Dashboard -->
     <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
   </div>
 
-  <!-- Footer -->
   <footer>
     © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br>
     <a href="terms.html">Terms</a> • 
@@ -221,13 +213,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function fetchSubscriptionStatus() {
   try {
-    // ✅ FIXED: Removed extra spaces in URL
-    const apiUrl = `https://api.gradely.info/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
+    // ✅ FIXED: Removed trailing spaces in URL
+    const API_BASE = 'https://api.gradely.info';
+    const apiUrl = `${API_BASE}/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
     console.log("📡 Fetching subscription status from:", apiUrl);
     
-    // ✅ CRITICAL: credentials included
     const res = await fetch(apiUrl, {
-      method: "GET",
       credentials: 'include'
     });
     
@@ -270,21 +261,22 @@ function updateSubscriptionUI(data) {
   const cancelBtn = document.getElementById('cancelBtn');
   const upgradeBtn = document.getElementById('upgradeBtn');
   
+  // ✅ FIXED: Proper button visibility logic
   if (data.plan === 'basic') {
     renewBtn.style.display = 'none';
     cancelBtn.style.display = 'none';
     upgradeBtn.style.display = 'block';
   } else if (data.plan === 'pro') {
     upgradeBtn.style.display = 'none';
-    cancelBtn.style.display = 'block';
     
     if (data.isActive) {
       renewBtn.style.display = 'block';
+      cancelBtn.style.display = 'block';
       renewBtn.textContent = '🔄 Renew';
     } else {
       renewBtn.style.display = 'block';
-      renewBtn.textContent = '💳 Renew Expired Subscription';
       cancelBtn.style.display = 'none';
+      renewBtn.textContent = '💳 Renew Expired Subscription';
     }
   }
 }
@@ -304,13 +296,13 @@ function cancelSubscription() {
   btn.textContent = "Cancelling...";
   document.getElementById('message').innerHTML = '';
 
-  // ✅ FIXED: Removed trailing spaces + credentials included
-fetch('https://api.gradely.info/api/subscription/cancel', {
-  method: 'POST',
-  credentials: 'include',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ school_id: schoolId })
-})
+  // ✅ FIXED: Removed trailing spaces in URL
+  fetch('https://api.gradely.info/api/subscription/cancel', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ school_id: schoolId })
+  })
   .then(response => response.json())
   .then(data => {
     if (data.success) {
@@ -337,9 +329,8 @@ function renewSubscription() {
     alert("Error: School ID not found. Please log in again.");
     return;
   }
-
-  // ✅ CORRECT: Pass schoolId directly (already validated)
-  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro`;
+  // ✅ FIXED: Pass correct parameters for renewal
+  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&renew=true`;
 }
 
 function upgradeToPro() {
@@ -347,15 +338,12 @@ function upgradeToPro() {
     alert("Error: School ID not found. Please log in again.");
     return;
   }
-  
-  // ✅ CORRECT: Pass schoolId directly
+  // ✅ FIXED: Pass correct parameters for upgrade
   window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
 }
 </script>
 
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
-
-
 </body>
 </html>
