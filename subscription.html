@@ -153,7 +153,6 @@
     let selectedPlan = null;
 
     document.addEventListener("DOMContentLoaded", async () => {
-      // ✅ CRITICAL FIX: Handle URL params FIRST (without optional chaining)
       const urlParams = new URLSearchParams(window.location.search);
       
       // Handle cancel success
@@ -161,34 +160,32 @@
         const expiry = urlParams.get('expiry') || 'your current term end date';
         const plan = (urlParams.get('plan') || 'pro').toUpperCase();
         
-        const messageEl = document.getElementById('message');
+        var messageEl = document.getElementById('message');
         if (messageEl) {
-          messageEl.innerHTML = `<span class="success">✅ Auto-renewal cancelled. Your ${plan} subscription remains active until ${expiry}.</span>`;
+          messageEl.innerHTML = '<span class="success">✅ Auto-renewal cancelled. Your ' + plan + ' subscription remains active until ' + expiry + '.</span>';
         }
         
-        // Hide cancel button and show status
-        const cancelBtn = document.getElementById('cancelBtn');
+        var cancelBtn = document.getElementById('cancelBtn');
         if (cancelBtn) {
           cancelBtn.style.display = 'none';
         }
-        const cancelStatusEl = document.getElementById('cancelStatus');
+        var cancelStatusEl = document.getElementById('cancelStatus');
         if (cancelStatusEl) {
           cancelStatusEl.style.display = 'block';
         }
         
-        // Clean URL without query params
         if (history.replaceState) {
           history.replaceState({}, document.title, window.location.pathname);
         }
-        return; // Stop further execution
+        return;
       }
       
       // Handle cancel error
       if (urlParams.has('cancel_error')) {
-        const error = decodeURIComponent(urlParams.get('cancel_error'));
-        const messageEl = document.getElementById('message');
+        var error = decodeURIComponent(urlParams.get('cancel_error'));
+        var messageEl = document.getElementById('message');
         if (messageEl) {
-          messageEl.innerHTML = `<span class="error">❌ ${error || 'Failed to cancel subscription'}</span>`;
+          messageEl.innerHTML = '<span class="error">❌ ' + (error || 'Failed to cancel subscription') + '</span>';
         }
         
         if (history.replaceState) {
@@ -196,7 +193,6 @@
         }
       }
       
-      // Initialize normally
       schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
       if (!schoolId) {
         alert("Session expired. Please log in again.");
@@ -208,30 +204,30 @@
 
     async function fetchSubscriptionStatus() {
       try {
-        const apiUrl = `/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
+        var apiUrl = '/api/subscription/status?school_id=' + encodeURIComponent(schoolId);
         console.log("📡 Fetching subscription status from:", apiUrl);
         
-        const res = await fetch(apiUrl, {
+        var res = await fetch(apiUrl, {
           credentials: 'include'
         });
         
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var data = await res.json();
 
         if (data.success) {
-          const planEl = document.getElementById('plan');
+          var planEl = document.getElementById('plan');
           if (planEl) {
             planEl.textContent = data.plan.charAt(0).toUpperCase() + data.plan.slice(1);
           }
           
-          const statusEl = document.getElementById('status');
+          var statusEl = document.getElementById('status');
           if (statusEl) {
             statusEl.textContent = data.isActive ? 'Active' : 'Expired';
             statusEl.className = data.isActive ? '' : 'error';
           }
           
-          const renewalEl = document.getElementById('renewal');
-          const cancelStatusEl = document.getElementById('cancelStatus');
+          var renewalEl = document.getElementById('renewal');
+          var cancelStatusEl = document.getElementById('cancelStatus');
           
           if (data.expiryDate && data.expiryDate !== 'null') {
             currentExpiry = new Date(data.expiryDate);
@@ -241,19 +237,19 @@
               });
             }
             
-            const today = new Date();
+            var today = new Date();
             if (data.subscriptionStatus === 'cancelled' && currentExpiry > today) {
               if (cancelStatusEl) cancelStatusEl.style.display = 'block';
-              const cancelBtn = document.getElementById('cancelBtn');
+              var cancelBtn = document.getElementById('cancelBtn');
               if (cancelBtn) cancelBtn.style.display = 'none';
             } else {
               if (cancelStatusEl) cancelStatusEl.style.display = 'none';
               
               if (data.isActive && data.subscriptionStatus !== 'cancelled') {
-                const cancelBtn = document.getElementById('cancelBtn');
+                var cancelBtn = document.getElementById('cancelBtn');
                 if (cancelBtn) cancelBtn.style.display = 'block';
               } else {
-                const cancelBtn = document.getElementById('cancelBtn');
+                var cancelBtn = document.getElementById('cancelBtn');
                 if (cancelBtn) cancelBtn.style.display = 'none';
               }
             }
@@ -262,46 +258,49 @@
             if (cancelStatusEl) cancelStatusEl.style.display = 'none';
           }
 
+          // ✅ CRITICAL FIX: REMOVE OPTIONAL CHAINING FROM BUTTON DISPLAY LOGIC
           if (data.isActive) {
             if (data.plan === 'basic') {
-              document.getElementById('renewBtn')?.style.display = 'none';
-              document.getElementById('upgradeBtn')?.style.display = 'block';
+              var renewBtn = document.getElementById('renewBtn');
+              if (renewBtn) renewBtn.style.display = 'none';
+              var upgradeBtn = document.getElementById('upgradeBtn');
+              if (upgradeBtn) upgradeBtn.style.display = 'block';
             } else if (data.plan === 'pro') {
-              document.getElementById('upgradeBtn')?.style.display = 'none';
-              document.getElementById('renewBtn')?.style.display = 'block';
+              var upgradeBtn = document.getElementById('upgradeBtn');
+              if (upgradeBtn) upgradeBtn.style.display = 'none';
+              var renewBtn = document.getElementById('renewBtn');
+              if (renewBtn) renewBtn.style.display = 'block';
             }
           } else {
-            const mainButtons = document.getElementById('mainButtons');
+            var mainButtons = document.getElementById('mainButtons');
             if (mainButtons) mainButtons.style.display = 'none';
             showPlanSelection(data.plan);
           }
         }
       } catch (err) {
         console.error("❌ Error:", err);
-        const messageEl = document.getElementById('message');
+        var messageEl = document.getElementById('message');
         if (messageEl) {
-          messageEl.innerHTML = `<span class="error">Unable to load subscription: ${err.message || 'Network error'}</span>`;
+          messageEl.innerHTML = '<span class="error">Unable to load subscription: ' + (err.message || 'Network error') + '</span>';
         }
       }
     }
 
-    // ✅ FIXED: Cancel function WITHOUT optional chaining
     function cancelSubscription() {
       if (!schoolId) {
         alert("Error: School ID not found. Please log in again.");
         return;
       }
       
-      const expiryStr = currentExpiry ? currentExpiry.toLocaleDateString('en-GB', {
+      var expiryStr = currentExpiry ? currentExpiry.toLocaleDateString('en-GB', {
         day: 'numeric', month: 'short', year: 'numeric'
       }) : 'your current term end date';
       
-      if (!confirm(`⏹️ Cancel Auto-Renewal?\n\n✅ Your subscription remains ACTIVE until: ${expiryStr}\n✅ Full access continues until expiry\n✅ No auto-renewal after expiry\n\nDo you want to proceed?`)) {
+      if (!confirm('⏹️ Cancel Auto-Renewal?\n\n✅ Your subscription remains ACTIVE until: ' + expiryStr + '\n✅ Full access continues until expiry\n✅ No auto-renewal after expiry\n\nDo you want to proceed?')) {
         return;
       }
       
-      // Redirect to GET endpoint
-      window.location.href = `/api/subscription/cancel?school_id=${encodeURIComponent(schoolId)}`;
+      window.location.href = '/api/subscription/cancel?school_id=' + encodeURIComponent(schoolId);
     }
 
     function renewSubscription() {
@@ -309,7 +308,7 @@
         alert("Error: School ID not found.");
         return;
       }
-      window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&renew=true`;
+      window.location.href = 'pay.html?school_id=' + encodeURIComponent(schoolId) + '&plan=pro&renew=true';
     }
 
     function upgradeToPro() {
@@ -317,60 +316,50 @@
         alert("Error: School ID not found.");
         return;
       }
-      window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
+      window.location.href = 'pay.html?school_id=' + encodeURIComponent(schoolId) + '&plan=pro&upgrade=true';
     }
 
-    // Plan selection functions (safe element access)
     function showPlanSelection(previousPlan) {
-      const container = document.querySelector('.container');
+      var container = document.querySelector('.container');
       if (!container) return;
       
-      const planSelectionHTML = `
-        <div id="planSelection" style="margin-bottom: 20px;">
-          <h3 style="color: #2d046e; margin-bottom: 15px;">Choose Your Plan to Reactivate</h3>
-          
-          <div style="text-align: center; margin-bottom: 15px;">
-            <a href="plan-comparison.html" style="color: #3498db; text-decoration: none; font-weight: 600; display: inline-block; padding: 8px 15px; border: 2px solid #3498db; border-radius: 20px; background: rgba(52, 152, 219, 0.1);">
-              📊 View Detailed Plan Comparison
-            </a>
-          </div>
-          
-          <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-            <div style="flex: 1; background: #f8f9fa; border: 2px solid #adb5bd; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s;" 
-                 onclick="selectPlan('basic')" id="basicPlanCard">
-              <h4 style="color: #495057; margin-bottom: 10px;">📝 Basic</h4>
-              <p style="font-size: 1.5rem; font-weight: bold; color: #000; margin: 10px 0;">₦16,800</p>
-              <p style="font-size: 0.9rem; color: #6c757d;">Per Term</p>
-              <ul style="text-align: left; margin-top: 10px; font-size: 0.85rem; color: #495057;">
-                <li>✓ Student Management</li>
-                <li>✓ Result Upload</li>
-                <li>✓ Basic Reporting</li>
-              </ul>
-            </div>
-            
-            <div style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s;" 
-                 onclick="selectPlan('pro')" id="proPlanCard">
-              <h4 style="color: #fff; margin-bottom: 10px;">🚀 Pro</h4>
-              <p style="font-size: 1.5rem; font-weight: bold; color: #fff; margin: 10px 0;">₦19,200</p>
-              <p style="font-size: 0.9rem; color: rgba(255,255,255,0.9);">Per Term</p>
-              <ul style="text-align: left; margin-top: 10px; font-size: 0.85rem; color: #fff;">
-                <li>✓ All Basic Features</li>
-                <li>✓ Class Management</li>
-                <li>✓ SMS Announcements</li>
-                <li>✓ Bulk Operations</li>
-                <li>✓ Priority Support</li>
-              </ul>
-            </div>
-          </div>
-          
-          <button class="btn btn-renew" onclick="confirmPlanSelection()" id="confirmPlanBtn" disabled 
-                  style="width: 100%; background: #6c757d; color: #fff; margin-top: 10px;">
-            ✅ Continue with Selected Plan
-          </button>
-        </div>
-      `;
+      var planSelectionHTML = '<div id="planSelection" style="margin-bottom: 20px;">' +
+        '<h3 style="color: #2d046e; margin-bottom: 15px;">Choose Your Plan to Reactivate</h3>' +
+        '<div style="text-align: center; margin-bottom: 15px;">' +
+        '<a href="plan-comparison.html" style="color: #3498db; text-decoration: none; font-weight: 600; display: inline-block; padding: 8px 15px; border: 2px solid #3498db; border-radius: 20px; background: rgba(52, 152, 219, 0.1);">' +
+        '📊 View Detailed Plan Comparison' +
+        '</a>' +
+        '</div>' +
+        '<div style="display: flex; gap: 15px; margin-bottom: 15px;">' +
+        '<div style="flex: 1; background: #f8f9fa; border: 2px solid #adb5bd; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s;" onclick="selectPlan(\'basic\')" id="basicPlanCard">' +
+        '<h4 style="color: #495057; margin-bottom: 10px;">📝 Basic</h4>' +
+        '<p style="font-size: 1.5rem; font-weight: bold; color: #000; margin: 10px 0;">₦16,800</p>' +
+        '<p style="font-size: 0.9rem; color: #6c757d;">Per Term</p>' +
+        '<ul style="text-align: left; margin-top: 10px; font-size: 0.85rem; color: #495057;">' +
+        '<li>✓ Student Management</li>' +
+        '<li>✓ Result Upload</li>' +
+        '<li>✓ Basic Reporting</li>' +
+        '</ul>' +
+        '</div>' +
+        '<div style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s;" onclick="selectPlan(\'pro\')" id="proPlanCard">' +
+        '<h4 style="color: #fff; margin-bottom: 10px;">🚀 Pro</h4>' +
+        '<p style="font-size: 1.5rem; font-weight: bold; color: #fff; margin: 10px 0;">₦19,200</p>' +
+        '<p style="font-size: 0.9rem; color: rgba(255,255,255,0.9);">Per Term</p>' +
+        '<ul style="text-align: left; margin-top: 10px; font-size: 0.85rem; color: #fff;">' +
+        '<li>✓ All Basic Features</li>' +
+        '<li>✓ Class Management</li>' +
+        '<li>✓ SMS Announcements</li>' +
+        '<li>✓ Bulk Operations</li>' +
+        '<li>✓ Priority Support</li>' +
+        '</ul>' +
+        '</div>' +
+        '</div>' +
+        '<button class="btn btn-renew" onclick="confirmPlanSelection()" id="confirmPlanBtn" disabled style="width: 100%; background: #6c757d; color: #fff; margin-top: 10px;">' +
+        '✅ Continue with Selected Plan' +
+        '</button>' +
+        '</div>';
       
-      const messageDiv = document.getElementById('message');
+      var messageDiv = document.getElementById('message');
       if (messageDiv) {
         messageDiv.insertAdjacentHTML('beforebegin', planSelectionHTML);
       }
@@ -382,8 +371,8 @@
     function selectPlan(plan) {
       selectedPlan = plan;
       
-      const basicCard = document.getElementById('basicPlanCard');
-      const proCard = document.getElementById('proPlanCard');
+      var basicCard = document.getElementById('basicPlanCard');
+      var proCard = document.getElementById('proPlanCard');
       
       if (basicCard && proCard) {
         basicCard.style.border = '2px solid #adb5bd';
@@ -399,12 +388,12 @@
           proCard.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
         }
         
-        const confirmBtn = document.getElementById('confirmPlanBtn');
+        var confirmBtn = document.getElementById('confirmPlanBtn');
         if (confirmBtn) {
           confirmBtn.disabled = false;
           confirmBtn.style.background = '#00c851';
           confirmBtn.style.color = '#fff';
-          confirmBtn.textContent = `✅ Continue with ${plan.toUpperCase()} Plan`;
+          confirmBtn.textContent = '✅ Continue with ' + plan.toUpperCase() + ' Plan';
         }
       }
     }
@@ -414,7 +403,7 @@
         alert("Please select a plan first!");
         return;
       }
-      window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=${selectedPlan}&renew=true`;
+      window.location.href = 'pay.html?school_id=' + encodeURIComponent(schoolId) + '&plan=' + selectedPlan + '&renew=true';
     }
   </script>
 
