@@ -225,53 +225,72 @@
     }
 
     function cancelSubscription() {
-      if (!schoolId) {
-        alert("Error: School ID not found. Please log in again.");
-        return;
-      }
-      
-      const expiryStr = currentExpiry ? currentExpiry.toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'short', year: 'numeric'
-      }) : 'your current term end date';
-      
-      if (!confirm(`⏹️ Cancel Auto-Renewal?\n\n✅ Your subscription remains ACTIVE until: ${expiryStr}\n✅ Full access continues until expiry\n✅ No auto-renewal after expiry\n✅ Renew manually anytime before/after expiry\n\nDo you want to proceed?`)) {
-        return;
-      }
-      
-      const btn = document.getElementById('cancelBtn');
-      btn.disabled = true;
-      btn.textContent = "Processing...";
-      document.getElementById('message').innerHTML = '';
+  if (!schoolId) {
+    alert("Error: School ID not found. Please log in again.");
+    return;
+  }
+  
+  const expiryStr = currentExpiry ? currentExpiry.toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric'
+  }) : 'your current term end date';
+  
+  if (!confirm(`⏹️ Cancel Auto-Renewal?\n\n✅ Your subscription remains ACTIVE until: ${expiryStr}\n✅ Full access continues until expiry\n✅ No auto-renewal after expiry\n\nDo you want to proceed?`)) {
+    return;
+  }
+  
+  const btn = document.getElementById('cancelBtn');
+  btn.disabled = true;
+  btn.textContent = "Processing...";
+  document.getElementById('message').innerHTML = '';
 
-      // ✅ FIXED: Get JWT token and include in headers
-      const token = localStorage.getItem('token') || localStorage.getItem('admin_token');
-      
-      // ✅ FIXED: Removed trailing spaces in URL
-      fetch('https://api.gradely.info/api/subscription/cancel', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // ✅ ADDED AUTH TOKEN
-        },
-        body: JSON.stringify({ school_id: schoolId })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          document.getElementById('message').innerHTML = `<span class="success">✅ ${data.message}</span>`;
-          setTimeout(() => location.reload(), 2000);
-        } else {
-          throw new Error(data.message || "Request failed");
-        }
-      })
-      .catch(err => {
-        console.error("Cancellation error:", err);
-        // ✅ FIXED: Better error message for auth failures
-        document.getElementById('message').innerHTML = `<span class="error">❌ ${err.message || 'Authentication failed. Please logout and login again.'}</span>`;
-        btn.disabled = false;
-        btn.textContent = "⏹️ Cancel Auto-Renew";
-      });
+  // ✅ CRITICAL FIX: Use SESSION COOKIES (credentials: 'include') - NOT JWT TOKEN
+  // Matches how your status endpoint works (which is working)
+  fetch('https://api.gradely.info/api/subscription/cancel', {
+    method: 'POST',
+    credentials: 'include', // ✅ MUST HAVE THIS FOR SESSION AUTH
+    headers: { 
+      'Content-Type': 'application/json'
+      // ❌ REMOVED: NO Authorization header needed
+    },
+    body: JSON.stringify({ school_id: schoolId })
+  })
+  .then(response => {
+    // ✅ Handle both success and error responses properly
+    if (!response.ok) {
+      return response.json().then(err => { throw new Error(err.message || 'Authentication failed') });
     }
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      document.getElementById('message').innerHTML = `<span class="success">✅ ${data.message}</span>`;
+      setTimeout(() => location.reload(), 2000);
+    } else {
+      throw new Error(data.message || "Request failed");
+    }
+  })
+  .catch(err => {
+    console.error("Cancellation error:", err);
+    // ✅ BETTER ERROR MESSAGING
+    let errorMsg = err.message || 'Failed to process request';
+    
+    // Special handling for auth errors
+    if (errorMsg.includes('Authentication') || errorMsg.includes('Unauthorized')) {
+      errorMsg = 'Session expired. Please logout and login again.';
+      // Auto-redirect to login after delay
+      setTimeout(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = "admin-login.html";
+      }, 3000);
+    }
+    
+    document.getElementById('message').innerHTML = `<span class="error">❌ ${errorMsg}</span>`;
+    btn.disabled = false;
+    btn.textContent = "⏹️ Cancel Auto-Renew";
+  });
+}
+
 
     function renewSubscription() {
       if (!schoolId) return alert("Error: School ID not found.");
