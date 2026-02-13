@@ -147,6 +147,40 @@
     let selectedPlan = null;
 
     document.addEventListener("DOMContentLoaded", async () => {
+      // ✅ CRITICAL FIX 1: Handle cancel success/error from URL params FIRST
+      const urlParams = new URLSearchParams(window.location.search);
+      
+      // Handle cancel success
+      if (urlParams.has('cancel_success')) {
+        const expiry = urlParams.get('expiry') || 'your current term end date';
+        const plan = (urlParams.get('plan') || 'pro').toUpperCase();
+        
+        document.getElementById('message').innerHTML = 
+          `<span class="success">✅ Auto-renewal cancelled. Your ${plan} subscription remains active until ${expiry}.</span>`;
+        
+        // Hide cancel button and show status
+        document.getElementById('cancelBtn')?.style.display = 'none';
+        document.getElementById('cancelStatus').style.display = 'block';
+        
+        // Clean URL without query params
+        if (history.replaceState) {
+          history.replaceState({}, document.title, window.location.pathname);
+        }
+        return; // Stop further execution - UI already updated
+      }
+      
+      // Handle cancel error
+      if (urlParams.has('cancel_error')) {
+        const error = decodeURIComponent(urlParams.get('cancel_error'));
+        document.getElementById('message').innerHTML = 
+          `<span class="error">❌ ${error || 'Failed to cancel subscription'}</span>`;
+        
+        if (history.replaceState) {
+          history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+      
+      // ✅ PROCEED WITH NORMAL INITIALIZATION
       schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
       if (!schoolId) {
         alert("Session expired. Please log in again.");
@@ -158,9 +192,8 @@
 
     async function fetchSubscriptionStatus() {
       try {
-        // ✅ CRITICAL FIX: DIRECT URL (NO API_BASE - PREVENTS DOUBLE /api)
         const apiUrl = `/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
-        console.log("📡 Fetching subscription status from:", apiUrl); // Should show: /api/subscription/status?...
+        console.log("📡 Fetching subscription status from:", apiUrl);
         
         const res = await fetch(apiUrl, {
           credentials: 'include'
@@ -222,6 +255,7 @@
       }
     }
 
+    // ✅ CRITICAL FIX 2: REPLACE ENTIRE cancelSubscription FUNCTION
     function cancelSubscription() {
       if (!schoolId) {
         alert("Error: School ID not found. Please log in again.");
@@ -236,49 +270,8 @@
         return;
       }
       
-      const btn = document.getElementById('cancelBtn');
-      btn.disabled = true;
-      btn.textContent = "Processing...";
-      document.getElementById('message').innerHTML = '';
-
-      // ✅ CORRECT: Single /api prefix (Vercel proxy handles routing)
-      fetch('/api/subscription/cancel', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ school_id: schoolId })
-      })
-      .then(response => {
-        if (!response.ok) {
-          return response.json().then(err => { throw new Error(err.message || 'Authentication failed') });
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.success) {
-          document.getElementById('message').innerHTML = `<span class="success">✅ ${data.message}</span>`;
-          setTimeout(() => location.reload(), 2000);
-        } else {
-          throw new Error(data.message || "Request failed");
-        }
-      })
-      .catch(err => {
-        console.error("Cancellation error:", err);
-        let errorMsg = err.message || 'Failed to process request';
-        
-        if (errorMsg.includes('Authentication') || errorMsg.includes('Unauthorized')) {
-          errorMsg = 'Session expired. Please logout and login again.';
-          setTimeout(() => {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.href = "admin-login.html";
-          }, 3000);
-        }
-        
-        document.getElementById('message').innerHTML = `<span class="error">❌ ${errorMsg}</span>`;
-        btn.disabled = false;
-        btn.textContent = "⏹️ Cancel Auto-Renew";
-      });
+      // ✅ REDIRECT TO GET ENDPOINT (bypasses browser cookie blocking)
+      window.location.href = `/api/subscription/cancel?school_id=${encodeURIComponent(schoolId)}`;
     }
 
     function renewSubscription() {
@@ -291,7 +284,7 @@
       window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
     }
 
-    // ✅ COMPLETE PLAN SELECTION FUNCTIONS (UNCHANGED - WORKING CORRECTLY)
+    // ✅ COMPLETE PLAN SELECTION FUNCTIONS (UNCHANGED)
     function showPlanSelection(previousPlan) {
       const container = document.querySelector('.container');
       
@@ -376,5 +369,9 @@
       window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=${selectedPlan}&renew=true`;
     }
   </script>
+
+  <script src="js/kaima-chatbot.js"></script>
+<script src="js/session-timeout.js"></script>
+
 </body>
 </html>
