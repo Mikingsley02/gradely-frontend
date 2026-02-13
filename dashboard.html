@@ -481,7 +481,7 @@
   }
 
   // ✅ FIXED: Correct backend URL + correct endpoint path
-  const API_BASE = 'https://api.gradely.info'; // Match your production backend
+  const API_BASE = '/api';
   const apiUrl = `${API_BASE}/api/auth/school/status?school_id=${encodeURIComponent(schoolId)}`;
   console.log("📡 Fetching account status from:", apiUrl);
 

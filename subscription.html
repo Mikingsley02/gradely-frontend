@@ -158,8 +158,7 @@
 
     async function fetchSubscriptionStatus() {
       try {
-        // ✅ FIXED: Removed trailing spaces in API URL
-        const API_BASE = 'https://api.gradely.info';
+        const API_BASE = '/api';
         const res = await fetch(`${API_BASE}/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`, {
           credentials: 'include'
         });
@@ -189,7 +188,7 @@
               cancelStatusEl.style.display = 'block';
               document.getElementById('cancelBtn').style.display = 'none'; // Hide cancel button after cancelled
             } else {
-              cancelStatusEl.style.display = 'none'; // ✅ HIDE FOR ACTIVE SUBSCRIPTIONS
+              cancelStatusEl.style.display = 'none';
               
               // Only show cancel button for active subscriptions that aren't cancelled
               if (data.isActive && data.subscriptionStatus !== 'cancelled') {
@@ -244,16 +243,12 @@
   document.getElementById('message').innerHTML = '';
 
   // ✅ CRITICAL FIX: Use SESSION COOKIES (credentials: 'include') - NOT JWT TOKEN
-  // Matches how your status endpoint works (which is working)
-  fetch('https://api.gradely.info/api/subscription/cancel', {
-    method: 'POST',
-    credentials: 'include', // ✅ MUST HAVE THIS FOR SESSION AUTH
-    headers: { 
-      'Content-Type': 'application/json'
-      // ❌ REMOVED: NO Authorization header needed
-    },
-    body: JSON.stringify({ school_id: schoolId })
-  })
+fetch('/api/subscription/cancel', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ school_id: schoolId })
+})
   .then(response => {
     // ✅ Handle both success and error responses properly
     if (!response.ok) {
