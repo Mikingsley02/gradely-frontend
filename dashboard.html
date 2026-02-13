@@ -464,81 +464,80 @@
   let currentPlan = 'basic';
   let isSubscriptionActive = true;
   let subscriptionExpiryDate = null;
-  let isAccountSuspended = false; // ✅ NEW: Track suspended state
+  let isAccountSuspended = false;
 
   document.addEventListener("DOMContentLoaded", async () => {
-  const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
-  console.log("🔍 school_id from storage:", schoolId);
-  
-  if (!schoolId) {
-    alert("⚠️ Session expired. Please log in again.");
-    window.location.href = "admin-login.html";
-    return;
-  }
-
-  if (!sessionStorage.getItem("school_id")) {
-    sessionStorage.setItem("school_id", schoolId);
-  }
-
-  // ✅ FIXED: Correct backend URL + correct endpoint path
-  const API_BASE = '/api';
-  const apiUrl = `${API_BASE}/api/auth/school/status?school_id=${encodeURIComponent(schoolId)}`;
-  console.log("📡 Fetching account status from:", apiUrl);
-
-  try {
-    const res = await fetch(apiUrl, {
-      credentials: 'include'
-    });
+    const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+    console.log("🔍 school_id from storage:", schoolId);
     
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("📡 API Error Body:", text);
-      throw new Error(`HTTP ${res.status}`);
+    if (!schoolId) {
+      alert("⚠️ Session expired. Please log in again.");
+      window.location.href = "admin-login.html";
+      return;
     }
 
-    const data = await res.json();
-    console.log("📡 Full API Response:", data);
+    if (!sessionStorage.getItem("school_id")) {
+      sessionStorage.setItem("school_id", schoolId);
+    }
 
-    if (data.success) {
-      currentPlan = data.plan || 'basic'; // ✅ Will now show "pro" correctly
-      isSubscriptionActive = data.isActive !== undefined ? data.isActive : true;
-      subscriptionExpiryDate = data.expiryDate || null;
-      isAccountSuspended = data.isSuspended || false;
+    // ✅ CRITICAL FIX: DIRECT URL (NO API_BASE VARIABLE - PREVENTS DOUBLE /api)
+    // This is the ONLY place API calls are made in this file
+    const apiUrl = `/api/auth/school/status?school_id=${encodeURIComponent(schoolId)}`;
+    console.log("📡 Fetching account status from:", apiUrl); // Should show: /api/auth/school/status?...
+
+    try {
+      const res = await fetch(apiUrl, {
+        credentials: 'include'
+      });
       
-      console.log("✅ Plan:", currentPlan); // Should show "pro" after unsuspend
-      console.log("✅ Account Suspended:", isAccountSuspended);
-      
-      if (isAccountSuspended) {
-        showAccountSuspended();
-      } else if (!isSubscriptionActive) {
-        showSubscriptionExpired();
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("📡 API Error Body:", text);
+        throw new Error(`HTTP ${res.status}`);
       }
-    }
-  } catch (err) {
-    console.error("❌ Failed to fetch account status:", err);
-    document.getElementById('planBadge').textContent = "ERROR";
-    document.getElementById('planBadge').className = "plan-badge expired";
-  }
 
-  // Update UI after 100ms
-  setTimeout(() => {
-    const badge = document.getElementById('planBadge');
-    if (badge) {
-      if (isAccountSuspended) {
-        badge.textContent = "SUSPENDED";
-        badge.className = "plan-badge suspended";
-      } else if (!isSubscriptionActive) {
-        badge.textContent = "EXPIRED";
-        badge.className = "plan-badge expired";
-      } else {
-        // ✅ Will now show "Pro" correctly after unsuspend
-        badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-        badge.className = `plan-badge ${currentPlan.toLowerCase()}`;
+      const data = await res.json();
+      console.log("📡 Full API Response:", data);
+
+      if (data.success) {
+        currentPlan = data.plan || 'basic';
+        isSubscriptionActive = data.isActive !== undefined ? data.isActive : true;
+        subscriptionExpiryDate = data.expiryDate || null;
+        isAccountSuspended = data.isSuspended || false;
+        
+        console.log("✅ Plan:", currentPlan);
+        console.log("✅ Account Suspended:", isAccountSuspended);
+        
+        if (isAccountSuspended) {
+          showAccountSuspended();
+        } else if (!isSubscriptionActive) {
+          showSubscriptionExpired();
+        }
       }
+    } catch (err) {
+      console.error("❌ Failed to fetch account status:", err);
+      document.getElementById('planBadge').textContent = "ERROR";
+      document.getElementById('planBadge').className = "plan-badge expired";
     }
-    applyPlanRestrictions();
-  }, 100);
-});
+
+    setTimeout(() => {
+      const badge = document.getElementById('planBadge');
+      if (badge) {
+        if (isAccountSuspended) {
+          badge.textContent = "SUSPENDED";
+          badge.className = "plan-badge suspended";
+        } else if (!isSubscriptionActive) {
+          badge.textContent = "EXPIRED";
+          badge.className = "plan-badge expired";
+        } else {
+          badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+          badge.className = `plan-badge ${currentPlan.toLowerCase()}`;
+        }
+      }
+      applyPlanRestrictions();
+    }, 100);
+  });
+
 
   // ✅ NEW: Show suspended account overlay
   function showAccountSuspended() {
@@ -677,15 +676,14 @@
   }
 
   // Logout
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById("logoutBtn")?.addEventListener("click", () => {
-      if (confirm("Are you sure you want to logout?")) {
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = "index.html";
-      }
-    });
+  document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    if (confirm("Are you sure you want to logout?")) {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = "index.html";
+    }
   });
+  
   </script>
 
   <script src="js/kaima-chatbot.js"></script>

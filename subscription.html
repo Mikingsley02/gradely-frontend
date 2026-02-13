@@ -158,8 +158,11 @@
 
     async function fetchSubscriptionStatus() {
       try {
-        const API_BASE = '/api';
-        const res = await fetch(`${API_BASE}/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`, {
+        // ✅ CRITICAL FIX: DIRECT URL (NO API_BASE - PREVENTS DOUBLE /api)
+        const apiUrl = `/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
+        console.log("📡 Fetching subscription status from:", apiUrl); // Should show: /api/subscription/status?...
+        
+        const res = await fetch(apiUrl, {
           credentials: 'include'
         });
         
@@ -182,15 +185,13 @@
               day: 'numeric', month: 'short', year: 'numeric'
             });
             
-            // ✅ FIXED: Only show cancel status IF subscription is cancelled AND expiry is in future
             const today = new Date();
             if (data.subscriptionStatus === 'cancelled' && currentExpiry > today) {
               cancelStatusEl.style.display = 'block';
-              document.getElementById('cancelBtn').style.display = 'none'; // Hide cancel button after cancelled
+              document.getElementById('cancelBtn').style.display = 'none';
             } else {
               cancelStatusEl.style.display = 'none';
               
-              // Only show cancel button for active subscriptions that aren't cancelled
               if (data.isActive && data.subscriptionStatus !== 'cancelled') {
                 document.getElementById('cancelBtn').style.display = 'block';
               } else {
@@ -202,7 +203,6 @@
             cancelStatusEl.style.display = 'none';
           }
 
-          // ✅ BUTTON LOGIC: Show appropriate buttons based on plan and status
           if (data.isActive) {
             if (data.plan === 'basic') {
               document.getElementById('renewBtn').style.display = 'none';
@@ -212,7 +212,6 @@
               document.getElementById('renewBtn').style.display = 'block';
             }
           } else {
-            // Expired: Show plan selection
             document.getElementById('mainButtons').style.display = 'none';
             showPlanSelection(data.plan);
           }
@@ -224,68 +223,63 @@
     }
 
     function cancelSubscription() {
-  if (!schoolId) {
-    alert("Error: School ID not found. Please log in again.");
-    return;
-  }
-  
-  const expiryStr = currentExpiry ? currentExpiry.toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric'
-  }) : 'your current term end date';
-  
-  if (!confirm(`⏹️ Cancel Auto-Renewal?\n\n✅ Your subscription remains ACTIVE until: ${expiryStr}\n✅ Full access continues until expiry\n✅ No auto-renewal after expiry\n\nDo you want to proceed?`)) {
-    return;
-  }
-  
-  const btn = document.getElementById('cancelBtn');
-  btn.disabled = true;
-  btn.textContent = "Processing...";
-  document.getElementById('message').innerHTML = '';
+      if (!schoolId) {
+        alert("Error: School ID not found. Please log in again.");
+        return;
+      }
+      
+      const expiryStr = currentExpiry ? currentExpiry.toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      }) : 'your current term end date';
+      
+      if (!confirm(`⏹️ Cancel Auto-Renewal?\n\n✅ Your subscription remains ACTIVE until: ${expiryStr}\n✅ Full access continues until expiry\n✅ No auto-renewal after expiry\n\nDo you want to proceed?`)) {
+        return;
+      }
+      
+      const btn = document.getElementById('cancelBtn');
+      btn.disabled = true;
+      btn.textContent = "Processing...";
+      document.getElementById('message').innerHTML = '';
 
-  // ✅ CRITICAL FIX: Use SESSION COOKIES (credentials: 'include') - NOT JWT TOKEN
-fetch('/api/subscription/cancel', {
-  method: 'POST',
-  credentials: 'include',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ school_id: schoolId })
-})
-  .then(response => {
-    // ✅ Handle both success and error responses properly
-    if (!response.ok) {
-      return response.json().then(err => { throw new Error(err.message || 'Authentication failed') });
+      // ✅ CORRECT: Single /api prefix (Vercel proxy handles routing)
+      fetch('/api/subscription/cancel', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ school_id: schoolId })
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.json().then(err => { throw new Error(err.message || 'Authentication failed') });
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          document.getElementById('message').innerHTML = `<span class="success">✅ ${data.message}</span>`;
+          setTimeout(() => location.reload(), 2000);
+        } else {
+          throw new Error(data.message || "Request failed");
+        }
+      })
+      .catch(err => {
+        console.error("Cancellation error:", err);
+        let errorMsg = err.message || 'Failed to process request';
+        
+        if (errorMsg.includes('Authentication') || errorMsg.includes('Unauthorized')) {
+          errorMsg = 'Session expired. Please logout and login again.';
+          setTimeout(() => {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = "admin-login.html";
+          }, 3000);
+        }
+        
+        document.getElementById('message').innerHTML = `<span class="error">❌ ${errorMsg}</span>`;
+        btn.disabled = false;
+        btn.textContent = "⏹️ Cancel Auto-Renew";
+      });
     }
-    return response.json();
-  })
-  .then(data => {
-    if (data.success) {
-      document.getElementById('message').innerHTML = `<span class="success">✅ ${data.message}</span>`;
-      setTimeout(() => location.reload(), 2000);
-    } else {
-      throw new Error(data.message || "Request failed");
-    }
-  })
-  .catch(err => {
-    console.error("Cancellation error:", err);
-    // ✅ BETTER ERROR MESSAGING
-    let errorMsg = err.message || 'Failed to process request';
-    
-    // Special handling for auth errors
-    if (errorMsg.includes('Authentication') || errorMsg.includes('Unauthorized')) {
-      errorMsg = 'Session expired. Please logout and login again.';
-      // Auto-redirect to login after delay
-      setTimeout(() => {
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = "admin-login.html";
-      }, 3000);
-    }
-    
-    document.getElementById('message').innerHTML = `<span class="error">❌ ${errorMsg}</span>`;
-    btn.disabled = false;
-    btn.textContent = "⏹️ Cancel Auto-Renew";
-  });
-}
-
 
     function renewSubscription() {
       if (!schoolId) return alert("Error: School ID not found.");
@@ -297,7 +291,7 @@ fetch('/api/subscription/cancel', {
       window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
     }
 
-    // ✅ COMPLETE PLAN SELECTION FUNCTIONS
+    // ✅ COMPLETE PLAN SELECTION FUNCTIONS (UNCHANGED - WORKING CORRECTLY)
     function showPlanSelection(previousPlan) {
       const container = document.querySelector('.container');
       
