@@ -461,230 +461,211 @@
   </footer>
 
   <script>
-  let currentPlan = 'basic';
-  let isSubscriptionActive = true;
-  let subscriptionExpiryDate = null;
-  let isAccountSuspended = false;
+let currentPlan = 'basic';
+let isSubscriptionActive = true;
+let subscriptionExpiryDate = null;
+let isAccountSuspended = false;
 
-  document.addEventListener("DOMContentLoaded", async () => {
-    const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
-    console.log("🔍 school_id from storage:", schoolId);
+document.addEventListener("DOMContentLoaded", async () => {
+  const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+  console.log("🔍 school_id from storage:", schoolId);
+  
+  if (!schoolId) {
+    alert("⚠️ Session expired. Please log in again.");
+    window.location.href = "admin-login.html";
+    return;
+  }
+
+  if (!sessionStorage.getItem("school_id")) {
+    sessionStorage.setItem("school_id", schoolId);
+  }
+
+  // ✅ CRITICAL FIX: DIRECT URL (NO API_BASE VARIABLE)
+  const apiUrl = `/api/auth/school/status?school_id=${encodeURIComponent(schoolId)}`;
+  console.log("📡 Fetching account status from:", apiUrl);
+
+  try {
+    const res = await fetch(apiUrl, {
+      credentials: 'include'
+    });
     
-    if (!schoolId) {
-      alert("⚠️ Session expired. Please log in again.");
-      window.location.href = "admin-login.html";
-      return;
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("📡 API Error Body:", text);
+      throw new Error(`HTTP ${res.status}`);
     }
 
-    if (!sessionStorage.getItem("school_id")) {
-      sessionStorage.setItem("school_id", schoolId);
+    const data = await res.json();
+    console.log("📡 Full API Response:", data);
+
+    if (data.success) {
+      // ✅ CRITICAL FIX 1: Normalize plan to lowercase for consistent checks
+      currentPlan = (data.plan || 'basic').toLowerCase();
+      isSubscriptionActive = data.isActive !== undefined ? data.isActive : true;
+      subscriptionExpiryDate = data.expiryDate || null;
+      isAccountSuspended = data.isSuspended || false;
+      
+      console.log("✅ Plan (normalized):", currentPlan);
+      console.log("✅ Account Suspended:", isAccountSuspended);
+      
+      if (isAccountSuspended) {
+        showAccountSuspended();
+      } else if (!isSubscriptionActive) {
+        showSubscriptionExpired();
+      }
     }
+  } catch (err) {
+    console.error("❌ Failed to fetch account status:", err);
+    document.getElementById('planBadge').textContent = "ERROR";
+    document.getElementById('planBadge').className = "plan-badge expired";
+  }
 
-    // ✅ CRITICAL FIX: DIRECT URL (NO API_BASE VARIABLE - PREVENTS DOUBLE /api)
-    // This is the ONLY place API calls are made in this file
-    const apiUrl = `/api/auth/school/status?school_id=${encodeURIComponent(schoolId)}`;
-    console.log("📡 Fetching account status from:", apiUrl); // Should show: /api/auth/school/status?...
+  setTimeout(() => {
+    const badge = document.getElementById('planBadge');
+    if (badge) {
+      if (isAccountSuspended) {
+        badge.textContent = "SUSPENDED";
+        badge.className = "plan-badge suspended";
+      } else if (!isSubscriptionActive) {
+        badge.textContent = "EXPIRED";
+        badge.className = "plan-badge expired";
+      } else {
+        // ✅ Use normalized plan for badge class
+        badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+        badge.className = `plan-badge ${currentPlan}`;
+      }
+    }
+    applyPlanRestrictions();
+  }, 100);
+});
 
-    try {
-      const res = await fetch(apiUrl, {
-        credentials: 'include'
+// ✅ SHOW SUSPENDED OVERLAY
+function showAccountSuspended() {
+  console.log("🔒 Account suspended - locking dashboard");
+  document.getElementById('dashboardContainer').classList.add('suspended');
+  document.getElementById('suspendedOverlay').classList.add('active');
+  disableAllCards();
+}
+
+// ✅ SHOW EXPIRED OVERLAY
+function showSubscriptionExpired() {
+  console.log("🔒 Subscription expired - locking dashboard");
+  document.getElementById('dashboardContainer').classList.add('expired');
+  document.getElementById('subscriptionOverlay').classList.add('active');
+  disableAllCards();
+}
+
+// ✅ DISABLE ALL CARDS
+function disableAllCards() {
+  document.querySelectorAll('.card').forEach(card => {
+    card.onclick = null;
+  });
+  document.querySelectorAll('.pro-only').forEach(card => {
+    card.classList.add('disabled');
+  });
+}
+
+// ✅ RENEW SUBSCRIPTION
+function renewSubscription() {
+  console.log("🔄 Redirecting to subscription page...");
+  window.location.href = 'subscription.html?renew=true';
+}
+
+// ✅ CONTACT ADMIN
+function contactAdmin() {
+  const adminEmail = "admin@gradely.info";
+  window.location.href = `mailto:${adminEmail}?subject=Account%20Suspended%20-%20${encodeURIComponent(localStorage.getItem('school_name') || 'School')}&body=Hello,%0D%0A%0D%0AMy%20school%20account%20has%20been%20suspended.%20Please%20assist.%0D%0A%0D%0ASchool%20ID:%20${encodeURIComponent(localStorage.getItem('school_id') || '')}%0D%0A%0D%0AThank%20you.`;
+}
+
+// ✅ APPLY PLAN RESTRICTIONS (VISUAL ONLY - NO ONCLICK OVERRIDE)
+function applyPlanRestrictions() {
+  const proCards = document.querySelectorAll('.pro-only');
+  
+  if (!isAccountSuspended && isSubscriptionActive) {
+    if (currentPlan === 'basic') {
+      // ✅ ONLY disable visually - KEEP original handleProFeature onclick
+      proCards.forEach(card => {
+        card.classList.add('disabled');
       });
       
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("📡 API Error Body:", text);
-        throw new Error(`HTTP ${res.status}`);
-      }
-
-      const data = await res.json();
-      console.log("📡 Full API Response:", data);
-
-      if (data.success) {
-        currentPlan = data.plan || 'basic';
-        isSubscriptionActive = data.isActive !== undefined ? data.isActive : true;
-        subscriptionExpiryDate = data.expiryDate || null;
-        isAccountSuspended = data.isSuspended || false;
-        
-        console.log("✅ Plan:", currentPlan);
-        console.log("✅ Account Suspended:", isAccountSuspended);
-        
-        if (isAccountSuspended) {
-          showAccountSuspended();
-        } else if (!isSubscriptionActive) {
-          showSubscriptionExpired();
-        }
-      }
-    } catch (err) {
-      console.error("❌ Failed to fetch account status:", err);
-      document.getElementById('planBadge').textContent = "ERROR";
-      document.getElementById('planBadge').className = "plan-badge expired";
-    }
-
-    setTimeout(() => {
-      const badge = document.getElementById('planBadge');
-      if (badge) {
-        if (isAccountSuspended) {
-          badge.textContent = "SUSPENDED";
-          badge.className = "plan-badge suspended";
-        } else if (!isSubscriptionActive) {
-          badge.textContent = "EXPIRED";
-          badge.className = "plan-badge expired";
-        } else {
-          badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-          badge.className = `plan-badge ${currentPlan.toLowerCase()}`;
-        }
-      }
-      applyPlanRestrictions();
-    }, 100);
-  });
-
-
-  // ✅ NEW: Show suspended account overlay
-  function showAccountSuspended() {
-    console.log("🔒 Account suspended - locking dashboard");
-    
-    // Gray out the entire dashboard
-    const dashboard = document.getElementById('dashboardContainer');
-    dashboard.classList.add('suspended');
-    
-    // Show the suspended overlay modal
-    const overlay = document.getElementById('suspendedOverlay');
-    overlay.classList.add('active');
-    
-    // Disable all card clicks
-    disableAllCards();
-  }
-
-  function showSubscriptionExpired() {
-    console.log("🔒 Subscription expired - locking dashboard");
-    
-    // Gray out the entire dashboard
-    const dashboard = document.getElementById('dashboardContainer');
-    dashboard.classList.add('expired');
-    
-    // Show the overlay modal
-    const overlay = document.getElementById('subscriptionOverlay');
-    overlay.classList.add('active');
-    
-    // Disable all card clicks
-    disableAllCards();
-  }
-
-  function disableAllCards() {
-    const cards = document.querySelectorAll('.card');
-    cards.forEach(card => {
-      card.onclick = null; // Remove all click handlers
-    });
-    
-    // Also disable pro-only card specifically
-    const proCards = document.querySelectorAll('.pro-only');
-    proCards.forEach(card => {
-      card.classList.add('disabled');
-    });
-  }
-
-  function renewSubscription() {
-    console.log("🔄 Redirecting to subscription page...");
-    window.location.href = 'subscription.html?renew=true';
-  }
-
-  // ✅ NEW: Contact admin function
-  function contactAdmin() {
-    console.log("📧 Contacting administrator...");
-    // You can customize this - email, phone, or redirect to contact page
-    const adminEmail = "admin@gradely.info";
-    window.location.href = `mailto:${adminEmail}?subject=Account%20Suspended%20-%20${encodeURIComponent(localStorage.getItem('school_name') || 'School')}&body=Hello,%0D%0A%0D%0AMy%20school%20account%20has%20been%20suspended.%20Please%20assist.%0D%0A%0D%0ASchool%20ID:%20${encodeURIComponent(localStorage.getItem('school_id') || '')}%0D%0A%0D%0AThank%20you.`;
-  }
-
-  function applyPlanRestrictions() {
-    const proCards = document.querySelectorAll('.pro-only');
-    const dashboard = document.getElementById('dashboardContainer');
-    
-    // ✅ Only apply restrictions if account is NOT suspended and subscription is active
-    if (!isAccountSuspended && isSubscriptionActive) {
-      if (currentPlan === 'basic') {
-        proCards.forEach(card => {
-          card.classList.add('disabled');
-          // Keep original onclick but wrap it
-          const originalOnclick = card.onclick;
-          card.onclick = function() {
-            if (currentPlan === 'pro') {
-              originalOnclick.call(this);
-            } else {
-              alert("💡 This feature is available only on Pro plan. Upgrade to unlock!");
-            }
-          };
-        });
-        
+      // Show upgrade prompt if not exists
+      if (!document.querySelector('.upgrade-prompt')) {
         const container = document.getElementById('dashboardContainer');
-        if (!document.querySelector('.upgrade-prompt')) {
-          const upgradeCard = document.createElement('div');
-          upgradeCard.className = 'upgrade-prompt';
-          upgradeCard.innerHTML = `
-            <div class="icon">✨</div>
-            <h3>Upgrade to Pro!</h3>
-            <p>Unlock bulk student registration, Class Management, School announcements & SMS features.</p>
-          `;
-          upgradeCard.onclick = () => window.location.href = 'subscription.html?plan=pro';
-          container.appendChild(upgradeCard);
-        }
-      } else {
-        proCards.forEach(card => {
-          card.classList.remove('disabled');
-          // Restore original functionality
-          card.onclick = function() {
-            window.location.href = this.getAttribute('data-url') || 
-              (this.id === 'manageClassesCard' ? 'manage-classes.html' : 'announcement.html');
-          };
-        });
-        document.querySelector('.upgrade-prompt')?.remove();
+        const upgradeCard = document.createElement('div');
+        upgradeCard.className = 'upgrade-prompt';
+        upgradeCard.innerHTML = `
+          <div class="icon">✨</div>
+          <h3>Upgrade to Pro!</h3>
+          <p>Unlock bulk student registration, Class Management, School announcements & SMS features.</p>
+        `;
+        upgradeCard.onclick = () => window.location.href = 'subscription.html?plan=pro';
+        container.appendChild(upgradeCard);
       }
-    }
-    // If account is suspended or subscription expired, all cards are already disabled
-  }
-
-  function handleProFeature(url) {
-    if (isAccountSuspended) {
-      showAccountSuspended();
-      return;
-    }
-    
-    if (!isSubscriptionActive) {
-      showSubscriptionExpired();
-      return;
-    }
-    
-    if (currentPlan === 'pro') {
-      window.location.href = url;
-    } else {
-      alert("💡 This feature is available only on Pro plan. Upgrade to unlock!");
+    } else if (currentPlan === 'pro') {
+      // ✅ ONLY enable visually - KEEP original handleProFeature onclick
+      proCards.forEach(card => {
+        card.classList.remove('disabled');
+      });
+      document.querySelector('.upgrade-prompt')?.remove();
     }
   }
+}
 
-  function goTo(page) {
-    if (isAccountSuspended) {
-      showAccountSuspended();
-      return;
-    }
-    
-    if (!isSubscriptionActive) {
-      showSubscriptionExpired();
-      return;
-    }
-    
-    window.location.href = page;
+// ✅ HANDLE PRO FEATURE CLICK (CENTRALIZED LOGIC WITH SESSION FLAG)
+function handleProFeature(url) {
+  // Check suspension/expiry first
+  if (isAccountSuspended) {
+    showAccountSuspended();
+    return;
   }
-
-  // Logout
-  document.getElementById("logoutBtn")?.addEventListener("click", () => {
-    if (confirm("Are you sure you want to logout?")) {
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.href = "index.html";
-    }
-  });
   
-  </script>
+  if (!isSubscriptionActive) {
+    showSubscriptionExpired();
+    return;
+  }
+  
+  // ✅ CRITICAL FIX 2: Pro users go directly to feature (NO ALERT)
+  if (currentPlan === 'pro') {
+    window.location.href = url;
+    return;
+  }
+  
+  // ✅ CRITICAL FIX 3: Basic users see alert ONLY ONCE per session
+  if (!sessionStorage.getItem('proFeatureAlertShown')) {
+    alert("💡 This feature is available only on Pro plan. Upgrade to unlock!");
+    sessionStorage.setItem('proFeatureAlertShown', 'true'); // Set session flag
+    console.log("✅ Pro feature alert shown (will not show again this session)");
+  } else {
+    console.log("ℹ️ Pro feature alert already shown this session - suppressed");
+  }
+}
+
+// ✅ HANDLE REGULAR NAVIGATION (non-Pro features)
+function goTo(page) {
+  if (isAccountSuspended) {
+    showAccountSuspended();
+    return;
+  }
+  
+  if (!isSubscriptionActive) {
+    showSubscriptionExpired();
+    return;
+  }
+  
+  window.location.href = page;
+}
+
+// ✅ LOGOUT HANDLER
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
+  if (confirm("Are you sure you want to logout?")) {
+    // ✅ CRITICAL FIX 4: Clear session flag on logout
+    sessionStorage.removeItem('proFeatureAlertShown');
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = "index.html";
+  }
+});
+</script>
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
