@@ -66,7 +66,7 @@
     }
     .btn-renew { background: #00c851; color: white; }
     .btn-renew:hover { background: #009c3b; }
-    .btn-cancel { background: #6c757d; color: white; } /* Gray = informational */
+    .btn-cancel { background: #6c757d; color: white; }
     .btn-cancel:hover { background: #5a6268; }
     .btn-upgrade { background: #00e676; color: #000; }
     .btn-upgrade:hover { background: #00c853; }
@@ -144,6 +144,7 @@
   <script>
     let schoolId = null;
     let currentExpiry = null;
+    let selectedPlan = null;
 
     document.addEventListener("DOMContentLoaded", async () => {
       schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
@@ -157,6 +158,7 @@
 
     async function fetchSubscriptionStatus() {
       try {
+        // ✅ FIXED: Removed trailing spaces in API URL
         const API_BASE = 'https://api.gradely.info';
         const res = await fetch(`${API_BASE}/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`, {
           credentials: 'include'
@@ -173,35 +175,45 @@
           statusEl.className = data.isActive ? '' : 'error';
           
           const renewalEl = document.getElementById('renewal');
+          const cancelStatusEl = document.getElementById('cancelStatus');
+          
           if (data.expiryDate && data.expiryDate !== 'null') {
             currentExpiry = new Date(data.expiryDate);
             renewalEl.textContent = currentExpiry.toLocaleDateString('en-GB', {
               day: 'numeric', month: 'short', year: 'numeric'
             });
             
-            // ✅ SHOW CANCEL STATUS IF EXPIRY IS IN FUTURE (means auto-renew was cancelled)
+            // ✅ FIXED: Only show cancel status IF subscription is cancelled AND expiry is in future
             const today = new Date();
-            if (currentExpiry > today && !data.autoRenew) {
-              document.getElementById('cancelStatus').style.display = 'block';
+            if (data.subscriptionStatus === 'cancelled' && currentExpiry > today) {
+              cancelStatusEl.style.display = 'block';
               document.getElementById('cancelBtn').style.display = 'none'; // Hide cancel button after cancelled
+            } else {
+              cancelStatusEl.style.display = 'none'; // ✅ HIDE FOR ACTIVE SUBSCRIPTIONS
+              
+              // Only show cancel button for active subscriptions that aren't cancelled
+              if (data.isActive && data.subscriptionStatus !== 'cancelled') {
+                document.getElementById('cancelBtn').style.display = 'block';
+              } else {
+                document.getElementById('cancelBtn').style.display = 'none';
+              }
             }
           } else {
             renewalEl.textContent = 'Not set';
+            cancelStatusEl.style.display = 'none';
           }
 
-          // ✅ BUTTON LOGIC: Show cancel button ONLY if active subscription
+          // ✅ BUTTON LOGIC: Show appropriate buttons based on plan and status
           if (data.isActive) {
             if (data.plan === 'basic') {
               document.getElementById('renewBtn').style.display = 'none';
-              document.getElementById('cancelBtn').style.display = 'block';
               document.getElementById('upgradeBtn').style.display = 'block';
             } else if (data.plan === 'pro') {
               document.getElementById('upgradeBtn').style.display = 'none';
               document.getElementById('renewBtn').style.display = 'block';
-              document.getElementById('cancelBtn').style.display = 'block';
             }
           } else {
-            // Expired: Show plan selection (handled separately)
+            // Expired: Show plan selection
             document.getElementById('mainButtons').style.display = 'none';
             showPlanSelection(data.plan);
           }
@@ -218,7 +230,6 @@
         return;
       }
       
-      // ✅ CORRECT CANCELLATION MESSAGE
       const expiryStr = currentExpiry ? currentExpiry.toLocaleDateString('en-GB', {
         day: 'numeric', month: 'short', year: 'numeric'
       }) : 'your current term end date';
@@ -232,17 +243,22 @@
       btn.textContent = "Processing...";
       document.getElementById('message').innerHTML = '';
 
+      // ✅ FIXED: Get JWT token and include in headers
+      const token = localStorage.getItem('token') || localStorage.getItem('admin_token');
+      
+      // ✅ FIXED: Removed trailing spaces in URL
       fetch('https://api.gradely.info/api/subscription/cancel', {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // ✅ ADDED AUTH TOKEN
+        },
         body: JSON.stringify({ school_id: schoolId })
       })
       .then(response => response.json())
       .then(data => {
         if (data.success) {
           document.getElementById('message').innerHTML = `<span class="success">✅ ${data.message}</span>`;
-          // Reload to show updated UI (cancel status message + hidden cancel button)
           setTimeout(() => location.reload(), 2000);
         } else {
           throw new Error(data.message || "Request failed");
@@ -250,30 +266,107 @@
       })
       .catch(err => {
         console.error("Cancellation error:", err);
-        document.getElementById('message').innerHTML = `<span class="error">❌ ${err.message || 'Failed to process request'}</span>`;
+        // ✅ FIXED: Better error message for auth failures
+        document.getElementById('message').innerHTML = `<span class="error">❌ ${err.message || 'Authentication failed. Please logout and login again.'}</span>`;
         btn.disabled = false;
         btn.textContent = "⏹️ Cancel Auto-Renew";
       });
     }
 
-    // ... (renewSubscription, upgradeToPro, showPlanSelection, selectPlan, confirmPlanSelection functions remain unchanged from previous version)
-    // [Include all the plan selection functions from the previous subscription.html here]
-    
-    // For brevity, keeping other functions minimal - they match previous working version
     function renewSubscription() {
       if (!schoolId) return alert("Error: School ID not found.");
       window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&renew=true`;
     }
+
     function upgradeToPro() {
       if (!schoolId) return alert("Error: School ID not found.");
       window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
     }
-    
-    // Plan selection functions (same as before)
-    let selectedPlan = null;
-    function showPlanSelection(previousPlan) { /* ... same as previous version ... */ }
-    function selectPlan(plan) { /* ... same as previous version ... */ }
-    function confirmPlanSelection() { /* ... same as previous version ... */ }
+
+    // ✅ COMPLETE PLAN SELECTION FUNCTIONS
+    function showPlanSelection(previousPlan) {
+      const container = document.querySelector('.container');
+      
+      const planSelectionHTML = `
+        <div id="planSelection" style="margin-bottom: 20px;">
+          <h3 style="color: #2d046e; margin-bottom: 15px;">Choose Your Plan to Reactivate</h3>
+          
+          <div style="text-align: center; margin-bottom: 15px;">
+            <a href="plan-comparison.html" style="color: #3498db; text-decoration: none; font-weight: 600; display: inline-block; padding: 8px 15px; border: 2px solid #3498db; border-radius: 20px; background: rgba(52, 152, 219, 0.1);">
+              📊 View Detailed Plan Comparison
+            </a>
+          </div>
+          
+          <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div style="flex: 1; background: #f8f9fa; border: 2px solid #adb5bd; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s;" 
+                 onclick="selectPlan('basic')" id="basicPlanCard">
+              <h4 style="color: #495057; margin-bottom: 10px;">📝 Basic</h4>
+              <p style="font-size: 1.5rem; font-weight: bold; color: #000; margin: 10px 0;">₦16,800</p>
+              <p style="font-size: 0.9rem; color: #6c757d;">Per Term</p>
+              <ul style="text-align: left; margin-top: 10px; font-size: 0.85rem; color: #495057;">
+                <li>✓ Student Management</li>
+                <li>✓ Result Upload</li>
+                <li>✓ Basic Reporting</li>
+              </ul>
+            </div>
+            
+            <div style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s;" 
+                 onclick="selectPlan('pro')" id="proPlanCard">
+              <h4 style="color: #fff; margin-bottom: 10px;">🚀 Pro</h4>
+              <p style="font-size: 1.5rem; font-weight: bold; color: #fff; margin: 10px 0;">₦19,200</p>
+              <p style="font-size: 0.9rem; color: rgba(255,255,255,0.9);">Per Term</p>
+              <ul style="text-align: left; margin-top: 10px; font-size: 0.85rem; color: #fff;">
+                <li>✓ All Basic Features</li>
+                <li>✓ Class Management</li>
+                <li>✓ SMS Announcements</li>
+                <li>✓ Bulk Operations</li>
+                <li>✓ Priority Support</li>
+              </ul>
+            </div>
+          </div>
+          
+          <button class="btn btn-renew" onclick="confirmPlanSelection()" id="confirmPlanBtn" disabled 
+                  style="width: 100%; background: #6c757d; color: #fff; margin-top: 10px;">
+            ✅ Continue with Selected Plan
+          </button>
+        </div>
+      `;
+      
+      const messageDiv = document.getElementById('message');
+      messageDiv.insertAdjacentHTML('beforebegin', planSelectionHTML);
+      
+      if (previousPlan === 'basic') selectPlan('basic');
+      else selectPlan('pro');
+    }
+
+    function selectPlan(plan) {
+      selectedPlan = plan;
+      document.getElementById('basicPlanCard').style.border = '2px solid #adb5bd';
+      document.getElementById('basicPlanCard').style.background = '#f8f9fa';
+      document.getElementById('proPlanCard').style.border = '2px solid #667eea';
+      document.getElementById('proPlanCard').style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      
+      if (plan === 'basic') {
+        document.getElementById('basicPlanCard').style.border = '3px solid #28a745';
+        document.getElementById('basicPlanCard').style.background = '#e8f5e9';
+      } else {
+        document.getElementById('proPlanCard').style.border = '3px solid #ffc107';
+        document.getElementById('proPlanCard').style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
+      }
+      
+      document.getElementById('confirmPlanBtn').disabled = false;
+      document.getElementById('confirmPlanBtn').style.background = '#00c851';
+      document.getElementById('confirmPlanBtn').style.color = '#fff';
+      document.getElementById('confirmPlanBtn').textContent = `✅ Continue with ${plan.toUpperCase()} Plan`;
+    }
+
+    function confirmPlanSelection() {
+      if (!selectedPlan) {
+        alert("Please select a plan first!");
+        return;
+      }
+      window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=${selectedPlan}&renew=true`;
+    }
   </script>
 </body>
 </html>

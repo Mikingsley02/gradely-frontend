@@ -90,7 +90,7 @@
       margin: 10px 0;
     }
 
-    .basic-price { color: #3498db; }
+    .basic-price { color: #00e676; }
     .pro-price { color: #00e676; }
 
     .upgrade-btn {
@@ -218,7 +218,20 @@
 
 
 
-    <a href="register-school.html" class="back-link">← Back to Dashboard</a>
+        <!-- Replace ONLY this section at the bottom of your plan-comparison.html -->
+    <a href="javascript:history.back()" class="back-link">← Go Back</a>
+  </div>
+
+  <script>
+    // Optional: Add keyboard shortcut for back (ESC key)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        window.history.back();
+      }
+    });
+  </script>
+</body>
+</html>
   </div>
 
   <script>

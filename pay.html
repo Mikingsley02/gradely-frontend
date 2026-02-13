@@ -3,117 +3,305 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>💳 Subscribe | Gradely Info</title>
-  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <title>💳 Secure Payment | Gradely</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* Same styles as before */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      color: #333;
+    }
+    .payment-container {
+      max-width: 520px;
+      width: 100%;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      margin: 0 auto;
+    }
+    .header {
+      background: linear-gradient(120deg, #4361ee 0%, #3a0ca3 100%);
+      color: white;
+      padding: 35px 30px;
+      text-align: center;
+      position: relative;
+    }
+    .header-content {
+      /* ✅ FIXED: Proper flex layout to prevent overlap */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px; /* ✅ Added spacing between logo and heading */
+    }
+    .brand-logo {
+      /* ✅ FIXED: Removed absolute positioning */
+      font-weight: 800;
+      font-size: 1.8rem;
+      background: linear-gradient(to right, #f9f9f8, #f9f9f8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 12px;
+    }
+    .header h1 {
+      font-size: 1.4rem;
+      margin-bottom: 5px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+    .header p {
+      opacity: 0.95;
+      font-size: 1.15rem;
+      margin-top: 4px;
+    }
+    .content {
+      padding: 40px 35px;
+    }
+    .plan-summary {
+      background: #f0f4ff;
+      border: 2px solid #4361ee;
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(67, 97, 238, 0.12);
+    }
+    .plan-summary h2 {
+      color: #1e293b;
+      margin-bottom: 18px;
+      font-size: 1.9rem;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: -0.8px;
+    }
+    .plan-details {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 1.05rem;
+    }
+    .plan-details:last-child { border-bottom: none; padding-bottom: 0; }
+    .plan-details strong { 
+      color: #4361ee; 
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .payment-methods {
+      text-align: center;
+      margin: 30px 0 25px;
+    }
+    .payment-methods p {
+      color: #334155;
+      margin-bottom: 18px;
+      font-weight: 600;
+      font-size: 1.15rem;
+    }
+    .paystack-badge {
+      display: inline-flex;
+      align-items: center;
+      background: linear-gradient(120deg, #f0f4ff 0%, #e6eeff 100%);
+      border: 2px solid #4361ee;
+      border-radius: 60px;
+      padding: 12px 28px;
+      font-weight: 700;
+      color: #1e3a8a;
+      gap: 10px;
+      box-shadow: 0 6px 15px rgba(67, 97, 238, 0.25);
+      font-size: 1.15rem;
+    }
+    .pay-btn {
+      background: linear-gradient(120deg, #4361ee 0%, #3a0ca3 100%);
+      color: white;
+      border: none;
+      width: 100%;
+      padding: 18px;
+      border-radius: 16px;
+      font-size: 1.35rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.35s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 8px 25px rgba(67, 97, 238, 0.45);
+      margin-top: 10px;
+    }
+    .pay-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(67, 97, 238, 0.6);
+      background: linear-gradient(120deg, #3a0ca3 0%, #4361ee 100%);
+    }
+    .pay-btn:active { transform: translateY(1px); }
+    .pay-btn i { font-size: 1.5rem; }
+    .security-note {
+      background: #eef7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 20px;
+      margin-top: 30px;
+      font-size: 0.95rem;
+      color: #1e40af;
+      line-height: 1.5;
+    }
+    .security-note i { 
+      margin-right: 10px; 
+      color: #1d4ed8; 
+      font-size: 1.2rem;
+      vertical-align: middle;
+    }
+    .footer {
+      text-align: center;
+      padding: 25px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      color: #475569;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      color: #4361ee;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.05rem;
+      padding: 10px 20px;
+      border-radius: 50px;
+      background: rgba(67, 97, 238, 0.08);
+      transition: all 0.25s;
+    }
+    .back-link:hover { 
+      background: rgba(67, 97, 238, 0.15);
+      transform: translateX(-3px);
+    }
+    .back-link i { margin-right: 8px; font-size: 1.1rem; }
+    @media (max-width: 480px) {
+      .content { padding: 30px 25px; }
+      .header { padding: 28px 20px; }
+      .header h1 { font-size: 1.3rem; }
+      .header p { font-size: 1.05rem; }
+      .plan-summary h2 { font-size: 1.7rem; }
+      .pay-btn { padding: 16px; font-size: 1.25rem; }
+      .paystack-badge { padding: 10px 22px; font-size: 1.05rem; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="box">
-      <h2 id="pageTitle">💳 Subscribe to Gradely</h2>
-      <p id="planDetails"></p>
-      <div id="contextNotice" style="display:none; margin-top:15px; padding:12px; background:rgba(0,0,0,0.2); border-radius:8px;">
-        <strong>🔄 Recurring Billing</strong><br>
-        Your card will be charged automatically every month. Cancel anytime.
+  <div class="payment-container">
+    <div class="header">
+      <div class="header-content">
+        <!-- ✅ FIXED: Properly spaced logo -->
+        <div class="brand-logo">gradely<span style="color:#ffaa00">.info</span></div>
+        <h1><i class="fas fa-shield-alt"></i> Secure Payment</h1>
+        <p>Encrypted & PCI-DSS Compliant</p>
       </div>
     </div>
-
-    <div class="box">
-      <h3>Secure Payment</h3>
-      <button id="paystackBtn">💳 Subscribe with Paystack</button>
-      <br><br>
-      <button id="freeBtn" class="btn-free">Test Subscription (Dev Only)</button>
+    
+    <div class="content">
+      <div class="plan-summary">
+        <h2 id="planName">Loading Plan...</h2>
+        <div class="plan-details">
+          <span>Amount:</span>
+          <strong id="planPrice">₦0.00</strong>
+        </div>
+        <div class="plan-details">
+          <span>Billing Cycle:</span>
+          <strong>Monthly</strong>
+        </div>
+        <div class="plan-details">
+          <span>Access:</span>
+          <strong>Full Features</strong>
+        </div>
+      </div>
+      
+      <div class="payment-methods">
+        <p><i class="fas fa-lock"></i> Secured Payment Processing</p>
+        <div class="paystack-badge">
+          <i class="fas fa-credit-card"></i>
+          <span>Paystack Payment Gateway</span>
+        </div>
+      </div>
+      
+      <button class="pay-btn" id="paystackBtn">
+        <i class="fas fa-credit-card"></i>
+        <span>Proceed to Payment</span>
+      </button>
+      
+      <div class="security-note">
+        <i class="fas fa-shield-alt"></i>
+        <strong>Your security is our priority:</strong> All payment details are encrypted with bank-grade security. We never store your card information. PCI-DSS Level 1 compliant processing.
+      </div>
+      
+      <a href="javascript:history.back()" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to Subscription
+      </a>
     </div>
-
-    <a href="subscription.html" class="back-btn">← Back</a>
+    
+    <div class="footer">
+      <p>© 2026 gradely.info • Secure, Encrypted Payments</p>
+      <p style="margin-top:10px; color:#64748b;">
+        <i class="fas fa-info-circle"></i> You'll be redirected to Paystack's secure payment page to complete your transaction
+      </p>
+    </div>
   </div>
 
-  
-<script>
-  console.log("=== PAY.HTML INIT ===");
-  const params = new URLSearchParams(window.location.search);
-  const plan = params.get("plan") || "pro";
-  const isUpgrade = params.get("upgrade") === "true";
-  const isRenew = params.get("renew") === "true";
-  
-  let school_id = params.get("school_id");
-  if (!school_id) school_id = localStorage.getItem("school_id");
-  if (!school_id) school_id = sessionStorage.getItem("school_id");
-  
-  if (!school_id) {
-    document.querySelector('.container').insertAdjacentHTML('afterbegin', `
-      <div class="error-box">
-        <strong>❌ Error: School ID not found</strong><br>
-        Please go back to the subscription page and try again.
-      </div>
-    `);
-    setTimeout(() => location.href = "subscription.html", 5000);
-    throw new Error("School ID not found");
-  }
-
-  // ✅ YOUR PAYSTACK PAYMENT LINKS - DIRECT LINKS
-  const PAYMENT_LINKS = {
-    basic: 'https://paystack.shop/pay/jeh3ez58fz',
-    pro: 'https://paystack.shop/pay/3xxw3ze66-'
-  };
-
-  // Display plan info
-  const planNames = { basic: 'Basic', pro: 'Pro' };
-  const planPrices = { basic: '₦16,800', pro: '₦19,200' };
-  document.getElementById("planDetails").textContent = `${planPrices[plan]} for ${planNames[plan]} Plan - Per Term`;
-
-  // Set context notice
-  const noticeEl = document.getElementById('contextNotice');
-  if (isUpgrade) {
-    document.getElementById("pageTitle").textContent = "✨ Upgrade to Pro Plan";
-    noticeEl.style.display = "block";
-    noticeEl.innerHTML = `<strong>✨ Upgrade in Progress</strong><br>Your account will be upgraded from Basic to Pro after payment.`;
-  } else if (isRenew) {
-    document.getElementById("pageTitle").textContent = "💳 Subscribe to Gradely";
-    noticeEl.style.display = "block";
-    noticeEl.innerHTML = `<strong>💳 Subscription Setup</strong><br>Your account will be activated with ${planNames[plan]} plan after payment.`;
-  } else {
-    document.getElementById("pageTitle").textContent = "💳 Subscribe to Gradely";
-  }
-
-  // ✅ PAYSTACK BUTTON - REDIRECT TO YOUR PAYMENT LINKS
-  document.getElementById("paystackBtn").onclick = () => {
-    const paymentLink = PAYMENT_LINKS[plan];
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script>
+    console.log("=== PAY.HTML INIT ===");
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get("plan") || "pro";
+    const school_id = params.get("school_id") || localStorage.getItem("school_id");
     
-    if (!paymentLink) {
-      alert(`❌ Payment link not found for ${plan} plan`);
-      return;
+    if (!school_id) {
+      alert("Session expired. Please return to subscription page.");
+      window.history.back();
     }
     
-    console.log(`💳 Redirecting to ${plan} payment link:`, paymentLink);
+    // ✅ PLAN DETAILS WITH CORRECT SIZING
+    const PLAN_NAMES = { 
+      basic: 'Basic Plan', 
+      pro: 'Professional Plan' 
+    };
+    const PLAN_PRICES = { 
+      basic: '₦16,800', 
+      pro: '₦19,200' 
+    };
     
-    // Open payment link in same window
-    window.location.href = paymentLink;
-  };
-
-  // Test button (optional - can remove in production)
-  document.getElementById("freeBtn").onclick = async () => {
-    if (!confirm("⚠️ TEST MODE: This will reactivate your subscription without payment. Continue?")) return;
+    document.getElementById('planName').textContent = PLAN_NAMES[plan];
+    document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
     
-    const res = await fetch('https://api.gradely.info/api/subscription/reactivate', {
-      method: "POST",
-      credentials: 'include',
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ school_id, plan })
-    }).then(r => r.json());
-
-    if (res.success) {
-      alert(`✅ TEST SUCCESS: Your ${planNames[plan]} subscription is now active!`);
-      location.href = "dashboard.html";
-    } else {
-      alert(`❌ TEST FAILED: ${res.message || 'Unknown error'}`);
-    }
-  };
-
-
-</script>
-
+    // ✅ PAYMENT LINKS
+    const PAYMENT_LINKS = {
+      basic: 'https://paystack.shop/pay/jeh3ez58fz',
+      pro: 'https://paystack.shop/pay/3xxw3ze66-'
+    };
+    
+    document.getElementById("paystackBtn").onclick = () => {
+      const paymentLink = PAYMENT_LINKS[plan];
+      if (!paymentLink) {
+        alert(`Payment link not configured for ${plan} plan`);
+        return;
+      }
+      
+      const btn = document.getElementById('paystackBtn');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirecting to Secure Payment...';
+      btn.disabled = true;
+      
+      setTimeout(() => {
+        window.location.href = paymentLink;
+      }, 800);
+    };
+  </script>
 </body>
 </html>
