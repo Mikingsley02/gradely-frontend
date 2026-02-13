@@ -66,6 +66,12 @@
     }
     .btn-renew { background: #00c851; color: white; }
     .btn-renew:hover { background: #009c3b; }
+    .btn-renew:focus,
+    .btn-renew:active {
+     outline: none !important;
+     box-shadow: none !important;
+     border-color: transparent !important;
+    }
     .btn-cancel { background: #6c757d; color: white; }
     .btn-cancel:hover { background: #5a6268; }
     .btn-upgrade { background: #00e676; color: #000; }
@@ -147,7 +153,7 @@
     let selectedPlan = null;
 
     document.addEventListener("DOMContentLoaded", async () => {
-      // ✅ CRITICAL FIX 1: Handle cancel success/error from URL params FIRST
+      // ✅ CRITICAL FIX: Handle URL params FIRST (without optional chaining)
       const urlParams = new URLSearchParams(window.location.search);
       
       // Handle cancel success
@@ -155,32 +161,42 @@
         const expiry = urlParams.get('expiry') || 'your current term end date';
         const plan = (urlParams.get('plan') || 'pro').toUpperCase();
         
-        document.getElementById('message').innerHTML = 
-          `<span class="success">✅ Auto-renewal cancelled. Your ${plan} subscription remains active until ${expiry}.</span>`;
+        const messageEl = document.getElementById('message');
+        if (messageEl) {
+          messageEl.innerHTML = `<span class="success">✅ Auto-renewal cancelled. Your ${plan} subscription remains active until ${expiry}.</span>`;
+        }
         
         // Hide cancel button and show status
-        document.getElementById('cancelBtn')?.style.display = 'none';
-        document.getElementById('cancelStatus').style.display = 'block';
+        const cancelBtn = document.getElementById('cancelBtn');
+        if (cancelBtn) {
+          cancelBtn.style.display = 'none';
+        }
+        const cancelStatusEl = document.getElementById('cancelStatus');
+        if (cancelStatusEl) {
+          cancelStatusEl.style.display = 'block';
+        }
         
         // Clean URL without query params
         if (history.replaceState) {
           history.replaceState({}, document.title, window.location.pathname);
         }
-        return; // Stop further execution - UI already updated
+        return; // Stop further execution
       }
       
       // Handle cancel error
       if (urlParams.has('cancel_error')) {
         const error = decodeURIComponent(urlParams.get('cancel_error'));
-        document.getElementById('message').innerHTML = 
-          `<span class="error">❌ ${error || 'Failed to cancel subscription'}</span>`;
+        const messageEl = document.getElementById('message');
+        if (messageEl) {
+          messageEl.innerHTML = `<span class="error">❌ ${error || 'Failed to cancel subscription'}</span>`;
+        }
         
         if (history.replaceState) {
           history.replaceState({}, document.title, window.location.pathname);
         }
       }
       
-      // ✅ PROCEED WITH NORMAL INITIALIZATION
+      // Initialize normally
       schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
       if (!schoolId) {
         alert("Session expired. Please log in again.");
@@ -203,59 +219,73 @@
         const data = await res.json();
 
         if (data.success) {
-          document.getElementById('plan').textContent = data.plan.charAt(0).toUpperCase() + data.plan.slice(1);
+          const planEl = document.getElementById('plan');
+          if (planEl) {
+            planEl.textContent = data.plan.charAt(0).toUpperCase() + data.plan.slice(1);
+          }
           
           const statusEl = document.getElementById('status');
-          statusEl.textContent = data.isActive ? 'Active' : 'Expired';
-          statusEl.className = data.isActive ? '' : 'error';
+          if (statusEl) {
+            statusEl.textContent = data.isActive ? 'Active' : 'Expired';
+            statusEl.className = data.isActive ? '' : 'error';
+          }
           
           const renewalEl = document.getElementById('renewal');
           const cancelStatusEl = document.getElementById('cancelStatus');
           
           if (data.expiryDate && data.expiryDate !== 'null') {
             currentExpiry = new Date(data.expiryDate);
-            renewalEl.textContent = currentExpiry.toLocaleDateString('en-GB', {
-              day: 'numeric', month: 'short', year: 'numeric'
-            });
+            if (renewalEl) {
+              renewalEl.textContent = currentExpiry.toLocaleDateString('en-GB', {
+                day: 'numeric', month: 'short', year: 'numeric'
+              });
+            }
             
             const today = new Date();
             if (data.subscriptionStatus === 'cancelled' && currentExpiry > today) {
-              cancelStatusEl.style.display = 'block';
-              document.getElementById('cancelBtn').style.display = 'none';
+              if (cancelStatusEl) cancelStatusEl.style.display = 'block';
+              const cancelBtn = document.getElementById('cancelBtn');
+              if (cancelBtn) cancelBtn.style.display = 'none';
             } else {
-              cancelStatusEl.style.display = 'none';
+              if (cancelStatusEl) cancelStatusEl.style.display = 'none';
               
               if (data.isActive && data.subscriptionStatus !== 'cancelled') {
-                document.getElementById('cancelBtn').style.display = 'block';
+                const cancelBtn = document.getElementById('cancelBtn');
+                if (cancelBtn) cancelBtn.style.display = 'block';
               } else {
-                document.getElementById('cancelBtn').style.display = 'none';
+                const cancelBtn = document.getElementById('cancelBtn');
+                if (cancelBtn) cancelBtn.style.display = 'none';
               }
             }
           } else {
-            renewalEl.textContent = 'Not set';
-            cancelStatusEl.style.display = 'none';
+            if (renewalEl) renewalEl.textContent = 'Not set';
+            if (cancelStatusEl) cancelStatusEl.style.display = 'none';
           }
 
           if (data.isActive) {
             if (data.plan === 'basic') {
-              document.getElementById('renewBtn').style.display = 'none';
-              document.getElementById('upgradeBtn').style.display = 'block';
+              document.getElementById('renewBtn')?.style.display = 'none';
+              document.getElementById('upgradeBtn')?.style.display = 'block';
             } else if (data.plan === 'pro') {
-              document.getElementById('upgradeBtn').style.display = 'none';
-              document.getElementById('renewBtn').style.display = 'block';
+              document.getElementById('upgradeBtn')?.style.display = 'none';
+              document.getElementById('renewBtn')?.style.display = 'block';
             }
           } else {
-            document.getElementById('mainButtons').style.display = 'none';
+            const mainButtons = document.getElementById('mainButtons');
+            if (mainButtons) mainButtons.style.display = 'none';
             showPlanSelection(data.plan);
           }
         }
       } catch (err) {
         console.error("❌ Error:", err);
-        document.getElementById('message').innerHTML = `<span class="error">Unable to load subscription: ${err.message || 'Network error'}</span>`;
+        const messageEl = document.getElementById('message');
+        if (messageEl) {
+          messageEl.innerHTML = `<span class="error">Unable to load subscription: ${err.message || 'Network error'}</span>`;
+        }
       }
     }
 
-    // ✅ CRITICAL FIX 2: REPLACE ENTIRE cancelSubscription FUNCTION
+    // ✅ FIXED: Cancel function WITHOUT optional chaining
     function cancelSubscription() {
       if (!schoolId) {
         alert("Error: School ID not found. Please log in again.");
@@ -270,23 +300,30 @@
         return;
       }
       
-      // ✅ REDIRECT TO GET ENDPOINT (bypasses browser cookie blocking)
+      // Redirect to GET endpoint
       window.location.href = `/api/subscription/cancel?school_id=${encodeURIComponent(schoolId)}`;
     }
 
     function renewSubscription() {
-      if (!schoolId) return alert("Error: School ID not found.");
+      if (!schoolId) {
+        alert("Error: School ID not found.");
+        return;
+      }
       window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&renew=true`;
     }
 
     function upgradeToPro() {
-      if (!schoolId) return alert("Error: School ID not found.");
+      if (!schoolId) {
+        alert("Error: School ID not found.");
+        return;
+      }
       window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
     }
 
-    // ✅ COMPLETE PLAN SELECTION FUNCTIONS (UNCHANGED)
+    // Plan selection functions (safe element access)
     function showPlanSelection(previousPlan) {
       const container = document.querySelector('.container');
+      if (!container) return;
       
       const planSelectionHTML = `
         <div id="planSelection" style="margin-bottom: 20px;">
@@ -334,7 +371,9 @@
       `;
       
       const messageDiv = document.getElementById('message');
-      messageDiv.insertAdjacentHTML('beforebegin', planSelectionHTML);
+      if (messageDiv) {
+        messageDiv.insertAdjacentHTML('beforebegin', planSelectionHTML);
+      }
       
       if (previousPlan === 'basic') selectPlan('basic');
       else selectPlan('pro');
@@ -342,23 +381,32 @@
 
     function selectPlan(plan) {
       selectedPlan = plan;
-      document.getElementById('basicPlanCard').style.border = '2px solid #adb5bd';
-      document.getElementById('basicPlanCard').style.background = '#f8f9fa';
-      document.getElementById('proPlanCard').style.border = '2px solid #667eea';
-      document.getElementById('proPlanCard').style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
       
-      if (plan === 'basic') {
-        document.getElementById('basicPlanCard').style.border = '3px solid #28a745';
-        document.getElementById('basicPlanCard').style.background = '#e8f5e9';
-      } else {
-        document.getElementById('proPlanCard').style.border = '3px solid #ffc107';
-        document.getElementById('proPlanCard').style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
+      const basicCard = document.getElementById('basicPlanCard');
+      const proCard = document.getElementById('proPlanCard');
+      
+      if (basicCard && proCard) {
+        basicCard.style.border = '2px solid #adb5bd';
+        basicCard.style.background = '#f8f9fa';
+        proCard.style.border = '2px solid #667eea';
+        proCard.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        
+        if (plan === 'basic') {
+          basicCard.style.border = '3px solid #28a745';
+          basicCard.style.background = '#e8f5e9';
+        } else {
+          proCard.style.border = '3px solid #ffc107';
+          proCard.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
+        }
+        
+        const confirmBtn = document.getElementById('confirmPlanBtn');
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.style.background = '#00c851';
+          confirmBtn.style.color = '#fff';
+          confirmBtn.textContent = `✅ Continue with ${plan.toUpperCase()} Plan`;
+        }
       }
-      
-      document.getElementById('confirmPlanBtn').disabled = false;
-      document.getElementById('confirmPlanBtn').style.background = '#00c851';
-      document.getElementById('confirmPlanBtn').style.color = '#fff';
-      document.getElementById('confirmPlanBtn').textContent = `✅ Continue with ${plan.toUpperCase()} Plan`;
     }
 
     function confirmPlanSelection() {
