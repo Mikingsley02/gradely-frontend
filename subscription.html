@@ -279,33 +279,62 @@
     }
 
     // ✅ CRITICAL FIX 2: CORRECT cancelSubscription function (SIMPLE REDIRECT)
-    function cancelSubscription() {
-      if (!schoolId) {
-        alert("Error: School ID not found. Please log in again.");
-        return;
-      }
+    async function cancelSubscription() {
 
-      const expiryStr = currentExpiry
-        ? currentExpiry.toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-          })
-        : 'your current term end date';
+  if (!schoolId) {
+    alert("Error: School ID not found. Please log in again.");
+    return;
+  }
 
-      if (!confirm(
-        '⏹️ Cancel Auto-Renewal?\n\n' +
-        '✅ Your subscription remains ACTIVE until: ' + expiryStr + '\n' +
-        '✅ Full access continues until expiry\n' +
-        '✅ No auto-renewal after expiry\n\n' +
-        'Do you want to proceed?'
-      )) {
-        return;
-      }
+  const expiryStr = currentExpiry
+    ? currentExpiry.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      })
+    : 'your current term end date';
 
-      // ✅ SIMPLE REDIRECT - NO fetch(), NO async/await, NO try/catch
-      window.location.href = `/api/subscription/cancel?school_id=${encodeURIComponent(schoolId)}`;
+  if (!confirm(
+    '⏹️ Cancel Auto-Renewal?\n\n' +
+    '✅ Your subscription remains ACTIVE until: ' + expiryStr + '\n' +
+    '✅ Full access continues until expiry\n' +
+    '✅ No auto-renewal after expiry\n\n' +
+    'Do you want to proceed?'
+  )) {
+    return;
+  }
+
+  try {
+    const res = await fetch('https://api.gradely.info/api/subscription/cancel', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ school_id: schoolId })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Cancellation failed');
     }
+
+    document.getElementById('message').innerHTML =
+      '<span class="success">✅ Auto-renewal cancelled. Your access continues until ' +
+      expiryStr +
+      '.</span>';
+
+    document.getElementById('cancelBtn').style.display = 'none';
+    document.getElementById('cancelStatus').style.display = 'block';
+
+  } catch (err) {
+    document.getElementById('message').innerHTML =
+      '<span class="error">❌ ' +
+      (err.message || 'Failed to cancel subscription') +
+      '</span>';
+  }
+}
 
     function renewSubscription() {
       window.location.href =
