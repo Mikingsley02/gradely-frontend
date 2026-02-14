@@ -10,7 +10,7 @@
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.paystack.co https://checkout.paystack.com https://vercel.live https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' https:; font-src 'self' https:; connect-src 'self' https://api.gradely.info https://api.paystack.co https://cdn.jsdelivr.net; frame-src https://checkout.paystack.com https://vercel.live;" }
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.paystack.co https://checkout.paystack.com https://vercel.live https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.datadoghq-browser-agent.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://paystack.com; img-src 'self' https: data:; font-src 'self' https: https://cdnjs.cloudflare.com; connect-src 'self' https://api.gradely.info https://api.paystack.co https://cdn.jsdelivr.net https://browser-intake-datadoghq.com; frame-src https://checkout.paystack.com https://vercel.live;" }
       ]
     }
   ]
