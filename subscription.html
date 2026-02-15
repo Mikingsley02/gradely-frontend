@@ -305,14 +305,14 @@
   }
 
   try {
-    const res = await fetch("https://api.gradely.info/api/subscription/cancel", {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ school_id: schoolId })
-    });
+  const res = await fetch("https://api.gradely.info/api/subscription/cancel", {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
 
     const data = await res.json();
 
