@@ -386,10 +386,12 @@
 
       try {
         const res = await fetch(`${API_BASE}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ admin_id, password }),
-        });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  credentials: "include", // << THIS IS THE KEY LINE
+  body: JSON.stringify({ admin_id, password }),
+});
+
 
         const data = await res.json();
 
