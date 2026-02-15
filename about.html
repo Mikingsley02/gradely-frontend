@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About Us | Gradely.info - School Management System</title>
+  <meta name="description" content="Gradely.info - Modern school management system for Nigerian schools. Student records, result uploads, SMS notifications, and more.">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* Header with gradient */
+    header {
+      background: linear-gradient(120deg, #2d046e 0%, #1a0a40 100%);
+      color: white;
+      padding: 1rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+      animation: pulse 10s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.2; }
+      50% { transform: scale(1.1); opacity: 0.4; }
+    }
+
+    .brand {
+      font-size: 1.6rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    /* ✅ FIXED LOGO: NO SPACE between gradely and .info (same line) */
+    .gradely-text { color: white; }
+    .info-text { color: #ffd700; }
+    
+    .subtitle { 
+      opacity: 0.9; 
+      font-size: 0.95rem; 
+      margin-top: 0.4rem;
+      max-width: 90%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Navigation */
+    nav {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      padding: 0.7rem 1rem;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #2d046e;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: color 0.3s ease;
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+    }
+
+    .nav-links a:hover {
+      color: #4361ee;
+      background: rgba(67, 97, 238, 0.08);
+    }
+
+    /* Main Content */
+    .container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1.2rem;
+    }
+
+    section {
+      background: white;
+      border-radius: 14px;
+      padding: 2rem;
+      margin-bottom: 1.8rem;
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    section:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    h2 {
+      color: #2d046e;
+      font-size: 1.8rem;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2.5px solid #4361ee;
+      display: inline-block;
+    }
+
+    h3 {
+      color: #4361ee;
+      font-size: 1.4rem;
+      margin: 1.2rem 0 0.8rem;
+    }
+
+    p {
+      margin-bottom: 0.9rem;
+      font-size: 1rem;
+      line-height: 1.65;
+    }
+
+    .highlight {
+      background: linear-gradient(120deg, rgba(67, 97, 238, 0.15), rgba(58, 12, 163, 0.1));
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,248,255,0.95) 100%);
+      border-radius: 14px;
+      margin-bottom: 1.8rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .hero h1 {
+      font-size: 2.3rem;
+      color: #2d046e;
+      margin-bottom: 0.9rem;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: #4a5568;
+      max-width: 750px;
+      margin: 0 auto 1.8rem;
+      line-height: 1.5;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(120deg, #4361ee 0%, #3a0ca3 100%);
+      color: white;
+      padding: 0.9rem 2.2rem;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.05rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 18px rgba(67, 97, 238, 0.35);
+      border: none;
+      cursor: pointer;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 22px rgba(67, 97, 238, 0.5);
+      background: linear-gradient(120deg, #3a0ca3 0%, #4361ee 100%);
+    }
+
+    /* Mission & Vision */
+    .mission-vision {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.6rem;
+      margin-top: 1.8rem;
+    }
+
+    .mission-card, .vision-card {
+      background: linear-gradient(135deg, #f8f9ff 0%, #eef2ff 100%);
+      border-left: 3.5px solid #4361ee;
+      padding: 1.6rem;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .mission-card:hover, .vision-card:hover {
+      transform: translateX(3px);
+      box-shadow: 0 5px 18px rgba(67, 97, 238, 0.18);
+    }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.6rem;
+      margin-top: 1.8rem;
+    }
+
+    .feature-card {
+      background: #f9fafc;
+      padding: 1.7rem 1.2rem;
+      border-radius: 12px;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: #eef2ff;
+      box-shadow: 0 6px 20px rgba(67, 97, 238, 0.2);
+    }
+
+    .feature-icon {
+      font-size: 2.6rem;
+      color: #4361ee;
+      margin-bottom: 0.9rem;
+    }
+
+    .feature-card h4 {
+      color: #2d046e;
+      margin-bottom: 0.7rem;
+      font-size: 1.25rem;
+    }
+
+    /* Stats Section */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1.5rem;
+      text-align: center;
+      margin-top: 1.8rem;
+    }
+
+    .stat-item {
+      padding: 1.2rem 0.5rem;
+    }
+
+    .stat-number {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #4361ee;
+      margin-bottom: 0.4rem;
+    }
+
+    .stat-label {
+      color: #4a5568;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    /* CEO Section */
+    .ceo-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 2.2rem 1.5rem;
+      background: linear-gradient(135deg, #f8f9ff 0%, #eef2ff 100%);
+      border-radius: 14px;
+      margin-top: 1.8rem;
+    }
+
+    @media (min-width: 768px) {
+      .ceo-section {
+        flex-direction: row;
+        text-align: left;
+        align-items: flex-start;
+      }
+    }
+
+    .ceo-avatar {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2d046e 0%, #4361ee 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 3.2rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 8px 25px rgba(45, 4, 110, 0.25);
+      flex-shrink: 0;
+    }
+
+    @media (min-width: 768px) {
+      .ceo-avatar {
+        margin-bottom: 0;
+        margin-right: 2rem;
+      }
+    }
+
+    .ceo-name {
+      font-size: 1.8rem;
+      color: #2d046e;
+      margin-bottom: 0.4rem;
+      font-weight: 700;
+    }
+
+    .ceo-title {
+      color: #4361ee;
+      font-size: 1.25rem;
+      margin-bottom: 1.2rem;
+      font-weight: 600;
+    }
+
+    .ceo-bio {
+      max-width: 700px;
+      line-height: 1.7;
+      color: #4a5568;
+    }
+
+    .company-badge {
+      display: inline-block;
+      background: linear-gradient(120deg, #ffd700 0%, #ffaa00 100%);
+      color: #000;
+      padding: 0.3rem 0.9rem;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin: 0.8rem 0;
+      box-shadow: 0 3px 10px rgba(255, 215, 0, 0.3);
+    }
+
+    /* Contact Section */
+    .contact-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1.8rem;
+      margin-top: 1.8rem;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+    }
+
+    .contact-icon {
+      min-width: 46px;
+      height: 46px;
+      background: linear-gradient(135deg, #4361ee, #3a0ca3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .contact-text h4 {
+      color: #2d046e;
+      margin-bottom: 0.25rem;
+      font-size: 1.05rem;
+    }
+
+    .contact-text p, .contact-text a {
+      color: #4a5568;
+      text-decoration: none;
+      transition: color 0.2s ease;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .contact-text a:hover {
+      color: #4361ee;
+    }
+
+    /* Footer */
+    footer {
+      background: linear-gradient(120deg, #2d046e 0%, #1a0a40 100%);
+      color: rgba(255, 255, 255, 0.85);
+      padding: 2.2rem 1.2rem 1.5rem;
+      text-align: center;
+    }
+
+    .footer-content {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .footer-logo {
+      font-size: 1.65rem;
+      font-weight: 700;
+      margin-bottom: 1.3rem;
+      display: block;
+      letter-spacing: -0.5px;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1.4rem;
+      margin: 1.6rem 0;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+      padding: 0.4rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    .footer-links a:hover {
+      color: #ffd700;
+      background: rgba(255, 215, 0, 0.12);
+    }
+
+    .copyright {
+      margin-top: 1.4rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 0.9rem;
+      opacity: 0.85;
+      line-height: 1.5;
+    }
+
+    .developed-by {
+      background: rgba(255, 255, 255, 0.15);
+      border-left: 4px solid #ffd700;
+      padding: 1.2rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.5rem 0;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    /* ✅ MOBILE-FIRST RESPONSIVE DESIGN */
+    @media (max-width: 768px) {
+      .container { margin: 1.8rem auto; padding: 0 1rem; }
+      section { padding: 1.8rem; margin-bottom: 1.5rem; }
+      h2 { font-size: 1.65rem; }
+      h3 { font-size: 1.3rem; }
+      p { font-size: 0.98rem; }
+      .hero { padding: 2rem 1.2rem; }
+      .hero h1 { font-size: 2rem; }
+      .hero p { font-size: 1.05rem; }
+      .cta-button { padding: 0.85rem 2rem; font-size: 1rem; }
+      .nav-container { padding: 0.6rem 0.8rem; }
+      .nav-links { gap: 0.9rem; }
+      .nav-links a { font-size: 0.9rem; padding: 0.35rem 0.5rem; }
+      .brand { font-size: 1.45rem; gap: 6px; }
+      .subtitle { font-size: 0.9rem; max-width: 95%; }
+      .stat-number { font-size: 2rem; }
+      .feature-icon { font-size: 2.4rem; }
+      .ceo-avatar { width: 130px; height: 130px; font-size: 2.8rem; }
+      .ceo-name { font-size: 1.65rem; }
+      .ceo-title { font-size: 1.15rem; }
+    }
+
+    @media (max-width: 480px) {
+      header { padding: 0.9rem 1rem; }
+      .brand { 
+        font-size: 1.35rem; 
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      /* ✅ CRITICAL: Logo spans on SAME LINE with NO SPACE */
+      .brand .logo-text { display: inline; }
+      .subtitle { 
+        font-size: 0.85rem; 
+        margin-top: 0.3rem;
+        max-width: 100%;
+      }
+      .container { margin: 1.5rem auto; padding: 0 0.9rem; }
+      section { 
+        padding: 1.6rem; 
+        margin-bottom: 1.4rem;
+        border-radius: 12px;
+      }
+      h2 { 
+        font-size: 1.55rem; 
+        margin-bottom: 1rem;
+      }
+      h3 { font-size: 1.25rem; }
+      p { font-size: 0.95rem; margin-bottom: 0.8rem; }
+      .hero { 
+        padding: 1.8rem 1rem; 
+        border-radius: 12px;
+      }
+      .hero h1 { 
+        font-size: 1.85rem; 
+        margin-bottom: 0.8rem;
+      }
+      .hero p { 
+        font-size: 1rem; 
+        margin-bottom: 1.6rem;
+      }
+      .cta-button { 
+        padding: 0.8rem 1.8rem; 
+        font-size: 0.98rem;
+        width: 90%;
+      }
+      .mission-vision, 
+      .features-grid,
+      .contact-info { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .stat-number { font-size: 1.9rem; }
+      .stat-label { font-size: 0.9rem; }
+      .contact-icon { min-width: 42px; height: 42px; font-size: 1.3rem; }
+      .contact-text h4 { font-size: 1rem; }
+      .contact-text p, .contact-text a { font-size: 0.92rem; }
+      footer { padding: 1.8rem 1rem 1.3rem; }
+      .footer-logo { font-size: 1.5rem; margin-bottom: 1.1rem; }
+      .footer-links { gap: 0.9rem; }
+      .footer-links a { font-size: 0.92rem; padding: 0.35rem 0.8rem; }
+      .copyright { 
+        font-size: 0.87rem; 
+        margin-top: 1.2rem;
+        padding-top: 1rem;
+      }
+      .ceo-avatar { width: 115px; height: 115px; font-size: 2.5rem; }
+      .ceo-name { font-size: 1.55rem; }
+      .ceo-title { font-size: 1.1rem; }
+      .ceo-section { padding: 1.8rem 1rem; }
+      .company-badge { font-size: 0.98rem; padding: 0.25rem 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <span>🎓</span>
+      <!-- ✅ CRITICAL FIX: Spans on SAME LINE with NO SPACE between them -->
+      <span class="logo-text"><span class="gradely-text">gradely</span><span class="info-text">.info</span></span>
+    </div>
+    <div class="subtitle">Transforming Education Through Technology</div>
+  </header>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <ul class="nav-links">
+        <li><a href="index.html">🏠 Home</a></li>
+        <li><a href="about.html">ℹ️ About Us</a></li>
+        <li><a href="plan-comparison.html">💳 Plan</a></li>
+        <li><a href="contact.html">📞 Contact</a></li>
+        <li><a href="admin-login.html">🔐 Login</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="container">
+    <section class="hero">
+      <h1>🎓 About Gradely.info</h1>
+      <p>Nigeria's premier school management system designed to streamline educational administration, enhance parent engagement, and empower educators with powerful digital tools.</p>
+      <a href="register-school.html" class="cta-button">
+        <i>🚀</i> Get Started Today
+      </a>
+    </section>
+
+    <!-- Our Story -->
+    <section>
+      <h2>📖 Our Story</h2>
+      <p><strong>gradely.info</strong> was founded in 2024 by a team of passionate educators and technology experts who recognized the urgent need for modern, affordable school management solutions in Nigeria.</p>
+      <p>Traditional school administration methods—paper-based records, and limited parent communication—were holding back educational institutions from reaching their full potential. We set out to change that.</p>
+      <p>Today, gradely.info serves hundreds of schools across Nigeria, helping administrators, teachers, and parents work together more effectively to support student success.</p>
+      
+      <div class="developed-by">
+        ✨ <strong>Gradely.info is proudly developed and maintained by Remit Integrated Services LTD</strong>
+      </div>
+   
+
+    <!-- CEO Section -->
+    <section>
+      <h2>🌟 Leadership</h2>
+      <div class="ceo-section">
+        <img 
+  src="https://i.postimg.cc/dt8v9tRq/pass.jpg"
+  alt="Ifeanyi Michael, CEO" 
+  class="ceo-avatar"
+  loading="lazy"
+>
+        <div>
+          <h3 class="ceo-name">Ifeanyi Michael</h3>
+          <div class="ceo-title">CEO, Remit Integrated Services LTD</div>
+          <div class="company-badge">gradely.info Founder</div>
+          <p class="ceo-bio">
+            Ifeanyi Michael is a visionary technology leader with over 10 years of experience in  technology and software development across Africa. A graduate of Information Technology from the University of Huddersfield, UK. He founded Remit Integrated Services LTD with a mission to bridge the IT and security gap in Nigerian.
+          </p>
+          <p class="ceo-bio">
+            Under his leadership, Remit Integrated Services has developed innovative solutions adopted by over 500 schools nationwide. Ifeanyi is passionate about leveraging technology to enhance communication for every Nigerian school, regardless of location or status.
+          </p>
+          <p class="ceo-bio">
+            "Our goal with gradely.info is not just to digitize school administration—it's to create an ecosystem where teachers can communicate better, parents can engage meaningfully, and students can thrive academically." — <em>Ifeanyi Michael</em>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mission & Vision -->
+    <section>
+      <h2>🎯 Mission & Vision</h2>
+      <div class="mission-vision">
+        <div class="mission-card">
+          <h3>🚀 Our Mission</h3>
+          <p>To provide affordable, user-friendly school management software that empowers Nigerian educational institutions to operate efficiently, communicate effectively, and focus on what matters most—student learning and development.</p>
+        </div>
+        <div class="vision-card">
+          <h3>🌟 Our Vision</h3>
+          <p>To become Nigeria's most trusted educational technology partner, transforming every school into a digitally-enabled learning environment where administrators, teachers, parents, and students thrive together.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- What We Do -->
+    <section>
+      <h2>💡 What We Do</h2>
+      <p><strong>gradely.info</strong> is a comprehensive school management system that simplifies every aspect of educational administration:</p>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h4>Student Management</h4>
+          <p>Centralized database for student records, enrollment, and academic reports.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📈</div>
+          <h4>Result Processing</h4>
+          <p>Automated result uploads, grading, and report card generation.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <h4>Parent Communication</h4>
+          <p>SMS and email notifications to keep parents informed about their children's progress.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🏫</div>
+          <h4>Class Management</h4>
+          <p>Organize classes, sections, and timetables with ease.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why Choose Us -->
+    <section>
+      <h2>✨ Why Choose Gradely?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🇳🇬</div>
+          <h4>Built for Nigeria</h4>
+          <p>Designed specifically for Nigerian educational system and requirements.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h4>Easy to Use</h4>
+          <p>Intuitive interface requires minimal training—get started in minutes.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h4>Secure & Reliable</h4>
+          <p>Built-in security features and 99.9% uptime guarantee.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Our Impact -->
+    <section>
+      <h2>📊 Our Impact</h2>
+      <div class="stats">
+        <div class="stat-item">
+          <div class="stat-number">500+</div>
+          <div class="stat-label">Schools Served</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">100K+</div>
+          <div class="stat-label">Students Managed</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">98%</div>
+          <div class="stat-label">Customer Satisfaction</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">24/7</div>
+          <div class="stat-label">Support Available</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Information -->
+    <section>
+      <h2>📞 Get in Touch</h2>
+      <p>We'd love to hear from you! Whether you have questions about our platform, need technical support, or want to discuss partnership opportunities, our team is here to help.</p>
+      
+      <div class="contact-info">
+        <div class="contact-item">
+          <div class="contact-icon">📧</div>
+          <div class="contact-text">
+            <h4>Email</h4>
+            <p><a href="mailto:support@gradely.info">support@gradely.info</a></p>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">📱</div>
+          <div class="contact-text">
+            <h4>Phone</h4>
+            <p>+234 806 428 7477</p>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">🏢</div>
+          <div class="contact-text">
+            <h4>Office</h4>
+          <p>Remit Integrated Services<br>25 Josephat Mojekwu Street, Along Living Faith Church, Ext 3, FO1,<br>Kubwa, Abuja, F.C.T, Nigeria</p>
+            <p>Mon-Fri: 9:00 AM - 5:00 PM</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section style="text-align: center; background: linear-gradient(135deg, #f0f4ff 0%, #e6eeff 100%); padding: 2rem; border-radius: 14px;">
+      <h2 style="border-bottom: 2.5px solid #ffd700; font-size: 1.7rem;">Ready to Transform Your School?</h2>
+      <p style="font-size: 1.1rem; margin: 1.2rem 0; color: #2d046e; line-height: 1.5;">Join hundreds of Nigerian schools already benefiting from Gradely's powerful platform.</p>
+      <a href="register-school.html" class="cta-button" style="background: linear-gradient(120deg, #ffd700 0%, #ffaa00 100%); color: #000; box-shadow: 0 5px 18px rgba(255, 215, 0, 0.35);">
+        <i>✨</i> Start Your Free Trial
+      </a>
+      <p style="margin-top: 1.3rem; color: #4a5568; font-size: 0.95rem;">No credit card required • 14-day free trial • Cancel anytime</p>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-logo">
+        <span>🎓</span>
+        <!-- ✅ CRITICAL FIX: Spans on SAME LINE with NO SPACE -->
+        <span class="logo-text"><span class="gradely-text">gradely</span><span class="info-text">.info</span></span>
+      </div>
+      
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About Us</a>
+        <a href="plan-comparison.html">Plan</a>
+        <a href="contact.html">Contact</a>
+        <a href="admin-login.html">Login</a>
+        <a href="register-school.html">Register</a>
+      </div>
+      
+      <div class="footer-links">
+        <a href="terms.html">Terms of Service</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="refund-policy.html">Refund Policy</a>
+        <a href="faq.html">FAQ</a>
+      </div>
+      
+      <div class="copyright">
+        <p>© 2026 <span class="gradely-text">gradely</span><span class="info-text">.info</span>. All rights reserved.</p>
+        <p style="margin-top: 0.3rem; font-size: 0.92rem; opacity: 0.85;">
+          Developed by <strong>Remit Integrated Services LTD</strong> | Powered by RIS
+        </p>
+        <p style="margin-top: 0.4rem; font-size: 0.88rem; opacity: 0.8;">
+          🇳🇬 Proudly serving Nigerian educational institutions
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+
+    // Header scroll effect
+    window.addEventListener('scroll', function() {
+      const header = document.querySelector('header');
+      if (window.scrollY > 40) {
+        header.style.boxShadow = '0 5px 18px rgba(0, 0, 0, 0.28)';
+        header.style.background = 'linear-gradient(120deg, #1e034a 0%, #0f0528 100%)';
+      } else {
+        header.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+        header.style.background = 'linear-gradient(120deg, #2d046e 0%, #1a0a40 100%)';
+      }
+    });
+  </script>
+
+</body>
+</html>

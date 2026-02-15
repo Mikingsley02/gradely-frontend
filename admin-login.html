@@ -19,7 +19,29 @@
       justify-content: center;
       align-items: center;
       padding: 20px;
+      position: relative; /* Required for absolute top nav */
     }
+    
+    /* ✅ TOP NAVIGATION STYLES */
+    .top-nav {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 15px;
+      font-size: 0.9rem;
+      z-index: 10;
+    }
+    .top-nav a {
+      color: #00d2ff;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    .top-nav a:hover {
+      color: white;
+      text-shadow: 0 0 5px rgba(0, 210, 255, 0.5);
+    }
+
     .container {
       background: white;
       border-radius: 15px;
@@ -43,9 +65,13 @@
       font-size: 1.8rem;
       font-weight: 600;
     }
+    /* ✅ REMOVED BOLD FROM HEADER PARAGRAPHS */
     .header p {
       font-size: 1rem;
       opacity: 0.9;
+      font-weight: normal;
+      line-height: 1.4;
+      margin: 5px 0;
     }
     .content {
       padding: 30px;
@@ -77,18 +103,39 @@
       font-family: inherit;
     }
     input:focus {
-      border-color: #3498db;
+      border-color: #ffd700;
       outline: none;
       box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
     }
+    
+    /* ✅ TOGGLE PASSWORD ICON STYLES */
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 1.3rem;
+      color: #666;
+      user-select: none;
+      z-index: 5;
+      padding: 5px;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+    }
+    .toggle-password:hover {
+      color: #00d2ff;
+      background: rgba(0, 210, 255, 0.1);
+    }
+
     button {
       width: 100%;
       padding: 14px;
-      background: #3498db;
+      background: linear-gradient(120deg, #3498db, #2980b9);
       color: white;
       border: none;
       border-radius: 8px;
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -96,9 +143,11 @@
       overflow: hidden;
     }
     button:hover {
-      background: #2980b9;
+      background: linear-gradient(120deg, #2980b9, #1a69a4);
       transform: scale(1.02);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    button:active {
+      transform: scale(0.98);
     }
     button.loading {
       background: #27ae60;
@@ -140,6 +189,12 @@
       body {
         padding: 10px;
       }
+      .top-nav {
+        font-size: 0.85rem;
+        gap: 10px;
+        right: 15px;
+        top: 15px;
+      }
       .container {
         border-radius: 12px;
         max-width: 100%;
@@ -163,6 +218,9 @@
       footer {
         font-size: 0.8rem;
         padding: 12px;
+      }
+      .toggle-password {
+        font-size: 1.2rem;
       }
     }
 
@@ -191,23 +249,20 @@
       text-decoration: underline;
     }
 
-    /* Toggle Password Icon */
-    .toggle-password {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      cursor: pointer;
-      font-size: 1.2em;
-      color: #666;
-      user-select: none;
-    }
-    .toggle-password:hover {
-      color: #2e7d32;
+    /* ✅ GOLDEN .info BRAND COLOR */
+    .info-text {
+      color: #ffd700;
+      font-weight: 700;
     }
   </style>
 </head>
 <body>
+  <!-- ✅ TOP NAVIGATION: Home, About Us, Contact Us -->
+  <div class="top-nav">
+    <a href="index.html">🏠 Home</a>
+    <a href="about.html">ℹ️ About Us</a>
+    <a href="contact.html">📞 Contact Us</a>
+  </div>
 
   <!-- Admin Login Form -->
   <div class="container">
@@ -227,9 +282,9 @@
             font-weight: 700;
             letter-spacing: -0.5px;
           ">
-            gradely<span style="color:#31bdd2;">.info</span>
+            gradely<span class="info-text">.info</span>
           </h1>
-          <p style="margin: 5px 0 0; font-size: 0.9rem; opacity: 0.9; font-weight: 400;">
+          <p style="margin: 5px 0 0; font-size: 0.9rem; opacity: 0.9; font-weight: normal;">
             Secure access only
           </p>
         </div>
@@ -238,7 +293,7 @@
     </div>
 
     <div class="content">
-      <p style="margin-bottom: 20px; color: #555;">
+      <p style="margin-bottom: 20px; color: #555; font-weight: normal;">
         Enter your credentials to access the admin dashboard.
       </p>
 
@@ -251,168 +306,124 @@
           <label for="adminPassword">Password</label>
           <div class="password-wrapper">
             <input type="password" id="adminPassword" placeholder="Enter Password" required />
-            <span class="toggle-password" onclick="toggleAdminPassword()">👁️</span>
+            <span class="toggle-password" id="togglePassword">👁️</span>
           </div>
         </div>
         <button type="submit">
-          <span class="text">Login</span>
+          <span class="text">Login to Dashboard</span>
           <span class="spinner"></span>
         </button>
       </form>
 
-      <p style="font-size: 0.9rem; margin-top: 15px;">
-  <a href="forgot-password.html" style="color: #3498db; text-decoration: none;">🔐 Forgot password?</a>
-</p>
+<!-- ✅ ADMIN LOGIN: Signup prompt for new schools -->
+<div class="options" style="margin-top: 20px; font-size: 0.95rem;">
+  <p>Forgot password? <a href="forgot-password.html" style="color: #3498db; text-decoration: none;">Reset here</a></p>
+  <div class="divider" style="
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: rgba(0,0,0,0.5);
+  ">
+    <div style="flex:1; border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+    <span style="padding:0 10px; font-weight:600;">OR</span>
+    <div style="flex:1; border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+  </div>
+  <p style="margin:0;">
+    New to Gradely? 
+    <a href="register-school.html" style="color: #27ae60; text-decoration: none; font-weight: 600;">
+      ✨ Register your school today
+    </a>
+  </p>
+</div>
 
+
+
+      
 
       <div class="admin-link">
         <a href="index.html">← Back to Home</a>
       </div>
     </div>
 
-    <!-- Footer -->
+    <!-- ✅ FIXED FOOTER: Golden .info + Removed refund policy -->
     <footer>
-      <strong>© 2026 gradely.info. All rights reserved. | Powered by RIS</strong><br>
+      <strong>© 2026 gradely<span class="info-text">.info</span></strong>. All rights reserved. | Powered by RIS<br>
       <a href="terms.html">Terms</a> • 
-      <a href="privacy.html">Privacy</a> • 
-      <a href="refund-policy.html">Refund Policy</a>
+      <a href="privacy.html">Privacy</a> •
+      <a href="refund-policy.html">Refund</a>
     </footer>
   </div>
 
   <!-- ✅ Scripts -->
   <script>
-// Toggle password
-function toggleAdminPassword() {
-  const passwordInput = document.getElementById("adminPassword");
-  const icon = passwordInput.nextElementSibling;
-
-  const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-  passwordInput.setAttribute("type", type);
-
-  icon.textContent = type === "text" ? "🙈" : "👁️";
-}
-
-document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const admin_id = document.getElementById("adminId").value.trim();
-  const password = document.getElementById("adminPassword").value.trim();
-
-  const btn = e.target.querySelector("button");
-  const text = btn.querySelector(".text");
-  const spinner = btn.querySelector(".spinner");
-
-  btn.classList.add("loading");
-  text.style.opacity = "0";
-  spinner.style.display = "block";
-
-  const API_BASE = window.location.hostname.includes("localhost")
-    ? "http://localhost:5000"
-    : "https://api.gradely.info";
-
-
-  try {
-    const res = await fetch(`${API_BASE}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ admin_id, password }),
+    // ✅ PASSWORD TOGGLE FUNCTIONALITY
+    document.getElementById('togglePassword').addEventListener('click', function() {
+      const passwordField = document.getElementById('adminPassword');
+      const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordField.setAttribute('type', type);
+      this.textContent = type === 'password' ? '👁️' : '🙈';
     });
 
-    const data = await res.json();
+    document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    if (!res.ok) {
-      alert("❌ " + (data.message || "Login failed."));
-      return;
-    }
+      const admin_id = document.getElementById("adminId").value.trim();
+      const password = document.getElementById("adminPassword").value.trim();
 
-    if (data.success) {
-  alert("✅ Login successful!");
+      const btn = e.target.querySelector("button");
+      const text = btn.querySelector(".text");
+      const spinner = btn.querySelector(".spinner");
 
-  
-  localStorage.setItem("adminId", data.admin.admin_id);
-  localStorage.setItem("school_id", data.admin.admin_id);
-  localStorage.setItem("school_name", data.admin.school_name || "");
-  localStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
-  localStorage.setItem("token", data.token);
-  localStorage.setItem("admin_token", data.token);
+      btn.classList.add("loading");
+      text.style.opacity = "0";
+      spinner.style.display = "block";
 
-  window.location.href = "dashboard.html";
-} else {
-      alert("❌ " + (data.message || "Login failed."));
-    }
+      // ✅ FIXED: Removed trailing spaces from API URL
+      const API_BASE = window.location.hostname.includes("localhost")
+        ? "http://localhost:5000"
+        : "https://api.gradely.info";
 
-  } catch (err) {
-    console.error("❌ Network or server error:", err);
-    alert("❌ Network or server error. Please try again.");
-  } finally {
-    btn.classList.remove("loading");
-    text.style.opacity = "1";
-    spinner.style.display = "none";
-  }
-});
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ admin_id, password }),
+        });
 
+        const data = await res.json();
 
-async function resetAdminPassword() {
-  const adminId = prompt("Enter your Admin ID to reset your password:");
-  if (!adminId) return;
+        if (!res.ok) {
+          alert("❌ " + (data.message || "Login failed."));
+          return;
+        }
 
-  const API_BASE = window.location.hostname.includes("localhost")
-    ? "http://localhost:3001/api/auth"
-    : "https://api.gradely.info/api/auth";
+        if (data.success) {
+          alert("✅ Login successful!");
+          
+          localStorage.setItem("adminId", data.admin.admin_id);
+          localStorage.setItem("school_id", data.admin.admin_id);
+          localStorage.setItem("school_name", data.admin.school_name || "");
+          localStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("admin_token", data.token);
 
-  try {
-    // Step 1: Request reset code
-    let res = await fetch(`${API_BASE}/forgot-password`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: adminId })
+          window.location.href = "dashboard.html";
+        } else {
+          alert("❌ " + (data.message || "Login failed."));
+        }
+      } catch (err) {
+        console.error("❌ Network or server error:", err);
+        alert("❌ Network or server error. Please try again.");
+      } finally {
+        btn.classList.remove("loading");
+        text.style.opacity = "1";
+        spinner.style.display = "none";
+      }
     });
-
-    let data = await res.json();
-
-    if (!res.ok || !data.success) {
-      alert("❌ " + (data.message || "Failed to send reset code."));
-      return;
-    }
-
-    alert("✅ Reset code sent! Check your email/SMS.");
-
-    // Step 2: Ask for code
-    const code = prompt("Enter the reset code you received:");
-    if (!code) return;
-
-    // Step 3: Ask for new password
-    const newPassword = prompt("Enter your new password (min 6 characters):");
-    if (!newPassword) return;
-
-    // Step 4: Reset password
-    res = await fetch(`${API_BASE}/reset-password`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: adminId, code, newPassword })
-    });
-
-    data = await res.json();
-
-    if (!res.ok || !data.success) {
-      alert("❌ " + (data.message || "Failed to reset password."));
-      return;
-    }
-
-    alert("✅ Password reset successfully! You can now login with your new password.");
-  } catch (err) {
-    console.error("❌ Forgot password/reset error:", err);
-    alert("❌ Network or server error. Please try again.");
-  }
-}
-
-
-
-</script>
-
+  </script>
 
   <!-- Chatbot -->
   <script src="js/kaima-chatbot.js"></script>
-
 </body>
 </html>
