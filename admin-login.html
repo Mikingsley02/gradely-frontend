@@ -379,7 +379,7 @@
       text.style.opacity = "0";
       spinner.style.display = "block";
 
-      // ✅ FIXED: Removed trailing spaces from API URL
+    
       const API_BASE = window.location.hostname.includes("localhost")
         ? "http://localhost:5000"
         : "https://api.gradely.info";
@@ -388,7 +388,7 @@
         const res = await fetch(`${API_BASE}/api/auth/login`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  credentials: "include", // << THIS IS THE KEY LINE
+  credentials: "include",
   body: JSON.stringify({ admin_id, password }),
 });
 
