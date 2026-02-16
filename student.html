@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>📚 Student Results | Gradely.info</title>
-  <link rel="icon" href="https://gradely.info/favicon.ico"/>
+  <link rel="icon" href="https://gradely.info/favicon.ico"/> <!-- ✅ FIXED: Removed trailing spaces -->
   <style>
     :root {
       --primary: #2575fc;
@@ -121,7 +121,7 @@
     <header>
       <div class="school-name" id="schoolName">Loading School...</div>
       <h2>📘 Student Term Results</h2>
-      <p>Review your child’s academic performance below</p>
+      <p>Review your child's academic performance below</p>
     </header>
 
     
@@ -216,10 +216,14 @@
     <a href="refund-policy.html">Refund Policy</a>
   </footer>
 
+  <!-- ✅ FIXED: Chart.js URL (removed trailing spaces) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <!-- ✅ CRITICAL FIX: Switched jsPDF to jsDelivr (NO source map comment) -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   
   <script>
+    // ✅ FIXED: Removed trailing spaces in backend URL
     const backendUrl = "https://api.gradely.info";
     let chartInstance = null;
     let currentData = null;
