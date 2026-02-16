@@ -370,7 +370,7 @@
         return;
       }
       
-      fetch('/api/login', {
+      fetch('https://api.gradely.info/api/auth/parent-login', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -378,9 +378,13 @@
       })
       .then(response => response.json())
       .then(data => {
-        if (data.success) {
-          sessionStorage.setItem('student', JSON.stringify(data.student));
-          window.location.href = 'student.html';
+  if (data.success) {
+
+    // ✅ Save student ID the way results page expects
+    localStorage.setItem("studentId", data.parent.student_id);
+    localStorage.setItem("studentData", JSON.stringify(data.parent));
+    window.location.href = 'student.html';
+
         } else {
           alert('Login failed: ' + data.message);
         }
