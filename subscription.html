@@ -131,9 +131,9 @@
 
     <div class="btn-group" id="mainButtons">
       <button class="btn btn-renew" onclick="renewSubscription()" id="renewBtn">🔄 Renew Now</button>
-<button class="btn btn-cancel" id="cancelBtn" onclick="cancelAutoRenew()">
-  🛑 Cancel Auto-Renewal
-</button>
+      <button class="btn btn-cancel" id="cancelBtn" onclick="cancelSubscription()">
+      🛑 Cancel Auto-Renewal
+     </button>
       <button class="btn btn-upgrade" onclick="upgradeToPro()" id="upgradeBtn" style="display:none;">✨ Upgrade to Pro</button>
       <button class="btn btn-compare" onclick="window.location.href='plan-comparison.html'">📊 Compare Plans</button>
     </div>
@@ -173,7 +173,7 @@
   // ============================================
   async function fetchSubscriptionStatus() {
     try {
-      const res = await fetch(`${API_BASE}/api/subscription/status`, {
+      const res = await fetch(`${API_BASE}/subscription/status`, {
         credentials: "include"
       });
 
@@ -262,7 +262,7 @@
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/subscription/cancel-auto-renew`, {
+    const res = await fetch(`${API_BASE}/subscription/cancel-auto-renew`, {
       method: "POST",
       credentials: "include"
     });
