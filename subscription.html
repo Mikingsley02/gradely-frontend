@@ -131,7 +131,9 @@
 
     <div class="btn-group" id="mainButtons">
       <button class="btn btn-renew" onclick="renewSubscription()" id="renewBtn">🔄 Renew Now</button>
-      <button class="btn btn-cancel" onclick="cancelSubscription()" id="cancelBtn">⏹️ Cancel Auto-Renew</button>
+<button class="btn btn-cancel" id="cancelBtn" onclick="cancelAutoRenew()">
+  🛑 Cancel Auto-Renewal
+</button>
       <button class="btn btn-upgrade" onclick="upgradeToPro()" id="upgradeBtn" style="display:none;">✨ Upgrade to Pro</button>
       <button class="btn btn-compare" onclick="window.location.href='plan-comparison.html'">📊 Compare Plans</button>
     </div>
@@ -255,38 +257,32 @@
   // CANCEL AUTO-RENEW (NOT IMMEDIATE SUSPENSION)
   // ============================================
   async function cancelSubscription() {
-    // ✅ ACCURATE MESSAGE: Reflects grace period until billing date
-    if (!confirm("⏸️ Cancel Auto-Renewal?\n\nYour account will remain active until your current billing date. You can renew manually before then.\n\nAre you sure?")) {
-      return;
-    }
-
-    try {
-      // ✅ CALLS CORRECT ENDPOINT FOR AUTO-RENEW CANCELLATION
-      const res = await fetch(`${API_BASE}/api/subscription/cancel-auto-renew`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" }
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || "Cancellation failed");
-
-      // ✅ SHOW SUCCESS WITH BILLING DATE
-      const successMsg = data.nextBillingDate 
-        ? `✅ Auto-renewal cancelled. Access continues until ${new Date(data.nextBillingDate).toLocaleDateString()}.`
-        : "✅ Auto-renewal cancelled. Access continues until your current billing date.";
-      
-      document.getElementById("message").innerHTML = `<span class="success">${successMsg}</span>`;
-      
-      // Refresh UI after 1.5 seconds
-      setTimeout(fetchSubscriptionStatus, 1500);
-
-    } catch (err) {
-      console.error("Cancel error:", err);
-      document.getElementById("message").innerHTML =
-        `<span class="error">❌ ${err.message}</span>`;
-    }
+  if (!confirm("⏸️ Cancel Auto-Renewal?\n\nYour account will remain active until your current billing date. You can renew manually before then.\n\nAre you sure?")) {
+    return;
   }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/subscription/cancel-auto-renew`, {
+      method: "POST",
+      credentials: "include"
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || "Cancellation failed");
+
+    const successMsg = data.nextBillingDate 
+      ? `✅ Auto-renewal cancelled. Access continues until ${new Date(data.nextBillingDate).toLocaleDateString()}.`
+      : "✅ Auto-renewal cancelled. Access continues until your current billing date.";
+    
+    document.getElementById("message").innerHTML = `<span class="success">${successMsg}</span>`;
+    setTimeout(fetchSubscriptionStatus, 1500);
+
+  } catch (err) {
+    console.error("Cancel error:", err);
+    document.getElementById("message").innerHTML =
+      `<span class="error">❌ ${err.message}</span>`;
+  }
+}
 
   // ============================================
   // RENEW / UPGRADE (UNCHANGED)
