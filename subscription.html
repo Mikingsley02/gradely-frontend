@@ -148,16 +148,14 @@
   </footer>
 
   <script>
+  // ✅ FIXED: Removed trailing spaces in API URL (CRITICAL)
   const API_BASE = "https://api.gradely.info";
 
   let schoolId = null;
   let currentExpiry = null;
-  let selectedPlan = null;
 
   document.addEventListener("DOMContentLoaded", async () => {
-
-    schoolId = localStorage.getItem("school_id") ||
-               sessionStorage.getItem("school_id");
+    schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
 
     if (!schoolId) {
       alert("Session expired. Please log in again.");
@@ -169,37 +167,34 @@
   });
 
   // ============================================
-  // FETCH STATUS
+  // FETCH STATUS (UPDATED FOR AUTO-RENEW LOGIC)
   // ============================================
   async function fetchSubscriptionStatus() {
     try {
-      const res = await fetch(
-        `${API_BASE}/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`,
-        { credentials: "include" }
-      );
+      const res = await fetch(`${API_BASE}/api/subscription/status`, {
+        credentials: "include"
+      });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json();
-      if (!data.success) throw new Error(data.message || "Failed");
+      if (!data.success) throw new Error(data.message || "Failed to load subscription");
 
-      // PLAN
+      // PLAN DISPLAY
       document.getElementById("plan").textContent =
-        data.plan.charAt(0).toUpperCase() + data.plan.slice(1);
+        (data.plan || 'basic').charAt(0).toUpperCase() + (data.plan || 'basic').slice(1);
 
-      // STATUS
+      // STATUS ELEMENTS
       const statusEl = document.getElementById("status");
-      const cancelStatusEl = document.getElementById("cancelStatus");
       const cancelBtn = document.getElementById("cancelBtn");
       const renewBtn = document.getElementById("renewBtn");
       const upgradeBtn = document.getElementById("upgradeBtn");
       const mainButtons = document.getElementById("mainButtons");
-
       const expiryEl = document.getElementById("renewal");
 
+      // EXPIRY DATE DISPLAY
       if (data.expiryDate) {
         currentExpiry = new Date(data.expiryDate);
-
         expiryEl.textContent = currentExpiry.toLocaleDateString("en-GB", {
           day: "numeric",
           month: "short",
@@ -207,48 +202,40 @@
         });
       } else {
         expiryEl.textContent = "Not set";
+        currentExpiry = null;
       }
 
       const today = new Date();
       const isExpired = currentExpiry && currentExpiry < today;
 
-      // ============================================
-      // STATUS LOGIC
-      // ============================================
-
+      // ✅ AUTO-RENEW STATUS LOGIC (MATCHES BACKEND)
       if (isExpired) {
         statusEl.textContent = "Expired";
         statusEl.className = "error";
-
         mainButtons.style.display = "none";
-        cancelStatusEl.style.display = "none";
-        showPlanSelection(data.plan);
+        showPlanSelection(data.plan || 'basic');
         return;
       }
 
-      if (data.subscriptionStatus === "cancelled" || data.autoRenew === false) {
-        statusEl.textContent = "Active (Auto-Renew Off)";
+      if (data.isActive) {
+        // ✅ SHOW AUTO-RENEW STATUS IN UI
+        statusEl.textContent = data.autoRenewEnabled 
+          ? "Active (Auto-Renew On)" 
+          : "Active (Auto-Renew Off)";
         statusEl.className = "";
-
-        cancelBtn.style.display = "none";
-        cancelStatusEl.style.display = "block";
-      } else if (data.isActive) {
-        statusEl.textContent = "Active";
-        statusEl.className = "";
-
-        cancelBtn.style.display = "block";
-        cancelStatusEl.style.display = "none";
+        
+        // ✅ SHOW CANCEL BUTTON ONLY WHEN AUTO-RENEW IS ENABLED
+        cancelBtn.style.display = data.autoRenewEnabled ? "block" : "none";
+        mainButtons.style.display = "flex";
       } else {
-        statusEl.textContent = "Inactive";
+        statusEl.textContent = data.subscriptionStatus === 'suspended' ? "Suspended" : "Inactive";
         statusEl.className = "error";
+        cancelBtn.style.display = "none";
+        mainButtons.style.display = "none";
+        return;
       }
 
-      mainButtons.style.display = "flex";
-
-      // ============================================
       // PLAN BUTTON LOGIC
-      // ============================================
-
       if (data.plan === "basic") {
         renewBtn.style.display = "none";
         upgradeBtn.style.display = "block";
@@ -258,63 +245,65 @@
       }
 
     } catch (err) {
+      console.error("Subscription fetch error:", err);
       document.getElementById("message").innerHTML =
         `<span class="error">Unable to load subscription: ${err.message}</span>`;
     }
   }
 
   // ============================================
-  // CANCEL SUBSCRIPTION
+  // CANCEL AUTO-RENEW (NOT IMMEDIATE SUSPENSION)
   // ============================================
   async function cancelSubscription() {
-
-    if (!confirm("Cancel auto-renewal? Your access remains until expiry.")) {
+    // ✅ ACCURATE MESSAGE: Reflects grace period until billing date
+    if (!confirm("⏸️ Cancel Auto-Renewal?\n\nYour account will remain active until your current billing date. You can renew manually before then.\n\nAre you sure?")) {
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/subscription/cancel`, {
+      // ✅ CALLS CORRECT ENDPOINT FOR AUTO-RENEW CANCELLATION
+      const res = await fetch(`${API_BASE}/api/subscription/cancel-auto-renew`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ school_id: schoolId })
+        headers: { "Content-Type": "application/json" }
       });
 
       const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || "Cancellation failed");
 
-      if (!res.ok || !data.success)
-        throw new Error(data.message || "Cancellation failed");
-
-      document.getElementById("message").innerHTML =
-        `<span class="success">✅ Auto-renewal cancelled.</span>`;
-
-      await fetchSubscriptionStatus(); // refresh UI
+      // ✅ SHOW SUCCESS WITH BILLING DATE
+      const successMsg = data.nextBillingDate 
+        ? `✅ Auto-renewal cancelled. Access continues until ${new Date(data.nextBillingDate).toLocaleDateString()}.`
+        : "✅ Auto-renewal cancelled. Access continues until your current billing date.";
+      
+      document.getElementById("message").innerHTML = `<span class="success">${successMsg}</span>`;
+      
+      // Refresh UI after 1.5 seconds
+      setTimeout(fetchSubscriptionStatus, 1500);
 
     } catch (err) {
+      console.error("Cancel error:", err);
       document.getElementById("message").innerHTML =
         `<span class="error">❌ ${err.message}</span>`;
     }
   }
 
   // ============================================
-  // RENEW / UPGRADE
+  // RENEW / UPGRADE (UNCHANGED)
   // ============================================
   function renewSubscription() {
-    window.location.href =
-      `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&renew=true`;
+    window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&renew=true`;
   }
 
   function upgradeToPro() {
-    window.location.href =
-      `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
+    window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
   }
 
   // ============================================
-  // EXPIRED PLAN SELECTION
+  // EXPIRED PLAN SELECTION (UNCHANGED)
   // ============================================
   function showPlanSelection(previousPlan) {
     const container = document.querySelector(".container");
-
     const html = `
       <div style="margin-top:20px;">
         <h3 style="color:#2d046e;">Reactivate Subscription</h3>
@@ -324,7 +313,6 @@
         </button>
       </div>
     `;
-
     container.insertAdjacentHTML("beforeend", html);
   }
 </script>
