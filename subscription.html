@@ -173,7 +173,8 @@
   // ============================================
   async function fetchSubscriptionStatus() {
     try {
-      const res = await fetch(`${API_BASE}/subscription/status`, {
+      const res = await fetch(`${API_BASE}/api/subscription/status`, {
+        method: "POST",
         credentials: "include"
       });
 
@@ -262,7 +263,7 @@
   }
 
   try {
-    const res = await fetch(`${API_BASE}/subscription/cancel-auto-renew`, {
+    const res = await fetch(`${API_BASE}/api/subscription/cancel-auto-renew`, {
       method: "POST",
       credentials: "include"
     });
