@@ -172,15 +172,15 @@
   // FETCH STATUS (UPDATED FOR AUTO-RENEW LOGIC)
   // ============================================
   async function fetchSubscriptionStatus() {
-    try {
-      const res = await fetch(`${API_BASE}/api/subscription/status`, {
-        method: "POST",
-        credentials: "include"
-      });
+  try {
+    const res = await fetch(`${API_BASE}/api/subscription/status`, {
+      method: "GET",
+      credentials: "include"
+    });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data = await res.json();
+    const data = await res.json();
       if (!data.success) throw new Error(data.message || "Failed to load subscription");
 
       // PLAN DISPLAY
