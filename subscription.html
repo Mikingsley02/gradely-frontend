@@ -151,24 +151,32 @@
 
  <script>
 const API_BASE = "https://api.gradely.info";
-let schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+
+let schoolId = null;
 let currentExpiry = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
+  schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+
   if (!schoolId) {
     alert("Session expired. Please log in again.");
     window.location.href = "admin-login.html";
     return;
   }
+
   await fetchSubscriptionStatus();
 });
 
+// =====================
+// FETCH STATUS
+// =====================
 async function fetchSubscriptionStatus() {
   try {
-    const res = await fetch(`${API_BASE}/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`, {
+    const res = await fetch(`${API_BASE}/api/subscription/status`, {
       method: "GET",
       credentials: "include"
     });
+
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (!data.success) throw new Error(data.message || "Failed to load subscription");
@@ -185,7 +193,9 @@ async function fetchSubscriptionStatus() {
 
     if (data.expiryDate) {
       currentExpiry = new Date(data.expiryDate);
-      expiryEl.textContent = currentExpiry.toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
+      expiryEl.textContent = currentExpiry.toLocaleDateString("en-GB", {
+        day: "numeric", month: "short", year: "numeric"
+      });
     } else {
       expiryEl.textContent = "Not set";
       currentExpiry = null;
@@ -194,7 +204,6 @@ async function fetchSubscriptionStatus() {
     const today = new Date();
     const isExpired = currentExpiry && currentExpiry < today;
 
-    // Status & buttons
     if (isExpired) {
       statusEl.textContent = "Expired";
       statusEl.className = "error";
@@ -211,10 +220,11 @@ async function fetchSubscriptionStatus() {
       cancelBtn.style.display = data.autoRenewEnabled ? "block" : "none";
       mainButtons.style.display = "flex";
     } else {
-      statusEl.textContent = data.subscriptionStatus === 'suspended' ? "Suspended" : "Inactive";
+      statusEl.textContent = "Inactive";
       statusEl.className = "error";
       cancelBtn.style.display = "none";
       mainButtons.style.display = "none";
+      return;
     }
 
     if (data.plan === "basic") {
@@ -232,8 +242,12 @@ async function fetchSubscriptionStatus() {
   }
 }
 
+// =====================
+// CANCEL / RENEW / UPGRADE
+// =====================
 async function cancelSubscription() {
-  if (!confirm("⏸️ Cancel Auto-Renewal?\n\nYour account will remain active until your current billing date.")) return;
+  if (!confirm("⏸️ Cancel Auto-Renewal?\nAccess continues until current billing date.\nAre you sure?")) return;
+
   try {
     const res = await fetch(`${API_BASE}/api/subscription/cancel-auto-renew`, {
       method: "POST",
@@ -242,11 +256,8 @@ async function cancelSubscription() {
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.message || "Cancellation failed");
 
-    const successMsg = data.nextBillingDate
-      ? `✅ Auto-renewal cancelled. Access continues until ${new Date(data.nextBillingDate).toLocaleDateString()}.`
-      : "✅ Auto-renewal cancelled. Access continues until your current billing date.";
-
-    document.getElementById("message").innerHTML = `<span class="success">${successMsg}</span>`;
+    document.getElementById("message").innerHTML =
+      `<span class="success">✅ ${data.message}</span>`;
     setTimeout(fetchSubscriptionStatus, 1500);
   } catch (err) {
     console.error("Cancel error:", err);
