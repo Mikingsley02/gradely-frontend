@@ -179,53 +179,72 @@
     <a href="javascript:history.back()" class="back-link">← Go Back</a>
   </div>
 
-  <script>
-    // --- Extract query parameters ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const schoolId = urlParams.get("school_id");
-    const plan = urlParams.get("plan") || "basic"; // Default to basic if not provided
-    const ref = urlParams.get("ref") || "GRAD-" + Math.floor(Math.random() * 1000000);
+ <script>
+  // --- Extract school_id from URL ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const schoolId = urlParams.get("school_id");
+  const ref = urlParams.get("ref") || "GRAD-" + Math.floor(Math.random() * 1000000);
 
-    // ✅ CRITICAL FIX 1: Get ACTUAL school name from storage (not hardcoded)
-    const schoolName = 
-      localStorage.getItem('school_name') || 
-      sessionStorage.getItem('school_name') || 
-      localStorage.getItem('admin_school_name') ||
-      "Your School";
+  // --- Get school name from storage or fallback ---
+  const schoolName = 
+    localStorage.getItem('school_name') || 
+    sessionStorage.getItem('school_name') || 
+    localStorage.getItem('admin_school_name') ||
+    "Your School";
 
-    // ✅ CRITICAL FIX 2: Display PLAN WITHOUT PRICE (no misleading amounts)
-    const planDisplay = plan.charAt(0).toUpperCase() + plan.slice(1) + " Plan";
-    const planClass = plan === "pro" ? "pro-badge" : "basic-badge";
+  document.getElementById("schoolName").textContent = schoolName;
+  document.getElementById("refId").textContent = ref;
 
-    // ✅ CRITICAL FIX 3: Set values with proper formatting
-    document.getElementById("schoolName").textContent = schoolName;
-    document.getElementById("planBadge").textContent = planDisplay;
-    document.getElementById("planBadge").className = `plan-badge ${planClass}`;
-    document.getElementById("refId").textContent = ref;
+  // --- Fetch actual subscription plan from backend ---
+  async function fetchSubscriptionPlan() {
+    if (!schoolId) {
+      console.warn("⚠️ School ID missing, cannot fetch plan");
+      document.getElementById("planBadge").textContent = "Basic Plan";
+      document.getElementById("planBadge").className = "plan-badge basic-badge";
+      return;
+    }
 
-    // ✅ CRITICAL FIX 4: Smart dashboard redirect
-    document.getElementById("goToDashboardBtn").addEventListener("click", () => {
-      // Try to preserve school context
-      if (schoolId) {
-        // Save to storage for dashboard
-        localStorage.setItem('school_id', schoolId);
-        localStorage.setItem('subscription_plan', plan);
-        
-        // Redirect to dashboard
-        window.location.href = "dashboard.html";
-      } else {
-        // Fallback: go to dashboard and let it handle auth
-        window.location.href = "dashboard.html";
-      }
-    });
+    try {
+      const res = await fetch(`https://api.gradely.info/api/subscription/status?school_id=${schoolId}`, {
+        credentials: 'include', // if using session cookies
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
 
-    // ✅ Optional: Auto-redirect after 5 seconds
-    setTimeout(() => {
-      if (confirm("✅ Payment confirmed! Would you like to go to your dashboard now?")) {
-        document.getElementById("goToDashboardBtn").click();
-      }
-    }, 5000);
-  </script>
+      const plan = (data.plan || "basic").toLowerCase();
+      const planDisplay = plan.charAt(0).toUpperCase() + plan.slice(1) + " Plan";
+      const planClass = plan === "pro" ? "pro-badge" : "basic-badge";
+
+      document.getElementById("planBadge").textContent = planDisplay;
+      document.getElementById("planBadge").className = `plan-badge ${planClass}`;
+    } catch (err) {
+      console.error("Failed to fetch subscription plan:", err);
+      // fallback
+      document.getElementById("planBadge").textContent = "Basic Plan";
+      document.getElementById("planBadge").className = "plan-badge basic-badge";
+    }
+  }
+
+  fetchSubscriptionPlan();
+
+  // --- Go to dashboard button ---
+  document.getElementById("goToDashboardBtn").addEventListener("click", () => {
+    if (schoolId) {
+      localStorage.setItem('school_id', schoolId);
+      window.location.href = "dashboard.html";
+    } else {
+      window.location.href = "dashboard.html";
+    }
+  });
+
+  // --- Optional auto-redirect after 5s ---
+  setTimeout(() => {
+    if (confirm("✅ Payment confirmed! Would you like to go to your dashboard now?")) {
+      document.getElementById("goToDashboardBtn").click();
+    }
+  }, 5000);
+</script>
+
 
   <script src="js/kaima-chatbot.js"></script>
 </body>
