@@ -76,8 +76,8 @@
     .btn-cancel:hover { background: #5a6268; }
     .btn-upgrade { background: #00e676; color: #000; }
     .btn-upgrade:hover { background: #00c853; }
-    .btn-compare { background: #3498db; color: white; }
-    .btn-compare:hover { background: #2980b9; }
+    .btn-downgrade { background: #ff9800; color: white; }
+    .btn-downgrade:hover { background: #f57c00; }
     .message { margin-top: 15px; font-size: 0.95rem; text-align: center; min-height: 22px; }
     .error { color: #e74c3c; }
     .success { color: #27ae60; }
@@ -135,7 +135,7 @@
       🛑 Cancel Auto-Renewal
      </button>
       <button class="btn btn-upgrade" onclick="upgradeToPro()" id="upgradeBtn" style="display:none;">✨ Upgrade to Pro</button>
-      <button class="btn btn-compare" onclick="goToPlanComparison()">Select Plan</button>
+      <button class="btn btn-downgrade" onclick="downgradeToBasic()" id="downgradeBtn" style="display:none;">⬇️ Downgrade to Basic</button>
     </div>
 
     <div class="message" id="message"></div>
@@ -150,10 +150,11 @@
   </footer>
 
  <script>
-const API_BASE = "https://api.gradely.info"; // ✅ Fixed trailing space
+const API_BASE = "https://api.gradely.info";
 
 let schoolId = null;
 let currentExpiry = null;
+let currentPlan = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
   schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
@@ -181,13 +182,16 @@ async function fetchSubscriptionStatus() {
     const data = await res.json();
     if (!data.success) throw new Error(data.message || "Failed to load subscription");
 
+    currentPlan = data.plan || 'basic';
+    
     document.getElementById("plan").textContent =
-      (data.plan || 'basic').charAt(0).toUpperCase() + (data.plan || 'basic').slice(1);
+      currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
 
     const statusEl = document.getElementById("status");
     const cancelBtn = document.getElementById("cancelBtn");
     const renewBtn = document.getElementById("renewBtn");
     const upgradeBtn = document.getElementById("upgradeBtn");
+    const downgradeBtn = document.getElementById("downgradeBtn");
     const mainButtons = document.getElementById("mainButtons");
     const expiryEl = document.getElementById("renewal");
 
@@ -208,7 +212,7 @@ async function fetchSubscriptionStatus() {
       statusEl.textContent = "Expired";
       statusEl.className = "error";
       mainButtons.style.display = "none";
-      showPlanSelection(data.plan || 'basic');
+      showPlanSelection(currentPlan);
       return;
     }
 
@@ -227,12 +231,15 @@ async function fetchSubscriptionStatus() {
       return;
     }
 
-    if (data.plan === "basic") {
+    // Show appropriate buttons based on current plan
+    if (currentPlan === "basic") {
       renewBtn.style.display = "none";
       upgradeBtn.style.display = "block";
-    } else {
+      downgradeBtn.style.display = "none";
+    } else if (currentPlan === "pro") {
       renewBtn.style.display = "block";
       upgradeBtn.style.display = "none";
+      downgradeBtn.style.display = "block";
     }
 
   } catch (err) {
@@ -243,7 +250,7 @@ async function fetchSubscriptionStatus() {
 }
 
 // =====================
-// CANCEL / RENEW / UPGRADE
+// CANCEL SUBSCRIPTION
 // =====================
 async function cancelSubscription() {
   if (!confirm("⏸️ Cancel Auto-Renewal?\nAccess continues until current billing date.\nAre you sure?")) return;
@@ -266,35 +273,79 @@ async function cancelSubscription() {
   }
 }
 
+// =====================
+// RENEW SUBSCRIPTION
+// =====================
 function renewSubscription() {
-  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&renew=true`;
+  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=${encodeURIComponent(currentPlan)}&renew=true`;
 }
 
+// =====================
+// UPGRADE TO PRO
+// =====================
 function upgradeToPro() {
-  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&upgrade=true`;
+  if (!confirm("✨ Upgrade to Pro Plan?\n\nYou'll get:\n• Unlimited students\n• Bulk registration\n• SMS/Email alerts\n• Priority support\n\nThis will be charged immediately. Continue?")) {
+    return;
+  }
+  
+  // Redirect to payment page for upgrade
+  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&from_plan=${encodeURIComponent(currentPlan)}&to_plan=pro&upgrade=true`;
 }
 
+// =====================
+// DOWNGRADE TO BASIC
+// =====================
+async function downgradeToBasic() {
+  const confirmed = confirm("⬇️ Downgrade to Basic Plan?\n\nYou will lose:\n• Unlimited students (limited to 200)\n• Bulk registration\n• SMS/Email alerts\n• Priority support\n\nChanges take effect immediately. Continue?");
+  
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/subscription/downgrade`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        school_id: schoolId,
+        to_plan: "basic"
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Downgrade failed");
+    }
+
+    document.getElementById("message").innerHTML =
+      `<span class="success">✅ ${data.message}</span>`;
+    
+    // Reload subscription status to reflect changes
+    setTimeout(fetchSubscriptionStatus, 1500);
+  } catch (err) {
+    console.error("Downgrade error:", err);
+    document.getElementById("message").innerHTML =
+      `<span class="error">❌ ${err.message}</span>`;
+  }
+}
+
+// =====================
+// SHOW PLAN SELECTION (EXPIRED)
+// =====================
 function showPlanSelection(previousPlan) {
   const container = document.querySelector(".container");
   const html = `
     <div style="margin-top:20px;">
       <h3 style="color:#2d046e;">Reactivate Subscription</h3>
       <button class="btn btn-renew"
-        onclick="window.location.href='pay.html?school_id=${encodeURIComponent(schoolId)}&plan=pro&renew=true'">
-        Renew Pro Plan
+        onclick="window.location.href='pay.html?school_id=${encodeURIComponent(schoolId)}&plan=${encodeURIComponent(previousPlan)}&renew=true'">
+        Reactivate ${previousPlan.charAt(0).toUpperCase() + previousPlan.slice(1)} Plan
       </button>
     </div>
   `;
   container.insertAdjacentHTML("beforeend", html);
-}
-
-// =====================
-// PLAN COMPARISON NAVIGATION (NEW)
-// =====================
-function goToPlanComparison() {
-  // Save current page URL before navigation for seamless return
-  sessionStorage.setItem('plan_return_url', location.href);
-  window.location.href = 'plan-comparison.html';
 }
 </script>
 

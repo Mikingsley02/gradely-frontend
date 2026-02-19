@@ -34,14 +34,12 @@
       position: relative;
     }
     .header-content {
-      /* ✅ FIXED: Proper flex layout to prevent overlap */
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px; /* ✅ Added spacing between logo and heading */
+      gap: 10px;
     }
     .brand-logo {
-      /* ✅ FIXED: Removed absolute positioning */
       font-weight: 800;
       font-size: 1.8rem;
       background: linear-gradient(to right, #f9f9f8, #f9f9f8);
@@ -201,7 +199,6 @@
   <div class="payment-container">
     <div class="header">
       <div class="header-content">
-        <!-- ✅ FIXED: Properly spaced logo -->
         <div class="brand-logo">gradely<span style="color:#ffaa00">.info</span></div>
         <h1><i class="fas fa-shield-alt"></i> Secure Payment</h1>
         <p>Encrypted & PCI-DSS Compliant</p>
@@ -262,6 +259,8 @@
     const params = new URLSearchParams(window.location.search);
     const plan = params.get("plan") || "pro";
     const school_id = params.get("school_id") || localStorage.getItem("school_id");
+    const isUpgrade = params.get("upgrade") === "true";
+    const isRenewal = params.get("renew") === "true";
     
     if (!school_id) {
       alert("Session expired. Please return to subscription page.");
@@ -281,12 +280,13 @@
     document.getElementById('planName').textContent = PLAN_NAMES[plan];
     document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
     
-    // ✅ PAYMENT LINKS
+    // ✅ PAYMENT LINKS (unchanged for basic flow)
     const PAYMENT_LINKS = {
       basic: 'https://paystack.shop/pay/jeh3ez58fz',
       pro: 'https://paystack.shop/pay/3xxw3ze66-'
     };
     
+    // ✅ Enhanced payment handler with upgrade completion
     document.getElementById("paystackBtn").onclick = () => {
       const paymentLink = PAYMENT_LINKS[plan];
       if (!paymentLink) {
@@ -298,10 +298,80 @@
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirecting to Secure Payment...';
       btn.disabled = true;
       
+      // For upgrades/renewals, we need to handle completion AFTER payment
+      // Since we're using payment links (redirect flow), completion happens via:
+      // 1. Paystack redirects back to your success URL with reference
+      // 2. Your backend webhook processes the payment
+      // 3. Frontend polls status OR redirects to dashboard
+      
+      // Simple approach: redirect to payment, then after payment Paystack 
+      // will redirect to your configured success URL which should handle upgrade completion
       setTimeout(() => {
         window.location.href = paymentLink;
       }, 800);
     };
+    
+    // ✅ AFTER PAYMENT: Handle upgrade completion when returning from Paystack
+    // This runs when user returns to this page AFTER successful payment
+    // (Your Paystack success URL should redirect here with ?reference=TRX_123)
+    const paymentReference = params.get("reference");
+    if (paymentReference && (isUpgrade || isRenewal)) {
+      // Only attempt completion once (prevent duplicate calls)
+      if (!sessionStorage.getItem(`upgrade_completed_${paymentReference}`)) {
+        completePlanActivation(paymentReference);
+        sessionStorage.setItem(`upgrade_completed_${paymentReference}`, 'true');
+      }
+    }
+    
+    async function completePlanActivation(reference) {
+      const btn = document.getElementById('paystackBtn');
+      btn.innerHTML = '<i class="fas fa-check-circle"></i> Finalizing subscription...';
+      btn.disabled = true;
+      
+      try {
+        // Determine endpoint based on flow type
+        const endpoint = isUpgrade 
+          ? '/api/subscription/upgrade/complete'
+          : '/api/subscription/renew/complete'; // You'll need to create this endpoint
+        
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')}`
+          },
+          body: JSON.stringify({
+            school_id: school_id,
+            payment_reference: reference,
+            plan: plan
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          btn.innerHTML = '<i class="fas fa-check-circle"></i> Success! Redirecting...';
+          
+          // Redirect to appropriate page based on flow
+          setTimeout(() => {
+            if (isUpgrade) {
+              window.location.href = 'subscription.html?upgrade_success=true';
+            } else if (isRenewal) {
+              window.location.href = 'subscription.html?renewal_success=true';
+            } else {
+              window.location.href = 'dashboard.html';
+            }
+          }, 1500);
+        } else {
+          throw new Error(result.message || 'Activation failed');
+        }
+      } catch (error) {
+        console.error('Activation error:', error);
+        btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error finalizing subscription';
+        btn.disabled = false;
+        alert(`Could not activate subscription: ${error.message}\nPlease contact support with reference: ${reference}`);
+      }
+    }
   </script>
 </body>
 </html>
