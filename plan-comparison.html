@@ -492,17 +492,16 @@
   </div>
 
   <script>
-  // Save referrer as fallback on page load (only if no return URL already stored)
   document.addEventListener('DOMContentLoaded', () => {
+
+    // Save referrer as fallback
     if (!sessionStorage.getItem('plan_return_url') && document.referrer) {
       try {
         const referrerUrl = new URL(document.referrer);
         if (referrerUrl.origin === window.location.origin) {
           sessionStorage.setItem('plan_return_url', document.referrer);
         }
-      } catch (e) {
-        // Invalid referrer - ignore silently
-      }
+      } catch (e) {}
     }
 
     // Card animation
@@ -517,24 +516,115 @@
     });
   });
 
-  function selectPlan(plan) {
-  // ✅ Use sessionStorage (not localStorage)
-  sessionStorage.setItem('selected_plan', plan);
-  
-  const returnTo = sessionStorage.getItem('plan_return_url');
-  sessionStorage.removeItem('plan_return_url');
-  
-  if (returnTo) {
-    window.location.href = returnTo;
-  } else {
-    window.history.back();
-  }
-}
 
-  // ESC key support
+  async function selectPlan(plan) {
+    sessionStorage.setItem('selected_plan', plan);
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("You must be logged in.");
+      return;
+    }
+
+    try {
+
+      // ============================
+      // 🚀 UPGRADE TO PRO
+      // ============================
+      if (plan === 'pro') {
+
+        const response = await fetch('/api/subscription/upgrade', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({})
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          alert(data.message);
+          return;
+        }
+
+        // ⚡ Here you trigger Paystack
+        // Replace this with your Paystack popup logic
+        alert("Redirecting to payment...");
+
+        // Example (after payment success):
+        /*
+        await fetch('/api/subscription/upgrade/complete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            payment_reference: referenceFromPaystack
+          })
+        });
+        */
+
+      }
+
+      // ============================
+      // 🔽 DOWNGRADE TO BASIC
+      // ============================
+      else if (plan === 'basic') {
+
+        const confirmDowngrade = confirm("Are you sure you want to downgrade to Basic?");
+        if (!confirmDowngrade) return;
+
+        const response = await fetch('/api/subscription/downgrade', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({})
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          alert(data.message);
+          return;
+        }
+
+        alert("Successfully downgraded to Basic plan.");
+
+        redirectBack();
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong.");
+    }
+  }
+
+
+  function redirectBack() {
+    const returnTo = sessionStorage.getItem('plan_return_url');
+    sessionStorage.removeItem('plan_return_url');
+
+    if (returnTo) {
+      window.location.href = returnTo;
+    } else {
+      window.history.back();
+    }
+  }
+
+
+  // ESC support
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') window.history.back();
   });
 </script>
+
+<script src="js/kaima-chatbot.js"></script>
+<script src="js/session-timeout.js"></script>
+
 </body>
 </html>
