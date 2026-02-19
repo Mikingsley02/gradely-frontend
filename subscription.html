@@ -135,7 +135,7 @@
       🛑 Cancel Auto-Renewal
      </button>
       <button class="btn btn-upgrade" onclick="upgradeToPro()" id="upgradeBtn" style="display:none;">✨ Upgrade to Pro</button>
-      <button class="btn btn-compare" onclick="goToPlanComparison()">📊 Compare Plans</button>
+      <button class="btn btn-compare" onclick="goToPlanComparison()">Select Plan</button>
     </div>
 
     <div class="message" id="message"></div>
@@ -150,7 +150,7 @@
   </footer>
 
  <script>
-const API_BASE = "https://api.gradely.info";
+const API_BASE = "https://api.gradely.info"; // ✅ Fixed trailing space
 
 let schoolId = null;
 let currentExpiry = null;
