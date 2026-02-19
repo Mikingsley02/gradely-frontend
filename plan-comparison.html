@@ -425,8 +425,9 @@
           <span class="feature-icon not-included">✗</span>
           <span class="feature-text not-included">Result upload alerts to parents (Email/SMS)</span>
         </li>
-        <span class="feature-icon not-included">✗</span>
-        <span class="feature-text not-included">School announcements (Email/SMS)</span>
+        <li class="feature-item">  <!-- ✅ FIXED: Added missing <li> -->
+          <span class="feature-icon not-included">✗</span>
+          <span class="feature-text not-included">School announcements (Email/SMS)</span>
         </li>
         <li class="feature-item">
           <span class="feature-icon not-included">✗</span>
@@ -491,33 +492,48 @@
   </div>
 
   <script>
-    function selectPlan(plan) {
-      const school_id = sessionStorage.getItem('school_id') || localStorage.getItem('school_id');
-      let url = 'register-school.html?plan=' + plan;
-      
-      if (school_id) {
-        url = 'subscription.html?plan=' + plan;
+  // Save referrer as fallback on page load (only if no return URL already stored)
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!sessionStorage.getItem('plan_return_url') && document.referrer) {
+      try {
+        const referrerUrl = new URL(document.referrer);
+        if (referrerUrl.origin === window.location.origin) {
+          sessionStorage.setItem('plan_return_url', document.referrer);
+        }
+      } catch (e) {
+        // Invalid referrer - ignore silently
       }
-      
-      url += '&source=plan_comparison';
-      window.location.href = url;
     }
-    
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') window.history.back();
+
+    // Card animation
+    document.querySelectorAll('.plan-card').forEach((card, index) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      setTimeout(() => {
+        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, 300 + (index * 150));
     });
+  });
+
+  function selectPlan(plan) {
+    localStorage.setItem('selected_plan', plan);
     
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.plan-card').forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-          card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-          card.style.opacity = '1';
-          card.style.transform = 'translateY(0)';
-        }, 300 + (index * 150));
-      });
-    });
-  </script>
+    const returnTo = sessionStorage.getItem('plan_return_url');
+    sessionStorage.removeItem('plan_return_url');
+    
+    if (returnTo) {
+      window.location.href = returnTo;
+    } else {
+      window.history.back(); // Fallback if no stored URL
+    }
+  }
+
+  // ESC key support
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') window.history.back();
+  });
+</script>
 </body>
 </html>

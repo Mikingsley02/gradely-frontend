@@ -135,7 +135,7 @@
       🛑 Cancel Auto-Renewal
      </button>
       <button class="btn btn-upgrade" onclick="upgradeToPro()" id="upgradeBtn" style="display:none;">✨ Upgrade to Pro</button>
-      <button class="btn btn-compare" onclick="window.location.href='plan-comparison.html'">📊 Compare Plans</button>
+      <button class="btn btn-compare" onclick="goToPlanComparison()">📊 Compare Plans</button>
     </div>
 
     <div class="message" id="message"></div>
@@ -286,6 +286,15 @@ function showPlanSelection(previousPlan) {
     </div>
   `;
   container.insertAdjacentHTML("beforeend", html);
+}
+
+// =====================
+// PLAN COMPARISON NAVIGATION (NEW)
+// =====================
+function goToPlanComparison() {
+  // Save current page URL before navigation for seamless return
+  sessionStorage.setItem('plan_return_url', location.href);
+  window.location.href = 'plan-comparison.html';
 }
 </script>
 
