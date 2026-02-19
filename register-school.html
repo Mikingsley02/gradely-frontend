@@ -52,6 +52,7 @@
       background: #00d2ff; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
     }
     button:hover { background: #0a84ff; transform: scale(1.03); }
+    button:active { transform: scale(0.98); }
 
     /* Test Mode Button */
     #skipPaymentBtn {
@@ -108,6 +109,18 @@
     .toggle-password:hover {
       color: #0077b6;
     }
+
+    /* Plan selection status - ONLY appears after selection */
+    .plan-status {
+      text-align: center;
+      margin-top: -8px;
+      margin-bottom: 8px;
+      min-height: 22px;
+      font-size: 0.9rem;
+      color: #00e676;
+      font-weight: 600;
+      display: none; /* Hidden by default */
+    }
   </style>
 </head>
 <body>
@@ -142,6 +155,7 @@
 
       <input type="hidden" id="plan" />
 
+      <div class="plan-status" id="planStatus"></div>
       <button type="button" id="selectPlanBtn">
         Select Plan
       </button>
@@ -175,18 +189,18 @@
     icon.textContent = isPassword ? '🙈' : '👁️';
   }
 
-  const API_BASE = "https://api.gradely.info"; // ✅ Fixed trailing space
+  const API_BASE = "https://api.gradely.info"; // Fixed trailing space
 
-  // ✅ Load selected plan from plan-comparison page
+  // ✅ Show plan status ONLY if user came from plan-comparison page
   document.addEventListener("DOMContentLoaded", () => {
-    const selectedPlan = localStorage.getItem("selected_plan");
+    const selectedPlan = sessionStorage.getItem("selected_plan");
+    const planInput = document.getElementById("plan");
+    const planStatus = document.getElementById("planStatus");
 
     if (selectedPlan) {
-      document.getElementById("plan").value = selectedPlan;
-
-      const selectBtn = document.getElementById("selectPlanBtn");
-      selectBtn.textContent = `Plan Selected: ${selectedPlan.toUpperCase()}`;
-      selectBtn.disabled = true; // Prevent re-selection after return
+      planInput.value = selectedPlan;
+      planStatus.textContent = `✅ ${selectedPlan.toUpperCase()} plan selected`;
+      planStatus.style.display = "block";
     }
   });
 
@@ -250,8 +264,8 @@
       if (res.ok && result.success) {
         alert("✅ Registration successful!");
 
-        // ✅ Clean up storage after successful registration
-        localStorage.removeItem("selected_plan");
+        // Clean up after successful registration
+        sessionStorage.removeItem("selected_plan");
         sessionStorage.removeItem("plan_return_url");
 
         if (testMode) {
@@ -290,13 +304,12 @@
     handleRegistration(true);
   });
 
-  // ✅ Go to plan comparison with return URL saved
+  // ✅ Always allow plan changes - button never disabled
   document.getElementById("selectPlanBtn").addEventListener("click", () => {
-    // Save current page URL BEFORE navigation for seamless return
     sessionStorage.setItem('plan_return_url', location.href);
     window.location.href = 'plan-comparison.html';
   });
-  </script>
+</script>
 
   <script src="js/kaima-chatbot.js"></script>
 </body>

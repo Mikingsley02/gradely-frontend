@@ -518,17 +518,18 @@
   });
 
   function selectPlan(plan) {
-    localStorage.setItem('selected_plan', plan);
-    
-    const returnTo = sessionStorage.getItem('plan_return_url');
-    sessionStorage.removeItem('plan_return_url');
-    
-    if (returnTo) {
-      window.location.href = returnTo;
-    } else {
-      window.history.back(); // Fallback if no stored URL
-    }
+  // ✅ Use sessionStorage (not localStorage)
+  sessionStorage.setItem('selected_plan', plan);
+  
+  const returnTo = sessionStorage.getItem('plan_return_url');
+  sessionStorage.removeItem('plan_return_url');
+  
+  if (returnTo) {
+    window.location.href = returnTo;
+  } else {
+    window.history.back();
   }
+}
 
   // ESC key support
   document.addEventListener('keydown', (e) => {
