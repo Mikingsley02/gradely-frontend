@@ -191,7 +191,6 @@
 </div>
 
 <script>
-// ✅ FIXED: Clean API_BASE (no trailing spaces)
 const API_BASE = "https://api.gradely.info";
 
 // TOGGLE PASSWORD
@@ -201,7 +200,7 @@ function togglePassword(id, icon) {
   icon.textContent = input.type === "password" ? "👁️" : "🙈";
 }
 
-// CREATE STUDENT - ✅ FIXED AUTH HEADERS + STORAGE
+// CREATE STUDENT
 document.getElementById("createForm").onsubmit = async (e) => {
   e.preventDefault();
   const msg = document.getElementById("message");
@@ -216,25 +215,15 @@ document.getElementById("createForm").onsubmit = async (e) => {
   }
 
   const data = Object.fromEntries(new FormData(e.target));
-  
-  // ✅ FIXED: Use localStorage (matches login page) instead of sessionStorage
-  data.school_id = localStorage.getItem("school_id");
-  
-  // ✅ FIXED: Get JWT token for Authorization header
-  const token = localStorage.getItem("token");
+  data.school_id = sessionStorage.getItem("school_id");
+
 
   msg.textContent = "⏳ Creating student...";
   msg.className = "message";
 
   const res = await fetch(`${API_BASE}/api/students/register`, {
     method: "POST",
-    headers: { 
-      "Content-Type": "application/json",
-      // ✅ FIXED: Send JWT token in Authorization header
-      "Authorization": token ? `Bearer ${token}` : undefined
-    },
-    // ✅ FIXED: Send session cookie cross-origin
-    credentials: "include",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
   });
 
@@ -248,7 +237,7 @@ document.getElementById("createForm").onsubmit = async (e) => {
   }
 };
 
-// BULK UPLOAD - ✅ FIXED AUTH HEADERS + STORAGE
+// BULK UPLOAD
 async function uploadBulkStudents() {
   const file = document.getElementById("bulkFile").files[0];
   const msg = document.getElementById("bulkMessage");
@@ -261,62 +250,53 @@ async function uploadBulkStudents() {
 
   const reader = new FileReader();
   reader.onload = async (e) => {
-    const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
-    const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+  const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+  const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
-    const normalized = sheet.map(s => ({
-      student_id: s.student_id,
-      first_name: s.first_name,
-      middle_name: s.middle_name || null,
-      last_name: s.last_name,
-      phone: s.phone || s.phone_number,
-      parent_email: s.parent_email || null,
-      password: s.password,
-      // ✅ FIXED: Use localStorage consistently
-      school_id: localStorage.getItem("school_id")
-    }));
+  const normalized = sheet.map(s => ({
+  student_id: s.student_id,
+  first_name: s.first_name,
+  middle_name: s.middle_name || null,
+  last_name: s.last_name,
+  phone: s.phone || s.phone_number,   // ✅ handles both
+  parent_email: s.parent_email || null,
+  password: s.password,
+  school_id: sessionStorage.getItem("school_id")
+}));
 
-    // ✅ FIXED: Get JWT token
-    const token = localStorage.getItem("token");
 
-    const res = await fetch(`${API_BASE}/api/students/bulk-upload`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        // ✅ FIXED: Send JWT token
-        "Authorization": token ? `Bearer ${token}` : undefined
-      },
-      // ✅ FIXED: Send session cookie
-      credentials: "include",
-      body: JSON.stringify({
-        school_id: localStorage.getItem("school_id"),
-        students: normalized
-      })
-    });
+  const res = await fetch(`${API_BASE}/api/students/bulk-upload`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      school_id: sessionStorage.getItem("school_id"),
+      students: normalized
+    })
+  });
 
-    const result = await res.json();
+  const result = await res.json();
 
-    msg.className = result.success ? "message success" : "message error";
-    msg.textContent = result.success
-      ? "✅ Upload successful"
-      : result.message || "❌ Upload failed";
+  msg.className = result.success ? "message success" : "message error";
+  msg.textContent = result.success
+    ? "✅ Upload successful"
+    : result.message || "❌ Upload failed";
 
-    if (result.success) {
-      setTimeout(() => {
-        window.location.href = "manage-students.html";
-      }, 1500);
-    }
-  };
+  if (result.success) {
+    setTimeout(() => {
+      window.location.href = "manage-students.html";
+    }, 1500);
+  }
+};
 
   reader.readAsArrayBuffer(file);
 }
 
-// TEMPLATE DOWNLOAD
+// TEMPLATE (NO CLASS / SECTION)
 function downloadStudentTemplate() {
   const ws = XLSX.utils.aoa_to_sheet([
-    ["student_id","first_name","middle_name","last_name","phone","parent_email","password"],
-    ["STU001","Kaima","","Ifeanyi","08012345678","parent@mail.com","12345678"]
-  ]);
+  ["student_id","first_name","middle_name","last_name","phone","parent_email","password"],
+  ["STU001","Kaima","","Ifeanyi","08012345678","parent@mail.com","12345678"]
+]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Students");
   XLSX.writeFile(wb, "Student_Bulk_Template.xlsx");
