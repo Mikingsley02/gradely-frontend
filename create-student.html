@@ -215,7 +215,7 @@ document.getElementById("createForm").onsubmit = async (e) => {
   }
 
   const data = Object.fromEntries(new FormData(e.target));
-  data.school_id = sessionStorage.getItem("school_id");
+  data.school_id = localStorage.getItem("school_id");
 
 
   msg.textContent = "⏳ Creating student...";
@@ -224,6 +224,7 @@ document.getElementById("createForm").onsubmit = async (e) => {
   const res = await fetch(`${API_BASE}/api/students/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(data)
   });
 
@@ -268,8 +269,9 @@ async function uploadBulkStudents() {
   const res = await fetch(`${API_BASE}/api/students/bulk-upload`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({
-      school_id: sessionStorage.getItem("school_id"),
+      school_id: localStorage.getItem("school_id"),
       students: normalized
     })
   });
