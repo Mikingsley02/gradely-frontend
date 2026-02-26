@@ -191,7 +191,7 @@
 </div>
 
 <script>
-const API_BASE = "https://api.gradely.info";
+const API_BASE = window.location.origin;
 
 // TOGGLE PASSWORD
 function togglePassword(id, icon) {
@@ -221,7 +221,7 @@ document.getElementById("createForm").onsubmit = async (e) => {
   msg.textContent = "⏳ Creating student...";
   msg.className = "message";
 
-  const res = await fetch(`${API_BASE}/api/students/register`, {
+  const res = await fetch(`/api/students/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -266,7 +266,7 @@ async function uploadBulkStudents() {
 }));
 
 
-  const res = await fetch(`${API_BASE}/api/students/bulk-upload`, {
+  const res = await fetch(`/api/students/bulk-upload`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
