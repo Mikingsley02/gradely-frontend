@@ -481,8 +481,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ✅ CRITICAL FIX: DIRECT URL (NO API_BASE VARIABLE)
-  const apiUrl = `/api/auth/school/status?school_id=${encodeURIComponent(schoolId)}`;
-  console.log("📡 Fetching account status from:", apiUrl);
+const apiUrl = `/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
+console.log("📡 Fetching subscription status from:", apiUrl);
 
   try {
     const res = await fetch(apiUrl, {
