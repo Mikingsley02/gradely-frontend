@@ -97,6 +97,7 @@
   <div class="form-header">
     <h2>➕ Create Student Account</h2>
     <p>Register a new student</p>
+    <p id="studentCounter" style="color:#e74c3c; font-weight:600; margin-top:5px; display:none;"></p>
   </div>
 
   <div class="form-body">
@@ -307,6 +308,45 @@ function downloadStudentTemplate() {
 function goBack() {
   window.location.href = "dashboard.html";
 }
+
+
+// SHOW STUDENT USAGE AND DISABLE BUTTON IF LIMIT REACHED
+async function showStudentUsage() {
+  const counter = document.getElementById("studentCounter");
+  const submitBtn = document.querySelector(".btn-submit");
+
+  try {
+    const res = await fetch(`/api/subscription/usage`, { credentials: "include" });
+    const data = await res.json();
+
+    if (!data.success) return;
+
+    if (data.plan === "basic") {
+      counter.style.display = "block";
+      counter.textContent = `🧑 Students registered: ${data.used} / ${data.limit}`;
+
+      // Disable button if reached limit
+      if (data.used >= data.limit) {
+        submitBtn.disabled = true;
+        submitBtn.style.background = "#bdc3c7"; // grey out
+        submitBtn.textContent = "Limit reached – Upgrade to Pro";
+        counter.textContent += " ⚠️ You have reached the maximum students for Basic plan!";
+      }
+    } else {
+      counter.style.display = "none"; // hide for pro
+      submitBtn.disabled = false;      // ensure enabled for pro
+      submitBtn.style.background = "#3498db";
+      submitBtn.textContent = "Create Account";
+    }
+  } catch (err) {
+    console.error("❌ Could not fetch student usage:", err);
+  }
+}
+
+// Call on page load
+showStudentUsage();
+
+
 </script>
 
 
