@@ -7,177 +7,32 @@
 
 <style>
 /* ---------- RESET ---------- */
-* {
-  box-sizing: border-box;
-}
-
-html, body {
-  height: 100%;
-  margin: 0;
-}
-
-/* ---------- PAGE LAYOUT ---------- */
-body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #f8f9fa;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Centers content with safe spacing */
-.page {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-/* ---------- MAIN CARD ---------- */
-.container {
-  width: 100%;
-  max-width: 760px;              /* ⬅ prevents over-stretching */
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  padding: 26px 24px 22px;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ---------- HEADER ---------- */
-h1 {
-  text-align: center;
-  color: #0c2461;
-  margin: 0 0 22px;
-}
-
-/* ---------- FORM ---------- */
-.form-section {
-  width: 100%;
-  max-width: 640px;              /* ⬅ keeps form centered */
-  margin: 0 auto;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-input, textarea {
-  width: 100%;
-  padding: 14px;                 /* ⬅ larger inputs */
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 1rem;
-}
-
-textarea {
-  height: 190px;                 /* ⬅ expanded textarea */
-  resize: none;
-}
-
-/* ---------- TOGGLES ---------- */
-.toggle-row {
-  display: flex;
-  justify-content: center;
-  gap: 36px;
-  margin: 18px 0 26px;
-  font-weight: 600;
-}
-
-.toggle-row label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* ---------- BUTTON ---------- */
-button {
-  background: #3498db;
-  color: white;
-  border: none;
-  padding: 12px 26px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  display: block;
-  margin: 0 auto;
-}
-
-button:hover {
-  background: #2980b9;
-}
-
-.back-link {
-  display: block;
-  text-align: center;
-  margin-top: 14px;
-  color: #3498db;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-/* ---------- ANNOUNCEMENTS ---------- */
-#announcementsList {
-  margin-top: 28px;
-  max-height: 260px;             /* ⬅ prevents page scroll */
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.announcement {
-  background: #f1f8ff;
-  border-left: 4px solid #3498db;
-  padding: 14px;
-  margin-bottom: 14px;
-  border-radius: 0 8px 8px 0;
-}
-
-.date {
-  font-size: 0.8rem;
-  color: #666;
-  margin: 4px 0 6px;
-}
-
-.status {
-  margin-top: 8px;
-  font-weight: bold;
-  font-size: 0.85rem;
-}
-
-.ok   { color: #27ae60; }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; font-family: 'Segoe UI', sans-serif; background: #f8f9fa; }
+body { display: flex; flex-direction: column; }
+.page { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
+.container { width: 100%; max-width: 760px; background: #fff; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 26px 24px 22px; display: flex; flex-direction: column; }
+h1 { text-align: center; color: #0c2461; margin: 0 0 22px; }
+.form-section { width: 100%; max-width: 640px; margin: 0 auto; }
+.form-group { margin-bottom: 16px; }
+input, textarea { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 1rem; }
+textarea { height: 190px; resize: none; }
+.toggle-row { display: flex; justify-content: center; gap: 36px; margin: 18px 0 26px; font-weight: 600; }
+.toggle-row label { display: flex; align-items: center; gap: 8px; }
+button { background: #3498db; color: white; border: none; padding: 12px 26px; border-radius: 8px; cursor: pointer; font-weight: bold; display: block; margin: 0 auto; }
+button:hover { background: #2980b9; }
+.back-link { display: block; text-align: center; margin-top: 14px; color: #3498db; text-decoration: none; font-weight: 600; }
+#announcementsList { margin-top: 28px; max-height: 260px; overflow-y: auto; padding-right: 4px; }
+.announcement { background: #f1f8ff; border-left: 4px solid #3498db; padding: 14px; margin-bottom: 14px; border-radius: 0 8px 8px 0; }
+.date { font-size: 0.8rem; color: #666; margin: 4px 0 6px; }
+.status { margin-top: 8px; font-weight: bold; font-size: 0.85rem; }
+.ok { color: #27ae60; }
 .warn { color: #f39c12; }
 .fail { color: #e74c3c; }
-
-/* ---------- FOOTER ---------- */
-.footer {
-  text-align: center;
-  padding: 18px 10px 22px;
-  font-size: 0.85rem;
-  color: #555;
-}
-
-.footer a {
-  color: #3498db;
-  text-decoration: none;
-  margin: 0 6px;
-}
-
-.footer a:hover {
-  text-decoration: underline;
-}
-
-/* ---------- MOBILE TWEAKS ---------- */
-@media (max-width: 480px) {
-  textarea {
-    height: 160px;
-  }
-
-  .toggle-row {
-    gap: 24px;
-  }
-}
+.footer { text-align: center; padding: 18px 10px 22px; font-size: 0.85rem; color: #555; }
+.footer a { color: #3498db; text-decoration: none; margin: 0 6px; }
+.footer a:hover { text-decoration: underline; }
+@media (max-width: 480px) { textarea { height: 160px; } .toggle-row { gap: 24px; } }
 </style>
 </head>
 
@@ -189,47 +44,26 @@ button:hover {
     <h1>📢 School Announcements</h1>
 
     <div class="form-section">
-  <div class="form-group">
-    <input
-      id="title"
-      type="text"
-      placeholder="Announcement Title"
-    />
-  </div>
+      <div class="form-group">
+        <input id="title" type="text" placeholder="Announcement Title" />
+      </div>
 
-  <div class="form-group">
-    <textarea
-      id="message"
-      placeholder="Write your announcement..."
-    ></textarea>
-  </div>
+      <div class="form-group">
+        <textarea id="message" placeholder="Write your announcement..."></textarea>
+      </div>
 
-  <div class="toggle-row">
-    <label>
-      <input type="checkbox" id="send_sms" checked>
-      SMS
-    </label>
+      <div class="toggle-row">
+        <label><input type="checkbox" id="send_sms" checked> SMS</label>
+        <label><input type="checkbox" id="send_email" checked> Email</label>
+      </div>
 
-    <label>
-      <input type="checkbox" id="send_email" checked>
-      Email
-    </label>
-  </div>
+      <button type="button" onclick="postAnnouncement()">Post Announcement</button>
+      <a class="back-link" href="dashboard.html">← Back to Dashboard</a>
+    </div>
 
-  <button
-    type="button"
-    onclick="postAnnouncement()"
-  >
-    Post Announcement
-  </button>
-
-  <a class="back-link" href="dashboard.html">
-    ← Back to Dashboard
-  </a>
-</div>
-
-
-    <div id="announcementsList"></div>
+    <div id="announcementsList">
+      <p style="text-align:center; color:#888;">Loading announcements...</p>
+    </div>
 
   </div>
 </div>
@@ -252,9 +86,9 @@ function getToken() {
 /* ✅ CACHE ELEMENTS */
 const titleInput   = document.getElementById("title");
 const messageInput = document.getElementById("message");
-const sms           = document.getElementById("send_sms");
-const email         = document.getElementById("send_email");
-const list          = document.getElementById("announcementsList");
+const sms          = document.getElementById("send_sms");
+const email        = document.getElementById("send_email");
+const list         = document.getElementById("announcementsList");
 
 
 window.addEventListener("DOMContentLoaded", loadAnnouncements);
@@ -265,51 +99,59 @@ window.addEventListener("DOMContentLoaded", loadAnnouncements);
 ================================ */
 async function loadAnnouncements() {
   const token = getToken();
-  if (!token) return;
+  if (!token) {
+    list.innerHTML = "<p style='text-align:center; color:#e74c3c;'>Unauthorized. Please log in again.</p>";
+    return;
+  }
 
-  const res = await fetch(`${API_BASE}/api/announcement`, {
-    headers: {
-      "Authorization": `Bearer ${token}`
+  try {
+    const res = await fetch(`${API_BASE}/api/announcement`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if (res.status === 401) {
+      list.innerHTML = "<p style='text-align:center; color:#e74c3c;'>Unauthorized. Your session may have expired. <a href='admin-login.html'>Login</a></p>";
+      return;
     }
-  });
 
-  if (!res.ok) {
-    console.warn("Failed to load announcements");
-    return;
+    if (!res.ok) throw new Error("Failed to fetch announcements");
+
+    const data = await res.json();
+    list.innerHTML = "";
+
+    if (!data.length) {
+      list.innerHTML = "<p style='text-align:center'>No announcements yet.</p>";
+      return;
+    }
+
+    data.forEach(a => {
+      const status =
+        a.sms_sent && a.email_sent
+          ? `<span class="ok">✔ Delivered</span>`
+          : a.sms_sent || a.email_sent
+          ? `<span class="warn">⚠ Partial</span>`
+          : `<span class="fail">⏳ Pending</span>`;
+
+      list.innerHTML += `
+        <div class="announcement">
+          <strong>${a.title}</strong>
+          <div class="date">${new Date(a.created_at).toLocaleString()}</div>
+          <p>${a.message}</p>
+          <div class="status">${status}</div>
+        </div>
+      `;
+    });
+
+  } catch (err) {
+    console.error("Failed to load announcements:", err);
+    list.innerHTML = "<p style='text-align:center; color:#e74c3c;'>Error loading announcements.</p>";
   }
-
-  const data = await res.json();
-  list.innerHTML = "";
-
-  if (!data.length) {
-    list.innerHTML = "<p style='text-align:center'>No announcements yet.</p>";
-    return;
-  }
-
-  data.forEach(a => {
-    const status =
-      a.sms_sent && a.email_sent
-        ? `<span class="ok">✔ Delivered</span>`
-        : a.sms_sent || a.email_sent
-        ? `<span class="warn">⚠ Partial</span>`
-        : `<span class="fail">⏳ Pending</span>`;
-
-    list.innerHTML += `
-      <div class="announcement">
-        <strong>${a.title}</strong>
-        <div class="date">${new Date(a.created_at).toLocaleString()}</div>
-        <p>${a.message}</p>
-        <div class="status">${status}</div>
-      </div>
-    `;
-  });
 }
 
 
 /* ===============================
    POST ANNOUNCEMENTS
 ================================ */
-
 async function postAnnouncement() {
   const token = getToken();
   if (!token) {
@@ -332,28 +174,29 @@ async function postAnnouncement() {
     return;
   }
 
-  const res = await fetch(`${API_BASE}/api/announcement`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify({ title, message, send_sms, send_email })
-  });
+  try {
+    const res = await fetch(`${API_BASE}/api/announcement`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ title, message, send_sms, send_email })
+    });
 
-  if (!res.ok) {
-    alert("Failed to post announcement");
-    return;
+    if (res.status === 401) {
+      alert("Unauthorized. Please log in again.");
+      return;
+    }
+
+    if (!res.ok) throw new Error("Failed to post announcement");
+
+    titleInput.value = "";
+    messageInput.value = "";
+    loadAnnouncements();
+  } catch (err) {
+    console.error("Failed to post announcement:", err);
+    alert("Failed to post announcement. Check console for details.");
   }
-
-  titleInput.value = "";
-  messageInput.value = "";
-  loadAnnouncements();
 }
-
-
 </script>
-
 
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
