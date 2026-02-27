@@ -288,6 +288,29 @@
       footer img { height: 24px; }
       .toggle-password { font-size: 1.2rem; }
     }
+
+
+/* ===== LOGIN BUTTON SPINNER  ===== */
+.btn .spinner {
+  display: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto;
+}
+
+.btn.loading .btn-text { display: none; }
+.btn.loading .spinner { display: block; }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
   </style>
 </head>
 <body>
@@ -324,7 +347,10 @@
       </div>
       
       <!-- ✅ UPDATED BUTTON TEXT -->
-      <button class="btn" id="loginBtn">Login</button>
+      <button class="btn" id="loginBtn">
+      <span class="btn-text">Login</span>
+       <span class="spinner"></span>
+     </button>
       
       <div class="options">
         <p>Forgot password? <a href="forgot-password.html">Reset here</a></p>
@@ -345,8 +371,8 @@
     </div>
     
     <div class="footer-links">
-      <a href="terms.html">Terms</a>
-      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a> •
+      <a href="privacy.html">Privacy</a> •
       <a href="faq.html">FAQ</a>
     </div>
   </footer>
@@ -362,38 +388,46 @@
     });
 
     document.getElementById('loginBtn').addEventListener('click', function() {
-      const studentId = document.getElementById('studentId').value.trim();
-      const password = document.getElementById('password').value.trim();
-      
-      if (!studentId || !password) {
-        alert('Please enter both Student ID and Password');
-        return;
-      }
-      
-      fetch('https://api.gradely.info/api/auth/parent-login',{
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ student_id: studentId, password: password })
-      })
-      .then(response => response.json())
-      .then(data => {
-  if (data.success) {
-
-    // ✅ Save student ID the way results page expects
-    localStorage.setItem("studentId", data.parent.student_id);
-    localStorage.setItem("studentData", JSON.stringify(data.parent));
-    window.location.href = 'student.html';
-
-        } else {
-          alert('Login failed: ' + data.message);
-        }
-      })
-      .catch(error => {
-        console.error('Login error:', error);
-        alert('Login failed. Please check your credentials and try again.');
-      });
-    });
+  const studentId = document.getElementById('studentId').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const loginBtn = document.getElementById('loginBtn');
+  
+  if (!studentId || !password) {
+    alert('Please enter both Student ID and Password');
+    return;
+  }
+  
+  // ✅ Show loading state
+  loginBtn.classList.add('loading');
+  loginBtn.disabled = true;
+  
+  fetch('https://api.gradely.info/api/auth/parent-login', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ student_id: studentId, password: password })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      localStorage.setItem("studentId", data.parent.student_id);
+      localStorage.setItem("studentData", JSON.stringify(data.parent));
+      window.location.href = 'student.html';
+    } else {
+      alert('Login failed: ' + data.message);
+      // ✅ Re-enable button on error
+      loginBtn.classList.remove('loading');
+      loginBtn.disabled = false;
+    }
+  })
+  .catch(error => {
+    console.error('Login error:', error);
+    alert('Login failed. Please check your credentials and try again.');
+    // ✅ Re-enable button on error
+    loginBtn.classList.remove('loading');
+    loginBtn.disabled = false;
+  });
+});
     
     // Allow Enter key to submit
     document.getElementById('password').addEventListener('keypress', function(e) {
