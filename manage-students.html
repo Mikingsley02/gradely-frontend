@@ -133,7 +133,9 @@ if (!schoolId) {
 /* LOAD STUDENTS */
 async function loadStudents() {
   try {
-    const res = await fetch(`${API_BASE}/api/manage-students/${encodeURIComponent(schoolId)}`);
+    const res = await fetch(`${API_BASE}/api/manage-students/${encodeURIComponent(schoolId)}`, {
+  credentials: "include"
+});
     const data = await res.json();
 
     if (!data.success || !data.students.length) {
@@ -176,9 +178,11 @@ async function handleSearch() {
 
   try {
     const res = await fetch(
-      `${API_BASE}/api/manage-students/${encodeURIComponent(schoolId)}/search/${encodeURIComponent(query)}`
+  `${API_BASE}/api/manage-students/${encodeURIComponent(schoolId)}/search/${encodeURIComponent(query)}`,
+  { credentials: "include" }
     );
     const data = await res.json();
+    
 
     if (!data.success || !data.students.length) {
       tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-warning">⚠️ No student found.</td></tr>`;
@@ -224,10 +228,12 @@ saveEditBtn.onclick = async () => {
 
 
   const res = await fetch(`${API_BASE}/api/students/${editStudentId.value}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  credentials: "include",
+  body: JSON.stringify(payload)
+});
+
 
   if (res.ok) {
     modal.hide();
@@ -246,7 +252,9 @@ async function deleteStudent(id) {
   try {
   const res = await fetch(
   `${API_BASE}/api/students/${id}?school_id=${encodeURIComponent(schoolId)}`,
-  { method: "DELETE" }
+  { method: "DELETE",
+  credentials: "include"
+  }
 );
 
 
