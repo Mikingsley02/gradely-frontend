@@ -255,124 +255,135 @@
 
   <script src="https://js.paystack.co/v1/inline.js"></script>
   <script>
-    console.log("=== PAY.HTML INIT ===");
-    const params = new URLSearchParams(window.location.search);
-    const plan = params.get("plan") || "pro";
-    const school_id = params.get("school_id") || localStorage.getItem("school_id");
-    const isUpgrade = params.get("upgrade") === "true";
-    const isRenewal = params.get("renew") === "true";
-    
-    if (!school_id) {
-      alert("Session expired. Please return to subscription page.");
-      window.history.back();
-    }
-    
-    // ✅ PLAN DETAILS WITH CORRECT SIZING
-    const PLAN_NAMES = { 
-      basic: 'Basic Plan', 
-      pro: 'Professional Plan' 
-    };
-    const PLAN_PRICES = { 
-      basic: '₦83,900', 
-      pro: '₦89,700' 
-    };
-    
-    document.getElementById('planName').textContent = PLAN_NAMES[plan];
-    document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
-    
-    // ✅ PAYMENT LINKS (unchanged for basic flow)
-    const PAYMENT_LINKS = {
-      basic: 'https://paystack.shop/pay/jeh3ez58fz',
-      pro: 'https://paystack.shop/pay/3xxw3ze66-'
-    };
-    
-    // ✅ Enhanced payment handler with upgrade completion
-    document.getElementById("paystackBtn").onclick = () => {
-      const paymentLink = PAYMENT_LINKS[plan];
-      if (!paymentLink) {
-        alert(`Payment link not configured for ${plan} plan`);
-        return;
+  console.log("=== PAY.HTML INIT ===");
+
+  const params = new URLSearchParams(window.location.search);
+  const plan = params.get("plan"); // ❌ no default to pro
+  const school_id = params.get("school_id") || localStorage.getItem("school_id");
+  const isUpgrade = params.get("upgrade") === "true";
+  const isRenewal = params.get("renew") === "true";
+
+  if (!school_id) {
+    alert("Session expired. Please return to subscription page.");
+    window.history.back();
+  }
+
+  if (!plan) {
+    alert("No plan selected.");
+    window.history.back();
+  }
+
+  // ✅ PLAN DETAILS (unchanged)
+  const PLAN_NAMES = {
+    basic: 'Basic Plan',
+    pro: 'Professional Plan'
+  };
+
+  const PLAN_PRICES = {
+    basic: '₦83,900',
+    pro: '₦89,700'
+  };
+
+  document.getElementById('planName').textContent = PLAN_NAMES[plan];
+  document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
+
+  // ✅ NEW PRODUCTION PAYMENT HANDLER (Initialize from backend)
+  document.getElementById("paystackBtn").onclick = async () => {
+
+    const btn = document.getElementById('paystackBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing secure payment...';
+    btn.disabled = true;
+
+    try {
+      const response = await fetch('/upgrade/initialize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ plan })
+      });
+
+      const result = await response.json();
+
+      if (!result.success || !result.authorization_url) {
+        throw new Error(result.message || 'Payment initialization failed');
       }
-      
-      const btn = document.getElementById('paystackBtn');
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirecting to Secure Payment...';
-      btn.disabled = true;
-      
-      // For upgrades/renewals, we need to handle completion AFTER payment
-      // Since we're using payment links (redirect flow), completion happens via:
-      // 1. Paystack redirects back to your success URL with reference
-      // 2. Your backend webhook processes the payment
-      // 3. Frontend polls status OR redirects to dashboard
-      
-      // Simple approach: redirect to payment, then after payment Paystack 
-      // will redirect to your configured success URL which should handle upgrade completion
-      setTimeout(() => {
-        window.location.href = paymentLink;
-      }, 800);
-    };
-    
-    // ✅ AFTER PAYMENT: Handle upgrade completion when returning from Paystack
-    // This runs when user returns to this page AFTER successful payment
-    // (Your Paystack success URL should redirect here with ?reference=TRX_123)
-    const paymentReference = params.get("reference");
-    if (paymentReference && (isUpgrade || isRenewal)) {
-      // Only attempt completion once (prevent duplicate calls)
-      if (!sessionStorage.getItem(`upgrade_completed_${paymentReference}`)) {
-        completePlanActivation(paymentReference);
-        sessionStorage.setItem(`upgrade_completed_${paymentReference}`, 'true');
-      }
+
+      // Redirect to Paystack secure hosted page
+      window.location.href = result.authorization_url;
+
+    } catch (error) {
+      console.error('Payment init error:', error);
+      btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Payment Failed';
+      btn.disabled = false;
+      alert("Could not start payment. Please try again.");
     }
-    
-    async function completePlanActivation(reference) {
-      const btn = document.getElementById('paystackBtn');
-      btn.innerHTML = '<i class="fas fa-check-circle"></i> Finalizing subscription...';
-      btn.disabled = true;
-      
-      try {
-        // Determine endpoint based on flow type
-        const endpoint = isUpgrade 
-          ? '/api/subscription/upgrade/complete'
-          : '/api/subscription/renew/complete'; // You'll need to create this endpoint
-        
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')}`
-          },
-          body: JSON.stringify({
-            school_id: school_id,
-            payment_reference: reference,
-            plan: plan
-          })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          btn.innerHTML = '<i class="fas fa-check-circle"></i> Success! Redirecting...';
-          
-          // Redirect to appropriate page based on flow
-          setTimeout(() => {
-            if (isUpgrade) {
-              window.location.href = 'subscription.html?upgrade_success=true';
-            } else if (isRenewal) {
-              window.location.href = 'subscription.html?renewal_success=true';
-            } else {
-              window.location.href = 'dashboard.html';
-            }
-          }, 1500);
-        } else {
-          throw new Error(result.message || 'Activation failed');
-        }
-      } catch (error) {
-        console.error('Activation error:', error);
-        btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error finalizing subscription';
-        btn.disabled = false;
-        alert(`Could not activate subscription: ${error.message}\nPlease contact support with reference: ${reference}`);
-      }
+  };
+
+  // ✅ AFTER PAYMENT: Handle upgrade completion (UNCHANGED)
+  const paymentReference = params.get("reference");
+
+  if (paymentReference && (isUpgrade || isRenewal)) {
+    if (!sessionStorage.getItem(`upgrade_completed_${paymentReference}`)) {
+      completePlanActivation(paymentReference);
+      sessionStorage.setItem(`upgrade_completed_${paymentReference}`, 'true');
     }
-  </script>
+  }
+
+  async function completePlanActivation(reference) {
+
+    const btn = document.getElementById('paystackBtn');
+    btn.innerHTML = '<i class="fas fa-check-circle"></i> Finalizing subscription...';
+    btn.disabled = true;
+
+    try {
+
+      const endpoint = isUpgrade
+        ? '/api/subscription/upgrade/complete'
+        : '/api/subscription/renew/complete';
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          school_id: school_id,
+          payment_reference: reference,
+          plan: plan
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Success! Redirecting...';
+
+        setTimeout(() => {
+          if (isUpgrade) {
+            window.location.href = 'subscription.html?upgrade_success=true';
+          } else if (isRenewal) {
+            window.location.href = 'subscription.html?renewal_success=true';
+          } else {
+            window.location.href = 'dashboard.html';
+          }
+        }, 1500);
+
+      } else {
+        throw new Error(result.message || 'Activation failed');
+      }
+
+    } catch (error) {
+      console.error('Activation error:', error);
+      btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error finalizing subscription';
+      btn.disabled = false;
+      alert(`Could not activate subscription: ${error.message}\nReference: ${reference}`);
+    }
+  }
+</script>
 
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
