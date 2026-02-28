@@ -106,7 +106,8 @@ async function loadAnnouncements() {
 
   try {
     const res = await fetch(`${API_BASE}/api/announcement`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      method: "GET",
+      credentials: "include"
     });
 
     if (res.status === 401) {
@@ -176,10 +177,13 @@ async function postAnnouncement() {
 
   try {
     const res = await fetch(`${API_BASE}/api/announcement`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ title, message, send_sms, send_email })
-    });
+  method: "POST",
+  credentials: "include",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ title, message, send_sms, send_email })
+});
 
     if (res.status === 401) {
       alert("Unauthorized. Please log in again.");
