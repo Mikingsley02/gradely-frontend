@@ -121,6 +121,32 @@
       font-weight: 600;
       display: none; /* Hidden by default */
     }
+    
+    /* Terms acceptance checkbox styling */
+    .terms-checkbox {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 10px 0;
+      font-size: 0.9rem;
+      color: #e8e8e8;
+    }
+    .terms-checkbox input {
+      width: auto;
+      height: auto;
+      margin-top: 3px;
+      min-width: 18px;
+      min-height: 18px;
+      cursor: pointer;
+    }
+    .terms-checkbox a {
+      color: #00d2ff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .terms-checkbox a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -159,6 +185,16 @@
       <button type="button" id="selectPlanBtn">
         Select Plan
       </button>
+
+      <!-- ✅ NEW: Mandatory Terms Acceptance Checkbox -->
+      <div class="terms-checkbox">
+        <input type="checkbox" id="agreeTerms" required />
+        <label for="agreeTerms" style="font-weight: normal; margin: 0; cursor: pointer;">
+          I agree to the <a href="terms.html" target="_blank">Terms of Service</a>, including the 
+          <a href="terms.html#announcement-policy" target="_blank">Announcement Policy</a>. 
+          I understand violations may result in account suspension.
+        </label>
+      </div>
 
       <!-- Comment out the button bellow to ✅ Proceed to Payment</button> -->
       <button type="submit" id="submitBtn">✅ Proceed to Payment</button> 
@@ -205,138 +241,145 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ✅ Password visibility toggle
+function togglePasswordVisibility(fieldId) {
+  const input = document.getElementById(fieldId);
+  const icon = input.nextElementSibling;
+  const isPassword = input.getAttribute('type') === 'password';
+  input.setAttribute('type', isPassword ? 'text' : 'password');
+  icon.textContent = isPassword ? '🙈' : '👁️';
+}
 
+// ✅ FIXED: Clean API_BASE (no trailing spaces)
+const API_BASE = "https://api.gradely.info";
 
+// ✅ Show plan status ONLY if user came from plan-comparison page
+document.addEventListener("DOMContentLoaded", () => {
+  const selectedPlan = sessionStorage.getItem("selected_plan");
+  const planInput = document.getElementById("plan");
+  const planStatus = document.getElementById("planStatus");
 
-  // ✅ Password visibility toggle
-  function togglePasswordVisibility(fieldId) {
-    const input = document.getElementById(fieldId);
-    const icon = input.nextElementSibling;
-    const isPassword = input.getAttribute('type') === 'password';
-    input.setAttribute('type', isPassword ? 'text' : 'password');
-    icon.textContent = isPassword ? '🙈' : '👁️';
+  if (selectedPlan) {
+    planInput.value = selectedPlan;
+    planStatus.textContent = `✅ ${selectedPlan.toUpperCase()} plan selected`;
+    planStatus.style.display = "block";
+  }
+});
+
+async function handleRegistration(testMode = false) {
+  const submitBtn = document.getElementById("submitBtn");
+  const skipBtn = document.getElementById("skipPaymentBtn");
+  
+  // ✅ NEW: Check terms acceptance
+  const agreeTerms = document.getElementById("agreeTerms");
+  if (!agreeTerms.checked) {
+    alert("⚠️ You must agree to the Terms of Service to continue.");
+    resetButtons();
+    return;
   }
 
-  const API_BASE = "https://api.gradely.info";
+  if (testMode) {
+    skipBtn.textContent = "🚀 Registering...";
+    skipBtn.disabled = true;
+  } else {
+    submitBtn.textContent = "⏳ Registering...";
+    submitBtn.disabled = true;
+  }
 
-  // ✅ Show plan status ONLY if user came from plan-comparison page
-  document.addEventListener("DOMContentLoaded", () => {
-    const selectedPlan = sessionStorage.getItem("selected_plan");
-    const planInput = document.getElementById("plan");
-    const planStatus = document.getElementById("planStatus");
+  const school_name = document.getElementById("schoolName").value.trim();
+  const admin_id = document.getElementById("adminNumber").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const confirm_password = document.getElementById("confirmPassword").value.trim();
+  const subscription_plan = document.getElementById("plan").value;
 
-    if (selectedPlan) {
-      planInput.value = selectedPlan;
-      planStatus.textContent = `✅ ${selectedPlan.toUpperCase()} plan selected`;
-      planStatus.style.display = "block";
-    }
-  });
+  if (!subscription_plan) {
+    alert("⚠️ Please select a subscription plan first.");
+    resetButtons();
+    return;
+  }
 
-  async function handleRegistration(testMode = false) {
-    const submitBtn = document.getElementById("submitBtn");
-    const skipBtn = document.getElementById("skipPaymentBtn");
+  if (!school_name || !admin_id || !email || !phone || !password || !confirm_password) {
+    alert("⚠️ Please fill in all fields.");
+    resetButtons();
+    return;
+  }
 
-    if (testMode) {
-      skipBtn.textContent = "🚀 Registering...";
-      skipBtn.disabled = true;
-    } else {
-      submitBtn.textContent = "⏳ Registering...";
-      submitBtn.disabled = true;
-    }
+  if (password !== confirm_password) {
+    alert("❌ Password does not match. Please try again.");
+    resetButtons();
+    return;
+  }
 
-    const school_name = document.getElementById("schoolName").value.trim();
-    const admin_id = document.getElementById("adminNumber").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const confirm_password = document.getElementById("confirmPassword").value.trim();
-    const subscription_plan = document.getElementById("plan").value;
+  const data = {
+    school_name,
+    admin_id,
+    email,
+    phone,
+    password,
+    subscription_plan,
+    terms_accepted: document.getElementById("agreeTerms").checked
+  };
 
-    if (!subscription_plan) {
-      alert("⚠️ Please select a subscription plan first.");
-      resetButtons();
-      return;
-    }
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
 
-    if (!school_name || !admin_id || !email || !phone || !password || !confirm_password) {
-      alert("⚠️ Please fill in all fields.");
-      resetButtons();
-      return;
-    }
+    const result = await res.json();
+    console.log("✅ Server response:", result);
 
-    if (password !== confirm_password) {
-      alert("❌ Password does not match. Please try again.");
-      resetButtons();
-      return;
-    }
+    if (res.ok && result.success) {
+      alert("✅ Registration successful!");
 
-    const data = {
-      school_name,
-      admin_id,
-      email,
-      phone,
-      password,
-      subscription_plan
-    };
+      // Clean up after successful registration
+      sessionStorage.removeItem("selected_plan");
+      sessionStorage.removeItem("plan_return_url");
 
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-
-      const result = await res.json();
-      console.log("✅ Server response:", result);
-
-      if (res.ok && result.success) {
-        alert("✅ Registration successful!");
-
-        // Clean up after successful registration
-        sessionStorage.removeItem("selected_plan");
-        sessionStorage.removeItem("plan_return_url");
-
-        if (testMode) {
-          window.location.href = `dashboard.html?admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}`;
-        } else {
-          window.location.href = `pay.html?admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}`;
-        }
+      if (testMode) {
+        window.location.href = `dashboard.html?admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}`;
       } else {
-        alert("⚠️ " + (result.message || "Registration failed."));
+        window.location.href = `pay.html?admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}`;
       }
-    } catch (err) {
-      console.error("🚫 Registration error:", err);
-      alert("⚠️ Could not connect to the server. Please check your internet or contact support.");
-    } finally {
-      resetButtons();
+    } else {
+      alert("⚠️ " + (result.message || "Registration failed."));
     }
+  } catch (err) {
+    console.error("🚫 Registration error:", err);
+    alert("⚠️ Could not connect to the server. Please check your internet or contact support.");
+  } finally {
+    resetButtons();
   }
+}
 
-  function resetButtons() {
-    const submitBtn = document.getElementById("submitBtn");
-    const skipBtn = document.getElementById("skipPaymentBtn");
+function resetButtons() {
+  const submitBtn = document.getElementById("submitBtn");
+  const skipBtn = document.getElementById("skipPaymentBtn");
 
-    submitBtn.textContent = "✅ Proceed to Payment";
-    submitBtn.disabled = false;
+  submitBtn.textContent = "✅ Proceed to Payment";
+  submitBtn.disabled = false;
 
-    skipBtn.textContent = "🚀 Register Without Payment";
-    skipBtn.disabled = false;
-  }
+  skipBtn.textContent = "🚀 Register Without Payment";
+  skipBtn.disabled = false;
+}
 
-  document.getElementById("schoolForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    handleRegistration(false);
-  });
+document.getElementById("schoolForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  handleRegistration(false);
+});
 
-  document.getElementById("skipPaymentBtn").addEventListener("click", () => {
-    handleRegistration(true);
-  });
+document.getElementById("skipPaymentBtn").addEventListener("click", () => {
+  handleRegistration(true);
+});
 
-  // ✅ Always allow plan changes - button never disabled
-  document.getElementById("selectPlanBtn").addEventListener("click", () => {
-    sessionStorage.setItem('plan_return_url', location.href);
-    window.location.href = 'plan-comparison.html';
-  });
+// ✅ Always allow plan changes - button never disabled
+document.getElementById("selectPlanBtn").addEventListener("click", () => {
+  sessionStorage.setItem('plan_return_url', location.href);
+  window.location.href = 'plan-comparison.html';
+});
 </script>
 
   <script src="js/kaima-chatbot.js"></script>

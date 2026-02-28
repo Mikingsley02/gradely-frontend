@@ -41,9 +41,33 @@
     h2 {
       color: #2c3e50;
       margin: 25px 0 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #eee;
+    }
+    h3 {
+      color: #34495e;
+      margin: 20px 0 12px;
+      font-size: 1.2rem;
     }
     p, ul {
       margin-bottom: 15px;
+    }
+    ul {
+      padding-left: 25px;
+    }
+    ul ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
     }
     footer {
       text-align: center;
@@ -67,6 +91,28 @@
       text-decoration: none;
       border-radius: 6px;
       font-size: 0.95rem;
+    }
+    .back-link {
+      display: inline-block;
+      margin: 20px 0;
+      color: #230baf;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    .compliance-note {
+      margin-top: 30px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-left: 4px solid #3498db;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .compliance-note a {
+      color: #3498db;
     }
   </style>
 </head>
@@ -107,19 +153,62 @@
         <li>Impersonate another user or school</li>
       </ul>
 
-      <h2>7. Limitation of Liability</h2>
+      <!-- ✅ NEW: Announcement Policy Section -->
+      <h2 id="announcement-policy">7. Announcement Feature Policy</h2>
+      <p>By using Gradely's announcement feature to send messages to students, parents, or staff, you agree to the following:</p>
+
+      <h3>7.1 Prohibited Content</h3>
+      <p>You shall not send announcements that contain:</p>
+      <ul>
+        <li>Harassment, bullying, discrimination, or hate speech</li>
+        <li>Fraudulent, misleading, or deceptive information (e.g., fake exam results, phishing)</li>
+        <li>Illegal content or activities under Nigerian law</li>
+        <li>Spam, unsolicited commercial messages, or excessive promotional content</li>
+        <li>Content that infringes intellectual property rights</li>
+        <li>Personal data of third parties without consent (violating NDPR 2019)</li>
+      </ul>
+
+      <h3>7.2 Moderation & Monitoring</h3>
+      <p>Gradely reserves the right to review, flag, or remove announcements that may violate these terms. All announcements are logged and may be accessed by Gradely staff for moderation, security, or legal compliance purposes.</p>
+
+      <h3>7.3 Enforcement</h3>
+      <p>Violations may result in:</p>
+      <ul>
+        <li>Warning and request to remove content</li>
+        <li>Temporary suspension of announcement privileges</li>
+        <li>Permanent suspension or termination of your school account</li>
+        <li>Reporting to relevant authorities where required by law</li>
+      </ul>
+
+      <h3>7.4 Appeal Process</h3>
+      <p>If your account is suspended for policy violations, you may appeal by contacting <a href="mailto:support@gradely.info">support@gradely.info</a>. Appeals will be reviewed within 5 business days, and a written decision will be provided.</p>
+
+      <h3>7.5 Cost Responsibility</h3>
+      <p>Schools are responsible for all costs associated with SMS/email announcements. Gradely tracks usage for billing transparency and may provide usage reports upon request.</p>
+
+      <!-- Renumber remaining sections -->
+      <h2>8. Limitation of Liability</h2>
       <p>While we strive for accuracy, we are not liable for errors in results due to incorrect uploads by schools. We are not liable for indirect damages arising from use of the service.</p>
 
-      <h2>8. Changes to Terms</h2>
+      <h2>9. Changes to Terms</h2>
       <p>We may update these terms at any time. Continued use after changes constitutes acceptance.</p>
 
-      <h2>9. Termination</h2>
+      <h2>10. Termination</h2>
       <p>We reserve the right to suspend or terminate accounts that violate these terms.</p>
 
-      <h2>10. Governing Law</h2>
+      <h2>11. Governing Law</h2>
       <p>These terms are governed by the laws of Nigeria. Any disputes will be resolved in Nigerian courts.</p>
 
-      <a href="javascript:history.back()" class="back-link" style="color: #230baf; text-decoration: none; font-weight: 600;">← Go Back</a>
+      <!-- ✅ NEW: Legal Compliance Footer -->
+      <div class="compliance-note">
+        <strong>Legal Compliance:</strong> This policy complies with Nigeria's 
+        <a href="https://nitda.gov.ng/ngdata-protection-regulation/" target="_blank">NDPR 2019</a>, 
+        <a href="https://nigcybercrime.gov.ng/" target="_blank">Cybercrimes Act 2015</a>, 
+        and applicable consumer protection laws. 
+        Remit Integrated Services LTD is registered as a Data Controller with NITDA.
+      </div>
+
+      <a href="javascript:history.back()" class="back-link">← Go Back</a>
     </div>
 
     <footer>
@@ -127,7 +216,7 @@
         src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" 
         alt="RIS Logo" 
       />
-      © 2026 <strong>gradely.info. </strong>All rights reserved. | Powered by RIS
+      © 2026 <strong>gradely.info.</strong> All rights reserved. | Powered by RIS
     </footer>
   </div>
 
