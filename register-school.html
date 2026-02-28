@@ -138,6 +138,12 @@
       min-width: 18px;
       min-height: 18px;
       cursor: pointer;
+      accent-color: #22c55e; /* ✅ Green when checked */
+      transition: all 0.2s ease;
+    }
+    .terms-checkbox input:checked {
+      accent-color: #22c55e; /* ✅ Green when checked */
+      transform: scale(1.1);
     }
     .terms-checkbox a {
       color: #00d2ff;
@@ -204,7 +210,8 @@
       </button>
     </form>
 
-    <a href="javascript:history.back()" class="back-link">← Go Back</a>
+    <!-- ✅ UPDATED: Link to index.html instead of history.back() -->
+    <a href="index.html" class="back-link">← Back to Home</a>
   </div>
 
   <!-- Footer -->

@@ -98,6 +98,7 @@
       color: #230baf;
       text-decoration: none;
       font-weight: 600;
+      cursor: pointer;
     }
     .back-link:hover {
       text-decoration: underline;
@@ -208,7 +209,8 @@
         Remit Integrated Services LTD is registered as a Data Controller with NITDA.
       </div>
 
-      <a href="javascript:history.back()" class="back-link">← Go Back</a>
+      <!-- ✅ UPDATED: Smart back button that returns to referring page -->
+      <a id="backLink" class="back-link">← Go Back</a>
     </div>
 
     <footer>
@@ -221,6 +223,36 @@
   </div>
 
 <script src="js/kaima-chatbot.js"></script>
+<script>
+  // ✅ Smart back button: return to referring page or fallback to index.html
+  document.addEventListener('DOMContentLoaded', () => {
+    const backLink = document.getElementById('backLink');
+    const referrer = document.referrer;
+    
+    // Determine where to go back to
+    let backUrl = 'index.html'; // Default fallback
+    
+    if (referrer) {
+      try {
+        const referrerUrl = new URL(referrer);
+        // Only use referrer if it's from our domain (security)
+        if (referrerUrl.origin === window.location.origin) {
+          backUrl = referrer;
+        }
+      } catch (e) {
+        // If URL parsing fails, fallback to index.html
+        backUrl = 'index.html';
+      }
+    }
+    
+    // Set the link href and click handler
+    backLink.href = backUrl;
+    backLink.onclick = (e) => {
+      e.preventDefault();
+      window.location.href = backUrl;
+    };
+  });
+</script>
 
 </body>
 </html>
