@@ -228,11 +228,9 @@ async function loadSchoolData() {
 
   try {
     const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
-    });
+  method: "GET",
+  credentials: "include"
+});
 
     const data = await res.json();
 
@@ -293,14 +291,14 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/settings/update-settings`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
+    const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
+  method: "PUT",
+  credentials: "include",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(data)
+});
 
     const data = await res.json();
 
