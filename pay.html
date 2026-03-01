@@ -17,21 +17,19 @@
  <script>
 console.log("=== PAY.HTML INIT ===");
 
-const API_BASE = "https://api.gradely.info";
+
+const API_BASE = "https://api.gradely.info/api/subscription";
 const btn = document.getElementById('paystackBtn');
 
-// ================= LOAD SUBSCRIPTION =================
+// ================= Load Current Subscription =================
 async function loadSubscription() {
   try {
-    const res = await fetch(`${API_BASE}/subscription/status`, {
-      method: "GET",
-      credentials: "include"
-    });
-
+    const res = await fetch(`${API_BASE}/status`, { credentials: 'include' });
     const data = await res.json();
 
     if (!data.success) throw new Error(data.message || "Failed to load subscription");
 
+    // Handle expired subscription
     if (!data.isActive) {
       alert("Your subscription has expired. Please subscribe to continue.");
       window.location.href = "plan-comparison.html";
@@ -39,17 +37,14 @@ async function loadSubscription() {
     }
 
     const plan = data.plan;
+    document.getElementById('planName').textContent = plan === 'pro' ? 'Professional Plan' : 'Basic Plan';
+    document.getElementById('planPrice').textContent = plan === 'pro' ? '₦89,700' : '₦83,900';
 
-    document.getElementById('planName').textContent =
-      plan === 'pro' ? 'Professional Plan' : 'Basic Plan';
-
-    document.getElementById('planPrice').textContent =
-      plan === 'pro' ? '₦89,700' : '₦83,900';
-
+    // Dynamically set button text and click behavior
     if (plan === 'basic') {
       btn.textContent = 'Upgrade Plan';
       btn.onclick = upgradePlan;
-    } else {
+    } else if (plan === 'pro') {
       btn.textContent = 'Downgrade Plan';
       btn.onclick = downgradePlan;
     }
@@ -60,13 +55,13 @@ async function loadSubscription() {
   }
 }
 
-// ================= UPGRADE =================
+// ================= Upgrade =================
 async function upgradePlan() {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing...';
   btn.disabled = true;
 
   try {
-    const res = await fetch(`${API_BASE}/subscription/upgrade`, {
+    const res = await fetch(`${API_BASE}/upgrade/initialize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -75,9 +70,7 @@ async function upgradePlan() {
 
     const data = await res.json();
 
-    if (!data.success || !data.authorization_url) {
-      throw new Error(data.message || "Payment initialization failed");
-    }
+    if (!data.success || !data.authorization_url) throw new Error(data.message || "Payment init failed");
 
     window.location.href = data.authorization_url;
 
@@ -89,7 +82,7 @@ async function upgradePlan() {
   }
 }
 
-// ================= DOWNGRADE =================
+// ================= Downgrade =================
 async function downgradePlan() {
   if (!confirm("You will lose Pro features immediately. Proceed?")) return;
 
@@ -97,18 +90,17 @@ async function downgradePlan() {
   btn.disabled = true;
 
   try {
-    const res = await fetch(`${API_BASE}/subscription/downgrade`, {
+    const res = await fetch(`${API_BASE}/downgrade`, {
       method: 'POST',
       credentials: 'include'
     });
-
     const data = await res.json();
 
     if (!data.success) throw new Error(data.message || "Downgrade failed");
 
     alert(data.message);
-    btn.disabled = false;
     loadSubscription();
+    btn.disabled = false;
 
   } catch (err) {
     console.error("Downgrade error:", err);
@@ -132,7 +124,7 @@ async function completePlanActivation(reference) {
   btn.disabled = true;
 
   try {
-    const response = await fetch(`${API_BASE}/subscription/upgrade/complete`, {
+    const response = await fetch(`${API_BASE}/upgrade/complete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -141,25 +133,24 @@ async function completePlanActivation(reference) {
 
     const result = await response.json();
 
-    if (!result.success) {
+    if (result.success) {
+      btn.innerHTML = '<i class="fas fa-check-circle"></i> Success!';
+      setTimeout(() => {
+        window.location.href = 'dashboard.html?upgrade_success=true';
+      }, 1500);
+    } else {
       throw new Error(result.message || 'Activation failed');
     }
 
-    btn.innerHTML = '<i class="fas fa-check-circle"></i> Success!';
-
-    setTimeout(() => {
-      window.location.href = 'dashboard.html?upgrade_success=true';
-    }, 1500);
-
   } catch (err) {
     console.error('Activation error:', err);
-    btn.innerHTML = 'Upgrade Plan';
+    btn.innerHTML = 'Paystack / Upgrade';
     btn.disabled = false;
     alert("Could not activate: " + err.message);
   }
 }
 
-// ================= INIT =================
+// ================= Initial Load =================
 loadSubscription();
 </script>
 
