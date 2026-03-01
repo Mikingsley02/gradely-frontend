@@ -17,19 +17,17 @@
  <script>
 console.log("=== PAY.HTML INIT ===");
 
-
-const API_BASE = "https://api.gradely.info/api/subscription";
+const API_BASE = "https://api.gradely.info";
 const btn = document.getElementById('paystackBtn');
 
-// ================= Load Current Subscription =================
+// ================= Load Subscription =================
 async function loadSubscription() {
   try {
-    const res = await fetch(`${API_BASE}/status`, { credentials: 'include' });
+    const res = await fetch(`${API_BASE}/api/subscription/status`, { credentials: 'include' });
     const data = await res.json();
 
     if (!data.success) throw new Error(data.message || "Failed to load subscription");
 
-    // Handle expired subscription
     if (!data.isActive) {
       alert("Your subscription has expired. Please subscribe to continue.");
       window.location.href = "plan-comparison.html";
@@ -37,16 +35,23 @@ async function loadSubscription() {
     }
 
     const plan = data.plan;
-    document.getElementById('planName').textContent = plan === 'pro' ? 'Professional Plan' : 'Basic Plan';
-    document.getElementById('planPrice').textContent = plan === 'pro' ? '₦89,700' : '₦83,900';
 
-    // Dynamically set button text and click behavior
-    if (plan === 'basic') {
-      btn.textContent = 'Upgrade Plan';
-      btn.onclick = upgradePlan;
-    } else if (plan === 'pro') {
-      btn.textContent = 'Downgrade Plan';
-      btn.onclick = downgradePlan;
+    // ✅ Safely update elements
+    const planNameEl = document.getElementById('planName');
+    const planPriceEl = document.getElementById('planPrice');
+
+    if (planNameEl) planNameEl.textContent = plan === 'pro' ? 'Professional Plan' : 'Basic Plan';
+    if (planPriceEl) planPriceEl.textContent = plan === 'pro' ? '₦89,700' : '₦83,900';
+
+    // ✅ Set button behavior
+    if (btn) {
+      if (plan === 'basic') {
+        btn.textContent = 'Upgrade Plan';
+        btn.onclick = upgradePlan;
+      } else if (plan === 'pro') {
+        btn.textContent = 'Downgrade Plan';
+        btn.onclick = downgradePlan;
+      }
     }
 
   } catch (err) {
@@ -55,13 +60,14 @@ async function loadSubscription() {
   }
 }
 
-// ================= Upgrade =================
+// ================= Upgrade Plan =================
 async function upgradePlan() {
+  if (!btn) return;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing...';
   btn.disabled = true;
 
   try {
-    const res = await fetch(`${API_BASE}/upgrade/initialize`, {
+    const res = await fetch(`${API_BASE}/api/subscription/upgrade/initialize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -69,7 +75,6 @@ async function upgradePlan() {
     });
 
     const data = await res.json();
-
     if (!data.success || !data.authorization_url) throw new Error(data.message || "Payment init failed");
 
     window.location.href = data.authorization_url;
@@ -82,15 +87,16 @@ async function upgradePlan() {
   }
 }
 
-// ================= Downgrade =================
+// ================= Downgrade Plan =================
 async function downgradePlan() {
+  if (!btn) return;
   if (!confirm("You will lose Pro features immediately. Proceed?")) return;
 
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
   btn.disabled = true;
 
   try {
-    const res = await fetch(`${API_BASE}/downgrade`, {
+    const res = await fetch(`${API_BASE}/api/subscription/downgrade`, {
       method: 'POST',
       credentials: 'include'
     });
@@ -110,7 +116,7 @@ async function downgradePlan() {
   }
 }
 
-// ================= AFTER PAYMENT =================
+// ================= Handle Upgrade Completion =================
 const params = new URLSearchParams(window.location.search);
 const paymentReference = params.get("reference");
 const isUpgrade = params.get("upgrade") === "true";
@@ -120,11 +126,12 @@ if (paymentReference && isUpgrade) {
 }
 
 async function completePlanActivation(reference) {
+  if (!btn) return;
   btn.innerHTML = '<i class="fas fa-check-circle"></i> Finalizing...';
   btn.disabled = true;
 
   try {
-    const response = await fetch(`${API_BASE}/upgrade/complete`, {
+    const response = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -150,9 +157,10 @@ async function completePlanActivation(reference) {
   }
 }
 
-// ================= Initial Load =================
+// ================= Initialize =================
 loadSubscription();
 </script>
+
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
