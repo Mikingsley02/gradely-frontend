@@ -17,6 +17,14 @@
   <script>
   console.log("=== PAY.HTML INIT ===");
 
+  // ✅ DEBUG: Log what we're sending
+console.log("📤 Sending to backend:", {
+  plan: plan,
+  planType: typeof plan,
+  school_id: school_id,
+  urlParams: Object.fromEntries(params)
+});
+
   // ✅ FIXED: Add API_BASE constant (no trailing spaces)
   const API_BASE = "https://api.gradely.info";
 
@@ -64,43 +72,55 @@
   document.getElementById('planName').textContent = PLAN_NAMES[plan];
   document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
 
-  // ✅ FIXED: Payment handler with correct URL + session auth
-  document.getElementById("paystackBtn").onclick = async () => {
-    const btn = document.getElementById('paystackBtn');
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing secure payment...';
-    btn.disabled = true;
+  
+  // ✅ FIXED: Payment handler with better error handling
+document.getElementById("paystackBtn").onclick = async () => {
+  const btn = document.getElementById('paystackBtn');
+  
+  // ✅ Double-check plan before proceeding
+  if (!plan || !['basic', 'pro'].includes(plan?.toLowerCase()?.trim())) {
+    alert("⚠️ Plan not selected. Please return to plan selection.");
+    window.location.href = "plan-comparison.html";
+    return;
+  }
+  
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing...';
+  btn.disabled = true;
 
-    try {
-      // ✅ FIXED: Full API URL + session auth + include school_id
-      const response = await fetch(`${API_BASE}/api/subscription/upgrade/initialize`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-          // ✅ NO Authorization header - session cookie handles auth
-        },
-        credentials: 'include',  // ✅ CRITICAL: sends session cookie
-        body: JSON.stringify({ 
-          plan, 
-          school_id  // ✅ Required by backend
-        })
-      });
+  try {
+    const response = await fetch(`${API_BASE}/api/subscription/upgrade/initialize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ 
+        plan: plan.toLowerCase().trim(),  // ✅ Normalize: lowercase + trim
+        school_id: school_id?.trim()
+      })
+    });
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success || !result.authorization_url) {
-        throw new Error(result.message || 'Payment initialization failed');
-      }
-
-      // Redirect to Paystack secure hosted page
-      window.location.href = result.authorization_url;
-
-    } catch (error) {
-      console.error('Payment init error:', error);
-      btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Payment Failed';
-      btn.disabled = false;
-      alert(`Could not start payment: ${error.message}. Please try again.`);
+    // ✅ Better error handling
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP ${response.status}`);
     }
-  };
+
+    const result = await response.json();
+
+    if (!result.success || !result.authorization_url) {
+      throw new Error(result.message || 'Payment initialization failed');
+    }
+
+    window.location.href = result.authorization_url;
+
+  } catch (error) {
+    console.error('❌ Payment init error:', error);
+    btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Try Again';
+    btn.disabled = false;
+    alert(`Payment error: ${error.message}`);
+  }
+};
 
   // ✅ AFTER PAYMENT: Handle upgrade completion
   const paymentReference = params.get("reference");
