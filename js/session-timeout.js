@@ -1,4 +1,11 @@
 // ========== SESSION TIMEOUT WITH SMART REDIRECT ==========
+
+
+
+if (!window.location.pathname.includes('pay.html')) {
+
+
+
 (function () {
   const TIMEOUT_DURATION = 15 * 60 * 1000; // 15 minutes
   const WARNING_DURATION = 60 * 1000;      // 1 minute warning
@@ -139,3 +146,5 @@
   startTimers();
   console.log("✅ Session timeout active (15 mins)");
 })();
+
+}
