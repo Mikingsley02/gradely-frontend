@@ -15,167 +15,167 @@
   <script src="https://js.paystack.co/v1/inline.js"></script>
 
  <script>
-console.log("=== PAY.HTML INIT ===");
+  console.log("=== PAY.HTML INIT ===");
 
-// ================= CONFIG =================
-const API_BASE = "https://api.gradely.info";
-const btn = document.getElementById('paystackBtn');
+  // ✅ FIXED: Clean API_BASE (no trailing spaces)
+  const API_BASE = "https://api.gradely.info";
 
-// Safely get DOM elements
-const planNameEl = document.getElementById('planName');
-const planPriceEl = document.getElementById('planPrice');
+  const params = new URLSearchParams(window.location.search);
+  
+  // ✅ FIXED: Check to_plan FIRST (for upgrades), then plan, then localStorage
+  let plan = params.get("to_plan")    
+          || params.get("plan")       
+          || localStorage.getItem("selected_plan");
 
-if (!btn || !planNameEl || !planPriceEl) {
-  console.error("❌ Required DOM elements (#paystackBtn, #planName, #planPrice) not found");
-  alert("Page not properly loaded. Please refresh.");
-  throw new Error("Missing required DOM elements");
-}
+  // ✅ Normalize plan value
+  if (plan) {
+    plan = plan.toLowerCase().trim();
+  }
 
-// ================= URL PARAMS =================
-const params = new URLSearchParams(window.location.search);
-const school_id = params.get("school_id") || localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
-const paymentReference = params.get("reference");
-const isUpgrade = params.get("upgrade") === "true";
-const planParam = params.get("plan");
+  // ✅ Validate plan AFTER declaration
+  if (!plan || !['basic', 'pro'].includes(plan)) {
+    console.warn("⚠️ Invalid/missing plan:", { 
+      plan, 
+      to_plan: params.get("to_plan"), 
+      plan_param: params.get("plan"),
+      localStorage: localStorage.getItem("selected_plan")
+    });
+    alert("Invalid or missing plan selection.");
+    window.location.href = "plan-comparison.html";
+    throw new Error("No valid plan selected");
+  }
 
-if (!school_id) {
-  alert("Session expired. Please log in again.");
-  window.location.href = "admin-login.html";
-  throw new Error("No school_id found");
-}
+  // ✅ Safe to log now that plan is declared
+  console.log("📤 Plan ready:", {
+    plan: plan,
+    planType: typeof plan,
+    urlParams: Object.fromEntries(params)
+  });
 
-// ================= PLAN DISPLAY =================
-const PLAN_NAMES = { basic: "Basic Plan", pro: "Professional Plan" };
-const PLAN_PRICES = { basic: "₦83,900", pro: "₦89,700" };
+  const isUpgrade = params.get("upgrade") === "true";
+  const isRenewal = params.get("renew") === "true";
 
-async function loadSubscription() {
-  try {
-    const res = await fetch(`${API_BASE}/api/subscription/status`, { credentials: "include" });
-    const data = await res.json();
+  // ✅ Get school_id with fallback chain
+  const school_id = params.get("school_id") 
+    || localStorage.getItem("school_id") 
+    || sessionStorage.getItem("school_id");
 
-    if (!data.success) throw new Error(data.message || "Failed to load subscription");
+  if (!school_id) {
+    alert("Session expired. Please return to subscription page.");
+    window.location.href = "admin-login.html";
+    throw new Error("No school_id found");
+  }
 
-    // If subscription expired
-    if (!data.isActive) {
-      alert("Your subscription has expired. Please subscribe to continue.");
+  // ✅ PLAN DETAILS
+  const PLAN_NAMES = {
+    basic: 'Basic Plan',
+    pro: 'Professional Plan'
+  };
+
+  const PLAN_PRICES = {
+    basic: '₦83,900',
+    pro: '₦89,700'
+  };
+
+  document.getElementById('planName').textContent = PLAN_NAMES[plan];
+  document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
+
+  // ✅ Payment handler
+  document.getElementById("paystackBtn").onclick = async () => {
+    const btn = document.getElementById('paystackBtn');
+    
+    if (!plan || !['basic', 'pro'].includes(plan)) {
+      alert("⚠️ Plan not selected. Please return to plan selection.");
       window.location.href = "plan-comparison.html";
       return;
     }
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing...';
+    btn.disabled = true;
 
-    const currentPlan = data.plan;
-    planNameEl.textContent = PLAN_NAMES[currentPlan] || "Unknown Plan";
-    planPriceEl.textContent = PLAN_PRICES[currentPlan] || "N/A";
+    try {
+      const response = await fetch(`${API_BASE}/api/subscription/upgrade/initialize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          plan: plan,
+          school_id: school_id
+        })
+      });
 
-    // Set button behavior
-    if (currentPlan === "basic") {
-      btn.textContent = "Upgrade Plan";
-      btn.onclick = () => upgradePlan("pro");
-    } else if (currentPlan === "pro") {
-      btn.textContent = "Downgrade Plan";
-      btn.onclick = downgradePlan;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success || !result.authorization_url) {
+        throw new Error(result.message || 'Payment initialization failed');
+      }
+
+      window.location.href = result.authorization_url;
+
+    } catch (error) {
+      console.error('❌ Payment init error:', error);
+      btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Try Again';
+      btn.disabled = false;
+      alert(`Payment error: ${error.message}`);
     }
+  };
 
-  } catch (err) {
-    console.error("Failed to load subscription:", err);
-    alert("Could not fetch subscription info. Refresh the page.");
-  }
-}
+  // ✅ AFTER PAYMENT: Handle upgrade completion
+  const paymentReference = params.get("reference");
 
-// ================= UPGRADE =================
-async function upgradePlan(targetPlan) {
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing...';
-  btn.disabled = true;
-
-  try {
-    const res = await fetch(`${API_BASE}/api/subscription/upgrade/initialize`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ plan: targetPlan, school_id })
-    });
-
-    const data = await res.json();
-    if (!data.success || !data.authorization_url) throw new Error(data.message || "Payment init failed");
-
-    // Redirect to Paystack
-    window.location.href = data.authorization_url;
-
-  } catch (err) {
-    console.error("Upgrade error:", err);
-    btn.innerHTML = "Upgrade Plan";
-    btn.disabled = false;
-    alert("Upgrade failed: " + err.message);
-  }
-}
-
-// ================= DOWNGRADE =================
-async function downgradePlan() {
-  if (!confirm("You will lose Pro features immediately. Proceed?")) return;
-
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-  btn.disabled = true;
-
-  try {
-    const res = await fetch(`${API_BASE}/api/subscription/downgrade`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include"
-    });
-
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message || "Downgrade failed");
-
-    alert(data.message);
-    await loadSubscription();
-    btn.disabled = false;
-
-  } catch (err) {
-    console.error("Downgrade error:", err);
-    btn.innerHTML = "Downgrade Plan";
-    btn.disabled = false;
-    alert("Downgrade failed: " + err.message);
-  }
-}
-
-// ================= AFTER PAYSTACK CALLBACK =================
-if (paymentReference && isUpgrade) {
-  finalizeUpgrade(paymentReference);
-}
-
-async function finalizeUpgrade(reference) {
-  btn.innerHTML = '<i class="fas fa-check-circle"></i> Finalizing...';
-  btn.disabled = true;
-
-  try {
-    const res = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ school_id, payment_reference: reference })
-    });
-
-    const result = await res.json();
-    if (result.success) {
-      btn.innerHTML = '<i class="fas fa-check-circle"></i> Success!';
-      setTimeout(() => {
-        window.location.href = "dashboard.html?upgrade_success=true";
-      }, 1500);
-    } else {
-      throw new Error(result.message || "Activation failed");
+  if (paymentReference && (isUpgrade || isRenewal)) {
+    if (!sessionStorage.getItem(`upgrade_completed_${paymentReference}`)) {
+      completePlanActivation(paymentReference);
+      sessionStorage.setItem(`upgrade_completed_${paymentReference}`, 'true');
     }
-
-  } catch (err) {
-    console.error("Activation error:", err);
-    btn.innerHTML = "Upgrade Plan";
-    btn.disabled = false;
-    alert("Could not activate upgrade: " + err.message);
   }
-}
 
-// ================= INITIAL LOAD =================
-loadSubscription();
+  async function completePlanActivation(reference) {
+    const btn = document.getElementById('paystackBtn');
+    btn.innerHTML = '<i class="fas fa-check-circle"></i> Finalizing...';
+    btn.disabled = true;
+
+    try {
+      const endpoint = isUpgrade
+        ? `${API_BASE}/api/subscription/upgrade/complete`
+        : `${API_BASE}/api/subscription/renew/complete`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          school_id: school_id,
+          payment_reference: reference,
+          plan: plan
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Success!';
+        setTimeout(() => {
+          sessionStorage.removeItem("selected_plan");
+          window.location.href = 'dashboard.html?upgrade_success=true';
+        }, 1500);
+      } else {
+        throw new Error(result.message || 'Activation failed');
+      }
+
+    } catch (error) {
+      console.error('❌ Activation error:', error);
+      btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error';
+      btn.disabled = false;
+      alert(`Could not activate: ${error.message}`);
+    }
+  }
 </script>
-
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
