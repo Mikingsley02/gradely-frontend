@@ -3,162 +3,401 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>💳 Secure Payment | Gradely</title>
+  <title>💳 Subscription Management | Gradely</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 520px;
+      width: 100%;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      margin: 0 auto;
+    }
+    .header {
+      background: linear-gradient(120deg, #4361ee 0%, #3a0ca3 100%);
+      color: white;
+      padding: 35px 30px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 1.4rem;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    .header p {
+      opacity: 0.95;
+      font-size: 1.1rem;
+    }
+    .content {
+      padding: 40px 35px;
+    }
+    .plan-card {
+      background: #f0f4ff;
+      border: 2px solid #4361ee;
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .plan-name {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 15px;
+    }
+    .plan-price {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #4361ee;
+      margin: 10px 0;
+    }
+    .plan-billing {
+      color: #64748b;
+      font-size: 1.05rem;
+      margin-bottom: 20px;
+    }
+    .plan-features {
+      text-align: left;
+      margin: 20px 0;
+      padding-left: 20px;
+    }
+    .plan-features li {
+      margin: 8px 0;
+      color: #334155;
+      font-size: 1.05rem;
+    }
+    .usage-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .usage-label {
+      color: #64748b;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+    .usage-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .action-btn {
+      background: linear-gradient(120deg, #4361ee 0%, #3a0ca3 100%);
+      color: white;
+      border: none;
+      width: 100%;
+      padding: 16px;
+      border-radius: 16px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 10px 0;
+    }
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4);
+    }
+    .action-btn:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 25px;
+      color: #4361ee;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    .error-msg {
+      color: #ef4444;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 15px 0;
+      font-size: 0.95rem;
+      display: none;
+    }
+    @media (max-width: 480px) {
+      .content { padding: 30px 25px; }
+      .plan-name { font-size: 1.7rem; }
+      .plan-price { font-size: 1.9rem; }
+      .action-btn { padding: 14px; font-size: 1.1rem; }
+    }
   </style>
 </head>
 <body>
-<button id="paystackBtn">Loading...</button>
-
-  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <div class="container">
+    <div class="header">
+      <h1><i class="fas fa-credit-card"></i> Manage Subscription</h1>
+      <p>Monthly billing • Cancel anytime</p>
+    </div>
+    
+    <div class="content">
+      <div id="errorMsg" class="error-msg"></div>
+      
+      <!-- Plan Display -->
+      <div class="plan-card">
+        <div class="plan-name" id="planName">Loading...</div>
+        <div class="plan-price" id="planPrice">₦0.00</div>
+        <div class="plan-billing" id="planBilling">per month</div>
+        
+        <ul class="plan-features" id="planFeatures">
+          <li>• Loading features...</li>
+        </ul>
+      </div>
+      
+      <!-- Usage Display -->
+      <div class="usage-card">
+        <div class="usage-label">Students Registered</div>
+        <div class="usage-value" id="usageDisplay">Loading...</div>
+        <div style="color: #64748b; font-size: 0.9rem; margin-top: 5px;" id="usageLimit"></div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <button class="action-btn" id="actionBtn" disabled>Loading...</button>
+      <button class="action-btn" id="cancelBtn" style="background: #64748b; display: none;">Cancel Subscription</button>
+      
+      <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+    </div>
+  </div>
 
   <script>
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("=== PAY.HTML INIT ===");
+    // ✅ FIXED: Clean API_BASE (NO trailing spaces)
+    const API_BASE = "https://api.gradely.info";
 
-  const API_BASE = "https://api.gradely.info";
-  const btn = document.getElementById('paystackBtn');
+    document.addEventListener("DOMContentLoaded", async () => {
+      console.log("=== SUBSCRIPTION PAGE INIT ===");
+      
+      const errorMsg = document.getElementById("errorMsg");
+      const actionBtn = document.getElementById("actionBtn");
+      const cancelBtn = document.getElementById("cancelBtn");
+      
+      // ✅ Get school_id from session storage (fallback chain)
+      const school_id = 
+        new URLSearchParams(window.location.search).get("school_id") ||
+        localStorage.getItem("school_id") ||
+        sessionStorage.getItem("school_id");
+      
+      if (!school_id) {
+        showError("Session expired. Please log in again.");
+        setTimeout(() => window.location.href = "admin-login.html", 2000);
+        return;
+      }
 
-  if (!btn) {
-    console.error("❌ paystackBtn not found");
-    return;
-  }
+      // ✅ Load subscription status first
+      await loadSubscriptionStatus();
+      
+      // ✅ Then load usage stats
+      await loadUsageStats();
+    });
 
-  const params = new URLSearchParams(window.location.search);
-  const school_id =
-    params.get("school_id") ||
-    localStorage.getItem("school_id") ||
-    sessionStorage.getItem("school_id");
+    // ✅ Load current subscription plan
+    async function loadSubscriptionStatus() {
+      try {
+        const res = await fetch(`${API_BASE}/api/subscription/status`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include"  // ✅ Send session cookie
+        });
 
-  const paymentReference = params.get("reference");
-  const isUpgrade = params.get("upgrade") === "true";
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("❌ Status fetch failed:", res.status, errorText.substring(0, 200));
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
 
-  if (!school_id) {
-    alert("Session expired. Please log in again.");
-    window.location.href = "admin-login.html";
-    return;
-  }
+        const data = await res.json();
+        
+        if (!data.success) {
+          throw new Error(data.message || "Failed to load subscription");
+        }
 
-  // ================= CALLBACK HANDLER =================
-  if (paymentReference && isUpgrade) {
-    finalizeUpgrade(paymentReference);
-    return;
-  }
+        // ✅ Update UI with plan info
+        updatePlanDisplay(data);
+        
+        // ✅ Set up action button based on current plan
+        setupActionButton(data.plan);
+        
+      } catch (err) {
+        console.error("❌ Subscription load failed:", err);
+        showError(`Could not load subscription: ${err.message}`);
+        // ✅ Fallback UI
+        document.getElementById("planName").textContent = "Basic Plan";
+        document.getElementById("planPrice").textContent = "₦83,900";
+        setupActionButton("basic");
+      }
+    }
 
-  // ================= LOAD CURRENT PLAN =================
-  loadSubscription();
+    // ✅ Load student usage stats
+    async function loadUsageStats() {
+      try {
+        const res = await fetch(`${API_BASE}/api/subscription/usage`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include"  // ✅ Send session cookie
+        });
 
-  async function loadSubscription() {
-    try {
-      const res = await fetch(`${API_BASE}/api/subscription/status`, {
-        credentials: "include"
-      });
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("❌ Usage fetch failed:", res.status, errorText.substring(0, 200));
+          throw new Error(`HTTP ${res.status}`);
+        }
 
-      const data = await res.json();
-      if (!data.success) throw new Error(data.message);
+        const data = await res.json();
+        
+        if (!data.success) {
+          throw new Error(data.message || "Failed to load usage");
+        }
 
-      if (data.plan === "basic") {
-        btn.textContent = "Upgrade Plan";
-        btn.onclick = () => upgradePlan("pro");
+        // ✅ Update usage display
+        const limit = data.limit === null ? "∞" : data.limit;
+        document.getElementById("usageDisplay").textContent = `${data.used} / ${limit}`;
+        document.getElementById("usageLimit").textContent = 
+          data.limit === null ? "Unlimited students" : `Max ${limit} students`;
+        
+      } catch (err) {
+        console.error("❌ Usage load failed:", err);
+        document.getElementById("usageDisplay").textContent = "— / —";
+        document.getElementById("usageLimit").textContent = "Usage unavailable";
+      }
+    }
+
+    // ✅ Update plan display UI
+    function updatePlanDisplay(data) {
+      const plan = data.plan?.toLowerCase();
+      const PLAN_INFO = {
+        basic: {
+          name: "Basic Plan",
+          price: "₦83,900",
+          billing: "per month",
+          features: [
+            "Up to 200 students",
+            "Single student registration",
+            "Result upload (Excel/CSV)",
+            "PDF report cards",
+            "Email support"
+          ]
+        },
+        pro: {
+          name: "Professional Plan",
+          price: "₦89,700",
+          billing: "per month",
+          features: [
+            "Unlimited students",
+            "Bulk student registration",
+            "Result upload (Excel/CSV)",
+            "PDF report cards",
+            "Class management & timetables",
+            "Parent alerts (SMS/Email)",
+            "Priority WhatsApp + Email support"
+          ]
+        }
+      };
+
+      const info = PLAN_INFO[plan] || PLAN_INFO.basic;
+      
+      document.getElementById("planName").textContent = info.name;
+      document.getElementById("planPrice").textContent = info.price;
+      document.getElementById("planBilling").textContent = info.billing;
+      
+      const featuresEl = document.getElementById("planFeatures");
+      featuresEl.innerHTML = info.features.map(f => `<li>${f}</li>`).join("");
+    }
+
+    // ✅ Set up action button based on current plan
+    function setupActionButton(currentPlan) {
+      const actionBtn = document.getElementById("actionBtn");
+      const cancelBtn = document.getElementById("cancelBtn");
+      
+      if (currentPlan === "basic") {
+        // ✅ Show upgrade button
+        actionBtn.textContent = "Upgrade to Pro — ₦89,700/month";
+        actionBtn.style.display = "block";
+        actionBtn.disabled = false;
+        actionBtn.onclick = () => handleUpgrade("pro");
+        
+        cancelBtn.style.display = "none";
+        
+      } else if (currentPlan === "pro") {
+        // ✅ Show downgrade button
+        actionBtn.textContent = "Downgrade to Basic — ₦83,900/month";
+        actionBtn.style.display = "block";
+        actionBtn.disabled = false;
+        actionBtn.onclick = () => handleDowngrade();
+        
+        // ✅ Show cancel button for Pro
+        cancelBtn.style.display = "block";
+        cancelBtn.onclick = () => handleCancel();
+        
       } else {
-        btn.textContent = "Downgrade Plan";
-        btn.onclick = downgradePlan;
+        // ✅ Fallback
+        actionBtn.textContent = "Manage Plan";
+        actionBtn.disabled = true;
       }
-
-    } catch (err) {
-      console.error("Subscription load failed:", err);
     }
-  }
 
-  // ================= UPGRADE =================
-  async function upgradePlan(plan) {
-    btn.textContent = "Initializing...";
-    btn.disabled = true;
+    // ✅ Handle upgrade action (stub - backend endpoint not implemented yet)
+    function handleUpgrade(targetPlan) {
+      // ✅ Since backend doesn't have /upgrade endpoint yet, show helpful message
+      alert(`🚀 Upgrade to ${targetPlan.toUpperCase()} coming soon!\n\nThis feature will connect to Paystack for secure payment processing.\n\nFor now, please contact support@gradely.info to upgrade manually.`);
+      
+      // ✅ Optional: Redirect to plan comparison page
+      // window.location.href = "plan-comparison.html?upgrade=true&target=" + targetPlan;
+    }
 
-    try {
-      const res = await fetch(`${API_BASE}/api/subscription/upgrade`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ plan, school_id })
-      });
-
-      const data = await res.json();
-
-      if (!data.success || !data.authorization_url) {
-        throw new Error(data.message || "Payment init failed");
+    // ✅ Handle downgrade action (stub)
+    function handleDowngrade() {
+      if (!confirm("Are you sure you want to downgrade to Basic?\n\n• You'll lose Pro features immediately\n• Student limit will be capped at 200\n• This action cannot be undone automatically")) {
+        return;
       }
-
-      window.location.href = data.authorization_url;
-
-    } catch (err) {
-      console.error("Upgrade error:", err);
-      btn.disabled = false;
-      btn.textContent = "Upgrade Plan";
-      alert(err.message);
+      
+      // ✅ Since backend doesn't have /downgrade endpoint yet
+      alert("⚠️ Downgrade feature coming soon!\n\nFor now, please contact support@gradely.info to downgrade manually.");
     }
-  }
 
-  // ================= COMPLETE =================
-  async function finalizeUpgrade(reference) {
-    btn.textContent = "Finalizing...";
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          school_id,
-          payment_reference: reference
-        })
-      });
-
-      const result = await res.json();
-
-      if (!result.success) throw new Error(result.message);
-
-      window.location.href = "dashboard.html?upgrade_success=true";
-
-    } catch (err) {
-      console.error("Finalize error:", err);
-      alert(err.message);
-      btn.disabled = false;
+    // ✅ Handle cancel subscription (stub)
+    function handleCancel() {
+      if (!confirm("Cancel your Pro subscription?\n\n• You'll keep Pro access until the end of your billing period\n• You can reactivate anytime\n• No refunds for partial months")) {
+        return;
+      }
+      
+      alert("ℹ️ Cancellation feature coming soon!\n\nYour subscription will remain active until the end of your current billing period.\n\nFor immediate assistance, contact support@gradely.info");
     }
-  }
 
-  // ================= DOWNGRADE =================
-  async function downgradePlan() {
-    if (!confirm("Proceed with downgrade?")) return;
-
-    btn.textContent = "Processing...";
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(`${API_BASE}/api/subscription/downgrade`, {
-        method: "POST",
-        credentials: "include"
-      });
-
-      const data = await res.json();
-      if (!data.success) throw new Error(data.message);
-
-      alert(data.message);
-      loadSubscription();
-      btn.disabled = false;
-
-    } catch (err) {
-      alert(err.message);
-      btn.disabled = false;
+    // ✅ Show error message in UI
+    function showError(message) {
+      const el = document.getElementById("errorMsg");
+      el.textContent = message;
+      el.style.display = "block";
+      setTimeout(() => {
+        el.style.display = "none";
+      }, 8000);
     }
-  }
-
-});
-</script>
-
+  </script>
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
