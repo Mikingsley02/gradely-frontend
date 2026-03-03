@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.disabled = true;
 
     try {
-      const res = await fetch(`${API_BASE}/api/subscription/upgrade/initialize`, {
+      const res = await fetch(`${API_BASE}/api/subscription/upgrade`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
