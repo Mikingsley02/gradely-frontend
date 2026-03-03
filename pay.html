@@ -338,7 +338,7 @@
 
       try {
         // ✅ FIXED: Full API URL + session cookie + include school_id
-        const response = await fetch(`${API_BASE}/api/subscription/upgrade/initialize`, {
+        const response = await fetch(`${API_BASE}/api/subscription/upgrade`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
