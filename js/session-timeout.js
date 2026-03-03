@@ -2,8 +2,7 @@
 
 
 
-if (!window.location.pathname.includes('pay.html')) {
-
+if (!window.location.pathname.toLowerCase().includes('pay.html')) {
 
 
 (function () {
