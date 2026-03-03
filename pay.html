@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>💳 Subscription Management | Gradely</title>
+  <title>💳 Secure Payment | Gradely</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -17,7 +17,7 @@
       padding: 20px;
       color: #333;
     }
-    .container {
+    .payment-container {
       max-width: 520px;
       width: 100%;
       background: white;
@@ -31,371 +31,413 @@
       color: white;
       padding: 35px 30px;
       text-align: center;
+      position: relative;
+    }
+    .header-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-logo {
+      font-weight: 800;
+      font-size: 1.8rem;
+      background: linear-gradient(to right, #f9f9f8, #f9f9f8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 12px;
     }
     .header h1 {
       font-size: 1.4rem;
       margin-bottom: 5px;
       font-weight: 600;
+      letter-spacing: -0.5px;
     }
     .header p {
       opacity: 0.95;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
+      margin-top: 4px;
     }
     .content {
       padding: 40px 35px;
     }
-    .plan-card {
+    .plan-summary {
       background: #f0f4ff;
       border: 2px solid #4361ee;
       border-radius: 16px;
       padding: 25px;
       margin-bottom: 30px;
-      text-align: center;
+      box-shadow: 0 4px 12px rgba(67, 97, 238, 0.12);
     }
-    .plan-name {
+    .plan-summary h2 {
+      color: #1e293b;
+      margin-bottom: 18px;
       font-size: 1.9rem;
       font-weight: 800;
-      color: #1e293b;
-      margin-bottom: 15px;
-    }
-    .plan-price {
-      font-size: 2.2rem;
-      font-weight: 800;
-      color: #4361ee;
-      margin: 10px 0;
-    }
-    .plan-billing {
-      color: #64748b;
-      font-size: 1.05rem;
-      margin-bottom: 20px;
-    }
-    .plan-features {
-      text-align: left;
-      margin: 20px 0;
-      padding-left: 20px;
-    }
-    .plan-features li {
-      margin: 8px 0;
-      color: #334155;
-      font-size: 1.05rem;
-    }
-    .usage-card {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 20px;
-      margin: 20px 0;
       text-align: center;
+      letter-spacing: -0.8px;
     }
-    .usage-label {
-      color: #64748b;
-      font-size: 0.95rem;
-      margin-bottom: 8px;
+    .plan-details {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 1.05rem;
     }
-    .usage-value {
-      font-size: 1.5rem;
+    .plan-details:last-child { border-bottom: none; padding-bottom: 0; }
+    .plan-details strong { 
+      color: #4361ee; 
       font-weight: 700;
-      color: #1e293b;
+      font-size: 1.1rem;
     }
-    .action-btn {
+    .payment-methods {
+      text-align: center;
+      margin: 30px 0 25px;
+    }
+    .payment-methods p {
+      color: #334155;
+      margin-bottom: 18px;
+      font-weight: 600;
+      font-size: 1.15rem;
+    }
+    .paystack-badge {
+      display: inline-flex;
+      align-items: center;
+      background: linear-gradient(120deg, #f0f4ff 0%, #e6eeff 100%);
+      border: 2px solid #4361ee;
+      border-radius: 60px;
+      padding: 12px 28px;
+      font-weight: 700;
+      color: #1e3a8a;
+      gap: 10px;
+      box-shadow: 0 6px 15px rgba(67, 97, 238, 0.25);
+      font-size: 1.15rem;
+    }
+    .pay-btn {
       background: linear-gradient(120deg, #4361ee 0%, #3a0ca3 100%);
       color: white;
       border: none;
       width: 100%;
-      padding: 16px;
+      padding: 18px;
       border-radius: 16px;
-      font-size: 1.2rem;
+      font-size: 1.35rem;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.3s ease;
-      margin: 10px 0;
+      transition: all 0.35s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 8px 25px rgba(67, 97, 238, 0.45);
+      margin-top: 10px;
     }
-    .action-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4);
+    .pay-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(67, 97, 238, 0.6);
+      background: linear-gradient(120deg, #3a0ca3 0%, #4361ee 100%);
     }
-    .action-btn:disabled {
-      background: #94a3b8;
-      cursor: not-allowed;
-      transform: none;
+    .pay-btn:active { transform: translateY(1px); }
+    .pay-btn i { font-size: 1.5rem; }
+    .security-note {
+      background: #eef7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 20px;
+      margin-top: 30px;
+      font-size: 0.95rem;
+      color: #1e40af;
+      line-height: 1.5;
+    }
+    .security-note i { 
+      margin-right: 10px; 
+      color: #1d4ed8; 
+      font-size: 1.2rem;
+      vertical-align: middle;
+    }
+    .footer {
+      text-align: center;
+      padding: 25px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      color: #475569;
+      font-size: 0.95rem;
+      line-height: 1.6;
     }
     .back-link {
-      display: block;
-      text-align: center;
-      margin-top: 25px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
       color: #4361ee;
       text-decoration: none;
       font-weight: 600;
       font-size: 1.05rem;
+      padding: 10px 20px;
+      border-radius: 50px;
+      background: rgba(67, 97, 238, 0.08);
+      transition: all 0.25s;
     }
-    .back-link:hover {
-      text-decoration: underline;
+    .back-link:hover { 
+      background: rgba(67, 97, 238, 0.15);
+      transform: translateX(-3px);
     }
-    .error-msg {
-      color: #ef4444;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      border-radius: 8px;
-      padding: 12px;
-      margin: 15px 0;
-      font-size: 0.95rem;
-      display: none;
-    }
+    .back-link i { margin-right: 8px; font-size: 1.1rem; }
     @media (max-width: 480px) {
       .content { padding: 30px 25px; }
-      .plan-name { font-size: 1.7rem; }
-      .plan-price { font-size: 1.9rem; }
-      .action-btn { padding: 14px; font-size: 1.1rem; }
+      .header { padding: 28px 20px; }
+      .header h1 { font-size: 1.3rem; }
+      .header p { font-size: 1.05rem; }
+      .plan-summary h2 { font-size: 1.7rem; }
+      .pay-btn { padding: 16px; font-size: 1.25rem; }
+      .paystack-badge { padding: 10px 22px; font-size: 1.05rem; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="payment-container">
     <div class="header">
-      <h1><i class="fas fa-credit-card"></i> Manage Subscription</h1>
-      <p>Monthly billing • Cancel anytime</p>
+      <div class="header-content">
+        <div class="brand-logo">gradely<span style="color:#ffaa00">.info</span></div>
+        <h1><i class="fas fa-shield-alt"></i> Secure Payment</h1>
+        <p>Encrypted & PCI-DSS Compliant</p>
+      </div>
     </div>
     
     <div class="content">
-      <div id="errorMsg" class="error-msg"></div>
-      
-      <!-- Plan Display -->
-      <div class="plan-card">
-        <div class="plan-name" id="planName">Loading...</div>
-        <div class="plan-price" id="planPrice">₦0.00</div>
-        <div class="plan-billing" id="planBilling">per month</div>
-        
-        <ul class="plan-features" id="planFeatures">
-          <li>• Loading features...</li>
-        </ul>
+      <div class="plan-summary">
+        <h2 id="planName">Loading Plan...</h2>
+        <div class="plan-details">
+          <span>Amount:</span>
+          <strong id="planPrice">₦0.00</strong>
+        </div>
+        <div class="plan-details">
+          <span>Billing Cycle:</span>
+          <strong>Monthly</strong>
+        </div>
+        <div class="plan-details">
+          <span>Access:</span>
+          <strong>Full Features</strong>
+        </div>
       </div>
       
-      <!-- Usage Display -->
-      <div class="usage-card">
-        <div class="usage-label">Students Registered</div>
-        <div class="usage-value" id="usageDisplay">Loading...</div>
-        <div style="color: #64748b; font-size: 0.9rem; margin-top: 5px;" id="usageLimit"></div>
+      <div class="payment-methods">
+        <p><i class="fas fa-lock"></i> Secured Payment Processing</p>
+        <div class="paystack-badge">
+          <i class="fas fa-credit-card"></i>
+          <span>Paystack Payment Gateway</span>
+        </div>
       </div>
       
-      <!-- Action Buttons -->
-      <button class="action-btn" id="actionBtn" disabled>Loading...</button>
-      <button class="action-btn" id="cancelBtn" style="background: #64748b; display: none;">Cancel Subscription</button>
+      <button class="pay-btn" id="paystackBtn">
+        <i class="fas fa-credit-card"></i>
+        <span>Proceed to Payment</span>
+      </button>
       
-      <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+      <div class="security-note">
+        <i class="fas fa-shield-alt"></i>
+        <strong>Your security is our priority:</strong> All payment details are encrypted with bank-grade security. We never store your card information. PCI-DSS Level 1 compliant processing.
+      </div>
+      
+      <a href="javascript:history.back()" class="back-link">
+        <i class="fas fa-arrow-left"></i> Go Back
+      </a>
+    </div>
+    
+    <div class="footer">
+      <p>© 2026 gradely.info • Secure, Encrypted Payments</p>
+      <p style="margin-top:10px; color:#64748b;">
+        <i class="fas fa-info-circle"></i> You'll be redirected to Paystack's secure payment page to complete your transaction
+      </p>
     </div>
   </div>
 
+  <!-- ✅ FIXED: Clean script src (no trailing spaces) -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+
   <script>
+    console.log("=== PAY.HTML INIT ===");
+
     // ✅ FIXED: Clean API_BASE (NO trailing spaces)
     const API_BASE = "https://api.gradely.info";
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      console.log("=== SUBSCRIPTION PAGE INIT ===");
-      
-      const errorMsg = document.getElementById("errorMsg");
-      const actionBtn = document.getElementById("actionBtn");
-      const cancelBtn = document.getElementById("cancelBtn");
-      
-      // ✅ Get school_id from session storage (fallback chain)
-      const school_id = 
-        new URLSearchParams(window.location.search).get("school_id") ||
-        localStorage.getItem("school_id") ||
-        sessionStorage.getItem("school_id");
-      
-      if (!school_id) {
-        showError("Session expired. Please log in again.");
-        setTimeout(() => window.location.href = "admin-login.html", 2000);
-        return;
-      }
+    const params = new URLSearchParams(window.location.search);
+    
+    // ✅ FIXED: Check to_plan FIRST (for upgrades), then plan, then localStorage
+    let plan = params.get("to_plan")    
+            || params.get("plan")       
+            || localStorage.getItem("selected_plan");
 
-      // ✅ Load subscription status first
-      await loadSubscriptionStatus();
-      
-      // ✅ Then load usage stats
-      await loadUsageStats();
+    // ✅ Normalize plan value
+    if (plan) {
+      plan = plan.toLowerCase().trim();
+    }
+
+    // ✅ Validate plan AFTER declaration
+    if (!plan || !['basic', 'pro'].includes(plan)) {
+      console.warn("⚠️ Invalid/missing plan:", { 
+        plan, 
+        to_plan: params.get("to_plan"), 
+        plan_param: params.get("plan"),
+        localStorage: localStorage.getItem("selected_plan")
+      });
+      alert("Invalid or missing plan selection.");
+      window.location.href = "plan-comparison.html";
+      throw new Error("No valid plan selected");
+    }
+
+    // ✅ Safe to log now that plan is declared
+    console.log("📤 Plan ready:", {
+      plan: plan,
+      planType: typeof plan,
+      urlParams: Object.fromEntries(params)
     });
 
-    // ✅ Load current subscription plan
-    async function loadSubscriptionStatus() {
-      try {
-        const res = await fetch(`${API_BASE}/api/subscription/status`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include"  // ✅ Send session cookie
-        });
+    const isUpgrade = params.get("upgrade") === "true";
+    const isRenewal = params.get("renew") === "true";
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error("❌ Status fetch failed:", res.status, errorText.substring(0, 200));
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
+    // ✅ Get school_id with fallback chain
+    const school_id = params.get("school_id") 
+      || localStorage.getItem("school_id") 
+      || sessionStorage.getItem("school_id");
 
-        const data = await res.json();
-        
-        if (!data.success) {
-          throw new Error(data.message || "Failed to load subscription");
-        }
-
-        // ✅ Update UI with plan info
-        updatePlanDisplay(data);
-        
-        // ✅ Set up action button based on current plan
-        setupActionButton(data.plan);
-        
-      } catch (err) {
-        console.error("❌ Subscription load failed:", err);
-        showError(`Could not load subscription: ${err.message}`);
-        // ✅ Fallback UI
-        document.getElementById("planName").textContent = "Basic Plan";
-        document.getElementById("planPrice").textContent = "₦83,900";
-        setupActionButton("basic");
-      }
+    if (!school_id) {
+      alert("Session expired. Please return to subscription page.");
+      window.location.href = "admin-login.html";
+      throw new Error("No school_id found");
     }
 
-    // ✅ Load student usage stats
-    async function loadUsageStats() {
-      try {
-        const res = await fetch(`${API_BASE}/api/subscription/usage`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include"  // ✅ Send session cookie
-        });
+    // ✅ PLAN DETAILS (Your original values - MONTHLY billing)
+    const PLAN_NAMES = {
+      basic: 'Basic Plan',
+      pro: 'Professional Plan'
+    };
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error("❌ Usage fetch failed:", res.status, errorText.substring(0, 200));
-          throw new Error(`HTTP ${res.status}`);
-        }
+    const PLAN_PRICES = {
+      basic: '₦83,900',  // ✅ Monthly
+      pro: '₦89,700'     // ✅ Monthly
+    };
 
-        const data = await res.json();
-        
-        if (!data.success) {
-          throw new Error(data.message || "Failed to load usage");
-        }
+    document.getElementById('planName').textContent = PLAN_NAMES[plan];
+    document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
 
-        // ✅ Update usage display
-        const limit = data.limit === null ? "∞" : data.limit;
-        document.getElementById("usageDisplay").textContent = `${data.used} / ${limit}`;
-        document.getElementById("usageLimit").textContent = 
-          data.limit === null ? "Unlimited students" : `Max ${limit} students`;
-        
-      } catch (err) {
-        console.error("❌ Usage load failed:", err);
-        document.getElementById("usageDisplay").textContent = "— / —";
-        document.getElementById("usageLimit").textContent = "Usage unavailable";
-      }
-    }
-
-    // ✅ Update plan display UI
-    function updatePlanDisplay(data) {
-      const plan = data.plan?.toLowerCase();
-      const PLAN_INFO = {
-        basic: {
-          name: "Basic Plan",
-          price: "₦83,900",
-          billing: "per month",
-          features: [
-            "Up to 200 students",
-            "Single student registration",
-            "Result upload (Excel/CSV)",
-            "PDF report cards",
-            "Email support"
-          ]
-        },
-        pro: {
-          name: "Professional Plan",
-          price: "₦89,700",
-          billing: "per month",
-          features: [
-            "Unlimited students",
-            "Bulk student registration",
-            "Result upload (Excel/CSV)",
-            "PDF report cards",
-            "Class management & timetables",
-            "Parent alerts (SMS/Email)",
-            "Priority WhatsApp + Email support"
-          ]
-        }
-      };
-
-      const info = PLAN_INFO[plan] || PLAN_INFO.basic;
+    // ✅ FIXED: Payment handler with correct URL + session auth + school_id
+    document.getElementById("paystackBtn").onclick = async () => {
+      const btn = document.getElementById('paystackBtn');
       
-      document.getElementById("planName").textContent = info.name;
-      document.getElementById("planPrice").textContent = info.price;
-      document.getElementById("planBilling").textContent = info.billing;
-      
-      const featuresEl = document.getElementById("planFeatures");
-      featuresEl.innerHTML = info.features.map(f => `<li>${f}</li>`).join("");
-    }
-
-    // ✅ Set up action button based on current plan
-    function setupActionButton(currentPlan) {
-      const actionBtn = document.getElementById("actionBtn");
-      const cancelBtn = document.getElementById("cancelBtn");
-      
-      if (currentPlan === "basic") {
-        // ✅ Show upgrade button
-        actionBtn.textContent = "Upgrade to Pro — ₦89,700/month";
-        actionBtn.style.display = "block";
-        actionBtn.disabled = false;
-        actionBtn.onclick = () => handleUpgrade("pro");
-        
-        cancelBtn.style.display = "none";
-        
-      } else if (currentPlan === "pro") {
-        // ✅ Show downgrade button
-        actionBtn.textContent = "Downgrade to Basic — ₦83,900/month";
-        actionBtn.style.display = "block";
-        actionBtn.disabled = false;
-        actionBtn.onclick = () => handleDowngrade();
-        
-        // ✅ Show cancel button for Pro
-        cancelBtn.style.display = "block";
-        cancelBtn.onclick = () => handleCancel();
-        
-      } else {
-        // ✅ Fallback
-        actionBtn.textContent = "Manage Plan";
-        actionBtn.disabled = true;
-      }
-    }
-
-    // ✅ Handle upgrade action (stub - backend endpoint not implemented yet)
-    function handleUpgrade(targetPlan) {
-      // ✅ Since backend doesn't have /upgrade endpoint yet, show helpful message
-      alert(`🚀 Upgrade to ${targetPlan.toUpperCase()} coming soon!\n\nThis feature will connect to Paystack for secure payment processing.\n\nFor now, please contact support@gradely.info to upgrade manually.`);
-      
-      // ✅ Optional: Redirect to plan comparison page
-      // window.location.href = "plan-comparison.html?upgrade=true&target=" + targetPlan;
-    }
-
-    // ✅ Handle downgrade action (stub)
-    function handleDowngrade() {
-      if (!confirm("Are you sure you want to downgrade to Basic?\n\n• You'll lose Pro features immediately\n• Student limit will be capped at 200\n• This action cannot be undone automatically")) {
+      // ✅ Double-check plan before proceeding
+      if (!plan || !['basic', 'pro'].includes(plan)) {
+        alert("⚠️ Plan not selected. Please return to plan selection.");
+        window.location.href = "plan-comparison.html";
         return;
       }
       
-      // ✅ Since backend doesn't have /downgrade endpoint yet
-      alert("⚠️ Downgrade feature coming soon!\n\nFor now, please contact support@gradely.info to downgrade manually.");
-    }
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing...';
+      btn.disabled = true;
 
-    // ✅ Handle cancel subscription (stub)
-    function handleCancel() {
-      if (!confirm("Cancel your Pro subscription?\n\n• You'll keep Pro access until the end of your billing period\n• You can reactivate anytime\n• No refunds for partial months")) {
-        return;
+      try {
+        // ✅ FIXED: Full API URL + session cookie + include school_id
+        const response = await fetch(`${API_BASE}/api/subscription/upgrade/initialize`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+            // ✅ NO Authorization header - session cookie handles auth
+          },
+          credentials: 'include',  // ✅ CRITICAL: sends session cookie
+          body: JSON.stringify({ 
+            plan: plan,
+            school_id: school_id
+          })
+        });
+
+        // ✅ Check if response is OK before parsing JSON
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Payment init failed:', response.status, errorText.substring(0, 200));
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success || !result.authorization_url) {
+          throw new Error(result.message || 'Payment initialization failed');
+        }
+
+        // ✅ Redirect to Paystack secure hosted page
+        window.location.href = result.authorization_url;
+
+      } catch (error) {
+        console.error('❌ Payment init error:', error);
+        btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Try Again';
+        btn.disabled = false;
+        alert(`Payment error: ${error.message}`);
       }
-      
-      alert("ℹ️ Cancellation feature coming soon!\n\nYour subscription will remain active until the end of your current billing period.\n\nFor immediate assistance, contact support@gradely.info");
+    };
+
+    // ✅ AFTER PAYMENT: Handle upgrade completion
+    const paymentReference = params.get("reference");
+
+    if (paymentReference && (isUpgrade || isRenewal)) {
+      if (!sessionStorage.getItem(`upgrade_completed_${paymentReference}`)) {
+        completePlanActivation(paymentReference);
+        sessionStorage.setItem(`upgrade_completed_${paymentReference}`, 'true');
+      }
     }
 
-    // ✅ Show error message in UI
-    function showError(message) {
-      const el = document.getElementById("errorMsg");
-      el.textContent = message;
-      el.style.display = "block";
-      setTimeout(() => {
-        el.style.display = "none";
-      }, 8000);
+    async function completePlanActivation(reference) {
+      const btn = document.getElementById('paystackBtn');
+      btn.innerHTML = '<i class="fas fa-check-circle"></i> Finalizing...';
+      btn.disabled = true;
+
+      try {
+        // ✅ FIXED: Full API URLs + session auth
+        const endpoint = isUpgrade
+          ? `${API_BASE}/api/subscription/upgrade/complete`
+          : `${API_BASE}/api/subscription/renew/complete`;
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+            // ✅ NO Authorization header
+          },
+          credentials: 'include',  // ✅ Send session cookie
+          body: JSON.stringify({
+            school_id: school_id,
+            payment_reference: reference,
+            plan: plan
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          btn.innerHTML = '<i class="fas fa-check-circle"></i> Success! Redirecting...';
+
+          setTimeout(() => {
+            // Clean up session storage
+            sessionStorage.removeItem("selected_plan");
+            
+            if (isUpgrade) {
+              window.location.href = 'dashboard.html?upgrade_success=true';
+            } else if (isRenewal) {
+              window.location.href = 'dashboard.html?renewal_success=true';
+            } else {
+              window.location.href = 'dashboard.html';
+            }
+          }, 1500);
+
+        } else {
+          throw new Error(result.message || 'Activation failed');
+        }
+
+      } catch (error) {
+        console.error('❌ Activation error:', error);
+        btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error finalizing subscription';
+        btn.disabled = false;
+        alert(`Could not activate subscription: ${error.message}\nReference: ${reference}`);
+      }
     }
   </script>
 
