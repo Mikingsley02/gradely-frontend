@@ -398,7 +398,10 @@
         }
 
         if (data.success) {
-          alert("✅ Login successful!");
+          alert("✅ Login successful. Redirecting to dashboard...");
+          setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 800);
           
           localStorage.setItem("adminId", data.admin.admin_id);
           localStorage.setItem("school_id", data.admin.admin_id);
