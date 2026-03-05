@@ -20,6 +20,7 @@
       align-items: center;
       padding: 20px;
       position: relative; /* Required for absolute top nav */
+      flex-direction: column; /* ✅ Allows footer to sit below */
     }
     
     /* ✅ TOP NAVIGATION STYLES */
@@ -52,6 +53,7 @@
       text-align: center;
       transform: translateY(0);
       transition: transform 0.3s ease;
+      margin-bottom: 20px; /* ✅ Space for footer */
     }
     .container:hover {
       transform: translateY(-5px);
@@ -233,15 +235,16 @@
 
     /* Footer Styling */
     footer {
-      background: #f8f9fa;
-      padding: 15px;
+      
       font-size: 0.85rem;
-      color: #666;
-      border-top: 1px solid #eee;
+      color: #f4eeee;
+      
       text-align: center;
+      width: 100%;
+      max-width: 450px; /* ✅ Match container width */
     }
     footer a {
-      color: #3498db;
+      color: #1ab5f3;
       text-decoration: none;
       margin: 0 5px;
     }
@@ -342,15 +345,16 @@
         <a href="index.html">← Back to Home</a>
       </div>
     </div>
-
-    <!-- ✅ FIXED FOOTER: Golden .info + Removed refund policy -->
-    <footer>
-      <strong>© 2026 gradely<span class="info-text">.info</span></strong>. All rights reserved. | Powered by RIS<br>
-      <a href="terms.html">Terms</a> • 
-      <a href="privacy.html">Privacy</a> •
-      <a href="refund-policy.html">Refund</a>
-    </footer>
+    <!-- ✅ Footer moved OUTSIDE container (below the page) -->
   </div>
+
+  <!-- ✅ FIXED FOOTER: Now outside container, below the page -->
+  <footer>
+    <strong>© 2026 gradely<span class="info-text">.info</span></strong>. All rights reserved. | Powered by RIS<br>
+    <a href="terms.html">Terms</a> • 
+    <a href="privacy.html">Privacy</a> •
+    <a href="refund-policy.html">Refund</a>
+  </footer>
 
   <!-- ✅ Scripts -->
   <script>
@@ -377,18 +381,18 @@
       spinner.style.display = "block";
 
     
+      // ✅ FIXED: Clean API_BASE
       const API_BASE = window.location.hostname.includes("localhost")
         ? "http://localhost:5000"
         : "https://api.gradely.info";
 
       try {
         const res = await fetch(`${API_BASE}/api/auth/login`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  credentials: "include",
-  body: JSON.stringify({ admin_id, password }),
-});
-
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ admin_id, password }),
+        });
 
         const data = await res.json();
 
@@ -398,18 +402,15 @@
         }
 
         if (data.success) {
-          alert("✅ Login successful. Redirecting to dashboard...");
-          setTimeout(() => {
-          window.location.href = "dashboard.html";
-        }, 800);
           
+          // ✅ Session-only: store only essential session data (no tokens)
           localStorage.setItem("adminId", data.admin.admin_id);
           localStorage.setItem("school_id", data.admin.admin_id);
           localStorage.setItem("school_name", data.admin.school_name || "");
           localStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
-          localStorage.setItem("token", data.token);
-          localStorage.setItem("admin_token", data.token);
+       
 
+          // ✅ Auto-redirect to dashboard (no alert delay)
           window.location.href = "dashboard.html";
         } else {
           alert("❌ " + (data.message || "Login failed."));
