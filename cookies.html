@@ -62,6 +62,38 @@
     }
     footer img { height: 24px; vertical-align: middle; margin-right: 6px; }
 
+    /* ✅ Loading state */
+    .policy-loading {
+      text-align: center;
+      padding: 40px;
+      color: rgba(255,255,255,0.8);
+    }
+    .policy-loading::after {
+      content: "";
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ✅ Error state */
+    .policy-error {
+      background: rgba(248, 113, 113, 0.15);
+      border: 1px solid #f87171;
+      border-radius: 12px;
+      padding: 20px;
+      color: #fecaca;
+      margin: 20px 0;
+    }
+
     @media (max-width: 600px) {
       .container { margin: 20px; }
       header h1 { font-size: 1.8rem; }
@@ -75,54 +107,66 @@
   <div class="container">
     <header>
       <h1>🍪 Cookie Policy</h1>
-      <p>Learn how Gradely.info uses cookies to enhance your experience</p>
+      <!-- ✅ Dynamic version info (populated by API) -->
+      <p id="policyMeta" style="margin-top: 10px; opacity: 0.9; font-size: 0.95rem;">
+        <span id="lastUpdated">Loading...</span>
+        <span id="policyVersion" style="margin-left: 15px;"></span>
+      </p>
     </header>
 
     <div class="content">
-      <div class="policy-section">
-        <div class="policy-title">What are cookies?</div>
-        <div class="policy-text">
-          Cookies are small text files stored on your device when you visit a website.
-          They help websites remember your preferences and provide a better browsing experience.
-        </div>
+      <!-- ✅ Dynamic content container -->
+      <div id="policyContent">
+        <p class="policy-loading">Loading cookie policy</p>
       </div>
 
-      <div class="policy-section">
-        <div class="policy-title">Types of cookies we use</div>
-        <div class="policy-text">
-          <strong>Essential Cookies:</strong> Required for secure login, system functionality, and maintaining sessions.<br><br>
-          <strong>Analytics Cookies:</strong> Help us understand user interactions and improve our services.<br><br>
-          <strong>Optional/Marketing Cookies:</strong> Enhance your experience, display personalized content, and provide relevant updates.
+      <!-- ✅ Fallback static content (shown if API fails) -->
+      <div id="fallbackContent" style="display: none;">
+        <div class="policy-section">
+          <div class="policy-title">What are cookies?</div>
+          <div class="policy-text">
+            Cookies are small text files stored on your device when you visit a website.
+            They help websites remember your preferences and provide a better browsing experience.
+          </div>
         </div>
-      </div>
 
-      <div class="policy-section">
-        <div class="policy-title">How we use cookies</div>
-        <div class="policy-text">
-          We use cookies to ensure you have a smooth experience while navigating Gradely.info.
-          They help us maintain login sessions, improve website functionality, and provide insights into how our services are used.
+        <div class="policy-section">
+          <div class="policy-title">Types of cookies we use</div>
+          <div class="policy-text">
+            <strong>Essential Cookies:</strong> Required for secure login, system functionality, and maintaining sessions.<br><br>
+            <strong>Analytics Cookies:</strong> Help us understand user interactions and improve our services.<br><br>
+            <strong>Optional/Marketing Cookies:</strong> Enhance your experience, display personalized content, and provide relevant updates.
+          </div>
         </div>
-      </div>
 
-      <div class="policy-section">
-        <div class="policy-title">Your choices</div>
-        <div class="policy-text">
-          You can choose to accept all cookies or reject non-essential cookies via the cookie banner.
-          Essential cookies will always be active as they are necessary for the service to work.
+        <div class="policy-section">
+          <div class="policy-title">How we use cookies</div>
+          <div class="policy-text">
+            We use cookies to ensure you have a smooth experience while navigating Gradely.info.
+            They help us maintain login sessions, improve website functionality, and provide insights into how our services are used.
+          </div>
         </div>
-      </div>
 
-      <div class="policy-section">
-        <div class="policy-title">Managing cookies</div>
-        <div class="policy-text">
-          You can manage your cookie preferences through your browser settings or revisit the cookie consent banner
-          whenever you wish to change your choices.
+        <div class="policy-section">
+          <div class="policy-title">Your choices</div>
+          <div class="policy-text">
+            You can choose to accept all cookies or reject non-essential cookies via the cookie banner.
+            Essential cookies will always be active as they are necessary for the service to work.
+          </div>
         </div>
-      </div>
 
-      <!-- Back to Home -->
-      <div style="text-align: center; margin-top: 30px;">
-        <a href="index.html" class="btn">← Back to Home</a>
+        <div class="policy-section">
+          <div class="policy-title">Managing cookies</div>
+          <div class="policy-text">
+            You can manage your cookie preferences through your browser settings or revisit the cookie consent banner
+            whenever you wish to change your choices.
+          </div>
+        </div>
+
+        <!-- Back to Home -->
+        <div style="text-align: center; margin-top: 30px;">
+          <a href="index.html" class="btn">← Back to Home</a>
+        </div>
       </div>
     </div>
   </div>
@@ -139,5 +183,83 @@
   </footer>
 
 <script src="js/kaima-chatbot.js"></script>
+
+<!-- ✅ DYNAMIC POLICY LOADER SCRIPT -->
+<script>
+  (function() {
+    // ✅ Clean API endpoint (NO trailing spaces)
+    const API_BASE = "https://api.gradely.info/api/super-admin/legal";
+    const POLICY_TYPE = "cookies"; // ✅ Change to "terms", "privacy", or "refund" for other pages
+    
+    const policyContent = document.getElementById("policyContent");
+    const fallbackContent = document.getElementById("fallbackContent");
+    const policyMeta = document.getElementById("policyMeta");
+    const lastUpdatedEl = document.getElementById("lastUpdated");
+    const policyVersionEl = document.getElementById("policyVersion");
+
+    // ✅ Load policy content from API
+    async function loadPolicy() {
+      try {
+        // ✅ Cache-busting: add timestamp to force fresh fetch
+        const url = `${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`;
+        
+        const res = await fetch(url);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        
+        const data = await res.json();
+        
+        if (!data.success || !data.data?.content) {
+          throw new Error(data.message || "Invalid response");
+        }
+        
+        // ✅ Inject dynamic content
+        policyContent.innerHTML = data.data.content;
+        
+        // ✅ Update version info
+        if (data.data.version) {
+          policyVersionEl.textContent = `Version: ${data.data.version}`;
+        }
+        
+        if (data.data.updated_at) {
+          const date = new Date(data.data.updated_at);
+          lastUpdatedEl.textContent = `Last Updated: ${date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}`;
+        }
+        
+        // ✅ Hide fallback, show dynamic content
+        fallbackContent.style.display = "none";
+        policyContent.style.display = "block";
+        
+        console.log("✅ Policy loaded:", data.data.version);
+        
+      } catch (err) {
+        console.warn("⚠️ Failed to load policy from API, showing fallback:", err);
+        
+        // ✅ Show fallback static content
+        policyContent.style.display = "none";
+        fallbackContent.style.display = "block";
+        
+        // ✅ Show error notice
+        if (policyMeta) {
+          policyMeta.innerHTML = `<span class="policy-error">⚠️ Using cached policy content. <a href="#" onclick="location.reload()">Refresh</a> to try again.</span>`;
+        }
+      }
+    }
+
+    // ✅ Load when DOM is ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", loadPolicy);
+    } else {
+      loadPolicy();
+    }
+  })();
+</script>
+
 </body>
 </html>

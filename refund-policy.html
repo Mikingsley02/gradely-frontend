@@ -87,6 +87,36 @@
       background: #006edc;
       transform: scale(1.05);
     }
+    /* ✅ Loading state */
+    .policy-loading {
+      text-align: center;
+      padding: 40px;
+      color: rgba(255,255,255,0.8);
+    }
+    .policy-loading::after {
+      content: "";
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    /* ✅ Error state */
+    .policy-error {
+      background: rgba(248, 113, 113, 0.15);
+      border: 1px solid #f87171;
+      border-radius: 12px;
+      padding: 20px;
+      color: #fecaca;
+      margin: 20px 0;
+    }
     @media (max-width: 600px) {
       .container {
         padding: 25px 20px;
@@ -106,99 +136,140 @@
 <body>
   <div class="container">
     <h1>💳 Refund & Cancellation Policy</h1>
-    <p><strong>Last Updated:</strong> October 20, 2025</p>
+    
+    <!-- ✅ Dynamic version info (populated by API) -->
+    <p id="policyMeta" style="margin-bottom: 20px; font-size: 0.95rem; opacity: 0.9;">
+      <span id="lastUpdated">Loading...</span>
+      <span id="policyVersion" style="margin-left: 15px;"></span>
+    </p>
 
-    <p>This Refund and Cancellation Policy applies to all schools using the <strong>Gradely Info Portal</strong> (gradely.info). By registering your school, you agree to these terms.</p>
-
-    <h2>1. Subscription Plans</h2>
-    <p>We offer two monthly subscription plans:</p>
-    <ul>
-      <li><strong>Basic Plan:</strong> ₦83,900 per month</li>
-      <li><strong>Pro Plan:</strong> ₦89,700 per month</li>
-    </ul>
-    <p>All payments are processed securely via <strong>Paystack</strong>. Subscriptions renew automatically each month unless canceled.</p>
-
-    <h2>2. Refund Policy</h2>
-    <p>We offer a <strong>7-day money-back guarantee</strong> from the date of your first payment if:</p>
-    <ul>
-      <li>You are unable to set up your school account successfully</li>
-      <li>Core features (result upload, parent login, PDF generation) do not work</li>
-      <li>You were charged incorrectly</li>
-    </ul>
-
-    <h3>How to Request a Refund</h3>
-    <p>Email us at: <strong>support@gradely.info</strong> with:</p>
-    <ol>
-      <li>School name</li>
-      <li>Email used during registration</li>
-      <li>Proof of payment (screenshot or transaction ID)</li>
-      <li>Reason for refund</li>
-    </ol>
-    <p>Refunds will be processed within <strong>5–7 business days</strong> and returned to the original payment method.</p>
-
-    <h3>When Refunds Are Not Allowed</h3>
-    <p>No refunds will be issued after <strong>2 days</strong> of successful onboarding, including if:</p>
-    <ul>
-      <li>You simply changed your mind</li>
-      <li>Your staff failed to complete setup</li>
-      <li>You uploaded data and used the system beyond testing</li>
-    </ul>
-    <p><strong>Tip:</strong> Test thoroughly in the first 2 days!</p>
-
-    <h2>3. Cancellation Policy</h2>
-    <p>You can cancel your subscription at any time.</p>
-
-    <h3>How to Cancel</h3>
-    <ol>
-      <li>Send an email to <strong>support@gradely.info</strong> titled: “Cancel Subscription”</li>
-      <li>Include your <strong>School Name</strong> and <strong>Admin ID</strong></li>
-      <li>We’ll confirm and deactivate auto-renewal</li>
-    </ol>
-    <p>Alternatively, request cancellation through the <strong>Kaima chatbot</strong> on our website.</p>
-
-    <h3>What Happens After Cancellation?</h3>
-    <ul>
-      <li>Your subscription remains <strong>active until the end of the current billing cycle</strong></li>
-      <li>You can continue using Gradely during this period</li>
-      <li>After the cycle ends, your access will be suspended</li>
-      <li>Data is retained for <strong>30 days</strong> before permanent deletion</li>
-    </ul>
-    <p><strong>Note:</strong> Your data is never sold or shared.</p>
-
-    <h2>4. Service Suspension for Non-Payment</h2>
-    <p>If your payment fails and is not resolved within <strong>7 days</strong>, your subscription will be suspended. You will:</p>
-    <ul>
-      <li>Lose access to the admin dashboard</li>
-      <li>See "Results Unavailable" on the parent portal</li>
-      <li>Be notified by email and SMS</li>
-    </ul>
-    <p>You can reactivate by updating payment details and completing the next payment.</p>
-
-    <h2>5. No Partial Refunds</h2>
-    <p>We do not offer partial refunds for unused portions of a billing period. For example:</p>
-    <ul>
-      <li>If you cancel halfway through the month → no refund</li>
-      <li>If you use only one week → full charge applies</li>
-    </ul>
-    <p>Subscriptions are billed monthly in advance.</p>
-
-    <h2>6. Technical Issues & Downtime</h2>
-    <p>While we strive for 99.9% uptime:</p>
-    <ul>
-      <li>No refunds are given for temporary downtime (< 24 hours)</li>
-      <li>Extended outages (> 72 hours) may qualify for service credit or partial refund at management discretion</li>
-    </ul>
-
-    <div class="contact-info">
-      <h3>📞 Contact Us</h3>
-      <p><strong>Email:</strong> <a href="mailto:support@gradely.info" style="color:#00d2ff;">support@gradely.info</a></p>
-      <p><strong>Phone:</strong> +234 806 428 7477</p>
-      <p><strong>Chat:</strong> Use the Kaima chatbot on <a href="https://gradely.info" style="color:#00d2ff;">gradely.info</a></p>
-      <p>We respond within <strong>24 business hours</strong>.</p>
+    <!-- ✅ Dynamic content container -->
+    <div id="policyContent">
+      <p class="policy-loading">Loading policy content</p>
     </div>
 
-    <h2>7. Policy Changes</h2>
-    <p>We may update this policy periodically. Changes will be posted on this page with a new "Last Updated" date. Continued use of our service constitutes acceptance of the revised terms.</p>
+    <!-- ✅ Fallback static content (shown if API fails) -->
+    <div id="fallbackContent" style="display: none;">
+      <p>This Refund and Cancellation Policy applies to all schools using the <strong>Gradely Info Portal</strong> (gradely.info). By registering your school, you agree to these terms.</p>
+
+      <h2>1. Subscription Plans</h2>
+      <p>We offer two monthly subscription plans:</p>
+      <ul>
+        <li><strong>Basic Plan:</strong> ₦83,900 per month</li>
+        <li><strong>Pro Plan:</strong> ₦89,700 per month</li>
+      </ul>
+      <p>All payments are processed securely via <strong>Paystack</strong>. Subscriptions renew automatically each month unless canceled.</p>
+
+      <h2>2. Plan Changes: Upgrades & Downgrades</h2>
+       
+      <h3>Upgrading from Basic to Pro</h3>
+      <p>When you upgrade from the Basic Plan to the Pro Plan:</p>
+      <ul>
+        <li>You will be charged the <strong>price difference</strong> for the remainder of your current billing cycle</li>
+        <li>Example: If you upgrade halfway through your month, you'll pay ₦2,900 (half of ₦5,800 difference)</li>
+        <li>Your Pro features activate immediately upon successful payment</li>
+        <li>Your next full monthly billing date remains unchanged</li>
+      </ul>
+
+      <h3>Downgrading from Pro to Basic</h3>
+      <p>When you downgrade from the Pro Plan to the Basic Plan:</p>
+      <ul>
+        <li><strong>No refunds</strong> are issued for the unused portion of your Pro subscription</li>
+        <li>Your Pro features remain active until the end of your current billing cycle</li>
+        <li>After your cycle ends, your account switches to Basic Plan features</li>
+        <li>Your next billing date remains unchanged, but you'll be charged the Basic Plan rate (₦83,900)</li>
+      </ul>
+
+      <div style="background: rgba(255, 209, 102, 0.15); border-left: 4px solid #ffd166; padding: 15px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+        <p style="margin: 0; font-size: 0.95rem;">
+          <strong>💡 Pro Tip:</strong> Plan changes take effect immediately for upgrades, but downgrades wait until your billing cycle ends to ensure you get full value from your current payment.
+        </p>
+      </div>
+
+      <h2>3. Refund Policy</h2>
+      <p>We offer a <strong>7-day money-back guarantee</strong> from the date of your first payment if:</p>
+      <ul>
+        <li>You are unable to set up your school account successfully</li>
+        <li>Core features (result upload, parent login, PDF generation) do not work</li>
+        <li>You were charged incorrectly</li>
+      </ul>
+
+      <h3>How to Request a Refund</h3>
+      <p>Email us at: <strong>support@gradely.info</strong> with:</p>
+      <ol>
+        <li>School name</li>
+        <li>Email used during registration</li>
+        <li>Proof of payment (screenshot or transaction ID)</li>
+        <li>Reason for refund</li>
+      </ol>
+      <p>Refunds will be processed within <strong>5–7 business days</strong> and returned to the original payment method.</p>
+
+      <h3>When Refunds Are Not Allowed</h3>
+      <p>No refunds will be issued after <strong>2 days</strong> of successful onboarding, including if:</p>
+      <ul>
+        <li>You simply changed your mind</li>
+        <li>Your staff failed to complete setup</li>
+        <li>You uploaded data and used the system beyond testing</li>
+        <li><strong>You downgraded from Pro to Basic</strong> (no refunds for plan downgrades)</li>
+      </ul>
+      <p><strong>Tip:</strong> Test thoroughly in the first 2 days!</p>
+
+      <h2>4. Cancellation Policy</h2>
+      <p>You can cancel your subscription at any time.</p>
+
+      <h3>How to Cancel</h3>
+      <ol>
+        <li>Send an email to <strong>support@gradely.info</strong> titled: "Cancel Subscription"</li>
+        <li>Include your <strong>School Name</strong> and <strong>Admin ID</strong></li>
+        <li>We'll confirm and deactivate auto-renewal</li>
+      </ol>
+      <p>Alternatively, request cancellation through the <strong>Kaima chatbot</strong> on our website.</p>
+
+      <h3>What Happens After Cancellation?</h3>
+      <ul>
+        <li>Your subscription remains <strong>active until the end of the current billing cycle</strong></li>
+        <li>You can continue using Gradely during this period</li>
+        <li>After the cycle ends, your access will be suspended</li>
+        <li>Data is retained for <strong>30 days</strong> before permanent deletion</li>
+      </ul>
+      <p><strong>Note:</strong> Your data is never sold or shared.</p>
+
+      <h2>5. Service Suspension for Non-Payment</h2>
+      <p>If your payment fails and is not resolved within <strong>7 days</strong>, your subscription will be suspended. You will:</p>
+      <ul>
+        <li>Lose access to the admin dashboard</li>
+        <li>See "Results Unavailable" on the parent portal</li>
+        <li>Be notified by email and SMS</li>
+      </ul>
+      <p>You can reactivate by updating payment details and completing the next payment.</p>
+
+      <h2>6. No Partial Refunds</h2>
+      <p>We do not offer partial refunds for unused portions of a billing period. For example:</p>
+      <ul>
+        <li>If you cancel halfway through the month → no refund</li>
+        <li>If you use only one week → full charge applies</li>
+        <li><strong>If you downgrade from Pro to Basic → no refund for unused Pro time</strong></li>
+      </ul>
+      <p>Subscriptions are billed monthly in advance.</p>
+
+      <h2>7. Technical Issues & Downtime</h2>
+      <p>While we strive for 99.9% uptime:</p>
+      <ul>
+        <li>No refunds are given for temporary downtime (< 24 hours)</li>
+        <li>Extended outages (> 72 hours) may qualify for service credit or partial refund at management discretion</li>
+      </ul>
+
+      <div class="contact-info">
+        <h3>📞 Contact Us</h3>
+        <p><strong>Email:</strong> <a href="mailto:support@gradely.info" style="color:#00d2ff;">support@gradely.info</a></p>
+        <p><strong>Phone:</strong> +234 806 428 7477</p>
+        <p><strong>Chat:</strong> Use the Kaima chatbot on <a href="https://gradely.info" style="color:#00d2ff;">gradely.info</a></p>
+        <p>We respond within <strong>24 business hours</strong>.</p>
+      </div>
+
+      <h2>8. Policy Changes</h2>
+      <p>We may update this policy periodically. Changes will be posted on this page with a new "Last Updated" date. Continued use of our service constitutes acceptance of the revised terms.</p>
+    </div>
 
     <!-- Back to Login Button -->
     <div style="text-align: center; margin-top: 30px;">
@@ -214,8 +285,83 @@
     <a href="refund-policy.html">Refund Policy</a>
   </footer>
 
+  <script src="js/kaima-chatbot.js"></script>
 
-<script src="js/kaima-chatbot.js"></script>
+  <!-- ✅ DYNAMIC POLICY LOADER SCRIPT -->
+  <script>
+    (function() {
+      // ✅ Clean API endpoint (NO trailing spaces)
+      const API_BASE = "https://api.gradely.info/api/super-admin/legal";
+      const POLICY_TYPE = "refund"; // ✅ Change to "terms" or "privacy" for other pages
+      
+      const policyContent = document.getElementById("policyContent");
+      const fallbackContent = document.getElementById("fallbackContent");
+      const policyMeta = document.getElementById("policyMeta");
+      const lastUpdatedEl = document.getElementById("lastUpdated");
+      const policyVersionEl = document.getElementById("policyVersion");
 
+      // ✅ Load policy content from API
+      async function loadPolicy() {
+        try {
+          // ✅ Cache-busting: add timestamp to force fresh fetch
+          const url = `${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`;
+          
+          const res = await fetch(url);
+          
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+          }
+          
+          const data = await res.json();
+          
+          if (!data.success || !data.data?.content) {
+            throw new Error(data.message || "Invalid response");
+          }
+          
+          // ✅ Inject dynamic content
+          policyContent.innerHTML = data.data.content;
+          
+          // ✅ Update version info
+          if (data.data.version) {
+            policyVersionEl.textContent = `Version: ${data.data.version}`;
+          }
+          
+          if (data.data.updated_at) {
+            const date = new Date(data.data.updated_at);
+            lastUpdatedEl.textContent = `Last Updated: ${date.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}`;
+          }
+          
+          // ✅ Hide fallback, show dynamic content
+          fallbackContent.style.display = "none";
+          policyContent.style.display = "block";
+          
+          console.log("✅ Policy loaded:", data.data.version);
+          
+        } catch (err) {
+          console.warn("⚠️ Failed to load policy from API, showing fallback:", err);
+          
+          // ✅ Show fallback static content
+          policyContent.style.display = "none";
+          fallbackContent.style.display = "block";
+          
+          // ✅ Show error notice
+          if (policyMeta) {
+            policyMeta.innerHTML = `<span class="policy-error">⚠️ Using cached policy content. <a href="#" onclick="location.reload()">Refresh</a> to try again.</span>`;
+          }
+        }
+      }
+
+      // ✅ Load when DOM is ready
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", loadPolicy);
+      } else {
+        loadPolicy();
+      }
+    })();
+  </script>
 </body>
 </html>

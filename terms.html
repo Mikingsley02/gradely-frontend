@@ -115,102 +115,141 @@
     .compliance-note a {
       color: #3498db;
     }
+    /* ✅ Loading state */
+    .policy-loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    .policy-loading::after {
+      content: "";
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(0,0,0,0.1);
+      border-top-color: #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    /* ✅ Error state */
+    .policy-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 15px;
+      color: #991b1b;
+      margin: 20px 0;
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
       <h1>📜 Terms of Service</h1>
-      <p>Last Updated: October 20, 2025</p>
+      <!-- ✅ Dynamic version info (populated by API) -->
+      <p id="policyMeta" style="margin-top: 10px; opacity: 0.9; font-size: 0.95rem;">
+        <span id="lastUpdated">Loading...</span>
+        <span id="policyVersion" style="margin-left: 15px;"></span>
+      </p>
     </header>
 
     <div class="content">
-      <p>Welcome to <strong>gradely.info</strong>, a result portal powered by Remit Integrated Services. By using our platform, you agree to the following terms.</p>
-
-      <h2>1. Acceptance of Terms</h2>
-      <p>By accessing or using gradely.info, you agree to be bound by these Terms of Service. If you do not agree, please do not use this service.</p>
-
-      <h2>2. Description of Service</h2>
-      <p>gradely.info provides an online platform for schools to upload student results and for parents to view academic performance securely.</p>
-
-      <h2>3. School Responsibilities</h2>
-      <ul>
-        <li>Schools must register truthfully and maintain accurate information.</li>
-        <li>Schools are responsible for the accuracy of uploaded results.</li>
-        <li>Schools must not misuse the system to send spam or unauthorized messages.</li>
-      </ul>
-
-      <h2>4. Parent Access</h2>
-      <p>Parents gain access via credentials provided by the school. You agree to keep your password secure and report any unauthorized access immediately.</p>
-
-      <h2>5. Data Privacy</h2>
-      <p>We collect minimal personal data (student ID, parent email/phone) solely for communication and authentication. See our <a href="privacy.html">Privacy Policy</a>.</p>
-
-      <h2>6. Prohibited Conduct</h2>
-      <p>You agree not to:</p>
-      <ul>
-        <li>Attempt to hack, scrape, or disrupt the service</li>
-        <li>Use automated tools to access the site without permission</li>
-        <li>Impersonate another user or school</li>
-      </ul>
-
-      <!-- ✅ NEW: Announcement Policy Section -->
-      <h2 id="announcement-policy">7. Announcement Feature Policy</h2>
-      <p>By using Gradely's announcement feature to send messages to students, parents, or staff, you agree to the following:</p>
-
-      <h3>7.1 Prohibited Content</h3>
-      <p>You shall not send announcements that contain:</p>
-      <ul>
-        <li>Harassment, bullying, discrimination, or hate speech</li>
-        <li>Fraudulent, misleading, or deceptive information (e.g., fake exam results, phishing)</li>
-        <li>Illegal content or activities under Nigerian law</li>
-        <li>Spam, unsolicited commercial messages, or excessive promotional content</li>
-        <li>Content that infringes intellectual property rights</li>
-        <li>Personal data of third parties without consent (violating NDPR 2019)</li>
-      </ul>
-
-      <h3>7.2 Moderation & Monitoring</h3>
-      <p>Gradely reserves the right to review, flag, or remove announcements that may violate these terms. All announcements are logged and may be accessed by Gradely staff for moderation, security, or legal compliance purposes.</p>
-
-      <h3>7.3 Enforcement</h3>
-      <p>Violations may result in:</p>
-      <ul>
-        <li>Warning and request to remove content</li>
-        <li>Temporary suspension of announcement privileges</li>
-        <li>Permanent suspension or termination of your school account</li>
-        <li>Reporting to relevant authorities where required by law</li>
-      </ul>
-
-      <h3>7.4 Appeal Process</h3>
-      <p>If your account is suspended for policy violations, you may appeal by contacting <a href="mailto:support@gradely.info">support@gradely.info</a>. Appeals will be reviewed within 5 business days, and a written decision will be provided.</p>
-
-      <h3>7.5 Cost Responsibility</h3>
-      <p>Schools are responsible for all costs associated with SMS/email announcements. Gradely tracks usage for billing transparency and may provide usage reports upon request.</p>
-
-      <!-- Renumber remaining sections -->
-      <h2>8. Limitation of Liability</h2>
-      <p>While we strive for accuracy, we are not liable for errors in results due to incorrect uploads by schools. We are not liable for indirect damages arising from use of the service.</p>
-
-      <h2>9. Changes to Terms</h2>
-      <p>We may update these terms at any time. Continued use after changes constitutes acceptance.</p>
-
-      <h2>10. Termination</h2>
-      <p>We reserve the right to suspend or terminate accounts that violate these terms.</p>
-
-      <h2>11. Governing Law</h2>
-      <p>These terms are governed by the laws of Nigeria. Any disputes will be resolved in Nigerian courts.</p>
-
-      <!-- ✅ NEW: Legal Compliance Footer -->
-      <div class="compliance-note">
-        <strong>Legal Compliance:</strong> This policy complies with Nigeria's 
-        <a href="https://nitda.gov.ng/ngdata-protection-regulation/" target="_blank">NDPR 2019</a>, 
-        <a href="https://nigcybercrime.gov.ng/" target="_blank">Cybercrimes Act 2015</a>, 
-        and applicable consumer protection laws. 
-        Remit Integrated Services LTD is registered as a Data Controller with NITDA.
+      <!-- ✅ Dynamic content container -->
+      <div id="policyContent">
+        <p class="policy-loading">Loading terms of service</p>
       </div>
 
-      <!-- ✅ UPDATED: Smart back button that returns to referring page -->
-      <a id="backLink" class="back-link">← Go Back</a>
+      <!-- ✅ Fallback static content (shown if API fails) -->
+      <div id="fallbackContent" style="display: none;">
+        <p>Welcome to <strong>gradely.info</strong>, a result portal powered by Remit Integrated Services. By using our platform, you agree to the following terms.</p>
+
+        <h2>1. Acceptance of Terms</h2>
+        <p>By accessing or using gradely.info, you agree to be bound by these Terms of Service. If you do not agree, please do not use this service.</p>
+
+        <h2>2. Description of Service</h2>
+        <p>gradely.info provides an online platform for schools to upload student results and for parents to view academic performance securely.</p>
+
+        <h2>3. School Responsibilities</h2>
+        <ul>
+          <li>Schools must register truthfully and maintain accurate information.</li>
+          <li>Schools are responsible for the accuracy of uploaded results.</li>
+          <li>Schools must not misuse the system to send spam or unauthorized messages.</li>
+        </ul>
+
+        <h2>4. Parent Access</h2>
+        <p>Parents gain access via credentials provided by the school. You agree to keep your password secure and report any unauthorized access immediately.</p>
+
+        <h2>5. Data Privacy</h2>
+        <p>We collect minimal personal data (student ID, parent email/phone) solely for communication and authentication. See our <a href="privacy.html">Privacy Policy</a>.</p>
+
+        <h2>6. Prohibited Conduct</h2>
+        <p>You agree not to:</p>
+        <ul>
+          <li>Attempt to hack, scrape, or disrupt the service</li>
+          <li>Use automated tools to access the site without permission</li>
+          <li>Impersonate another user or school</li>
+        </ul>
+
+        <h2 id="announcement-policy">7. Announcement Feature Policy</h2>
+        <p>By using Gradely's announcement feature to send messages to students, parents, or staff, you agree to the following:</p>
+
+        <h3>7.1 Prohibited Content</h3>
+        <p>You shall not send announcements that contain:</p>
+        <ul>
+          <li>Harassment, bullying, discrimination, or hate speech</li>
+          <li>Fraudulent, misleading, or deceptive information (e.g., fake exam results, phishing)</li>
+          <li>Illegal content or activities under Nigerian law</li>
+          <li>Spam, unsolicited commercial messages, or excessive promotional content</li>
+          <li>Content that infringes intellectual property rights</li>
+          <li>Personal data of third parties without consent (violating NDPR 2019)</li>
+        </ul>
+
+        <h3>7.2 Moderation & Monitoring</h3>
+        <p>Gradely reserves the right to review, flag, or remove announcements that may violate these terms. All announcements are logged and may be accessed by Gradely staff for moderation, security, or legal compliance purposes.</p>
+
+        <h3>7.3 Enforcement</h3>
+        <p>Violations may result in:</p>
+        <ul>
+          <li>Warning and request to remove content</li>
+          <li>Temporary suspension of announcement privileges</li>
+          <li>Permanent suspension or termination of your school account</li>
+          <li>Reporting to relevant authorities where required by law</li>
+        </ul>
+
+        <h3>7.4 Appeal Process</h3>
+        <p>If your account is suspended for policy violations, you may appeal by contacting <a href="mailto:support@gradely.info">support@gradely.info</a>. Appeals will be reviewed within 5 business days, and a written decision will be provided.</p>
+
+        <h3>7.5 Cost Responsibility</h3>
+        <p>Schools are responsible for all costs associated with SMS/email announcements. Gradely tracks usage for billing transparency and may provide usage reports upon request.</p>
+
+        <h2>8. Limitation of Liability</h2>
+        <p>While we strive for accuracy, we are not liable for errors in results due to incorrect uploads by schools. We are not liable for indirect damages arising from use of the service.</p>
+
+        <h2>9. Changes to Terms</h2>
+        <p>We may update these terms at any time. Continued use after changes constitutes acceptance.</p>
+
+        <h2>10. Termination</h2>
+        <p>We reserve the right to suspend or terminate accounts that violate these terms.</p>
+
+        <h2>11. Governing Law</h2>
+        <p>These terms are governed by the laws of Nigeria. Any disputes will be resolved in Nigerian courts.</p>
+
+        <div class="compliance-note">
+          <strong>Legal Compliance:</strong> This policy complies with Nigeria's 
+          <a href="https://nitda.gov.ng/ngdata-protection-regulation/" target="_blank">NDPR 2019</a>, 
+          <a href="https://nigcybercrime.gov.ng/" target="_blank">Cybercrimes Act 2015</a>, 
+          and applicable consumer protection laws. 
+          Remit Integrated Services LTD is registered as a Data Controller with NITDA.
+        </div>
+
+        <a id="backLink" class="back-link">← Go Back</a>
+      </div>
     </div>
 
     <footer>
@@ -223,8 +262,86 @@
   </div>
 
 <script src="js/kaima-chatbot.js"></script>
+
+<!-- ✅ DYNAMIC POLICY LOADER SCRIPT -->
 <script>
-  // ✅ Smart back button: return to referring page or fallback to index.html
+  (function() {
+    // ✅ Clean API endpoint (NO trailing spaces)
+    const API_BASE = "https://api.gradely.info/api/super-admin/legal";
+    const POLICY_TYPE = "terms"; // ✅ Change to "privacy" or "refund" for other pages
+    
+    const policyContent = document.getElementById("policyContent");
+    const fallbackContent = document.getElementById("fallbackContent");
+    const policyMeta = document.getElementById("policyMeta");
+    const lastUpdatedEl = document.getElementById("lastUpdated");
+    const policyVersionEl = document.getElementById("policyVersion");
+
+    // ✅ Load policy content from API
+    async function loadPolicy() {
+      try {
+        // ✅ Cache-busting: add timestamp to force fresh fetch
+        const url = `${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`;
+        
+        const res = await fetch(url);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        
+        const data = await res.json();
+        
+        if (!data.success || !data.data?.content) {
+          throw new Error(data.message || "Invalid response");
+        }
+        
+        // ✅ Inject dynamic content
+        policyContent.innerHTML = data.data.content;
+        
+        // ✅ Update version info
+        if (data.data.version) {
+          policyVersionEl.textContent = `Version: ${data.data.version}`;
+        }
+        
+        if (data.data.updated_at) {
+          const date = new Date(data.data.updated_at);
+          lastUpdatedEl.textContent = `Last Updated: ${date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}`;
+        }
+        
+        // ✅ Hide fallback, show dynamic content
+        fallbackContent.style.display = "none";
+        policyContent.style.display = "block";
+        
+        console.log("✅ Policy loaded:", data.data.version);
+        
+      } catch (err) {
+        console.warn("⚠️ Failed to load policy from API, showing fallback:", err);
+        
+        // ✅ Show fallback static content
+        policyContent.style.display = "none";
+        fallbackContent.style.display = "block";
+        
+        // ✅ Show error notice
+        if (policyMeta) {
+          policyMeta.innerHTML = `<span class="policy-error">⚠️ Using cached policy content. <a href="#" onclick="location.reload()">Refresh</a> to try again.</span>`;
+        }
+      }
+    }
+
+    // ✅ Load when DOM is ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", loadPolicy);
+    } else {
+      loadPolicy();
+    }
+  })();
+</script>
+
+<!-- ✅ Smart back button: return to referring page or fallback to index.html -->
+<script>
   document.addEventListener('DOMContentLoaded', () => {
     const backLink = document.getElementById('backLink');
     const referrer = document.referrer;
@@ -246,11 +363,13 @@
     }
     
     // Set the link href and click handler
-    backLink.href = backUrl;
-    backLink.onclick = (e) => {
-      e.preventDefault();
-      window.location.href = backUrl;
-    };
+    if (backLink) {
+      backLink.href = backUrl;
+      backLink.onclick = (e) => {
+        e.preventDefault();
+        window.location.href = backUrl;
+      };
+    }
   });
 </script>
 
