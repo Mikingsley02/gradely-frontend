@@ -10,9 +10,11 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #6a11cb, #2575fc);
       color: #fff;
-      min-height: 100vh;
+      min-height: 100vh;  /* ✅ Ensures body fills viewport */
       padding: 20px;
       line-height: 1.7;
+      display: flex;
+      flex-direction: column;  /* ✅ Stack content + footer */
     }
 
     .container {
@@ -21,8 +23,9 @@
       background: rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(10px);
       border-radius: 20px;
-      overflow: hidden;
+      /* overflow: hidden; ← REMOVED: was causing footer cutoff */
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      flex: 1;  /* ✅ Allows container to grow, pushing footer down */
     }
 
     header {
@@ -53,12 +56,14 @@
     }
     .btn:hover { background: #0a84ff; transform: scale(1.05); }
 
+    /* ✅ Footer styles - now outside container */
     footer {
       text-align: center;
       padding: 20px;
       font-size: 0.9rem;
       color: #eee;
       opacity: 0.8;
+      margin-top: auto;  /* ✅ Pushes footer to bottom */
     }
     footer img { height: 24px; vertical-align: middle; margin-right: 6px; }
 
@@ -104,6 +109,7 @@
 </head>
 <body>
 
+  <!-- ✅ Main content container -->
   <div class="container">
     <header>
       <h1>🍪 Cookie Policy</h1>
@@ -120,8 +126,8 @@
         <p class="policy-loading">Loading cookie policy</p>
       </div>
 
-      <!-- ✅ Fallback static content (shown if API fails) -->
-      <div id="fallbackContent" style="display: none;">
+      <!-- ✅ Fallback static content (ALWAYS visible if API fails) -->
+      <div id="fallbackContent">
         <div class="policy-section">
           <div class="policy-title">What are cookies?</div>
           <div class="policy-text">
@@ -163,15 +169,15 @@
           </div>
         </div>
 
-        <!-- Back to Home -->
+        <!-- ✅ Smart back button (ID for JS control) -->
         <div style="text-align: center; margin-top: 30px;">
-          <a href="index.html" class="btn">← Back to Home</a>
+          <a id="backLink" class="btn">← Back to Home</a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Footer -->
+  <!-- ✅ Footer MOVED OUTSIDE container (fixes positioning) -->
   <footer>
     <img src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" alt="RIS Logo" />
     © 2026 <strong>gradely.info</strong> | Powered by RIS
@@ -184,12 +190,12 @@
 
 <script src="js/kaima-chatbot.js"></script>
 
-<!-- ✅ DYNAMIC POLICY LOADER SCRIPT -->
+<!-- ✅ DYNAMIC POLICY LOADER SCRIPT (Public Endpoint - FIXED) -->
 <script>
   (function() {
-    // ✅ Clean API endpoint (NO trailing spaces)
-    const API_BASE = "https://api.gradely.info/api/super-admin/legal";
-    const POLICY_TYPE = "cookies"; // ✅ Change to "terms", "privacy", or "refund" for other pages
+    // ✅ Use PUBLIC endpoint (no auth required) - FIXED URL
+    const API_BASE = "https://api.gradely.info/api/public/legal";
+    const POLICY_TYPE = "cookies";
     
     const policyContent = document.getElementById("policyContent");
     const fallbackContent = document.getElementById("fallbackContent");
@@ -197,22 +203,25 @@
     const lastUpdatedEl = document.getElementById("lastUpdated");
     const policyVersionEl = document.getElementById("policyVersion");
 
-    // ✅ Load policy content from API
+    // ✅ Load policy content from API (enhancement only, fallback ALWAYS visible)
     async function loadPolicy() {
       try {
-        // ✅ Cache-busting: add timestamp to force fresh fetch
         const url = `${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`;
-        
         const res = await fetch(url);
         
         if (!res.ok) {
+          // ✅ 404 means no active policy yet - just use fallback silently
+          if (res.status === 404) {
+            console.log("ℹ️ No active cookie policy published yet - showing fallback content");
+            return;
+          }
           throw new Error(`HTTP ${res.status}`);
         }
         
         const data = await res.json();
         
         if (!data.success || !data.data?.content) {
-          throw new Error(data.message || "Invalid response");
+          throw new Error("Invalid response");
         }
         
         // ✅ Inject dynamic content
@@ -236,19 +245,14 @@
         fallbackContent.style.display = "none";
         policyContent.style.display = "block";
         
-        console.log("✅ Policy loaded:", data.data.version);
+        console.log("✅ Cookie policy loaded:", data.data.version);
         
       } catch (err) {
-        console.warn("⚠️ Failed to load policy from API, showing fallback:", err);
-        
-        // ✅ Show fallback static content
-        policyContent.style.display = "none";
-        fallbackContent.style.display = "block";
-        
-        // ✅ Show error notice
-        if (policyMeta) {
-          policyMeta.innerHTML = `<span class="policy-error">⚠️ Using cached policy content. <a href="#" onclick="location.reload()">Refresh</a> to try again.</span>`;
-        }
+        // ✅ Silently use fallback - no error message to avoid confusing users
+        console.log("ℹ️ Using default cookie policy content (API unavailable)");
+        // Ensure fallback is visible
+        if (policyContent) policyContent.style.display = "none";
+        if (fallbackContent) fallbackContent.style.display = "block";
       }
     }
 
@@ -259,6 +263,52 @@
       loadPolicy();
     }
   })();
+</script>
+
+<!-- ✅ SMART BACK BUTTON: Returns to referring page (same origin) or fallback to index.html -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const backLink = document.getElementById('backLink');
+    if (!backLink) return;
+    
+    const referrer = document.referrer;
+    const currentOrigin = window.location.origin;
+    
+    // Determine back URL: use referrer only if from same origin
+    let backUrl = 'index.html'; // Default fallback
+    
+    if (referrer) {
+      try {
+        const referrerUrl = new URL(referrer);
+        // Only use referrer if it's from our domain (security)
+        if (referrerUrl.origin === currentOrigin) {
+          backUrl = referrer;
+        }
+      } catch (e) {
+        // If URL parsing fails, fallback to index.html
+        backUrl = 'index.html';
+      }
+    }
+    
+    // Set the link and click handler
+    backLink.href = backUrl;
+    backLink.onclick = (e) => {
+      e.preventDefault();
+      window.location.href = backUrl;
+    };
+    
+    // Optional: Update link text to show where it goes
+    if (backUrl !== 'index.html') {
+      try {
+        const backPage = new URL(backUrl).pathname.split('/').pop().replace('.html', '');
+        if (backPage && backPage !== 'index') {
+          backLink.textContent = `← Back to ${backPage.charAt(0).toUpperCase() + backPage.slice(1)}`;
+        }
+      } catch (e) {
+        // Keep default text if parsing fails
+      }
+    }
+  });
 </script>
 
 </body>

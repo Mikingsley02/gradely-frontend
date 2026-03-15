@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📋 Data Processing Agreement | Gradely.info</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+      min-height: 100vh;  /* ✅ Ensures body fills viewport */
+      padding: 20px;
+      line-height: 1.7;
+      display: flex;
+      flex-direction: column;  /* ✅ Stack content + footer */
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      /* overflow: hidden;  ← REMOVED: was causing footer cutoff */
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      flex: 1;  /* ✅ Allows container to grow, pushing footer down */
+    }
+    header {
+      text-align: center;
+      padding: 40px 30px;
+      background: rgba(0,0,0,0.1);
+    }
+    header h1 { font-size: 2.2rem; margin-bottom: 10px; color: #00ffb3; }
+    header p { opacity: 0.9; font-size: 1.1rem; }
+    .content { padding: 30px; }
+    h2 {
+      color: #00d2ff;
+      margin: 25px 0 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid rgba(0, 210, 255, 0.3);
+      font-size: 1.4rem;
+    }
+    h3 {
+      color: #e8f4fc;
+      margin: 20px 0 12px;
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+    p, ul, ol {
+      margin-bottom: 15px;
+      color: #e8f4fc;
+      font-size: 1rem;
+    }
+    ul, ol { padding-left: 25px; }
+    li { margin-bottom: 8px; }
+    strong { color: #ffd166; }
+    a { color: #00d2ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    
+    .compliance-badge {
+      display: inline-block;
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid #22c55e;
+      color: #86efac;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 10px 0;
+    }
+    
+    .section-box {
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 4px solid #00d2ff;
+      padding: 15px 20px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+    }
+    
+    .btn {
+      display: inline-block;
+      background: #00d2ff;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+    }
+    .btn:hover { background: #0a84ff; transform: scale(1.05); }
+    
+    /* ✅ Footer styles - now outside container */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9rem;
+      color: #eee;
+      opacity: 0.8;
+      margin-top: auto;  /* ✅ Pushes footer to bottom */
+    }
+    footer img { height: 24px; vertical-align: middle; margin-right: 6px; }
+    
+    /* ✅ Loading state */
+    .policy-loading {
+      text-align: center;
+      padding: 40px;
+      color: rgba(255,255,255,0.8);
+    }
+    .policy-loading::after {
+      content: "";
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* ✅ Error state */
+    .policy-error {
+      background: rgba(248, 113, 113, 0.15);
+      border: 1px solid #f87171;
+      border-radius: 12px;
+      padding: 20px;
+      color: #fecaca;
+      margin: 20px 0;
+    }
+    
+    @media (max-width: 600px) {
+      .container { margin: 20px; }
+      header h1 { font-size: 1.8rem; }
+      .content { padding: 20px; }
+      h2 { font-size: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ✅ Main content container -->
+  <div class="container">
+    <header>
+      <h1>📋 Data Processing Agreement</h1>
+      <!-- ✅ Dynamic version info (populated by API) -->
+      <p id="policyMeta" style="margin-top: 10px; opacity: 0.9; font-size: 0.95rem;">
+        <span id="lastUpdated">Loading...</span>
+        <span id="policyVersion" style="margin-left: 15px;"></span>
+      </p>
+      <span class="compliance-badge">✅ NDPR 2019 Compliant</span>
+    </header>
+
+    <div class="content">
+      <!-- ✅ Dynamic content container -->
+      <div id="policyContent">
+        <p class="policy-loading">Loading Data Processing Agreement</p>
+      </div>
+
+      <!-- ✅ Fallback static content (ALWAYS visible if API fails) -->
+      <div id="fallbackContent">
+        
+        <p><strong>Effective Date:</strong> <span id="effectiveDate">February 26, 2026</span></p>
+        
+        <div class="section-box">
+          <strong>🇳🇬 Nigeria Data Protection Regulation (NDPR) 2019 Compliant</strong><br>
+          This Agreement satisfies Article 2.3 of the NDPR requiring written agreements between Data Controllers and Data Processors.
+        </div>
+
+        <h2>1. Parties</h2>
+        <p><strong>Data Controller:</strong> The registered school using Gradely.info ("School")</p>
+        <p><strong>Data Processor:</strong> Remit Integrated Services LTD, operating gradely.info ("Gradely")</p>
+        <p>This Agreement governs the processing of personal data by Gradely on behalf of the School in connection with the Gradely Info Portal services.</p>
+
+        <h2>2. Scope of Processing</h2>
+        <p>Gradely processes the following categories of personal data on behalf of the School:</p>
+        <ul>
+          <li><strong>Student Data:</strong> Student ID, name, class/grade, academic results, attendance records</li>
+          <li><strong>Parent/Guardian Data:</strong> Name, email address, phone number, relationship to student</li>
+          <li><strong>Authentication Data:</strong> Hashed passwords, login timestamps, session tokens</li>
+          <li><strong>Usage Data:</strong> Feature access logs, announcement delivery records (anonymized where possible)</li>
+        </ul>
+        <p><strong>Purpose of Processing:</strong> To provide the Gradely Info Portal services, including student result management, parent access authentication, announcement delivery, and subscription management.</p>
+
+        <h2>3. School Responsibilities (Data Controller)</h2>
+        <p>The School agrees to:</p>
+        <ul>
+          <li>Obtain lawful basis for collecting student and parent data under NDPR 2019 (consent, contract, legal obligation, or legitimate interest)</li>
+          <li>Ensure data accuracy and update records when information changes</li>
+          <li>Respond to data subject requests (access, correction, deletion) within required timelines</li>
+          <li>Notify Gradely within 24 hours of becoming aware of any personal data breach</li>
+          <li>Comply with all applicable Nigerian data protection laws, including the NDPR 2019 and Cybercrimes Act 2015</li>
+          <li>Obtain necessary consents from parents/guardians before uploading student data to the platform</li>
+        </ul>
+
+        <h2>4. Gradely Responsibilities (Data Processor)</h2>
+        <p>Gradely agrees to:</p>
+        <ul>
+          <li>Process personal data only on documented instructions from the School</li>
+          <li>Implement appropriate technical and organizational security measures (encryption at rest and in transit, access controls, regular security audits)</li>
+          <li>Ensure personnel authorized to process personal data are bound by confidentiality obligations</li>
+          <li>Assist the School in responding to data subject requests and regulatory inquiries</li>
+          <li>Notify the School without undue delay upon becoming aware of a personal data breach</li>
+          <li>Delete or return all personal data upon termination of services, unless retention is required by Nigerian law</li>
+          <li>Maintain records of processing activities as required by NDPR Article 2.6</li>
+        </ul>
+
+        <h2>5. Sub-Processors</h2>
+        <p>The School acknowledges that Gradely engages the following third-party sub-processors to deliver services:</p>
+        <ul>
+          <li><strong>Paystack (Flutterwave)</strong>: Payment processing for school subscriptions</li>
+          <li><strong>Infobip</strong>: SMS notification delivery</li>
+          <li><strong>Resend</strong>: Email notification delivery</li>
+          <li><strong>AWS/Render</strong>: Cloud hosting and infrastructure</li>
+        </ul>
+        <p>Gradely maintains written agreements with all sub-processors requiring equivalent data protection standards. The School may object to new sub-processors by contacting support@gradely.info within 14 days of notice.</p>
+
+        <h2>6. Data Security Measures</h2>
+        <p>Gradely implements the following security measures to protect personal data:</p>
+        <ul>
+          <li><strong>Encryption:</strong> TLS 1.3 for data in transit; AES-256 encryption for sensitive data at rest</li>
+          <li><strong>Access Controls:</strong> Role-based access, multi-factor authentication for admin accounts, principle of least privilege</li>
+          <li><strong>Monitoring:</strong> 24/7 security monitoring, intrusion detection, regular vulnerability assessments</li>
+          <li><strong>Backups:</strong> Encrypted daily backups with 30-day retention; tested restoration procedures</li>
+          <li><strong>Training:</strong> Regular security awareness training for all personnel with data access</li>
+        </ul>
+
+        <h2>7. Data Breach Notification</h2>
+        <p>In the event of a personal data breach:</p>
+        <ol>
+          <li>Gradely will notify the School within <strong>24 hours</strong> of becoming aware of the breach</li>
+          <li>Notification will include: nature of breach, categories of data affected, likely consequences, measures taken</li>
+          <li>Gradely will assist the School in notifying the Nigeria Data Protection Bureau (NDPB) within 72 hours if required</li>
+          <li>Gradely will assist the School in notifying affected data subjects where the breach poses high risk to their rights</li>
+        </ol>
+
+        <h2>8. Data Retention & Deletion</h2>
+        <p><strong>Retention Period:</strong> Personal data is retained for the duration of the School's active subscription plus 30 days thereafter.</p>
+        <p><strong>Deletion Process:</strong> Upon termination or written request, Gradely will securely delete all personal data within 30 days, except where retention is required by Nigerian law (e.g., tax records, audit logs).</p>
+        <p><strong>School-Requested Deletion:</strong> Schools may request deletion of specific student/parent records via the admin dashboard or by contacting support@gradely.info. Gradely will process deletion requests within 14 days.</p>
+
+        <h2>9. International Data Transfers</h2>
+        <p>Gradely's infrastructure may process data outside Nigeria. Where transfers occur:</p>
+        <ul>
+          <li>Transfers comply with NDPR Article 2.12 requirements for adequate safeguards</li>
+          <li>Standard Contractual Clauses or equivalent protections are in place with sub-processors</li>
+          <li>The School consents to such transfers by using the Gradely services</li>
+        </ul>
+
+        <h2>10. Audit & Compliance</h2>
+        <p><strong>School Audit Rights:</strong> The School may request a compliance report annually. On-site audits require 30 days' notice and are subject to Gradely's security policies.</p>
+        <p><strong>Regulatory Cooperation:</strong> Both parties agree to cooperate with the Nigeria Data Protection Bureau (NDPB) and other relevant authorities in investigations or compliance reviews.</p>
+
+        <h2>11. Liability & Indemnification</h2>
+        <p><strong>Gradely Liability:</strong> Gradely's total liability under this Agreement shall not exceed the fees paid by the School in the 12 months preceding the claim, except for breaches of confidentiality or data protection obligations.</p>
+        <p><strong>School Indemnification:</strong> The School agrees to indemnify Gradely against claims arising from the School's unlawful collection, use, or disclosure of personal data.</p>
+
+        <h2>12. Term & Termination</h2>
+        <p>This Agreement remains in effect for the duration of the School's use of Gradely services. Either party may terminate with 30 days' written notice. Upon termination, Gradely will delete or return personal data as specified in Section 8.</p>
+
+        <h2>13. Governing Law & Dispute Resolution</h2>
+        <p>This Agreement is governed by the laws of Nigeria. Any disputes shall first be resolved through good-faith negotiation. If unresolved, disputes shall be submitted to the exclusive jurisdiction of Nigerian courts.</p>
+
+        <div class="section-box">
+          <strong>📞 Contact for Data Protection Matters:</strong><br>
+          Email: <a href="mailto:dpo@gradely.info">dpo@gradely.info</a><br>
+          Phone: +234 806 428 7477<br>
+          Address: Remit Integrated Services LTD, Lagos, Nigeria
+        </div>
+
+        <div class="section-box">
+          <strong>🔄 Policy Updates:</strong> Gradely may update this Agreement to reflect legal or operational changes. Schools will be notified of material changes via email and dashboard notice. Continued use of services constitutes acceptance of updated terms.
+        </div>
+
+        <!-- ✅ Smart back button (ID for JS control) -->
+        <div style="text-align: center; margin-top: 30px;">
+          <a id="backLink" class="btn">← Go Back</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Footer MOVED OUTSIDE container (fixes positioning) -->
+  <footer>
+    <img src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" alt="RIS Logo" />
+    © 2026 <strong>gradely.info</strong> | Powered by RIS
+    <div style="margin-top: 10px;">
+      <a href="terms.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Terms</a> •
+      <a href="privacy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Privacy</a> •
+      <a href="refund-policy.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">Refund Policy</a> •
+      <a href="dpa.html" style="color: #00d2ff; text-decoration: none; margin: 0 10px;">DPA</a>
+    </div>
+  </footer>
+
+<script src="js/kaima-chatbot.js"></script>
+
+<!-- ✅ DYNAMIC POLICY LOADER SCRIPT (Public Endpoint - FIXED) -->
+<script>
+  (function() {
+    // ✅ Use PUBLIC endpoint (no auth required) - FIXED URL
+    const API_BASE = "https://api.gradely.info/api/public/legal";
+    const POLICY_TYPE = "dpa";
+    
+    const policyContent = document.getElementById("policyContent");
+    const fallbackContent = document.getElementById("fallbackContent");
+    const policyMeta = document.getElementById("policyMeta");
+    const lastUpdatedEl = document.getElementById("lastUpdated");
+    const policyVersionEl = document.getElementById("policyVersion");
+
+    // ✅ Load policy content from API (enhancement only, fallback ALWAYS visible)
+    async function loadPolicy() {
+      try {
+        const url = `${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`;
+        const res = await fetch(url);
+        
+        if (!res.ok) {
+          // ✅ 404 means no active policy yet - just use fallback silently
+          if (res.status === 404) {
+            console.log("ℹ️ No active DPA published yet - showing fallback content");
+            return;
+          }
+          throw new Error(`HTTP ${res.status}`);
+        }
+        
+        const data = await res.json();
+        
+        if (!data.success || !data.data?.content) {
+          throw new Error("Invalid response");
+        }
+        
+        // ✅ Inject dynamic content
+        policyContent.innerHTML = data.data.content;
+        
+        // ✅ Update version info
+        if (data.data.version) {
+          policyVersionEl.textContent = `Version: ${data.data.version}`;
+        }
+        
+        if (data.data.updated_at) {
+          const date = new Date(data.data.updated_at);
+          lastUpdatedEl.textContent = `Last Updated: ${date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}`;
+          // Also update effective date in fallback content if visible
+          const effectiveDateEl = document.getElementById("effectiveDate");
+          if (effectiveDateEl) {
+            effectiveDateEl.textContent = date.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            });
+          }
+        }
+        
+        // ✅ Hide fallback, show dynamic content
+        fallbackContent.style.display = "none";
+        policyContent.style.display = "block";
+        
+        console.log("✅ DPA loaded:", data.data.version);
+        
+      } catch (err) {
+        // ✅ Silently use fallback - no error message to avoid confusing users
+        console.log("ℹ️ Using default DPA content (API unavailable)");
+        // Ensure fallback is visible
+        if (policyContent) policyContent.style.display = "none";
+        if (fallbackContent) fallbackContent.style.display = "block";
+      }
+    }
+
+    // ✅ Load when DOM is ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", loadPolicy);
+    } else {
+      loadPolicy();
+    }
+  })();
+</script>
+
+<!-- ✅ SMART BACK BUTTON: Returns to referring page (same origin) or fallback to index.html -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const backLink = document.getElementById('backLink');
+    if (!backLink) return;
+    
+    const referrer = document.referrer;
+    const currentOrigin = window.location.origin;
+    
+    // Determine back URL: use referrer only if from same origin
+    let backUrl = 'index.html'; // Default fallback
+    
+    if (referrer) {
+      try {
+        const referrerUrl = new URL(referrer);
+        // Only use referrer if it's from our domain (security)
+        if (referrerUrl.origin === currentOrigin) {
+          backUrl = referrer;
+        }
+      } catch (e) {
+        // If URL parsing fails, fallback to index.html
+        backUrl = 'index.html';
+      }
+    }
+    
+    // Set the link and click handler
+    backLink.href = backUrl;
+    backLink.onclick = (e) => {
+      e.preventDefault();
+      window.location.href = backUrl;
+    };
+    
+    // Optional: Update link text to show where it goes
+    if (backUrl !== 'index.html') {
+      try {
+        const backPage = new URL(backUrl).pathname.split('/').pop().replace('.html', '');
+        if (backPage && backPage !== 'index') {
+          backLink.textContent = `← Back to ${backPage.charAt(0).toUpperCase() + backPage.slice(1)}`;
+        }
+      } catch (e) {
+        // Keep default text if parsing fails
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -7,14 +7,45 @@
   <style>
     /* Same style as above */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-    body { background: #f4f6f9; color: #333; line-height: 1.7; padding: 20px; }
-    .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); overflow: hidden; }
-    header { background: #0c2461; color: white; text-align: center; padding: 40px; }
+    body { 
+      background: #f4f6f9; 
+      color: #333; 
+      line-height: 1.7; 
+      padding: 20px;
+      min-height: 100vh;  /* ✅ Ensures body fills viewport */
+      display: flex;
+      flex-direction: column;  /* ✅ Stack content + footer */
+    }
+    .container { 
+      max-width: 900px; 
+      margin: 40px auto; 
+      background: white; 
+      border-radius: 12px; 
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1); 
+      /* overflow: hidden; ← REMOVED: was causing footer cutoff */
+      flex: 1;  /* ✅ Allows container to grow, pushing footer down */
+    }
+    header { 
+      background: #0c2461; 
+      color: white; 
+      text-align: center; 
+      padding: 40px; 
+    }
     header h1 { font-size: 1.8rem; font-weight: 600; }
     .content { padding: 40px; }
     h2 { color: #2c3e50; margin: 25px 0 15px; }
     p, ul { margin-bottom: 15px; }
-    footer { text-align: center; padding: 20px; background: #f8f9fa; border-top: 1px solid #eee; font-size: 0.9rem; color: #666; }
+    
+    /* ✅ Footer styles - now outside container */
+    footer { 
+      text-align: center; 
+      padding: 20px; 
+      background: #f8f9fa; 
+      border-top: 1px solid #eee; 
+      font-size: 0.9rem; 
+      color: #666;
+      margin-top: auto;  /* ✅ Pushes footer to bottom */
+    }
     footer img { height: 30px; vertical-align: middle; margin-right: 8px; }
     .btn { display: inline-block; margin: 20px auto; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 6px; font-size: 0.95rem; }
     .back-link {
@@ -60,6 +91,7 @@
   </style>
 </head>
 <body>
+  <!-- ✅ Main content container -->
   <div class="container">
     <header>
       <h1>🔐 Privacy Policy</h1>
@@ -76,8 +108,8 @@
         <p class="policy-loading">Loading privacy policy</p>
       </div>
 
-      <!-- ✅ Fallback static content (shown if API fails) -->
-      <div id="fallbackContent" style="display: none;">
+      <!-- ✅ Fallback static content (ALWAYS visible if API fails) -->
+      <div id="fallbackContent">
         <p>Your privacy is important to us. This policy explains how <strong>gradely.info</strong> collects, uses, and protects your information.</p>
 
         <h2>1. Information We Collect</h2>
@@ -129,27 +161,28 @@
         <p><strong>Email:</strong> support@gradely.info<br>
         <strong>Phone:</strong> +234 806 428 7477</p>
 
-        <a href="javascript:history.back()" class="back-link">← Go Back</a>
+        <a id="backLink" class="back-link">← Go Back</a>
       </div>
     </div>
-
-    <footer>
-      <img 
-        src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" 
-        alt="RIS Logo" 
-      />
-      <strong>© 2026 gradely.info. </strong>All rights reserved. | Powered by RIS
-    </footer>
   </div>
+
+  <!-- ✅ Footer MOVED OUTSIDE container (fixes positioning) -->
+  <footer>
+    <img 
+      src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" 
+      alt="RIS Logo" 
+    />
+    <strong>© 2026 gradely.info. </strong>All rights reserved. | Powered by RIS
+  </footer>
 
 <script src="js/kaima-chatbot.js"></script>
 
-<!-- ✅ DYNAMIC POLICY LOADER SCRIPT -->
+<!-- ✅ DYNAMIC POLICY LOADER SCRIPT (Public Endpoint - FIXED) -->
 <script>
   (function() {
-    // ✅ Clean API endpoint (NO trailing spaces)
-    const API_BASE = "https://api.gradely.info/api/super-admin/legal";
-    const POLICY_TYPE = "privacy"; // ✅ Change to "terms" or "refund" for other pages
+    // ✅ Use PUBLIC endpoint (no auth required) - FIXED URL
+    const API_BASE = "https://api.gradely.info/api/public/legal";
+    const POLICY_TYPE = "privacy";
     
     const policyContent = document.getElementById("policyContent");
     const fallbackContent = document.getElementById("fallbackContent");
@@ -157,22 +190,25 @@
     const lastUpdatedEl = document.getElementById("lastUpdated");
     const policyVersionEl = document.getElementById("policyVersion");
 
-    // ✅ Load policy content from API
+    // ✅ Load policy content from API (enhancement only, fallback ALWAYS visible)
     async function loadPolicy() {
       try {
-        // ✅ Cache-busting: add timestamp to force fresh fetch
         const url = `${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`;
-        
         const res = await fetch(url);
         
         if (!res.ok) {
+          // ✅ 404 means no active policy yet - just use fallback silently
+          if (res.status === 404) {
+            console.log("ℹ️ No active privacy policy published yet - showing fallback content");
+            return;
+          }
           throw new Error(`HTTP ${res.status}`);
         }
         
         const data = await res.json();
         
         if (!data.success || !data.data?.content) {
-          throw new Error(data.message || "Invalid response");
+          throw new Error("Invalid response");
         }
         
         // ✅ Inject dynamic content
@@ -196,19 +232,14 @@
         fallbackContent.style.display = "none";
         policyContent.style.display = "block";
         
-        console.log("✅ Policy loaded:", data.data.version);
+        console.log("✅ Privacy policy loaded:", data.data.version);
         
       } catch (err) {
-        console.warn("⚠️ Failed to load policy from API, showing fallback:", err);
-        
-        // ✅ Show fallback static content
-        policyContent.style.display = "none";
-        fallbackContent.style.display = "block";
-        
-        // ✅ Show error notice
-        if (policyMeta) {
-          policyMeta.innerHTML = `<span class="policy-error">⚠️ Using cached policy content. <a href="#" onclick="location.reload()">Refresh</a> to try again.</span>`;
-        }
+        // ✅ Silently use fallback - no error message to avoid confusing users
+        console.log("ℹ️ Using default privacy content (API unavailable)");
+        // Ensure fallback is visible
+        if (policyContent) policyContent.style.display = "none";
+        if (fallbackContent) fallbackContent.style.display = "block";
       }
     }
 
@@ -219,6 +250,52 @@
       loadPolicy();
     }
   })();
+</script>
+
+<!-- ✅ SMART BACK BUTTON: Returns to referring page (same origin) or fallback to index.html -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const backLink = document.getElementById('backLink');
+    if (!backLink) return;
+    
+    const referrer = document.referrer;
+    const currentOrigin = window.location.origin;
+    
+    // Determine back URL: use referrer only if from same origin
+    let backUrl = 'index.html'; // Default fallback
+    
+    if (referrer) {
+      try {
+        const referrerUrl = new URL(referrer);
+        // Only use referrer if it's from our domain (security)
+        if (referrerUrl.origin === currentOrigin) {
+          backUrl = referrer;
+        }
+      } catch (e) {
+        // If URL parsing fails, fallback to index.html
+        backUrl = 'index.html';
+      }
+    }
+    
+    // Set the link and click handler
+    backLink.href = backUrl;
+    backLink.onclick = (e) => {
+      e.preventDefault();
+      window.location.href = backUrl;
+    };
+    
+    // Optional: Update link text to show where it goes
+    if (backUrl !== 'index.html') {
+      try {
+        const backPage = new URL(backUrl).pathname.split('/').pop().replace('.html', '');
+        if (backPage && backPage !== 'index') {
+          backLink.textContent = `← Back to ${backPage.charAt(0).toUpperCase() + backPage.slice(1)}`;
+        }
+      } catch (e) {
+        // Keep default text if parsing fails
+      }
+    }
+  });
 </script>
 
 </body>

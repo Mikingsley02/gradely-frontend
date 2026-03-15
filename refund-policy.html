@@ -14,9 +14,11 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #6a11cb, #2575fc);
       color: #fff;
-      min-height: 100vh;
+      min-height: 100vh;  /* ✅ Ensures body fills viewport */
       padding: 20px;
       text-align: center;
+      display: flex;
+      flex-direction: column;  /* ✅ Stack content + footer */
     }
     .container {
       max-width: 900px;
@@ -27,6 +29,8 @@
       padding: 40px 30px;
       box-shadow: 0 8px 30px rgba(0,0,0,0.2);
       text-align: left;
+      /* overflow: hidden; ← REMOVED: was causing footer cutoff */
+      flex: 1;  /* ✅ Allows container to grow, pushing footer down */
     }
     h1, h2, h3 {
       color: #fff;
@@ -59,17 +63,22 @@
       border-radius: 12px;
       margin: 20px 0;
     }
+    
+    /* ✅ Footer styles - now outside container */
     footer {
       margin-top: 40px;
       text-align: center;
       font-size: 0.9rem;
       color: #eee;
+      padding: 20px;
+      margin-top: auto;  /* ✅ Pushes footer to bottom */
     }
     footer img {
       height: 28px;
       vertical-align: middle;
       margin-right: 8px;
     }
+    
     /* Back to Login Button */
     .back-btn {
       display: inline-block;
@@ -87,6 +96,7 @@
       background: #006edc;
       transform: scale(1.05);
     }
+    
     /* ✅ Loading state */
     .policy-loading {
       text-align: center;
@@ -108,6 +118,7 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    
     /* ✅ Error state */
     .policy-error {
       background: rgba(248, 113, 113, 0.15);
@@ -117,6 +128,7 @@
       color: #fecaca;
       margin: 20px 0;
     }
+    
     @media (max-width: 600px) {
       .container {
         padding: 25px 20px;
@@ -134,6 +146,7 @@
   </style>
 </head>
 <body>
+  <!-- ✅ Main content container -->
   <div class="container">
     <h1>💳 Refund & Cancellation Policy</h1>
     
@@ -148,8 +161,8 @@
       <p class="policy-loading">Loading policy content</p>
     </div>
 
-    <!-- ✅ Fallback static content (shown if API fails) -->
-    <div id="fallbackContent" style="display: none;">
+    <!-- ✅ Fallback static content (ALWAYS visible if API fails) -->
+    <div id="fallbackContent">
       <p>This Refund and Cancellation Policy applies to all schools using the <strong>Gradely Info Portal</strong> (gradely.info). By registering your school, you agree to these terms.</p>
 
       <h2>1. Subscription Plans</h2>
@@ -269,14 +282,15 @@
 
       <h2>8. Policy Changes</h2>
       <p>We may update this policy periodically. Changes will be posted on this page with a new "Last Updated" date. Continued use of our service constitutes acceptance of the revised terms.</p>
-    </div>
 
-    <!-- Back to Login Button -->
-    <div style="text-align: center; margin-top: 30px;">
-      <a href="javascript:history.back()" class="back-link" style="color: #00d2ff; text-decoration: none; font-weight: 600;">← Go Back</a>
+      <!-- ✅ Smart back button (ID for JS control) -->
+      <div style="text-align: center; margin-top: 30px;">
+        <a id="backLink" class="back-link" style="color: #00d2ff; text-decoration: none; font-weight: 600;">← Go Back</a>
+      </div>
     </div>
   </div>
 
+  <!-- ✅ Footer MOVED OUTSIDE container (fixes positioning) -->
   <footer>
     <img src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" alt="RIS Logo" />
     <strong>© 2026 gradely.info. All rights reserved. | Powered by RIS</strong><br>
@@ -287,12 +301,12 @@
 
   <script src="js/kaima-chatbot.js"></script>
 
-  <!-- ✅ DYNAMIC POLICY LOADER SCRIPT -->
+  <!-- ✅ DYNAMIC POLICY LOADER SCRIPT (Public Endpoint - FIXED) -->
   <script>
     (function() {
-      // ✅ Clean API endpoint (NO trailing spaces)
-      const API_BASE = "https://api.gradely.info/api/super-admin/legal";
-      const POLICY_TYPE = "refund"; // ✅ Change to "terms" or "privacy" for other pages
+      // ✅ Use PUBLIC endpoint (no auth required) - FIXED URL
+      const API_BASE = "https://api.gradely.info/api/public/legal";
+      const POLICY_TYPE = "refund";
       
       const policyContent = document.getElementById("policyContent");
       const fallbackContent = document.getElementById("fallbackContent");
@@ -300,22 +314,25 @@
       const lastUpdatedEl = document.getElementById("lastUpdated");
       const policyVersionEl = document.getElementById("policyVersion");
 
-      // ✅ Load policy content from API
+      // ✅ Load policy content from API (enhancement only, fallback ALWAYS visible)
       async function loadPolicy() {
         try {
-          // ✅ Cache-busting: add timestamp to force fresh fetch
           const url = `${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`;
-          
           const res = await fetch(url);
           
           if (!res.ok) {
+            // ✅ 404 means no active policy yet - just use fallback silently
+            if (res.status === 404) {
+              console.log("ℹ️ No active refund policy published yet - showing fallback content");
+              return;
+            }
             throw new Error(`HTTP ${res.status}`);
           }
           
           const data = await res.json();
           
           if (!data.success || !data.data?.content) {
-            throw new Error(data.message || "Invalid response");
+            throw new Error("Invalid response");
           }
           
           // ✅ Inject dynamic content
@@ -339,19 +356,14 @@
           fallbackContent.style.display = "none";
           policyContent.style.display = "block";
           
-          console.log("✅ Policy loaded:", data.data.version);
+          console.log("✅ Refund policy loaded:", data.data.version);
           
         } catch (err) {
-          console.warn("⚠️ Failed to load policy from API, showing fallback:", err);
-          
-          // ✅ Show fallback static content
-          policyContent.style.display = "none";
-          fallbackContent.style.display = "block";
-          
-          // ✅ Show error notice
-          if (policyMeta) {
-            policyMeta.innerHTML = `<span class="policy-error">⚠️ Using cached policy content. <a href="#" onclick="location.reload()">Refresh</a> to try again.</span>`;
-          }
+          // ✅ Silently use fallback - no error message to avoid confusing users
+          console.log("ℹ️ Using default refund policy content (API unavailable)");
+          // Ensure fallback is visible
+          if (policyContent) policyContent.style.display = "none";
+          if (fallbackContent) fallbackContent.style.display = "block";
         }
       }
 
@@ -362,6 +374,52 @@
         loadPolicy();
       }
     })();
+  </script>
+
+  <!-- ✅ SMART BACK BUTTON: Returns to referring page (same origin) or fallback to index.html -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const backLink = document.getElementById('backLink');
+      if (!backLink) return;
+      
+      const referrer = document.referrer;
+      const currentOrigin = window.location.origin;
+      
+      // Determine back URL: use referrer only if from same origin
+      let backUrl = 'index.html'; // Default fallback
+      
+      if (referrer) {
+        try {
+          const referrerUrl = new URL(referrer);
+          // Only use referrer if it's from our domain (security)
+          if (referrerUrl.origin === currentOrigin) {
+            backUrl = referrer;
+          }
+        } catch (e) {
+          // If URL parsing fails, fallback to index.html
+          backUrl = 'index.html';
+        }
+      }
+      
+      // Set the link and click handler
+      backLink.href = backUrl;
+      backLink.onclick = (e) => {
+        e.preventDefault();
+        window.location.href = backUrl;
+      };
+      
+      // Optional: Update link text to show where it goes
+      if (backUrl !== 'index.html') {
+        try {
+          const backPage = new URL(backUrl).pathname.split('/').pop().replace('.html', '');
+          if (backPage && backPage !== 'index') {
+            backLink.textContent = `← Back to ${backPage.charAt(0).toUpperCase() + backPage.slice(1)}`;
+          }
+        } catch (e) {
+          // Keep default text if parsing fails
+        }
+      }
+    });
   </script>
 </body>
 </html>
