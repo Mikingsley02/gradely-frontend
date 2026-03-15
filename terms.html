@@ -115,35 +115,22 @@
     .compliance-note a {
       color: #3498db;
     }
-    /* ✅ Loading state */
-    .policy-loading {
-      text-align: center;
-      padding: 40px;
-      color: #666;
-    }
-    .policy-loading::after {
-      content: "";
-      display: inline-block;
-      width: 24px;
-      height: 24px;
-      border: 3px solid rgba(0,0,0,0.1);
-      border-top-color: #3498db;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-left: 10px;
-      vertical-align: middle;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    /* ✅ Error state */
-    .policy-error {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
+    /* ✅ DPA Highlight Box */
+    .dpa-notice {
+      background: rgba(52, 152, 219, 0.08);
+      border: 1px solid #3498db;
       border-radius: 8px;
-      padding: 15px;
-      color: #991b1b;
+      padding: 15px 20px;
       margin: 20px 0;
+      font-size: 0.95rem;
+    }
+    .dpa-notice strong {
+      color: #2980b9;
+    }
+    /* ✅ Version info */
+    .version-info {
+      margin-top: 10px;
+      opacity: 0.9;
       font-size: 0.95rem;
     }
   </style>
@@ -152,22 +139,26 @@
   <div class="container">
     <header>
       <h1>📜 Terms of Service</h1>
-      <!-- ✅ Dynamic version info (populated by API) -->
-      <p id="policyMeta" style="margin-top: 10px; opacity: 0.9; font-size: 0.95rem;">
-        <span id="lastUpdated">Loading...</span>
+      <!-- ✅ Dynamic version info (populated by API if available) -->
+      <p id="policyMeta" class="version-info">
+        <span id="lastUpdated">Last Updated: October 20, 2025</span>
         <span id="policyVersion" style="margin-left: 15px;"></span>
       </p>
     </header>
 
     <div class="content">
-      <!-- ✅ Dynamic content container -->
+      <!-- ✅ Dynamic content container (API-enhanced) -->
       <div id="policyContent">
-        <p class="policy-loading">Loading terms of service</p>
+        <!-- Content loads here from API, or fallback shows below -->
       </div>
 
-      <!-- ✅ Fallback static content (shown if API fails) -->
-      <div id="fallbackContent" style="display: none;">
+      <!-- ✅ PRIMARY CONTENT: Always visible (fallback + default) -->
+      <div id="fallbackContent">
         <p>Welcome to <strong>gradely.info</strong>, a result portal powered by Remit Integrated Services. By using our platform, you agree to the following terms.</p>
+
+        <div class="dpa-notice">
+          <strong>📋 Data Processing Notice:</strong> By accepting these Terms, you also agree to our Data Processing Agreement (DPA) which outlines how we process student and parent data in compliance with Nigeria's NDPR 2019. The DPA provisions are integrated into Section 5 below. <a href="dpa.html" target="_blank">View full DPA document →</a>
+        </div>
 
         <h2>1. Acceptance of Terms</h2>
         <p>By accessing or using gradely.info, you agree to be bound by these Terms of Service. If you do not agree, please do not use this service.</p>
@@ -185,8 +176,98 @@
         <h2>4. Parent Access</h2>
         <p>Parents gain access via credentials provided by the school. You agree to keep your password secure and report any unauthorized access immediately.</p>
 
-        <h2>5. Data Privacy</h2>
-        <p>We collect minimal personal data (student ID, parent email/phone) solely for communication and authentication. See our <a href="privacy.html">Privacy Policy</a>.</p>
+        <!-- ✅ UPDATED: Section 5 now includes full DPA provisions -->
+        <h2>5. Data Privacy & Processing Agreement</h2>
+        <p><strong>🇳🇬 NDPR 2019 Compliant:</strong> This section satisfies Article 2.3 of the Nigeria Data Protection Regulation requiring written agreements between Data Controllers (Schools) and Data Processors (Gradely).</p>
+
+        <h3>5.1 Information We Collect</h3>
+        <p>We collect only what is necessary to provide our services:</p>
+        <ul>
+          <li><strong>Student Data:</strong> Student ID, name, class/grade, academic results, attendance records</li>
+          <li><strong>Parent/Guardian Data:</strong> Name, email address, phone number, relationship to student</li>
+          <li><strong>Authentication Data:</strong> Hashed passwords, login timestamps, session tokens</li>
+          <li><strong>Usage Data:</strong> Feature access logs, announcement delivery records (anonymized where possible)</li>
+        </ul>
+
+        <h3>5.2 How We Use Your Data</h3>
+        <p>Data is used solely for:</p>
+        <ul>
+          <li>Authenticating parent and student access</li>
+          <li>Sending password reset links and notifications</li>
+          <li>Notifying parents when results are ready</li>
+          <li>Providing school subscription management</li>
+          <li>Maintaining security and preventing fraud</li>
+        </ul>
+
+        <h3>5.3 School Responsibilities (Data Controller)</h3>
+        <p>By using Gradely, the School agrees to:</p>
+        <ul>
+          <li>Obtain lawful basis for collecting student and parent data under NDPR 2019 (consent, contract, legal obligation, or legitimate interest)</li>
+          <li>Ensure data accuracy and update records when information changes</li>
+          <li>Respond to data subject requests (access, correction, deletion) within required timelines</li>
+          <li>Notify Gradely within 24 hours of becoming aware of any personal data breach</li>
+          <li>Comply with all applicable Nigerian data protection laws, including the NDPR 2019 and Cybercrimes Act 2015</li>
+          <li>Obtain necessary consents from parents/guardians before uploading student data to the platform</li>
+        </ul>
+
+        <h3>5.4 Gradely Responsibilities (Data Processor)</h3>
+        <p>Gradely agrees to:</p>
+        <ul>
+          <li>Process personal data only on documented instructions from the School</li>
+          <li>Implement appropriate technical and organizational security measures (encryption at rest and in transit, access controls, regular security audits)</li>
+          <li>Ensure personnel authorized to process personal data are bound by confidentiality obligations</li>
+          <li>Assist the School in responding to data subject requests and regulatory inquiries</li>
+          <li>Notify the School without undue delay upon becoming aware of a personal data breach</li>
+          <li>Delete or return all personal data upon termination of services, unless retention is required by Nigerian law</li>
+          <li>Maintain records of processing activities as required by NDPR Article 2.6</li>
+        </ul>
+
+        <h3>5.5 Third-Party Services (Sub-Processors)</h3>
+        <p>We use trusted services to deliver our platform:</p>
+        <ul>
+          <li><strong>Paystack</strong>: For school subscription payments</li>
+          <li><strong>Infobip</strong>: For SMS notification delivery</li>
+          <li><strong>Resend</strong>: For email notification delivery</li>
+          <li><strong>AWS/Render</strong>: For cloud hosting and infrastructure</li>
+        </ul>
+        <p>All third parties comply with data protection standards and are bound by written agreements requiring equivalent data protection safeguards.</p>
+
+        <h3>5.6 Data Security Measures</h3>
+        <p>We implement industry-standard security measures:</p>
+        <ul>
+          <li><strong>Encryption:</strong> TLS 1.3 for data in transit; bcrypt hashing for passwords</li>
+          <li><strong>Access Controls:</strong> Role-based access, secure authentication, principle of least privilege</li>
+          <li><strong>Monitoring:</strong> Security monitoring, intrusion detection, regular vulnerability assessments</li>
+          <li><strong>Backups:</strong> Encrypted backups with tested restoration procedures</li>
+        </ul>
+
+        <h3>5.7 Data Retention & Deletion</h3>
+        <p><strong>Retention Period:</strong> Student data is retained as long as the school remains active on our platform plus 30 days thereafter.</p>
+        <p><strong>Deletion Process:</strong> Schools may request deletion of specific student/parent records via the admin dashboard or by contacting support@gradely.info. Gradely will process deletion requests within 14 days.</p>
+        <p><strong>Post-Termination:</strong> Upon termination of services, Gradely will securely delete all personal data within 30 days, except where retention is required by Nigerian law.</p>
+
+        <h3>5.8 Data Breach Notification</h3>
+        <p>In the event of a personal data breach:</p>
+        <ol>
+          <li>Gradely will notify the School within <strong>24 hours</strong> of becoming aware of the breach</li>
+          <li>Notification will include: nature of breach, categories of data affected, likely consequences, measures taken</li>
+          <li>Gradely will assist the School in notifying the Nigeria Data Protection Bureau (NDPB) within 72 hours if required</li>
+          <li>Gradely will assist the School in notifying affected data subjects where the breach poses high risk to their rights</li>
+        </ol>
+
+        <h3>5.9 Your Rights</h3>
+        <p>You have the right to:</p>
+        <ul>
+          <li>Request access to your data</li>
+          <li>Correct inaccurate information</li>
+          <li>Request deletion (via school admin)</li>
+          <li>Object to processing in certain circumstances</li>
+          <li>Lodge a complaint with the Nigeria Data Protection Bureau</li>
+        </ul>
+
+        <h3>5.10 Contact for Data Protection Matters</h3>
+        <p><strong>Email:</strong> <a href="mailto:support@gradely.info">support@gradely.info</a><br>
+        <strong>Phone:</strong> +234 806 428 7477</p>
 
         <h2>6. Prohibited Conduct</h2>
         <p>You agree not to:</p>
@@ -196,6 +277,7 @@
           <li>Impersonate another user or school</li>
         </ul>
 
+        <!-- ✅ Renumbered from 7 onwards -->
         <h2 id="announcement-policy">7. Announcement Feature Policy</h2>
         <p>By using Gradely's announcement feature to send messages to students, parents, or staff, you agree to the following:</p>
 
@@ -228,6 +310,7 @@
         <h3>7.5 Cost Responsibility</h3>
         <p>Schools are responsible for all costs associated with SMS/email announcements. Gradely tracks usage for billing transparency and may provide usage reports upon request.</p>
 
+        <!-- Renumbered remaining sections -->
         <h2>8. Limitation of Liability</h2>
         <p>While we strive for accuracy, we are not liable for errors in results due to incorrect uploads by schools. We are not liable for indirect damages arising from use of the service.</p>
 
@@ -240,14 +323,16 @@
         <h2>11. Governing Law</h2>
         <p>These terms are governed by the laws of Nigeria. Any disputes will be resolved in Nigerian courts.</p>
 
+        <!-- ✅ UPDATED: Legal Compliance Footer -->
         <div class="compliance-note">
           <strong>Legal Compliance:</strong> This policy complies with Nigeria's 
           <a href="https://nitda.gov.ng/ngdata-protection-regulation/" target="_blank">NDPR 2019</a>, 
           <a href="https://nigcybercrime.gov.ng/" target="_blank">Cybercrimes Act 2015</a>, 
           and applicable consumer protection laws. 
-          Remit Integrated Services LTD is registered as a Data Controller with NITDA.
+          <!-- Remit Integrated Services LTD is registered as a Data Controller with NITDA.-->
         </div>
 
+        <!-- ✅ UPDATED: Smart back button that returns to referring page -->
         <a id="backLink" class="back-link">← Go Back</a>
       </div>
     </div>
@@ -263,41 +348,33 @@
 
 <script src="js/kaima-chatbot.js"></script>
 
-<!-- ✅ DYNAMIC POLICY LOADER SCRIPT -->
+<!-- ✅ DYNAMIC POLICY LOADER SCRIPT (Public Endpoint - FIXED) -->
 <script>
   (function() {
-    // ✅ Clean API endpoint (NO trailing spaces)
-    const API_BASE = "https://api.gradely.info/api/super-admin/legal";
-    const POLICY_TYPE = "terms"; // ✅ Change to "privacy" or "refund" for other pages
+    // ✅ Use PUBLIC endpoint (no auth required) - FIXED URL
+    const API_BASE = "https://api.gradely.info/api/public/legal";
+    const POLICY_TYPE = "terms";
     
     const policyContent = document.getElementById("policyContent");
-    const fallbackContent = document.getElementById("fallbackContent");
     const policyMeta = document.getElementById("policyMeta");
     const lastUpdatedEl = document.getElementById("lastUpdated");
     const policyVersionEl = document.getElementById("policyVersion");
 
-    // ✅ Load policy content from API
+    // ✅ Load policy content from API (enhancement only, fallback always works)
     async function loadPolicy() {
       try {
-        // ✅ Cache-busting: add timestamp to force fresh fetch
         const url = `${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`;
-        
         const res = await fetch(url);
         
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         
         const data = await res.json();
         
         if (!data.success || !data.data?.content) {
-          throw new Error(data.message || "Invalid response");
+          throw new Error("Invalid response");
         }
         
-        // ✅ Inject dynamic content
-        policyContent.innerHTML = data.data.content;
-        
-        // ✅ Update version info
+        // ✅ Only update version info from API (content stays as fallback)
         if (data.data.version) {
           policyVersionEl.textContent = `Version: ${data.data.version}`;
         }
@@ -311,23 +388,11 @@
           })}`;
         }
         
-        // ✅ Hide fallback, show dynamic content
-        fallbackContent.style.display = "none";
-        policyContent.style.display = "block";
-        
-        console.log("✅ Policy loaded:", data.data.version);
+        console.log("✅ Terms version loaded:", data.data.version);
         
       } catch (err) {
-        console.warn("⚠️ Failed to load policy from API, showing fallback:", err);
-        
-        // ✅ Show fallback static content
-        policyContent.style.display = "none";
-        fallbackContent.style.display = "block";
-        
-        // ✅ Show error notice
-        if (policyMeta) {
-          policyMeta.innerHTML = `<span class="policy-error">⚠️ Using cached policy content. <a href="#" onclick="location.reload()">Refresh</a> to try again.</span>`;
-        }
+        // ✅ Silently fail - fallback content is already visible
+        console.log("ℹ️ Using default terms content");
       }
     }
 
@@ -340,20 +405,23 @@
   })();
 </script>
 
-<!-- ✅ Smart back button: return to referring page or fallback to index.html -->
+<!-- ✅ SMART BACK BUTTON: Returns to referring page (same origin) or fallback to index.html -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const backLink = document.getElementById('backLink');
-    const referrer = document.referrer;
+    if (!backLink) return;
     
-    // Determine where to go back to
+    const referrer = document.referrer;
+    const currentOrigin = window.location.origin;
+    
+    // Determine back URL: use referrer only if from same origin
     let backUrl = 'index.html'; // Default fallback
     
     if (referrer) {
       try {
         const referrerUrl = new URL(referrer);
         // Only use referrer if it's from our domain (security)
-        if (referrerUrl.origin === window.location.origin) {
+        if (referrerUrl.origin === currentOrigin) {
           backUrl = referrer;
         }
       } catch (e) {
@@ -362,13 +430,23 @@
       }
     }
     
-    // Set the link href and click handler
-    if (backLink) {
-      backLink.href = backUrl;
-      backLink.onclick = (e) => {
-        e.preventDefault();
-        window.location.href = backUrl;
-      };
+    // Set the link and click handler
+    backLink.href = backUrl;
+    backLink.onclick = (e) => {
+      e.preventDefault();
+      window.location.href = backUrl;
+    };
+    
+    // Optional: Update link text to show where it goes
+    if (backUrl !== 'index.html') {
+      try {
+        const backPage = new URL(backUrl).pathname.split('/').pop().replace('.html', '');
+        if (backPage && backPage !== 'index') {
+          backLink.textContent = `← Back to ${backPage.charAt(0).toUpperCase() + backPage.slice(1)}`;
+        }
+      } catch (e) {
+        // Keep default text if parsing fails
+      }
     }
   });
 </script>
