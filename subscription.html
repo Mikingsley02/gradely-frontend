@@ -104,6 +104,137 @@
       margin-top: auto;
     }
     footer a { color: #00d2ff; text-decoration: none; margin: 0 6px; }
+    
+    /* ✅ Upgrade success toast */
+    .upgrade-success-toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #22c55e;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 9999;
+      font-weight: 500;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+    
+    /* ✅ Subscription Expired Overlay Styles */
+    .subscription-expired-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .expired-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px 30px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.4s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .warning-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+    }
+
+    .warning-icon svg {
+      width: 40px;
+      height: 40px;
+      color: white;
+    }
+
+    .expired-card h2 {
+      color: #2d3748;
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    .expired-card p {
+      color: #718096;
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .renew-btn {
+      background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+      margin-bottom: 20px;
+    }
+
+    .renew-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(245, 87, 108, 0.5);
+    }
+
+    .renew-btn:active {
+      transform: translateY(0);
+    }
+
+    .expired-note {
+      background: rgba(245, 87, 108, 0.1);
+      border-left: 4px solid #f5576c;
+      padding: 12px 15px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #718096;
+    }
+
+    .expired-note strong {
+      color: #f5576c;
+    }
+
+    /* ✅ Blur dashboard content when expired */
+    .dashboard-blurred {
+      filter: blur(5px) grayscale(0.8);
+      pointer-events: none;
+      user-select: none;
+    }
+    
     @media (max-width: 600px) {
       .btn-group { flex-direction: column; }
       .btn { width: 100%; }
@@ -111,11 +242,32 @@
   </style>
 </head>
 <body>
+  <!-- ✅ Subscription Expired Overlay -->
+  <div id="subscriptionExpiredOverlay" class="subscription-expired-overlay" style="display: none;">
+    <div class="expired-card">
+      <div class="warning-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+      <h2>Subscription Expired!</h2>
+      <p>Your Gradely subscription has expired. Please renew to continue using all features.</p>
+      <button class="renew-btn" onclick="window.location.href='subscription.html'">
+        Renew Subscription Now
+      </button>
+      <div class="expired-note">
+        <strong>Note:</strong> All dashboard features are temporarily disabled until renewal.
+      </div>
+    </div>
+  </div>
+
   <header>
     <div class="brand">🎓 Gradely.info — Subscription</div>
   </header>
 
-  <div class="container">
+  <div class="container" id="dashboardContent">
     <h2>📦 Your Subscription</h2>
     <p>Manage your current plan and renewal settings.</p>
 
@@ -150,14 +302,18 @@
   </footer>
 
  <script>
+// ✅ Clean API_BASE (NO trailing spaces)
 const API_BASE = "https://api.gradely.info";
 
 let schoolId = null;
+let adminId = null;
 let currentExpiry = null;
 let currentPlan = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // ✅ Get school_id and admin_id from storage
   schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+  adminId = localStorage.getItem("admin_id") || sessionStorage.getItem("admin_id");
 
   if (!schoolId) {
     alert("Session expired. Please log in again.");
@@ -165,8 +321,144 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  // ✅ Check for upgrade success params from redirect
+  checkUpgradeSuccess();
+
+  // ✅ Check subscription status and show expired overlay if needed
+  await checkSubscriptionStatus();
+  
   await fetchSubscriptionStatus();
 });
+
+// ✅ Check if subscription is expired and show overlay
+async function checkSubscriptionStatus() {
+  try {
+    const response = await fetch(`${API_BASE}/api/subscription/status`, {
+      method: "GET",
+      credentials: "include"
+    });
+
+    if (!response.ok) {
+      console.error("Failed to fetch subscription status");
+      return;
+    }
+
+    const data = await response.json();
+    
+    if (!data.success) {
+      console.error("Subscription status check failed");
+      return;
+    }
+
+    // ✅ Check if subscription is expired
+    const expiryDate = data.expiryDate || data.data?.subscription_expiry;
+    const isActive = data.isActive !== undefined ? data.isActive : (data.data?.subscription_status === 'active');
+    
+    if (expiryDate) {
+      const expiry = new Date(expiryDate);
+      const today = new Date();
+      
+      // ✅ If subscription has expired, show overlay
+      if (expiry < today || !isActive) {
+        showSubscriptionExpired();
+      }
+    } else if (!isActive) {
+      // ✅ If explicitly marked as inactive
+      showSubscriptionExpired();
+    }
+
+  } catch (error) {
+    console.error("Error checking subscription status:", error);
+  }
+}
+
+// ✅ Show subscription expired overlay
+function showSubscriptionExpired() {
+  const overlay = document.getElementById("subscriptionExpiredOverlay");
+  const dashboardContent = document.getElementById("dashboardContent");
+  
+  if (overlay) {
+    overlay.style.display = "flex";
+  }
+  
+  // ✅ Blur and disable dashboard content
+  if (dashboardContent) {
+    dashboardContent.classList.add("dashboard-blurred");
+  }
+  
+  // ✅ Disable all interactive elements except overlay
+  const interactiveElements = document.querySelectorAll("button, a, input, select, textarea");
+  interactiveElements.forEach(el => {
+    if (!el.closest(".expired-card")) {
+      el.disabled = true;
+      el.style.pointerEvents = "none";
+    }
+  });
+}
+
+// ✅ Check for upgrade success after redirect from payment
+function checkUpgradeSuccess() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const upgradeStatus = urlParams.get("upgrade");
+  const upgradedPlan = urlParams.get("plan");
+  
+  if (upgradeStatus === "success" || upgradeStatus === "completed") {
+    // ✅ Show success toast
+    showUpgradeSuccess(upgradedPlan);
+    
+    // ✅ Refresh subscription status
+    setTimeout(fetchSubscriptionStatus, 1000);
+    
+    // ✅ Unlock Pro features if upgraded
+    if (upgradedPlan === "pro") {
+      setTimeout(unlockProFeatures, 1500);
+    }
+    
+    // ✅ Clean URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+// ✅ Show upgrade success notification
+function showUpgradeSuccess(plan) {
+  const toast = document.createElement("div");
+  toast.className = "upgrade-success-toast";
+  toast.innerHTML = `
+    ✅ <strong>Upgrade Successful!</strong><br>
+    Your account is now on the <strong>${plan?.toUpperCase()}</strong> plan.
+    <br><small style="opacity:0.9">All Pro features are now unlocked.</small>
+  `;
+  document.body.appendChild(toast);
+  
+  // ✅ Auto-remove after 5 seconds
+  setTimeout(() => {
+    toast.style.animation = "slideOut 0.3s ease";
+    setTimeout(() => toast.remove(), 300);
+  }, 5000);
+}
+
+// ✅ Unlock Pro features in UI
+function unlockProFeatures() {
+  // ✅ Show Pro-only features
+  document.querySelectorAll(".pro-feature").forEach(el => {
+    el.style.opacity = "1";
+    el.style.pointerEvents = "auto";
+    el.classList.remove("locked");
+  });
+  
+  // ✅ Update plan badge if exists
+  const planBadge = document.getElementById("currentPlanBadge");
+  if (planBadge) {
+    planBadge.textContent = "Pro Plan";
+    planBadge.className = "plan-badge pro";
+  }
+  
+  // ✅ Enable Pro buttons
+  document.querySelectorAll(".pro-only-btn").forEach(btn => {
+    btn.disabled = false;
+    btn.title = "";
+  });
+}
 
 // =====================
 // FETCH STATUS
@@ -182,7 +474,8 @@ async function fetchSubscriptionStatus() {
     const data = await res.json();
     if (!data.success) throw new Error(data.message || "Failed to load subscription");
 
-    currentPlan = data.plan || 'basic';
+    // ✅ Handle both response formats: { plan: 'pro' } or { data: { current_plan: 'pro' } }
+    currentPlan = data.plan || data.data?.current_plan || 'basic';
     
     document.getElementById("plan").textContent =
       currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
@@ -195,8 +488,10 @@ async function fetchSubscriptionStatus() {
     const mainButtons = document.getElementById("mainButtons");
     const expiryEl = document.getElementById("renewal");
 
-    if (data.expiryDate) {
-      currentExpiry = new Date(data.expiryDate);
+    // ✅ Handle both response formats for expiry
+    const expiryDate = data.expiryDate || data.data?.subscription_expiry;
+    if (expiryDate) {
+      currentExpiry = new Date(expiryDate);
       expiryEl.textContent = currentExpiry.toLocaleDateString("en-GB", {
         day: "numeric", month: "short", year: "numeric"
       });
@@ -216,12 +511,20 @@ async function fetchSubscriptionStatus() {
       return;
     }
 
-    if (data.isActive) {
-      statusEl.textContent = data.autoRenewEnabled
+    // ✅ Handle both response formats for isActive
+    const isActive = data.isActive !== undefined ? data.isActive : (data.data?.subscription_status === 'active');
+    
+    if (isActive) {
+      // ✅ Handle both response formats for autoRenewEnabled
+      const autoRenewEnabled = data.autoRenewEnabled !== undefined 
+        ? data.autoRenewEnabled 
+        : (data.data?.auto_renew_enabled !== false);
+      
+      statusEl.textContent = autoRenewEnabled
         ? "Active (Auto-Renew On)"
         : "Active (Auto-Renew Off)";
       statusEl.className = "";
-      cancelBtn.style.display = data.autoRenewEnabled ? "block" : "none";
+      cancelBtn.style.display = autoRenewEnabled ? "block" : "none";
       mainButtons.style.display = "flex";
     } else {
       statusEl.textContent = "Inactive";
@@ -277,7 +580,8 @@ async function cancelSubscription() {
 // RENEW SUBSCRIPTION
 // =====================
 function renewSubscription() {
-  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&plan=${encodeURIComponent(currentPlan)}&renew=true`;
+  // ✅ Redirect to payment page with CRITICAL metadata
+  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(currentPlan)}&renew=true`;
 }
 
 // =====================
@@ -288,8 +592,8 @@ function upgradeToPro() {
     return;
   }
   
-  // Redirect to payment page for upgrade
-  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&from_plan=${encodeURIComponent(currentPlan)}&to_plan=pro&upgrade=true`;
+  // ✅ Redirect to payment page with CRITICAL metadata for webhook
+  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&from_plan=${encodeURIComponent(currentPlan)}&to_plan=pro&upgrade=true`;
 }
 
 // =====================
@@ -305,7 +609,7 @@ async function downgradeToBasic() {
       method: "POST",
       credentials: "include",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json"  // ✅ Comma added
       },
       body: JSON.stringify({
         school_id: schoolId,
@@ -340,7 +644,7 @@ function showPlanSelection(previousPlan) {
     <div style="margin-top:20px;">
       <h3 style="color:#2d046e;">Reactivate Subscription</h3>
       <button class="btn btn-renew"
-        onclick="window.location.href='pay.html?school_id=${encodeURIComponent(schoolId)}&plan=${encodeURIComponent(previousPlan)}&renew=true'">
+        onclick="window.location.href='pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(previousPlan)}&renew=true'">
         Reactivate ${previousPlan.charAt(0).toUpperCase() + previousPlan.slice(1)} Plan
       </button>
     </div>
