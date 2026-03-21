@@ -228,38 +228,45 @@
   document.addEventListener("DOMContentLoaded", () => {
     
     // ===============================
-    // ✅ Auto-select plan from URL parameter (e.g., ?plan=pro)
+    // ✅ CONSOLIDATED: Auto-select plan from URL param OR sessionStorage
     // ===============================
     const urlParams = new URLSearchParams(window.location.search);
     const planFromUrl = urlParams.get('plan');
+    const planFromSession = sessionStorage.getItem('selected_plan');
     
-    if (planFromUrl && (planFromUrl === 'basic' || planFromUrl === 'pro')) {
-      const planInput = document.querySelector(`input[name="plan"][value="${planFromUrl}"]`);
-      if (planInput) {
-        planInput.checked = true;
-        document.querySelectorAll('.plan-card').forEach(card => {
-          card.style.borderColor = 'transparent';
-          card.style.boxShadow = 'none';
-        });
-        const selectedCard = document.querySelector(`.plan-card.${planFromUrl}`);
-        if (selectedCard) {
-          selectedCard.style.borderColor = planFromUrl === 'pro' ? 'rgba(255, 215, 0, 0.8)' : 'rgba(0, 230, 118, 0.8)';
-          selectedCard.style.boxShadow = `0 0 25px ${planFromUrl === 'pro' ? 'rgba(255, 215, 0, 0.4)' : 'rgba(0, 230, 118, 0.35)'}`;
-        }
-      }
-    }
-
-    // ===============================
-    // ✅ Show plan status if user came from plan-comparison page
-    // ===============================
-    const selectedPlan = sessionStorage.getItem("selected_plan");
+    // ✅ Determine which plan to use (URL param takes priority, then sessionStorage)
+    const selectedPlan = planFromUrl || planFromSession;
+    
     const planInput = document.getElementById("plan");
     const planStatus = document.getElementById("planStatus");
-
-    if (selectedPlan && planInput && planStatus) {
-      planInput.value = selectedPlan;
-      planStatus.textContent = `✅ ${selectedPlan.toUpperCase()} plan selected`;
-      planStatus.style.display = "block";
+    
+    // ✅ Set plan value and show status if plan is selected
+    if (selectedPlan && (selectedPlan === 'basic' || selectedPlan === 'pro')) {
+      // ✅ Set hidden input value
+      if (planInput) {
+        planInput.value = selectedPlan;
+      }
+      
+      // ✅ Show visual feedback
+      if (planStatus) {
+        planStatus.textContent = `✅ ${selectedPlan.toUpperCase()} plan selected`;
+        planStatus.style.display = "block";
+        planStatus.style.color = selectedPlan === 'pro' ? '#ffd700' : '#00e676';
+      }
+      
+      // ✅ Optional: Update "Select Plan" button text to show current selection
+      const selectPlanBtn = document.getElementById("selectPlanBtn");
+      if (selectPlanBtn) {
+        selectPlanBtn.textContent = `✓ ${selectedPlan.toUpperCase()} Selected — Change Plan`;
+        selectPlanBtn.style.background = selectedPlan === 'pro' 
+          ? 'linear-gradient(120deg, #ffd700, #ffaa00)' 
+          : 'linear-gradient(120deg, #00e676, #00c853)';
+      }
+      
+      // ✅ Clear sessionStorage after using (prevents stale data on refresh)
+      if (planFromSession) {
+        sessionStorage.removeItem('selected_plan');
+      }
     }
 
     // ===============================
@@ -287,7 +294,7 @@
     if (schoolForm) {
       schoolForm.addEventListener("submit", (e) => {
         e.preventDefault();
-        handleRegistration();  // ✅ Only one mode now: with payment
+        handleRegistration();
       });
     }
 
@@ -297,9 +304,36 @@
     const selectPlanBtn = document.getElementById("selectPlanBtn");
     if (selectPlanBtn) {
       selectPlanBtn.addEventListener("click", () => {
-        sessionStorage.setItem('plan_return_url', location.href);
-        window.location.href = 'plan-comparison.html';
+        // ✅ Save current form data so user doesn't lose it when going to plan selection
+        sessionStorage.setItem('register_form_data', JSON.stringify({
+          schoolName: document.getElementById('schoolName')?.value,
+          adminId: document.getElementById('adminNumber')?.value,
+          email: document.getElementById('email')?.value,
+          phone: document.getElementById('phone')?.value
+        }));
+        
+        // ✅ Redirect to plan comparison with new=true flag
+        window.location.href = 'plan-comparison.html?new=true';
       });
+    }
+    
+    // ===============================
+    // ✅ Restore form data if user returns from plan selection
+    // ===============================
+    const formData = sessionStorage.getItem('register_form_data');
+    if (formData) {
+      try {
+        const data = JSON.parse(formData);
+        if (data.schoolName) document.getElementById('schoolName').value = data.schoolName;
+        if (data.adminId) document.getElementById('adminNumber').value = data.adminId;
+        if (data.email) document.getElementById('email').value = data.email;
+        if (data.phone) document.getElementById('phone').value = data.phone;
+        
+        // ✅ Clear after restoring (one-time use)
+        sessionStorage.removeItem('register_form_data');
+      } catch (e) {
+        console.warn("⚠️ Could not restore form data:", e);
+      }
     }
 
   }); // ✅ End of DOMContentLoaded
@@ -386,9 +420,10 @@
         // Clean up session storage
         sessionStorage.removeItem("selected_plan");
         sessionStorage.removeItem("plan_return_url");
+        sessionStorage.removeItem("register_form_data");
 
-        // Redirect to payment page (payment now required)
-        window.location.href = `pay.html?admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}`;
+        // ✅ Redirect to payment page with ALL required params
+        window.location.href = `pay.html?school_id=${encodeURIComponent(result.school_id)}&admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}&new=true`;
       } else {
         alert("⚠️ " + (result.message || "Registration failed."));
         resetSubmitBtn();
