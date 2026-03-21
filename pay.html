@@ -253,13 +253,11 @@
     </div>
   </div>
 
-  <!-- ✅ FIXED: Clean script src (no trailing spaces) -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
 
   <script>
     console.log("=== PAY.HTML INIT ===");
-
-    // ✅ FIXED: Clean API_BASE (NO trailing spaces)
+    
     const API_BASE = "https://api.gradely.info";
 
     const params = new URLSearchParams(window.location.search);
@@ -366,9 +364,9 @@
         const response = await fetch(`${API_BASE}/api/subscription/upgrade`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'  // ✅ Comma added here
+            'Content-Type': 'application/json'
           },
-          credentials: 'include',  // ✅ CRITICAL: sends session cookie
+          credentials: 'include',
           body: JSON.stringify({ 
             plan: plan,
             school_id: school_id
@@ -458,9 +456,9 @@
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'  // ✅ Comma added here
+            'Content-Type': 'application/json'
           },
-          credentials: 'include',  // ✅ Send session cookie
+          credentials: 'include',
           body: JSON.stringify({
             school_id: school_id,
             payment_reference: reference,
