@@ -492,56 +492,71 @@
   </div>
 
   <script>
-  document.addEventListener('DOMContentLoaded', () => {
+  // ✅ CHECK FLOW TYPE: New registration vs Reactivation vs Existing user upgrade
+const urlParams = new URLSearchParams(window.location.search);
+const isReactivate = urlParams.get('reactivate') === 'true';
+const isNewRegistration = urlParams.get('new') === 'true' || !urlParams.get('reactivate');
 
-    // Save referrer as fallback
-    if (!sessionStorage.getItem('plan_return_url') && document.referrer) {
-      try {
-        const referrerUrl = new URL(document.referrer);
-        if (referrerUrl.origin === window.location.origin) {
-          sessionStorage.setItem('plan_return_url', document.referrer);
-        }
-      } catch (e) {}
-    }
+// ✅ Get school/admin IDs (for reactivation flow)
+const schoolId = urlParams.get('school_id') || localStorage.getItem('school_id');
+const adminId = urlParams.get('admin_id') || localStorage.getItem('admin_id');
 
-    // Card animation
-    document.querySelectorAll('.plan-card').forEach((card, index) => {
-      card.style.opacity = '0';
-      card.style.transform = 'translateY(20px)';
-      setTimeout(() => {
-        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-        card.style.opacity = '1';
-        card.style.transform = 'translateY(0)';
-      }, 300 + (index * 150));
-    });
-  });
-
-
-  async function selectPlan(plan) {
-  // ✅ Save selected plan for registration page
-  sessionStorage.setItem('selected_plan', plan);
-
-  const token = localStorage.getItem('token');
-  
-  // ✅ NEW USER FLOW: If not logged in, check if they're in registration flow
-  if (!token) {
-    const referrer = document.referrer;
-    const isRegistrationFlow = referrer.includes('register-school.html') || 
-                               referrer.includes('register') ||
-                               window.location.search.includes('new=true');
-    
-    if (isRegistrationFlow) {
-      // ✅ Redirect to registration with plan pre-selected
-      window.location.href = `register-school.html?plan=${plan}`;
-      return;
-    } else {
-      // ✅ Not in registration flow → redirect to login
-      window.location.href = `admin-login.html?redirect=plan-comparison.html&plan=${plan}`;
-      return;
-    }
+document.addEventListener('DOMContentLoaded', () => {
+  // Save referrer as fallback for back button
+  if (!sessionStorage.getItem('plan_return_url') && document.referrer) {
+    try {
+      const referrerUrl = new URL(document.referrer);
+      if (referrerUrl.origin === window.location.origin) {
+        sessionStorage.setItem('plan_return_url', document.referrer);
+      }
+    } catch (e) {}
   }
 
-  // ✅ EXISTING USER FLOW: Logged in → proceed with subscription change
+  // Card animation (preserved from your original)
+  document.querySelectorAll('.plan-card').forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    setTimeout(() => {
+      card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, 300 + (index * 150));
+  });
+});
+
+// ✅ MAIN PLAN SELECTION HANDLER — Routes based on flow type
+async function selectPlan(plan) {
+  // 🔄 REACTIVATION FLOW: School exists, go directly to payment
+  if (isReactivate) {
+    if (!schoolId || !adminId) {
+      alert("⚠️ Session expired. Please log in again.");
+      window.location.href = "admin-login.html";
+      return;
+    }
+    // ✅ Redirect to payment with all required params
+    window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(plan)}&reactivate=true`;
+    return;
+  }
+  
+  // 🆕 NEW REGISTRATION FLOW: School doesn't exist yet, go to registration form
+  if (isNewRegistration) {
+    // ✅ Save selected plan for registration page to use
+    sessionStorage.setItem('selected_plan', plan);
+    // ✅ Redirect to registration form with plan prefilled
+    window.location.href = `register-school.html?plan=${encodeURIComponent(plan)}&new=true`;
+    return;
+  }
+  
+  // 👤 EXISTING USER FLOW: Logged in → proceed with subscription change
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  
+  if (!token) {
+    // Not logged in and not in registration/reactivation flow → redirect to login
+    window.location.href = `admin-login.html?redirect=plan-comparison.html&plan=${encodeURIComponent(plan)}`;
+    return;
+  }
+
+  // ✅ Existing logged-in user changing plan
   try {
     if (plan === 'pro') {
       // 🚀 UPGRADE TO PRO
@@ -556,7 +571,7 @@
 
       const data = await response.json();
       if (!data.success) {
-        alert(data.message);
+        alert(data.message || "Upgrade failed");
         return;
       }
 
@@ -579,7 +594,7 @@
 
       const data = await response.json();
       if (!data.success) {
-        alert(data.message);
+        alert(data.message || "Downgrade failed");
         return;
       }
 
@@ -587,28 +602,27 @@
       redirectBack();
     }
   } catch (error) {
-    console.error(error);
-    alert("Something went wrong.");
+    console.error("❌ Plan selection error:", error);
+    alert("Something went wrong. Please try again.");
   }
 }
 
+// ✅ Back button handler
+function redirectBack() {
+  const returnTo = sessionStorage.getItem('plan_return_url');
+  sessionStorage.removeItem('plan_return_url');
 
-  function redirectBack() {
-    const returnTo = sessionStorage.getItem('plan_return_url');
-    sessionStorage.removeItem('plan_return_url');
-
-    if (returnTo) {
-      window.location.href = returnTo;
-    } else {
-      window.history.back();
-    }
+  if (returnTo) {
+    window.location.href = returnTo;
+  } else {
+    window.history.back();
   }
+}
 
-
-  // ESC support
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') window.history.back();
-  });
+// ✅ ESC key support
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') window.history.back();
+});
 </script>
 
 <script src="js/kaima-chatbot.js"></script>
