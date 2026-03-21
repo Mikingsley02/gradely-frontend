@@ -305,7 +305,7 @@ async function fetchSubscriptionStatus() {
       statusEl.textContent = "Expired";
       statusEl.className = "error";
       mainButtons.style.display = "none";
-      showPlanSelection(currentPlan);
+      showPlanSelection(); // ✅ FIXED: Go to plan selection, not direct payment
       return;
     }
 
@@ -375,10 +375,10 @@ async function cancelSubscription() {
 }
 
 // =====================
-// RENEW SUBSCRIPTION
+// RENEW SUBSCRIPTION (Active subscription, not expired)
 // =====================
 function renewSubscription() {
-  // ✅ Redirect to payment page with CRITICAL metadata
+  // ✅ Redirect to payment page with CRITICAL metadata for same-plan renewal
   window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(currentPlan)}&renew=true`;
 }
 
@@ -434,19 +434,29 @@ async function downgradeToBasic() {
 }
 
 // =====================
-// SHOW PLAN SELECTION (EXPIRED)
+// SHOW PLAN SELECTION (EXPIRED SUBSCRIPTION) - ✅ FIXED
 // =====================
-function showPlanSelection(previousPlan) {
+function showPlanSelection() {
   const container = document.querySelector(".container");
+  
+  // ✅ Create plan selection UI that goes to plan-comparison.html first
   const html = `
-    <div style="margin-top:20px;">
-      <h3 style="color:#2d046e;">Reactivate Subscription</h3>
-      <button class="btn btn-renew"
-        onclick="window.location.href='pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(previousPlan)}&renew=true'">
-        Reactivate ${previousPlan.charAt(0).toUpperCase() + previousPlan.slice(1)} Plan
+    <div style="margin-top:20px; padding: 20px; background: rgba(0, 230, 118, 0.1); border-radius: 12px; border: 2px dashed #00e676;">
+      <h3 style="color:#2d046e; margin-bottom: 15px;">🔄 Reactivate Subscription</h3>
+      <p style="margin-bottom: 20px; color: #555;">
+        Your subscription has expired. Choose a plan to continue:
+      </p>
+      <button class="btn btn-upgrade" 
+        onclick="window.location.href='plan-comparison.html?reactivate=true&school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}'"
+        style="width: 100%; margin-bottom: 10px; background: linear-gradient(135deg, #6a11cb, #2575fc); color: white;">
+        ✨ Choose Your Plan
       </button>
+      <p style="font-size: 0.85rem; color: #777; margin-top: 15px;">
+        <strong>Tip:</strong> You can upgrade to Pro or stay on Basic — your choice!
+      </p>
     </div>
   `;
+  
   container.insertAdjacentHTML("beforeend", html);
 }
 </script>
