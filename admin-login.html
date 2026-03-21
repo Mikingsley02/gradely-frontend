@@ -235,10 +235,8 @@
 
     /* Footer Styling */
     footer {
-      
       font-size: 0.85rem;
       color: #f4eeee;
-      
       text-align: center;
       width: 100%;
       max-width: 450px; /* ✅ Match container width */
@@ -381,7 +379,7 @@
       spinner.style.display = "block";
 
     
-      // ✅ FIXED: Clean API_BASE
+      // ✅ FIXED: Clean API_BASE (NO trailing spaces)
       const API_BASE = window.location.hostname.includes("localhost")
         ? "http://localhost:5000"
         : "https://api.gradely.info";
@@ -402,13 +400,16 @@
         }
 
         if (data.success) {
+          // ✅ CRITICAL FIX: Save email to localStorage for pay.html to use
+          const email = data.admin.email || document.getElementById("adminId").value + "@gradely.info";
+          localStorage.setItem("email", email);
           
           // ✅ Session-only: store only essential session data (no tokens)
           localStorage.setItem("adminId", data.admin.admin_id);
-          localStorage.setItem("school_id", data.admin.admin_id);
+          localStorage.setItem("school_id", data.admin.school_id || data.admin.admin_id);
           localStorage.setItem("school_name", data.admin.school_name || "");
           localStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
-       
+          localStorage.setItem("admin_email", email); // ✅ Also save as admin_email for redundancy
 
           // ✅ Auto-redirect to dashboard (no alert delay)
           window.location.href = "dashboard.html";
