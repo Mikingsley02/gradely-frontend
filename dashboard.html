@@ -47,7 +47,7 @@
 
     .plan-badge.basic { background: #ffcc00; color: #000; }
     .plan-badge.pro { background: #00e676; color: #000; }
-    .plan-badge.expired { background: #ff5252; color: #fff; animation: pulse 2s infinite; }
+    .plan-badge.expired { background: #ef4444; color: #fff; animation: pulse 2s infinite; }
     .plan-badge.suspended { background: #9e9e9e; color: #fff; animation: pulse 2s infinite; }
 
     @keyframes pulse {
@@ -165,14 +165,14 @@
       opacity: 0.8;
     }
 
-    /* ✅ Subscription Expired/Cancelled Overlay - CORRECT DESIGN */
+    /* ✅ Subscription Expired/Cancelled Overlay - ERROR RED DESIGN */
     .subscription-overlay {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       display: none;
       justify-content: center;
       align-items: center;
@@ -211,12 +211,12 @@
       width: 80px;
       height: 80px;
       margin: 0 auto 20px;
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
     }
 
     .warning-icon svg {
@@ -240,7 +240,7 @@
     }
 
     .renew-btn {
-      background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       color: white;
       border: none;
       padding: 16px 40px;
@@ -249,13 +249,13 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
-      box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
       margin-bottom: 20px;
     }
 
     .renew-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(245, 87, 108, 0.5);
+      box-shadow: 0 12px 30px rgba(239, 68, 68, 0.5);
     }
 
     .renew-btn:active {
@@ -263,8 +263,8 @@
     }
 
     .expired-note {
-      background: rgba(245, 87, 108, 0.1);
-      border-left: 4px solid #f5576c;
+      background: rgba(239, 68, 68, 0.1);
+      border-left: 4px solid #ef4444;
       padding: 12px 15px;
       border-radius: 8px;
       font-size: 0.9rem;
@@ -272,7 +272,7 @@
     }
 
     .expired-note strong {
-      color: #f5576c;
+      color: #ef4444;
     }
 
     /* ✅ Blur dashboard when overlay is active */
@@ -413,7 +413,7 @@
     <button class="logout-btn" id="logoutBtn">Logout</button>
   </header>
 
-  <!-- ✅ Subscription Expired/Cancelled Overlay - CORRECT DESIGN -->
+  <!-- ✅ Subscription Expired/Cancelled Overlay - ERROR RED DESIGN -->
   <div class="subscription-overlay" id="subscriptionOverlay">
     <div class="expired-card">
       <div class="warning-icon">
