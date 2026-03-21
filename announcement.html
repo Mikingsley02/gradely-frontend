@@ -76,12 +76,8 @@ button:hover { background: #2980b9; }
 </div>
 
 <script>
+// ✅ FIXED: Clean API_BASE (NO trailing spaces)
 const API_BASE = "https://api.gradely.info";
-
-/* 🔑 JWT TOKEN HELPER */
-function getToken() {
-  return localStorage.getItem("admin_token");
-}
 
 /* ✅ CACHE ELEMENTS */
 const titleInput   = document.getElementById("title");
@@ -90,24 +86,32 @@ const sms          = document.getElementById("send_sms");
 const email        = document.getElementById("send_email");
 const list         = document.getElementById("announcementsList");
 
+/* ✅ Check if user is logged in (via session, not token) */
+function isLoggedIn() {
+  // ✅ Check for school_id in localStorage (set during login)
+  return !!(localStorage.getItem("school_id") || sessionStorage.getItem("school_id"));
+}
 
-window.addEventListener("DOMContentLoaded", loadAnnouncements);
-
+window.addEventListener("DOMContentLoaded", () => {
+  // ✅ Check login status before loading
+  if (!isLoggedIn()) {
+    list.innerHTML = "<p style='text-align:center; color:#e74c3c;'>Unauthorized. Please <a href='admin-login.html'>log in</a> again.</p>";
+    return;
+  }
+  
+  loadAnnouncements();
+});
 
 /* ===============================
    LOAD ANNOUNCEMENTS
 ================================ */
 async function loadAnnouncements() {
-  const token = getToken();
-  if (!token) {
-    list.innerHTML = "<p style='text-align:center; color:#e74c3c;'>Unauthorized. Please log in again.</p>";
-    return;
-  }
-
+  // ✅ Removed getToken() check - backend uses session cookies, not JWT
+  
   try {
     const res = await fetch(`${API_BASE}/api/announcement`, {
       method: "GET",
-      credentials: "include"
+      credentials: "include"  // ✅ Sends session cookie
     });
 
     if (res.status === 401) {
@@ -115,7 +119,11 @@ async function loadAnnouncements() {
       return;
     }
 
-    if (!res.ok) throw new Error("Failed to fetch announcements");
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("❌ Failed to fetch announcements:", res.status, errorText.substring(0, 200));
+      throw new Error(`HTTP ${res.status}`);
+    }
 
     const data = await res.json();
     list.innerHTML = "";
@@ -149,17 +157,12 @@ async function loadAnnouncements() {
   }
 }
 
-
 /* ===============================
    POST ANNOUNCEMENTS
 ================================ */
 async function postAnnouncement() {
-  const token = getToken();
-  if (!token) {
-    alert("Session expired. Please log in again.");
-    return;
-  }
-
+  // ✅ Removed getToken() check - backend uses session cookies, not JWT
+  
   const title = titleInput.value.trim();
   const message = messageInput.value.trim();
   const send_sms = sms.checked;
@@ -177,24 +180,30 @@ async function postAnnouncement() {
 
   try {
     const res = await fetch(`${API_BASE}/api/announcement`, {
-  method: "POST",
-  credentials: "include",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({ title, message, send_sms, send_email })
-});
+      method: "POST",
+      credentials: "include",  // ✅ Sends session cookie
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ title, message, send_sms, send_email })
+    });
 
     if (res.status === 401) {
       alert("Unauthorized. Please log in again.");
       return;
     }
 
-    if (!res.ok) throw new Error("Failed to post announcement");
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("❌ Failed to post announcement:", res.status, errorText.substring(0, 200));
+      throw new Error(`HTTP ${res.status}`);
+    }
 
+    // ✅ Clear form and reload
     titleInput.value = "";
     messageInput.value = "";
     loadAnnouncements();
+    
   } catch (err) {
     console.error("Failed to post announcement:", err);
     alert("Failed to post announcement. Check console for details.");
