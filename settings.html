@@ -193,24 +193,22 @@
   </div>
 
 <script>
+// ✅ FIXED: Clean API_BASE (NO trailing spaces)
 const API_BASE = window.location.hostname.includes("localhost")
   ? "http://localhost:5000"
   : "https://api.gradely.info";
 
+// ✅ Check if user is logged in (via session, not token)
+function isLoggedIn() {
+  // ✅ Check for school_id in localStorage (set during login)
+  return !!(localStorage.getItem("school_id") || sessionStorage.getItem("school_id"));
+}
 
-// ✅ Check localStorage first (persistent), fallback to sessionStorage
-const adminId = localStorage.getItem("adminId") || sessionStorage.getItem("adminId");
-const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
-
-if (!adminId || !schoolId) {
+// ✅ Early redirect if not logged in
+if (!isLoggedIn()) {
   alert("⚠️ You are not logged in!");
   window.location.href = "admin-login.html";
 }
-
-// Optional: sync to sessionStorage for compatibility
-sessionStorage.setItem("adminId", adminId);
-sessionStorage.setItem("school_id", schoolId);
-
 
 document.addEventListener("DOMContentLoaded", loadSchoolData);
 
@@ -219,28 +217,31 @@ async function loadSchoolData() {
   msgEl.textContent = "⏳ Loading settings...";
   msgEl.className = "message";
 
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("⚠️ Session expired. Please log in again.");
-    window.location.href = "admin-login.html";
-    return;
-  }
-
+  // ✅ Removed token check - backend uses session cookies, not JWT
+  
   try {
     const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
-  method: "GET",
-  credentials: "include"
-});
+      method: "GET",
+      credentials: "include"  // ✅ Sends session cookie
+    });
+
+    if (res.status === 401) {
+      alert("⚠️ Session expired. Please log in again.");
+      window.location.href = "admin-login.html";
+      return;
+    }
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("❌ Failed to load settings:", res.status, errorText.substring(0, 200));
+      throw new Error(`HTTP ${res.status}`);
+    }
 
     const data = await res.json();
 
-    if (!res.ok) {
-      throw new Error(data.message || "Failed to load settings");
-    }
-
-    document.getElementById("school_name").value = data.school.school_name || "";
-    document.getElementById("email").value = data.school.email || "";
-    document.getElementById("phone_number").value = data.school.phone_number || "";
+    document.getElementById("school_name").value = data.school?.school_name || "";
+    document.getElementById("email").value = data.school?.email || "";
+    document.getElementById("phone_number").value = data.school?.phone_number || "";
 
     msgEl.textContent = "";
   } catch (err) {
@@ -257,22 +258,25 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   msgEl.className = "message";
   msgEl.textContent = "⏳ Saving changes...";
 
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("⚠️ Session expired. Please log in again.");
-    window.location.href = "admin-login.html";
-    return;
-  }
+  // ✅ Removed token check - backend uses session cookies, not JWT
 
   const payload = {};
 
-  if (school_name.value.trim()) payload.school_name = school_name.value.trim();
-  if (email.value.trim()) payload.email = email.value.trim();
-  if (phone_number.value.trim()) payload.phone_number = phone_number.value.trim();
+  // ✅ Fixed: Use document.getElementById() for form fields
+  const schoolNameEl = document.getElementById("school_name");
+  const emailEl = document.getElementById("email");
+  const phoneEl = document.getElementById("phone_number");
+  const currentPasswordEl = document.getElementById("current_password");
+  const newPasswordEl = document.getElementById("new_password");
+  const confirmPasswordEl = document.getElementById("confirm_new_password");
 
-  const currentPassword = current_password.value.trim();
-  const newPassword = new_password.value.trim();
-  const confirmPassword = confirm_new_password.value.trim();
+  if (schoolNameEl.value.trim()) payload.school_name = schoolNameEl.value.trim();
+  if (emailEl.value.trim()) payload.email = emailEl.value.trim();
+  if (phoneEl.value.trim()) payload.phone_number = phoneEl.value.trim();
+
+  const currentPassword = currentPasswordEl.value.trim();
+  const newPassword = newPasswordEl.value.trim();
+  const confirmPassword = confirmPasswordEl.value.trim();
 
   if (currentPassword || newPassword || confirmPassword) {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -292,26 +296,35 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
 
   try {
     const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
-  method: "PUT",
-  credentials: "include",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(data)
-});
+      method: "PUT",
+      credentials: "include",  // ✅ Sends session cookie
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)  // ✅ Fixed: was JSON.stringify(data)
+    });
 
-    const data = await res.json();
+    if (res.status === 401) {
+      alert("⚠️ Session expired. Please log in again.");
+      window.location.href = "admin-login.html";
+      return;
+    }
 
     if (!res.ok) {
-      throw new Error(data.message || "Update failed");
+      const errorText = await res.text();
+      console.error("❌ Failed to update settings:", res.status, errorText.substring(0, 200));
+      throw new Error(`HTTP ${res.status}`);
     }
+
+    const data = await res.json();
 
     msgEl.className = "message success";
     msgEl.textContent = "✅ Settings updated successfully";
 
-    current_password.value = "";
-    new_password.value = "";
-    confirm_new_password.value = "";
+    // ✅ Clear password fields only
+    currentPasswordEl.value = "";
+    newPasswordEl.value = "";
+    confirmPasswordEl.value = "";
 
   } catch (err) {
     msgEl.className = "message error";
@@ -319,7 +332,6 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
     console.error(err);
   }
 });
-
 
 function togglePassword(fieldId, icon) {
   const input = document.getElementById(fieldId);
