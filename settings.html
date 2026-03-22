@@ -301,7 +301,7 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(payload)  // ✅ Fixed: was JSON.stringify(data)
+      body: JSON.stringify(payload)
     });
 
     if (res.status === 401) {
