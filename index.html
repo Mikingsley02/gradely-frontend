@@ -160,22 +160,24 @@
     // ✅ FUNCTION: Load analytics/tracking scripts ONLY if user accepted
     function loadNonEssentialScripts() {
       if (localStorage.getItem("gradely_cookie_consent") === "accepted") {
-        // ✅ Example: Google Analytics (replace GA_MEASUREMENT_ID with your actual ID)
-        // Uncomment when you add analytics:
-        /*
+        
+        // ✅ Google Analytics 4 (YOUR ID: G-8G4E0GYWT1)
         const gaScript = document.createElement("script");
-        gaScript.src = "https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID";
+        gaScript.src = "https://www.googletagmanager.com/gtag/js?id=G-8G4E0GYWT1";
         gaScript.async = true;
         document.head.appendChild(gaScript);
         
         window.dataLayer = window.dataLayer || [];
         function gtag(){ dataLayer.push(arguments); }
         gtag('js', new Date());
-        gtag('config', 'GA_MEASUREMENT_ID');
-        */
+        gtag('config', 'G-8G4E0GYWT1', {
+          // ✅ Optional: Track user type
+          user_type: localStorage.getItem("adminId") ? 'admin' : 
+                     localStorage.getItem("school_id") ? 'school' : 'visitor'
+        });
         
-        // ✅ Add other non-essential scripts here (Facebook Pixel, Hotjar, etc.)
-        console.log("✅ Non-essential cookies accepted - analytics enabled");
+        console.log("✅ Google Analytics loaded (G-8G4E0GYWT1)");
+        
       } else {
         console.log("⚠️ Non-essential cookies rejected - analytics blocked");
       }
@@ -201,9 +203,13 @@
       overlay.style.display = "flex";
     }
 
-    // ✅ On page load: show banner if no consent, or load scripts if already accepted
+    // ✅ On page load: show banner ONLY if no consent exists
+    // ✅ This ensures banner shows on FIRST visit, not on logout
     if (!savedConsent) {
-      overlay.style.display = "flex";
+      // ✅ Only show on index.html (homepage), not on other pages
+      if (window.location.pathname === "/" || window.location.pathname.endsWith("index.html")) {
+        overlay.style.display = "flex";
+      }
     } else {
       // User already chose - load scripts if they accepted
       loadNonEssentialScripts();
