@@ -126,7 +126,7 @@
   <!-- Footer -->
   <footer>
     <div>
-      <img src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" alt="RIS Logo">
+      <img src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png  " alt="RIS Logo">
       <strong>© 2026 gradely<span class="footer-info">.info</span></strong> | Powered by RIS | All Rights Reserved
     </div>
     <div style="margin-top:10px;">
@@ -157,20 +157,56 @@
     const overlay = document.getElementById("cookieOverlay");
     const savedConsent = localStorage.getItem("gradely_cookie_consent");
 
+    // ✅ FUNCTION: Load analytics/tracking scripts ONLY if user accepted
+    function loadNonEssentialScripts() {
+      if (localStorage.getItem("gradely_cookie_consent") === "accepted") {
+        // ✅ Example: Google Analytics (replace GA_MEASUREMENT_ID with your actual ID)
+        // Uncomment when you add analytics:
+        /*
+        const gaScript = document.createElement("script");
+        gaScript.src = "https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID";
+        gaScript.async = true;
+        document.head.appendChild(gaScript);
+        
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){ dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'GA_MEASUREMENT_ID');
+        */
+        
+        // ✅ Add other non-essential scripts here (Facebook Pixel, Hotjar, etc.)
+        console.log("✅ Non-essential cookies accepted - analytics enabled");
+      } else {
+        console.log("⚠️ Non-essential cookies rejected - analytics blocked");
+      }
+    }
+
+    // ✅ Accept: Save consent + load non-essential scripts
     function acceptCookies() {
       localStorage.setItem("gradely_cookie_consent", "accepted");
       overlay.style.display = "none";
-      console.log("All cookies accepted");
+      loadNonEssentialScripts(); // ✅ Actually enable analytics now
     }
 
+    // ✅ Reject: Save consent + do NOT load non-essential scripts
     function rejectCookies() {
       localStorage.setItem("gradely_cookie_consent", "rejected");
       overlay.style.display = "none";
-      console.log("Non-essential cookies rejected");
+      // ✅ Analytics NOT loaded - essential cookies still work
     }
 
+    // ✅ Allow users to change consent later via footer link
+    function openCookieSettings() {
+      localStorage.removeItem("gradely_cookie_consent");
+      overlay.style.display = "flex";
+    }
+
+    // ✅ On page load: show banner if no consent, or load scripts if already accepted
     if (!savedConsent) {
       overlay.style.display = "flex";
+    } else {
+      // User already chose - load scripts if they accepted
+      loadNonEssentialScripts();
     }
   </script>
 
