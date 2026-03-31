@@ -497,7 +497,7 @@ let currentPlan = 'basic';
 let isSubscriptionActive = true;
 let subscriptionExpiryDate = null;
 let isAccountSuspended = false;
-let subscriptionStatus = 'active'; // 'active', 'expired', 'cancelled', 'inactive'
+let subscriptionStatus = 'active'; // 'active', 'expired', 'cancelled', 'inactive', 'suspended'
 
 document.addEventListener("DOMContentLoaded", async () => {
   const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
@@ -513,13 +513,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     sessionStorage.setItem("school_id", schoolId);
   }
 
-  // ✅ Fetch subscription status
-  const apiUrl = `/api/subscription/status?school_id=${encodeURIComponent(schoolId)}`;
+  // ✅ Fetch subscription status with cache-busting timestamp
+  const timestamp = Date.now();
+  const apiUrl = `/api/subscription/status?school_id=${encodeURIComponent(schoolId)}&t=${timestamp}`;
   console.log("📡 Fetching subscription status from:", apiUrl);
 
   try {
     const res = await fetch(apiUrl, {
-      credentials: 'include'
+      credentials: 'include',
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
     });
     
     if (!res.ok) {
@@ -536,21 +542,30 @@ document.addEventListener("DOMContentLoaded", async () => {
       currentPlan = (data.plan || data.data?.current_plan || 'basic').toLowerCase();
       
       // ✅ Get subscription status and expiry
-      subscriptionStatus = data.data?.subscription_status || data.subscription_status || 'active';
+      subscriptionStatus = (data.data?.subscription_status || data.subscription_status || 'active').toLowerCase().trim();
       subscriptionExpiryDate = data.expiryDate || data.data?.subscription_expiry || null;
       isAccountSuspended = data.isSuspended || data.data?.is_suspended || false;
       
-      // ✅ Determine if active based on status AND expiry date
-      const today = new Date();
-      const isExpired = subscriptionExpiryDate && new Date(subscriptionExpiryDate) < today;
+      // ✅ SIMPLE STATUS CHECK: subscription_status is the ONLY source of truth
+      // ✅ NO grace period, NO date fallback — just explicit status
+      let isExpired = false;
       
-      isSubscriptionActive = !isAccountSuspended && 
-                            subscriptionStatus === 'active' && 
-                            !isExpired;
+      // Check subscription_status explicitly
+      if (subscriptionStatus === 'expired' || 
+          subscriptionStatus === 'cancelled' || 
+          subscriptionStatus === 'inactive') {
+        isExpired = true;
+      }
+      
+      // That's it. No date checks. No grace period.
+      // If backend says 'active', dashboard shows active.
+      // If backend says 'expired', dashboard shows expired.
+      
+      isSubscriptionActive = !isAccountSuspended && !isExpired;
       
       console.log("✅ Plan (normalized):", currentPlan);
       console.log("✅ Subscription Status:", subscriptionStatus);
-      console.log("✅ Is Expired:", isExpired);
+      console.log("✅ Is Expired (simple check):", isExpired);
       console.log("✅ Is Active:", isSubscriptionActive);
       
       // ✅ Show appropriate overlay if not active
@@ -566,7 +581,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('planBadge').className = "plan-badge expired";
   }
 
-  // ✅ Update UI after fetch
+  // ✅ Update UI after fetch — PRESERVE LAST PAID PLAN ON BADGE
   setTimeout(() => {
     const badge = document.getElementById('planBadge');
     if (badge) {
@@ -574,9 +589,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         badge.textContent = "SUSPENDED";
         badge.className = "plan-badge suspended";
       } else if (!isSubscriptionActive) {
-        badge.textContent = "EXPIRED";
+        // ✅ Show last paid plan + (EXPIRED) — preserves Pro/Basic even when expired
+        badge.textContent = `${currentPlan.toUpperCase()} (EXPIRED)`;
         badge.className = "plan-badge expired";
       } else {
+        // ✅ Active subscription - show plan normally
         badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
         badge.className = `plan-badge ${currentPlan}`;
       }
