@@ -153,6 +153,24 @@
     .terms-checkbox a:hover {
       text-decoration: underline;
     }
+    
+    /* ✅ Redirect status message styling */
+    .redirect-status {
+      margin-top: 15px;
+      padding: 12px;
+      background: rgba(0, 230, 118, 0.2);
+      border-radius: 8px;
+      color: #00e676;
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -205,6 +223,9 @@
 
       <!-- Comment out the button bellow to ✅ Proceed to Payment</button> -->
       <button type="submit" id="submitBtn">✅ Proceed to Payment</button> 
+      
+      <!-- ✅ Redirect status message (hidden by default) -->
+      <div class="redirect-status" id="redirectStatus"></div>
 
     </form>
 
@@ -338,6 +359,7 @@
   // ===============================
   async function handleRegistration() {
     const submitBtn = document.getElementById("submitBtn");
+    const redirectStatus = document.getElementById("redirectStatus");
     if (!submitBtn) return;
     
     // ✅ Check terms acceptance
@@ -410,8 +432,13 @@
       console.log("✅ Server response:", result);
 
       if (res.ok && result.success) {
-        // ✅ ACCURATE MESSAGE: Account created but NOT yet active
-        alert("✅ Account created! Please complete payment to activate your subscription.");
+        // ✅ Show redirecting message on page (NO alert popup)
+        if (redirectStatus) {
+          redirectStatus.textContent = "✅ Account created! Redirecting to payment...";
+          redirectStatus.style.display = "block";
+        }
+        submitBtn.textContent = "🔄 Redirecting...";
+        submitBtn.disabled = true;
 
         // Clean up session storage
         sessionStorage.removeItem("selected_plan");
@@ -422,8 +449,11 @@
         const schoolId = result.data?.school_id || result.data?.admin_id;
         const adminId = result.data?.admin_id;
         
-        // ✅ Redirect to payment page with ALL required params
-        window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(subscription_plan)}&new=true&pending=true`;
+        // ✅ Auto-redirect after 1 second (no OK button needed)
+        setTimeout(() => {
+          window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(subscription_plan)}&new=true&pending=true`;
+        }, 1000);
+        
       } else {
         alert("⚠️ " + (result.message || "Registration failed."));
         resetSubmitBtn();
