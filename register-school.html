@@ -296,14 +296,13 @@
     if (selectPlanBtn) {
       selectPlanBtn.addEventListener("click", () => {
         // ✅ Save ALL form data including passwords (temporary, for registration flow only)
-        // ⚠️ Note: sessionStorage is cleared when tab closes, so this is low-risk for registration
         sessionStorage.setItem('register_form_data', JSON.stringify({
           schoolName: document.getElementById('schoolName')?.value,
           adminId: document.getElementById('adminNumber')?.value,
           email: document.getElementById('email')?.value,
           phone: document.getElementById('phone')?.value,
-          password: document.getElementById('password')?.value,        // ✅ Added
-          confirmPassword: document.getElementById('confirmPassword')?.value  // ✅ Added
+          password: document.getElementById('password')?.value,
+          confirmPassword: document.getElementById('confirmPassword')?.value
         }));
         
         // ✅ Redirect to plan comparison with new=true flag
@@ -322,14 +321,13 @@
         if (data.adminId) document.getElementById('adminNumber').value = data.adminId;
         if (data.email) document.getElementById('email').value = data.email;
         if (data.phone) document.getElementById('phone').value = data.phone;
-        // ✅ Restore passwords (temporary, cleared after use)
         if (data.password) document.getElementById('password').value = data.password;
         if (data.confirmPassword) document.getElementById('confirmPassword').value = data.confirmPassword;
         
         // ✅ Clear after restoring (one-time use, security best practice)
         sessionStorage.removeItem('register_form_data');
       } catch (e) {
-        console.warn("⚠️ Could not restore form data:", e);
+        console.warn("⚠️ Could not restore form ", e);
       }
     }
 
@@ -420,8 +418,12 @@
         sessionStorage.removeItem("plan_return_url");
         sessionStorage.removeItem("register_form_data");
 
+        // ✅ FIXED: Access nested result.data fields for redirect
+        const schoolId = result.data?.school_id || result.data?.admin_id;
+        const adminId = result.data?.admin_id;
+        
         // ✅ Redirect to payment page with ALL required params
-        window.location.href = `pay.html?school_id=${encodeURIComponent(result.school_id)}&admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}&new=true&pending=true`;
+        window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(subscription_plan)}&new=true&pending=true`;
       } else {
         alert("⚠️ " + (result.message || "Registration failed."));
         resetSubmitBtn();
