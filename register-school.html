@@ -234,7 +234,6 @@
     input.type = isPassword ? 'text' : 'password';
     
     // Find and update the associated eye icon
-    // The icon is in the same .password-wrapper as the input
     const wrapper = input.closest('.password-wrapper');
     if (wrapper) {
       const icon = wrapper.querySelector('.toggle-password');
@@ -254,27 +253,20 @@
     const planFromUrl = urlParams.get('plan');
     const planFromSession = sessionStorage.getItem('selected_plan');
     
-    // ✅ Determine which plan to use (URL param takes priority, then sessionStorage)
     const selectedPlan = planFromUrl || planFromSession;
     
     const planInput = document.getElementById("plan");
     const planStatus = document.getElementById("planStatus");
     
-    // ✅ Set plan value and show status if plan is selected
     if (selectedPlan && (selectedPlan === 'basic' || selectedPlan === 'pro')) {
-      // ✅ Set hidden input value
-      if (planInput) {
-        planInput.value = selectedPlan;
-      }
+      if (planInput) planInput.value = selectedPlan;
       
-      // ✅ Show visual feedback
       if (planStatus) {
         planStatus.textContent = `✅ ${selectedPlan.toUpperCase()} plan selected`;
         planStatus.style.display = "block";
         planStatus.style.color = selectedPlan === 'pro' ? '#ffd700' : '#00e676';
       }
       
-      // ✅ Optional: Update "Select Plan" button text to show current selection
       const selectPlanBtn = document.getElementById("selectPlanBtn");
       if (selectPlanBtn) {
         selectPlanBtn.textContent = `✓ ${selectedPlan.toUpperCase()} Selected — Change Plan`;
@@ -283,13 +275,8 @@
           : 'linear-gradient(120deg, #00e676, #00c853)';
       }
       
-      // ✅ Clear sessionStorage after using (prevents stale data on refresh)
-      if (planFromSession) {
-        sessionStorage.removeItem('selected_plan');
-      }
+      if (planFromSession) sessionStorage.removeItem('selected_plan');
     }
-
-    // ✅ REMOVED conflicting event listener - onclick handles toggle now
 
     // ===============================
     // ✅ Form submit handler
@@ -308,12 +295,15 @@
     const selectPlanBtn = document.getElementById("selectPlanBtn");
     if (selectPlanBtn) {
       selectPlanBtn.addEventListener("click", () => {
-        // ✅ Save current form data so user doesn't lose it when going to plan selection
+        // ✅ Save ALL form data including passwords (temporary, for registration flow only)
+        // ⚠️ Note: sessionStorage is cleared when tab closes, so this is low-risk for registration
         sessionStorage.setItem('register_form_data', JSON.stringify({
           schoolName: document.getElementById('schoolName')?.value,
           adminId: document.getElementById('adminNumber')?.value,
           email: document.getElementById('email')?.value,
-          phone: document.getElementById('phone')?.value
+          phone: document.getElementById('phone')?.value,
+          password: document.getElementById('password')?.value,        // ✅ Added
+          confirmPassword: document.getElementById('confirmPassword')?.value  // ✅ Added
         }));
         
         // ✅ Redirect to plan comparison with new=true flag
@@ -322,7 +312,7 @@
     }
     
     // ===============================
-    // ✅ Restore form data if user returns from plan selection
+    // ✅ Restore form data if user returns from plan selection (INCLUDING passwords)
     // ===============================
     const formData = sessionStorage.getItem('register_form_data');
     if (formData) {
@@ -332,8 +322,11 @@
         if (data.adminId) document.getElementById('adminNumber').value = data.adminId;
         if (data.email) document.getElementById('email').value = data.email;
         if (data.phone) document.getElementById('phone').value = data.phone;
+        // ✅ Restore passwords (temporary, cleared after use)
+        if (data.password) document.getElementById('password').value = data.password;
+        if (data.confirmPassword) document.getElementById('confirmPassword').value = data.confirmPassword;
         
-        // ✅ Clear after restoring (one-time use)
+        // ✅ Clear after restoring (one-time use, security best practice)
         sessionStorage.removeItem('register_form_data');
       } catch (e) {
         console.warn("⚠️ Could not restore form data:", e);
