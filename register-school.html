@@ -336,7 +336,7 @@
   }); // ✅ End of DOMContentLoaded
 
   // ===============================
-  // ✅ Registration handler (payment required only)
+  // ✅ Registration handler (payment required BEFORE account activation)
   // ===============================
   async function handleRegistration() {
     const submitBtn = document.getElementById("submitBtn");
@@ -351,7 +351,7 @@
     }
 
     // ✅ Set button to loading state
-    submitBtn.textContent = "⏳ Registering...";
+    submitBtn.textContent = "⏳ Creating account...";
     submitBtn.disabled = true;
 
     // ✅ Gather form values
@@ -412,7 +412,8 @@
       console.log("✅ Server response:", result);
 
       if (res.ok && result.success) {
-        alert("✅ Registration successful!");
+        // ✅ ACCURATE MESSAGE: Account created but NOT yet active
+        alert("✅ Account created! Please complete payment to activate your subscription.");
 
         // Clean up session storage
         sessionStorage.removeItem("selected_plan");
@@ -420,7 +421,7 @@
         sessionStorage.removeItem("register_form_data");
 
         // ✅ Redirect to payment page with ALL required params
-        window.location.href = `pay.html?school_id=${encodeURIComponent(result.school_id)}&admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}&new=true`;
+        window.location.href = `pay.html?school_id=${encodeURIComponent(result.school_id)}&admin_id=${encodeURIComponent(result.admin_id)}&plan=${encodeURIComponent(subscription_plan)}&new=true&pending=true`;
       } else {
         alert("⚠️ " + (result.message || "Registration failed."));
         resetSubmitBtn();
