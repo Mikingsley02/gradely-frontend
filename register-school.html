@@ -224,6 +224,22 @@
   // ✅ FIXED: Clean API_BASE (NO trailing spaces)
   const API_BASE = "https://api.gradely.info";
 
+  // ✅ Toggle password visibility (eye icon) - ADDED TO FIX ReferenceError
+  function togglePasswordVisibility(fieldId, icon) {
+    const input = document.getElementById(fieldId);
+    if (input) {
+      if (input.type === 'password') {
+        input.type = 'text';
+        // Update icon if passed
+        if (icon) icon.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        // Update icon if passed
+        if (icon) icon.textContent = '👁️';
+      }
+    }
+  }
+
   // ✅ Wait for DOM to be ready before attaching event listeners
   document.addEventListener("DOMContentLoaded", () => {
     
@@ -270,11 +286,12 @@
     }
 
     // ===============================
-    // ✅ Password visibility toggle
+    // ✅ Password visibility toggle (event listener fallback)
     // ===============================
     const togglePasswordBtns = document.querySelectorAll(".toggle-password");
     togglePasswordBtns.forEach(btn => {
-      btn.addEventListener("click", function() {
+      btn.addEventListener("click", function(e) {
+        e.preventDefault(); // Prevent default onclick if both are attached
         const inputId = this.getAttribute("onclick")?.match(/'(\w+)'/)?.[1];
         if (!inputId) return;
         
