@@ -415,7 +415,6 @@
         const uniqueReference = generateUniqueReference(school_id, plan);
         sessionStorage.setItem(`payment_ref_${school_id}`, uniqueReference);
 
-        // ✅ FIXED: Callback is a REGULAR function (NOT async) - uses .then() chaining
         const handler = PaystackPop.setup({
           key: paystackKey,
           email: customerEmail || 'pending@registration.gradely.info',
@@ -434,7 +433,6 @@
             ]
           },
           
-          // ✅ FIXED: Regular function (NOT async) - Paystack requires this
           callback: function(response) {
             // ✅ Save session data FIRST
             if (school_id) localStorage.setItem('school_id', school_id);
@@ -443,50 +441,77 @@
             localStorage.setItem('plan', plan);
             
             console.log("✅ Paystack payment success:", response);
+            console.log("🔍 Authorization object:", response.authorization);
             
             const authorizationCode = response.authorization?.authorization_code;
             
-            // ✅ FIXED: Use .then() chaining instead of await (callback cannot be async)
+            // ✅ Show visual feedback during recurring setup
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> Payment Success! Setting up auto-renewal...';
+            btn.disabled = true;
+            
             if (authorizationCode) {
+              console.log("🔄 Authorization code found:", authorizationCode.substring(0, 10) + '...');
               console.log("🔄 Creating recurring subscription...");
+              
+              // ✅ Use sendBeacon for more reliable delivery (fires even if page closes)
+              const recurringData = {
+                school_id: school_id,
+                plan: plan,
+                authorization_code: authorizationCode,
+                customer_email: customerEmail
+              };
+              
+              // ✅ Try fetch with timeout + fallback to sendBeacon
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
               
               fetch(`${API_BASE}/api/subscription/create-recurring`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({
-                  school_id: school_id,
-                  plan: plan,
-                  authorization_code: authorizationCode,
-                  customer_email: customerEmail
-                })
+                body: JSON.stringify(recurringData),
+                signal: controller.signal
               })
-              .then(res => res.json())
+              .then(res => {
+                clearTimeout(timeoutId);
+                return res.json();
+              })
               .then(data => {
                 if (data.success) {
                   console.log("✅ Recurring subscription created:", data.subscription_code);
-                  // ✅ Redirect AFTER create-recurring completes
-                  console.log("🔄 Redirecting to dashboard...");
-                  window.location.href = `/dashboard.html?upgrade=success&plan=${plan}`;
                 } else {
                   console.warn("⚠️ Recurring subscription setup failed:", data.message);
-                  // ✅ Still redirect - payment succeeded
+                }
+                // ✅ Redirect after 2 second delay (ensures backend processes)
+                setTimeout(() => {
                   console.log("🔄 Redirecting to dashboard...");
                   window.location.href = `/dashboard.html?upgrade=success&plan=${plan}`;
-                }
+                }, 2000);
               })
               .catch(err => {
+                clearTimeout(timeoutId);
                 console.error("❌ Failed to create recurring subscription:", err);
-                // ✅ Still redirect - payment succeeded
-                console.log("🔄 Redirecting to dashboard...");
-                window.location.href = `/dashboard.html?upgrade=success&plan=${plan}`;
+                // ✅ Fallback: Use sendBeacon (fires even if page closes)
+                console.log("🔄 Fallback: Using sendBeacon for create-recurring...");
+                navigator.sendBeacon(
+                  `${API_BASE}/api/subscription/create-recurring`,
+                  JSON.stringify(recurringData)
+                );
+                // ✅ Redirect anyway after delay
+                setTimeout(() => {
+                  console.log("🔄 Redirecting to dashboard (fallback)...");
+                  window.location.href = `/dashboard.html?upgrade=success&plan=${plan}`;
+                }, 2000);
               });
               
             } else {
-              console.warn("⚠️ No authorization_code in Paystack response - skipping recurring setup");
-              // ✅ Redirect anyway
-              console.log("🔄 Redirecting to dashboard...");
-              window.location.href = `/dashboard.html?upgrade=success&plan=${plan}`;
+              console.warn("⚠️ No authorization_code in Paystack response");
+              console.log("🔍 Full Paystack response:", JSON.stringify(response, null, 2));
+              // ✅ Redirect anyway after delay
+              setTimeout(() => {
+                console.log("🔄 Redirecting to dashboard (no auth code)...");
+                window.location.href = `/dashboard.html?upgrade=success&plan=${plan}`;
+              }, 2000);
             }
           },
           
