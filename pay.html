@@ -322,6 +322,10 @@
 
     const isUpgrade = params.get("upgrade") === "true";
     const isRenewal = params.get("renew") === "true";
+    
+    // ✅ NEW: Detect new pending registrations
+    const isPending = params.get("pending") === "true";
+    const isNew = params.get("new") === "true";
 
     // ✅ Get school_id and admin_id with fallback chain
     const school_id = params.get("school_id") 
@@ -407,13 +411,17 @@
         return;
       }
       
-      // ✅ Validate email before proceeding
-      if (!customerEmail || !customerEmail.includes('@')) {
-        alert("⚠️ Email not found. Please log in again.");
-        isProcessingPayment = false;
-        window.location.href = "admin-login.html";
-        return;
+      // ✅ FIXED: Skip email validation for new pending registrations (backend has email from registration)
+      if (!(isPending && isNew)) {
+        // ✅ For existing schools/upgrades/renewals, email is required
+        if (!customerEmail || !customerEmail.includes('@')) {
+          alert("⚠️ Email not found. Please log in again.");
+          isProcessingPayment = false;
+          window.location.href = "admin-login.html";
+          return;
+        }
       }
+      // ✅ For new pending registrations, proceed with payment (backend will use email from registration)
       
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
       btn.disabled = true;
@@ -457,7 +465,7 @@
         // ✅ Initialize Paystack with fetched public key + CRITICAL metadata
         const handler = PaystackPop.setup({
           key: paystackKey,  // ✅ Fetched from backend (not hardcoded)
-          email: customerEmail,  // ✅ FIXED: Use email from localStorage/sessionStorage
+          email: customerEmail || 'pending@registration.gradely.info',  // ✅ FIXED: Fallback email for new registrations
           amount: result.amount_in_kobo || (plan === 'pro' ? 8970000 : 8390000),
           currency: "NGN",
           ref: uniqueReference,  // ✅ Use frontend-generated unique reference
