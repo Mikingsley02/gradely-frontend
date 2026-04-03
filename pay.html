@@ -433,6 +433,7 @@
             ]
           },
           
+          // ✅ FIXED: Regular function (NOT async) - Paystack requires this
           callback: function(response) {
             // ✅ Save session data FIRST
             if (school_id) localStorage.setItem('school_id', school_id);
@@ -441,7 +442,7 @@
             localStorage.setItem('plan', plan);
             
             console.log("✅ Paystack payment success:", response);
-            console.log("🔍 Authorization object:", response.authorization);
+            console.log("🔍 Full authorization object:", response.authorization);
             
             const authorizationCode = response.authorization?.authorization_code;
             
@@ -451,37 +452,35 @@
             
             if (authorizationCode) {
               console.log("🔄 Authorization code found:", authorizationCode.substring(0, 10) + '...');
-              console.log("🔄 Creating recurring subscription...");
+              console.log("🔄 Calling /api/subscription/create-recurring...");
               
-              // ✅ Use sendBeacon for more reliable delivery (fires even if page closes)
-              const recurringData = {
-                school_id: school_id,
-                plan: plan,
-                authorization_code: authorizationCode,
-                customer_email: customerEmail
-              };
-              
-              // ✅ Try fetch with timeout + fallback to sendBeacon
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-              
+              // ✅ Call create-recurring with explicit error handling
               fetch(`${API_BASE}/api/subscription/create-recurring`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify(recurringData),
-                signal: controller.signal
+                body: JSON.stringify({
+                  school_id: school_id,
+                  plan: plan,
+                  authorization_code: authorizationCode,
+                  customer_email: customerEmail
+                })
               })
-              .then(res => {
-                clearTimeout(timeoutId);
-                return res.json();
-              })
-              .then(data => {
-                if (data.success) {
+              .then(async res => {
+                const data = await res.json();
+                console.log("🔍 create-recurring response:", { 
+                  status: res.status, 
+                  success: data.success, 
+                  subscription_code: data.subscription_code,
+                  message: data.message 
+                });
+                
+                if (data.success && data.subscription_code) {
                   console.log("✅ Recurring subscription created:", data.subscription_code);
                 } else {
-                  console.warn("⚠️ Recurring subscription setup failed:", data.message);
+                  console.warn("⚠️ create-recurring response:", data.message || "No subscription_code returned");
                 }
+                
                 // ✅ Redirect after 2 second delay (ensures backend processes)
                 setTimeout(() => {
                   console.log("🔄 Redirecting to dashboard...");
@@ -489,13 +488,17 @@
                 }, 2000);
               })
               .catch(err => {
-                clearTimeout(timeoutId);
-                console.error("❌ Failed to create recurring subscription:", err);
+                console.error("❌ Failed to call create-recurring:", err);
                 // ✅ Fallback: Use sendBeacon (fires even if page closes)
                 console.log("🔄 Fallback: Using sendBeacon for create-recurring...");
                 navigator.sendBeacon(
                   `${API_BASE}/api/subscription/create-recurring`,
-                  JSON.stringify(recurringData)
+                  JSON.stringify({
+                    school_id: school_id,
+                    plan: plan,
+                    authorization_code: authorizationCode,
+                    customer_email: customerEmail
+                  })
                 );
                 // ✅ Redirect anyway after delay
                 setTimeout(() => {
