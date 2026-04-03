@@ -285,49 +285,31 @@
   <script>
     console.log("=== PAY.HTML INIT ===");
 
-    // ✅ FIXED: Clean API_BASE (NO trailing spaces)
     const API_BASE = "https://api.gradely.info";
-
     const params = new URLSearchParams(window.location.search);
     
-    // ✅ FIXED: Check to_plan FIRST (for upgrades), then plan, then localStorage
     let plan = params.get("to_plan")    
             || params.get("plan")       
             || localStorage.getItem("selected_plan");
 
-    // ✅ Normalize plan value
     if (plan) {
       plan = plan.toLowerCase().trim();
     }
 
-    // ✅ Validate plan AFTER declaration
     if (!plan || !['basic', 'pro'].includes(plan)) {
-      console.warn("⚠️ Invalid/missing plan:", { 
-        plan, 
-        to_plan: params.get("to_plan"), 
-        plan_param: params.get("plan"),
-        localStorage: localStorage.getItem("selected_plan")
-      });
+      console.warn("⚠️ Invalid/missing plan:", { plan });
       alert("Invalid or missing plan selection.");
       window.location.href = "plan-comparison.html";
       throw new Error("No valid plan selected");
     }
 
-    // ✅ Safe to log now that plan is declared
-    console.log("📤 Plan ready:", {
-      plan: plan,
-      planType: typeof plan,
-      urlParams: Object.fromEntries(params)
-    });
+    console.log("📤 Plan ready:", { plan });
 
     const isUpgrade = params.get("upgrade") === "true";
     const isRenewal = params.get("renew") === "true";
-    
-    // ✅ NEW: Detect new pending registrations
     const isPending = params.get("pending") === "true";
     const isNew = params.get("new") === "true";
 
-    // ✅ Get school_id and admin_id with fallback chain
     const school_id = params.get("school_id") 
       || localStorage.getItem("school_id") 
       || sessionStorage.getItem("school_id");
@@ -336,7 +318,6 @@
       || localStorage.getItem("admin_id") 
       || sessionStorage.getItem("admin_id");
 
-    // ✅ FIXED: Get email from multiple sources (backend → localStorage → sessionStorage)
     const customerEmail = params.get("email")
       || localStorage.getItem("email")
       || sessionStorage.getItem("email")
@@ -348,21 +329,12 @@
       throw new Error("No school_id found");
     }
 
-    // ✅ PLAN DETAILS (Your original values - MONTHLY billing)
-    const PLAN_NAMES = {
-      basic: 'Basic Plan',
-      pro: 'Professional Plan'
-    };
-
-    const PLAN_PRICES = {
-      basic: '₦83,900',  // ✅ Monthly
-      pro: '₦89,700'     // ✅ Monthly
-    };
+    const PLAN_NAMES = { basic: 'Basic Plan', pro: 'Professional Plan' };
+    const PLAN_PRICES = { basic: '₦83,900', pro: '₦89,700' };
 
     document.getElementById('planName').textContent = PLAN_NAMES[plan];
     document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
 
-    // ✅ Fetch Paystack public key from backend config
     async function loadPaystackKey() {
       try {
         const res = await fetch(`${API_BASE}/api/config/paystack-key`);
@@ -376,11 +348,10 @@
         }
       } catch (err) {
         console.error("❌ Failed to load Paystack key:", err);
-        throw new Error("Payment configuration not available. Please refresh and try again.");
+        throw new Error("Payment configuration not available.");
       }
     }
 
-    // ✅ Generate truly unique reference (prevents duplicate transaction errors)
     function generateUniqueReference(schoolId, plan) {
       const timestamp = Date.now();
       const random1 = Math.random().toString(36).substring(2, 15);
@@ -389,12 +360,9 @@
       return `GRD-${hash}-${timestamp}`;
     }
 
-    // ✅ Prevent duplicate clicks
     let isProcessingPayment = false;
 
-    // ✅ FIXED: Payment handler with unique reference + duplicate click prevention
     document.getElementById("paystackBtn").onclick = async () => {
-      // ✅ Prevent duplicate clicks
       if (isProcessingPayment) {
         console.log("⚠️ Payment already in progress, ignoring duplicate click");
         return;
@@ -403,17 +371,14 @@
       
       const btn = document.getElementById('paystackBtn');
       
-      // ✅ Double-check plan before proceeding
       if (!plan || !['basic', 'pro'].includes(plan)) {
-        alert("⚠️ Plan not selected. Please return to plan selection.");
+        alert("⚠️ Plan not selected.");
         isProcessingPayment = false;
         window.location.href = "plan-comparison.html";
         return;
       }
       
-      // ✅ FIXED: Skip email validation for new pending registrations (backend has email from registration)
       if (!(isPending && isNew)) {
-        // ✅ For existing schools/upgrades/renewals, email is required
         if (!customerEmail || !customerEmail.includes('@')) {
           alert("⚠️ Email not found. Please log in again.");
           isProcessingPayment = false;
@@ -421,26 +386,18 @@
           return;
         }
       }
-      // ✅ For new pending registrations, proceed with payment (backend will use email from registration)
       
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
       btn.disabled = true;
 
       try {
-        // ✅ Fetch Paystack public key from backend (secure, no hardcoded keys)
         const paystackKey = await loadPaystackKey();
         
-        // ✅ Initialize payment with backend
         const response = await fetch(`${API_BASE}/api/subscription/upgrade`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ 
-            plan: plan,
-            school_id: school_id
-          })
+          body: JSON.stringify({ plan: plan, school_id: school_id })
         });
 
         if (!response.ok) {
@@ -476,49 +433,55 @@
             ]
           },
           
-          callback: function(response) {
-            // ✅ FIXED: Save session data to localStorage BEFORE redirecting to dashboard
+          // ✅ FIXED: Async callback that waits for create-recurring
+          callback: async function(response) {
+            // ✅ Save session data FIRST
             if (school_id) localStorage.setItem('school_id', school_id);
             if (admin_id) localStorage.setItem('admin_id', admin_id);
             if (customerEmail) localStorage.setItem('email', customerEmail);
             localStorage.setItem('plan', plan);
             
-            // ✅ Payment succeeded on Paystack (SYNCHRONOUS)
             console.log("✅ Paystack payment success:", response);
             
             const authorizationCode = response.authorization?.authorization_code;
             
+            // ✅ FIXED: Wait for create-recurring BEFORE redirect
             if (authorizationCode) {
-              fetch(`${API_BASE}/api/subscription/create-recurring`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                  school_id: school_id,
-                  plan: plan,
-                  authorization_code: authorizationCode,
-                  customer_email: customerEmail
-                })
-              })
-              .then(res => res.json())
-              .then(data => {
-                if (data.success) {
-                  console.log("✅ Recurring subscription created:", data.subscription_code);
+              console.log("🔄 Creating recurring subscription...");
+              try {
+                const recurringRes = await fetch(`${API_BASE}/api/subscription/create-recurring`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({
+                    school_id: school_id,
+                    plan: plan,
+                    authorization_code: authorizationCode,
+                    customer_email: customerEmail
+                  })
+                });
+                
+                const recurringData = await recurringRes.json();
+                
+                if (recurringData.success) {
+                  console.log("✅ Recurring subscription created:", recurringData.subscription_code);
                 } else {
-                  console.warn("⚠️ Recurring subscription setup failed, but payment succeeded");
+                  console.warn("⚠️ Recurring subscription setup failed:", recurringData.message);
                 }
-              })
-              .catch(err => {
+              } catch (err) {
                 console.error("❌ Failed to create recurring subscription:", err);
-              });
+              }
+            } else {
+              console.warn("⚠️ No authorization_code in Paystack response - skipping recurring setup");
             }
             
-            // ✅ Redirect to dashboard with success params (IMMEDIATE)
+            // ✅ NOW redirect after create-recurring completes
+            console.log("🔄 Redirecting to dashboard...");
             window.location.href = `/dashboard.html?upgrade=success&plan=${plan}`;
           },
           
           onClose: function() {
-            alert("Payment window closed. Please contact support if you were charged but not upgraded.");
+            alert("Payment window closed. Please contact support if you were charged.");
             btn.innerHTML = '<i class="fas fa-credit-card"></i> Proceed to Payment';
             btn.disabled = false;
             isProcessingPayment = false;
@@ -557,9 +520,7 @@
 
         const response = await fetch(endpoint, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
             school_id: school_id,
