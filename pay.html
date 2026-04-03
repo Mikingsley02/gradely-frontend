@@ -415,6 +415,7 @@
         const uniqueReference = generateUniqueReference(school_id, plan);
         sessionStorage.setItem(`payment_ref_${school_id}`, uniqueReference);
 
+        // ✅ FIXED: Callback is a REGULAR function (NOT async) - uses .then() chaining
         const handler = PaystackPop.setup({
           key: paystackKey,
           email: customerEmail || 'pending@registration.gradely.info',
@@ -433,8 +434,8 @@
             ]
           },
           
-          // ✅ FIXED: Async callback that waits for create-recurring
-          callback: async function(response) {
+          // ✅ FIXED: Regular function (NOT async) - Paystack requires this
+          callback: function(response) {
             // ✅ Save session data FIRST
             if (school_id) localStorage.setItem('school_id', school_id);
             if (admin_id) localStorage.setItem('admin_id', admin_id);
@@ -445,39 +446,48 @@
             
             const authorizationCode = response.authorization?.authorization_code;
             
-            // ✅ FIXED: Wait for create-recurring BEFORE redirect
+            // ✅ FIXED: Use .then() chaining instead of await (callback cannot be async)
             if (authorizationCode) {
               console.log("🔄 Creating recurring subscription...");
-              try {
-                const recurringRes = await fetch(`${API_BASE}/api/subscription/create-recurring`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  credentials: 'include',
-                  body: JSON.stringify({
-                    school_id: school_id,
-                    plan: plan,
-                    authorization_code: authorizationCode,
-                    customer_email: customerEmail
-                  })
-                });
-                
-                const recurringData = await recurringRes.json();
-                
-                if (recurringData.success) {
-                  console.log("✅ Recurring subscription created:", recurringData.subscription_code);
+              
+              fetch(`${API_BASE}/api/subscription/create-recurring`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  school_id: school_id,
+                  plan: plan,
+                  authorization_code: authorizationCode,
+                  customer_email: customerEmail
+                })
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  console.log("✅ Recurring subscription created:", data.subscription_code);
+                  // ✅ Redirect AFTER create-recurring completes
+                  console.log("🔄 Redirecting to dashboard...");
+                  window.location.href = `/dashboard.html?upgrade=success&plan=${plan}`;
                 } else {
-                  console.warn("⚠️ Recurring subscription setup failed:", recurringData.message);
+                  console.warn("⚠️ Recurring subscription setup failed:", data.message);
+                  // ✅ Still redirect - payment succeeded
+                  console.log("🔄 Redirecting to dashboard...");
+                  window.location.href = `/dashboard.html?upgrade=success&plan=${plan}`;
                 }
-              } catch (err) {
+              })
+              .catch(err => {
                 console.error("❌ Failed to create recurring subscription:", err);
-              }
+                // ✅ Still redirect - payment succeeded
+                console.log("🔄 Redirecting to dashboard...");
+                window.location.href = `/dashboard.html?upgrade=success&plan=${plan}`;
+              });
+              
             } else {
               console.warn("⚠️ No authorization_code in Paystack response - skipping recurring setup");
+              // ✅ Redirect anyway
+              console.log("🔄 Redirecting to dashboard...");
+              window.location.href = `/dashboard.html?upgrade=success&plan=${plan}`;
             }
-            
-            // ✅ NOW redirect after create-recurring completes
-            console.log("🔄 Redirecting to dashboard...");
-            window.location.href = `/dashboard.html?upgrade=success&plan=${plan}`;
           },
           
           onClose: function() {
