@@ -175,6 +175,7 @@ let schoolId = null;
 let adminId = null;
 let currentExpiry = null;
 let currentPlan = null;
+let isCancelled = false; // ✅ Track cancellation state
 
 document.addEventListener("DOMContentLoaded", async () => {
   // ✅ Get school_id and admin_id from storage
@@ -259,7 +260,7 @@ function unlockProFeatures() {
 }
 
 // =====================
-// FETCH STATUS (CRITICAL FIX: Uses EXPIRY DATE not status string)
+// FETCH STATUS (CORRECTED LOGIC FOR RENEW BUTTON)
 // =====================
 async function fetchSubscriptionStatus() {
   try {
@@ -298,7 +299,7 @@ async function fetchSubscriptionStatus() {
       expiryEl.textContent = "Not set";
     }
 
-    // ✅ CRITICAL FIX #1: Compute active status based on EXPIRY DATE (not status string)
+    // ✅ Compute active status based on EXPIRY DATE (not status string)
     const today = new Date();
     const isExpired = expiryDate && expiryDate < today;
     const isSuspended = data.isSuspended || data.data?.is_suspended || false;
@@ -307,14 +308,17 @@ async function fetchSubscriptionStatus() {
     const subscriptionStatus = (data.subscription_status || data.status || data.data?.subscription_status || 'active').toLowerCase().trim();
     const accountStatus = (data.account_status || data.data?.account_status || 'active').toLowerCase().trim();
     
+    // ✅ Track cancellation state
+    isCancelled = subscriptionStatus === 'cancelled';
+    
     // ✅ Show/hide cancel status message based on subscription status
-    if (subscriptionStatus === 'cancelled') {
+    if (isCancelled) {
       cancelStatusEl.style.display = 'block';
     } else {
       cancelStatusEl.style.display = 'none';
     }
 
-    // ✅ CRITICAL FIX #2: Show buttons if NOT expired AND NOT suspended (regardless of cancellation status)
+    // ✅ Show buttons if NOT expired AND NOT suspended (regardless of cancellation status)
     const showButtons = !isSuspended && !isExpired;
 
     if (isSuspended) {
@@ -333,8 +337,8 @@ async function fetchSubscriptionStatus() {
     }
 
     // ✅ For non-expired accounts: show appropriate status text
-    if (subscriptionStatus === 'cancelled') {
-      // ✅ CRITICAL FIX #3: Cancelled but NOT expired = still active with auto-renew OFF
+    if (isCancelled) {
+      // ✅ Cancelled but NOT expired = still active with auto-renew OFF
       statusEl.textContent = "Active (Auto-Renew Off)";
       statusEl.className = "";
       cancelBtn.style.display = "none"; // Hide cancel button (already cancelled)
@@ -348,16 +352,26 @@ async function fetchSubscriptionStatus() {
       cancelBtn.style.display = "none";
     }
 
-    // ✅ CRITICAL FIX #4: Show renewal/upgrade buttons for cancelled subscriptions (before expiry)
+    // ✅ CRITICAL FIX: Show renewal button for ALL cancelled subscriptions (Basic OR Pro)
+    // ✅ Also show upgrade/downgrade buttons based on current plan
     if (showButtons) {
       mainButtons.style.display = "flex";
       
+      // ✅ ALWAYS show Renew button for cancelled subscriptions (both Basic and Pro)
+      if (isCancelled) {
+        renewBtn.style.display = "block"; // ✅ RENEW BUTTON VISIBLE FOR BASIC + PRO
+      } else {
+        // For active subscriptions: only show renew for Pro (Basic doesn't need it)
+        renewBtn.style.display = currentPlan === "pro" ? "block" : "none";
+      }
+      
+      // ✅ Show upgrade button for Basic plans (active OR cancelled)
       if (currentPlan === "basic") {
-        renewBtn.style.display = "none";
         upgradeBtn.style.display = "block";
         downgradeBtn.style.display = "none";
-      } else if (currentPlan === "pro") {
-        renewBtn.style.display = "block";
+      } 
+      // ✅ Show downgrade button for Pro plans (active OR cancelled)
+      else if (currentPlan === "pro") {
         upgradeBtn.style.display = "none";
         downgradeBtn.style.display = "block";
       }
@@ -408,15 +422,16 @@ async function cancelSubscription() {
 }
 
 // =====================
-// RENEW SUBSCRIPTION
+// RENEW SUBSCRIPTION (WORKS FOR BOTH BASIC AND PRO)
 // =====================
 function renewSubscription() {
-  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(currentPlan)}&renew=true`;
+  // ✅ RENEW ON CURRENT PLAN (Basic OR Pro)
+  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(currentPlan)}&renew=true&is_renewal=true`;
 }
 
-// =====================
+// ====================
 // UPGRADE TO PRO
-// =====================
+// ====================
 function upgradeToPro() {
   if (!confirm("✨ Upgrade to Pro Plan?\n\nYou'll get:\n• Unlimited students\n• Bulk registration\n• SMS/Email alerts\n• Priority support\n\nThis will be charged immediately. Continue?")) {
     return;
