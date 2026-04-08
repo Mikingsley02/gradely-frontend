@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ✅ Check for upgrade success params from redirect
   checkUpgradeSuccess();
 
-  // ✅ Fetch subscription status (NO expiration check here - that's for dashboard)
+  // ✅ Fetch subscription status
   await fetchSubscriptionStatus();
 });
 
@@ -259,7 +259,7 @@ function unlockProFeatures() {
 }
 
 // =====================
-// FETCH STATUS
+// FETCH STATUS (CRITICAL FIX: Uses EXPIRY DATE not status string)
 // =====================
 async function fetchSubscriptionStatus() {
   try {
@@ -272,9 +272,8 @@ async function fetchSubscriptionStatus() {
     const data = await res.json();
     if (!data.success) throw new Error(data.message || "Failed to load subscription");
 
-    // ✅ Handle both response formats: { plan: 'pro' } or { data: { current_plan: 'pro' } }
-    currentPlan = data.plan || data.data?.current_plan || 'basic';
-    
+    // ✅ Handle both response formats
+    currentPlan = data.plan || data.current_plan || data.data?.current_plan || 'basic';
     document.getElementById("plan").textContent =
       currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
 
@@ -285,62 +284,85 @@ async function fetchSubscriptionStatus() {
     const downgradeBtn = document.getElementById("downgradeBtn");
     const mainButtons = document.getElementById("mainButtons");
     const expiryEl = document.getElementById("renewal");
+    const cancelStatusEl = document.getElementById("cancelStatus");
 
-    // ✅ Handle both response formats for expiry
-    const expiryDate = data.expiryDate || data.data?.subscription_expiry;
-    if (expiryDate) {
-      currentExpiry = new Date(expiryDate);
-      expiryEl.textContent = currentExpiry.toLocaleDateString("en-GB", {
+    // ✅ Get expiry date (handle both response formats)
+    const rawExpiry = data.expiryDate || data.data?.subscription_expiry;
+    let expiryDate = null;
+    if (rawExpiry) {
+      expiryDate = new Date(rawExpiry);
+      expiryEl.textContent = expiryDate.toLocaleDateString("en-GB", {
         day: "numeric", month: "short", year: "numeric"
       });
     } else {
       expiryEl.textContent = "Not set";
-      currentExpiry = null;
     }
 
+    // ✅ CRITICAL FIX #1: Compute active status based on EXPIRY DATE (not status string)
     const today = new Date();
-    const isExpired = currentExpiry && currentExpiry < today;
+    const isExpired = expiryDate && expiryDate < today;
+    const isSuspended = data.isSuspended || data.data?.is_suspended || false;
+    
+    // ✅ Get subscription status (handle both formats)
+    const subscriptionStatus = (data.subscription_status || data.status || data.data?.subscription_status || 'active').toLowerCase().trim();
+    const accountStatus = (data.account_status || data.data?.account_status || 'active').toLowerCase().trim();
+    
+    // ✅ Show/hide cancel status message based on subscription status
+    if (subscriptionStatus === 'cancelled') {
+      cancelStatusEl.style.display = 'block';
+    } else {
+      cancelStatusEl.style.display = 'none';
+    }
+
+    // ✅ CRITICAL FIX #2: Show buttons if NOT expired AND NOT suspended (regardless of cancellation status)
+    const showButtons = !isSuspended && !isExpired;
+
+    if (isSuspended) {
+      statusEl.textContent = "Suspended";
+      statusEl.className = "error";
+      mainButtons.style.display = "none";
+      return;
+    }
 
     if (isExpired) {
       statusEl.textContent = "Expired";
       statusEl.className = "error";
       mainButtons.style.display = "none";
-      showPlanSelection(); // ✅ FIXED: Go to plan selection, not direct payment
+      showPlanSelection();
       return;
     }
 
-    // ✅ Handle both response formats for isActive
-    const isActive = data.isActive !== undefined ? data.isActive : (data.data?.subscription_status === 'active');
-    
-    if (isActive) {
-      // ✅ Handle both response formats for autoRenewEnabled
-      const autoRenewEnabled = data.autoRenewEnabled !== undefined 
-        ? data.autoRenewEnabled 
-        : (data.data?.auto_renew_enabled !== false);
-      
-      statusEl.textContent = autoRenewEnabled
-        ? "Active (Auto-Renew On)"
-        : "Active (Auto-Renew Off)";
+    // ✅ For non-expired accounts: show appropriate status text
+    if (subscriptionStatus === 'cancelled') {
+      // ✅ CRITICAL FIX #3: Cancelled but NOT expired = still active with auto-renew OFF
+      statusEl.textContent = "Active (Auto-Renew Off)";
       statusEl.className = "";
-      cancelBtn.style.display = autoRenewEnabled ? "block" : "none";
-      mainButtons.style.display = "flex";
+      cancelBtn.style.display = "none"; // Hide cancel button (already cancelled)
+    } else if (subscriptionStatus === 'active') {
+      statusEl.textContent = "Active (Auto-Renew On)";
+      statusEl.className = "";
+      cancelBtn.style.display = "block";
     } else {
-      statusEl.textContent = "Inactive";
-      statusEl.className = "error";
+      statusEl.textContent = accountStatus.charAt(0).toUpperCase() + accountStatus.slice(1);
+      statusEl.className = "";
       cancelBtn.style.display = "none";
-      mainButtons.style.display = "none";
-      return;
     }
 
-    // Show appropriate buttons based on current plan
-    if (currentPlan === "basic") {
-      renewBtn.style.display = "none";
-      upgradeBtn.style.display = "block";
-      downgradeBtn.style.display = "none";
-    } else if (currentPlan === "pro") {
-      renewBtn.style.display = "block";
-      upgradeBtn.style.display = "none";
-      downgradeBtn.style.display = "block";
+    // ✅ CRITICAL FIX #4: Show renewal/upgrade buttons for cancelled subscriptions (before expiry)
+    if (showButtons) {
+      mainButtons.style.display = "flex";
+      
+      if (currentPlan === "basic") {
+        renewBtn.style.display = "none";
+        upgradeBtn.style.display = "block";
+        downgradeBtn.style.display = "none";
+      } else if (currentPlan === "pro") {
+        renewBtn.style.display = "block";
+        upgradeBtn.style.display = "none";
+        downgradeBtn.style.display = "block";
+      }
+    } else {
+      mainButtons.style.display = "none";
     }
 
   } catch (err) {
@@ -357,18 +379,16 @@ async function cancelSubscription() {
   if (!confirm("⏸️ Cancel Auto-Renewal?\nAccess continues until current billing date.\nAre you sure?")) return;
 
   try {
-    // ✅ FIXED: Use correct endpoint: /cancel (not /cancel-auto-renew)
     const res = await fetch(`${API_BASE}/api/subscription/cancel`, {
       method: "POST",
       credentials: "include"
     });
     
-    // ✅ Check if response is JSON before parsing (prevents "Unexpected token '<'" error)
     const contentType = res.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       const text = await res.text();
       console.error("❌ Expected JSON, got:", text.substring(0, 200));
-      throw new Error("Server returned non-JSON response (likely 404 HTML page)");
+      throw new Error("Server returned non-JSON response");
     }
     
     const data = await res.json();
@@ -388,10 +408,9 @@ async function cancelSubscription() {
 }
 
 // =====================
-// RENEW SUBSCRIPTION (Active subscription, not expired)
+// RENEW SUBSCRIPTION
 // =====================
 function renewSubscription() {
-  // ✅ Redirect to payment page with CRITICAL metadata for same-plan renewal
   window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(currentPlan)}&renew=true`;
 }
 
@@ -403,7 +422,6 @@ function upgradeToPro() {
     return;
   }
   
-  // ✅ Redirect to payment page with CRITICAL metadata for webhook
   window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&from_plan=${encodeURIComponent(currentPlan)}&to_plan=pro&upgrade=true`;
 }
 
@@ -420,7 +438,7 @@ async function downgradeToBasic() {
       method: "POST",
       credentials: "include",
       headers: {
-        "Content-Type": "application/json"  // ✅ Comma added
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         school_id: schoolId,
@@ -436,8 +454,6 @@ async function downgradeToBasic() {
 
     document.getElementById("message").innerHTML =
       `<span class="success">✅ ${data.message}</span>`;
-    
-    // Reload subscription status to reflect changes
     setTimeout(fetchSubscriptionStatus, 1500);
   } catch (err) {
     console.error("Downgrade error:", err);
@@ -447,12 +463,11 @@ async function downgradeToBasic() {
 }
 
 // =====================
-// SHOW PLAN SELECTION (EXPIRED SUBSCRIPTION) - ✅ FIXED
+// SHOW PLAN SELECTION (EXPIRED SUBSCRIPTION)
 // =====================
 function showPlanSelection() {
   const container = document.querySelector(".container");
   
-  // ✅ Create plan selection UI that goes to plan-comparison.html first
   const html = `
     <div style="margin-top:20px; padding: 20px; background: rgba(0, 230, 118, 0.1); border-radius: 12px; border: 2px dashed #00e676;">
       <h3 style="color:#2d046e; margin-bottom: 15px;">🔄 Reactivate Subscription</h3>
