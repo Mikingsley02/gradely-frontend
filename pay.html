@@ -314,7 +314,7 @@ const admin_id = params.get("admin_id")
   || localStorage.getItem("admin_id") 
   || sessionStorage.getItem("admin_id");
 
-const customerEmail = params.get("email")
+let customerEmail = params.get("email")
   || localStorage.getItem("email")
   || sessionStorage.getItem("email")
   || '';
@@ -330,6 +330,33 @@ const PLAN_PRICES = { basic: '₦83,900', pro: '₦89,700' };
 
 document.getElementById('planName').textContent = PLAN_NAMES[plan];
 document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
+
+// ✅ NEW FIX: Fetch email from backend if missing
+async function ensureEmail() {
+  if (customerEmail && customerEmail.includes('@')) return customerEmail;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/me`, {
+      credentials: 'include'
+    });
+    const data = await res.json();
+
+    if (data?.email) {
+      customerEmail = data.email;
+
+      // ✅ Save for future use
+      localStorage.setItem("email", customerEmail);
+      sessionStorage.setItem("email", customerEmail);
+
+      console.log("✅ Email recovered from session:", customerEmail);
+      return customerEmail;
+    }
+  } catch (err) {
+    console.warn("⚠️ Failed to fetch email from session:", err);
+  }
+
+  return null;
+}
 
 async function loadPaystackKey() {
   const res = await fetch(`${API_BASE}/api/config/paystack-key`);
@@ -354,7 +381,10 @@ document.getElementById("paystackBtn").onclick = async () => {
 
   const btn = document.getElementById('paystackBtn');
 
-  if (!customerEmail || !customerEmail.includes('@')) {
+  // ✅ FIXED: Ensure email before blocking
+  const validEmail = await ensureEmail();
+
+  if (!validEmail) {
     alert("⚠️ Email not found. Please log in again.");
     isProcessingPayment = false;
     return;
@@ -383,7 +413,7 @@ document.getElementById("paystackBtn").onclick = async () => {
 
     const handler = PaystackPop.setup({
       key: paystackKey,
-      email: customerEmail,
+      email: validEmail, // ✅ use recovered email
       amount: result.amount_in_kobo,
       currency: "NGN",
       ref: reference,
@@ -412,9 +442,6 @@ document.getElementById("paystackBtn").onclick = async () => {
         .then(res => res.json())
         .then(data => {
           console.log("🔍 Activation response:", data);
-
-          // ✅ IMPORTANT: Even if subscription_code not returned here,
-          // webhook should update paystack_subscription_code in DB
 
           setTimeout(() => {
             window.location.href = `/dashboard.html?payment=success&plan=${plan}`;
