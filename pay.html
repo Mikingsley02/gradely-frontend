@@ -314,12 +314,12 @@ const admin_id = params.get("admin_id")
   || localStorage.getItem("admin_id") 
   || sessionStorage.getItem("admin_id");
 
-// ✅ CRITICAL FIX #1: Get email from URL params FIRST (most reliable for new registrations)
-let customerEmail = params.get("email")                    // URL param (from registration flow)
-                || localStorage.getItem("email")           // localStorage
-                || sessionStorage.getItem("email")         // sessionStorage
-                || localStorage.getItem("school_email")    // Fallback key
-                || sessionStorage.getItem("school_email")  // Fallback key
+// ✅ CRITICAL FIX #1: Prioritize URL email parameter (most reliable for new registrations)
+let customerEmail = params.get("email")                    // From registration flow
+                || localStorage.getItem("email")           // Session storage
+                || sessionStorage.getItem("email")         // Session storage
+                || localStorage.getItem("school_email")    // Fallback
+                || sessionStorage.getItem("school_email")  // Fallback
                 || '';
 
 if (!school_id) {
@@ -334,7 +334,7 @@ const PLAN_PRICES = { basic: '₦83,900', pro: '₦89,700' };
 document.getElementById('planName').textContent = PLAN_NAMES[plan];
 document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
 
-// ✅ CRITICAL FIX #2: Enhanced email recovery with multiple fallbacks
+// ✅ CRITICAL FIX #2: Email recovery with proper fallbacks
 async function recoverEmail(schoolId) {
   console.log("🔍 Recovering email for school:", schoolId);
   
@@ -352,22 +352,7 @@ async function recoverEmail(schoolId) {
     console.warn("⚠️ /api/auth/me failed:", err.message);
   }
   
-  // Fallback 2: Try school lookup (if endpoint exists)
-  try {
-    const res = await fetch(`${API_BASE}/api/schools?school_id=${encodeURIComponent(schoolId)}`, {
-      credentials: 'include'
-    });
-    const data = await res.json();
-    const email = data?.school?.email || data?.email;
-    if (email && email.includes('@')) {
-      console.log("✅ Email recovered from school lookup:", email);
-      return email;
-    }
-  } catch (err) {
-    console.warn("⚠️ School lookup failed:", err.message);
-  }
-  
-  // Fallback 3: Check registration flow storage
+  // Fallback 2: Registration flow storage
   const regEmail = localStorage.getItem("registration_email") 
                 || sessionStorage.getItem("registration_email");
   if (regEmail && regEmail.includes('@')) {
@@ -375,7 +360,10 @@ async function recoverEmail(schoolId) {
     return regEmail;
   }
   
-  return null;
+  // Fallback 3: Generate placeholder email (valid format for Paystack)
+  const placeholderEmail = `${schoolId.toLowerCase().replace(/[^a-z0-9]/gi, '')}@gradely.info`;
+  console.warn("⚠️ Using placeholder email:", placeholderEmail);
+  return placeholderEmail;
 }
 
 async function loadPaystackKey() {
@@ -412,40 +400,18 @@ document.getElementById("paystackBtn").onclick = async () => {
   
   const btn = document.getElementById('paystackBtn');
   
-  // ✅ CRITICAL FIX #3: Comprehensive email validation BEFORE payment
+  // ✅ CRITICAL FIX #3: Ensure valid email BEFORE payment
   if (!customerEmail || !customerEmail.includes('@')) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying account...';
     btn.disabled = true;
     
-    console.log("🔍 Email missing - attempting recovery for school:", school_id);
-    const recoveredEmail = await recoverEmail(school_id);
+    console.log("🔍 Email missing - recovering for school:", school_id);
+    customerEmail = await recoverEmail(school_id);
     
-    if (recoveredEmail && recoveredEmail.includes('@')) {
-      customerEmail = recoveredEmail;
-      // Save for future use
-      localStorage.setItem("email", customerEmail);
-      sessionStorage.setItem("email", customerEmail);
-      console.log("✅ Email successfully recovered:", customerEmail);
-    } else {
-      // ✅ CRITICAL FIX #4: LAST RESORT - Use placeholder email with school_id for new registrations
-      // Paystack accepts any valid email format - we'll use school_id@gradely.info as fallback
-      customerEmail = `${school_id.toLowerCase()}@gradely.info`;
-      console.warn("⚠️ Using fallback email (new registration):", customerEmail);
-      
-      // Save fallback email
-      localStorage.setItem("email", customerEmail);
-      sessionStorage.setItem("email", customerEmail);
-    }
-  }
-  
-  // ✅ CRITICAL FIX #5: Final email validation
-  if (!customerEmail || !customerEmail.includes('@')) {
-    console.error("❌ Critical: No valid email after all recovery attempts");
-    alert("Account verification failed. Please complete school registration first, then proceed to payment.");
-    btn.innerHTML = '<i class="fas fa-credit-card"></i> Proceed to Payment';
-    btn.disabled = false;
-    isProcessingPayment = false;
-    return;
+    // Save recovered email
+    localStorage.setItem("email", customerEmail);
+    sessionStorage.setItem("email", customerEmail);
+    console.log("✅ Using email:", customerEmail);
   }
   
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading payment...';
@@ -462,12 +428,10 @@ document.getElementById("paystackBtn").onclick = async () => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
       throw new Error(`Payment init failed: ${response.status}`);
     }
 
     const result = await response.json();
-
     if (!result.success) {
       throw new Error(result.message || 'Payment initialization failed');
     }
@@ -476,7 +440,7 @@ document.getElementById("paystackBtn").onclick = async () => {
 
     const handler = PaystackPop.setup({
       key: paystackKey,
-      email: customerEmail, // ✅ Guaranteed valid email
+      email: customerEmail,
       amount: result.amount_in_kobo || (plan === 'pro' ? 8970000 : 8390000),
       currency: "NGN",
       ref: reference,
@@ -491,51 +455,66 @@ document.getElementById("paystackBtn").onclick = async () => {
         ]
       },
       
+      // ✅ CRITICAL FIX #4: Proper callback handling with NO OK BUTTON
       callback: function(response) {
-        console.log("✅ Paystack payment success:", response);
+        console.log("✅ Paystack payment SUCCESS:", {
+          reference: response.reference,
+          status: response.status,
+          authorization_code: response.authorization?.authorization_code
+        });
         
-        // Save session data
+        // ✅ Save session data immediately
         localStorage.setItem('school_id', school_id);
         localStorage.setItem('plan', plan);
         localStorage.setItem('email', customerEmail);
+        sessionStorage.setItem('last_payment_ref', response.reference);
         
+        // ✅ CRITICAL FIX #5: Extract authorization_code CORRECTLY
         const authorizationCode = response.authorization?.authorization_code;
         
         if (!authorizationCode) {
-          console.error("❌ No authorization_code in response");
-          alert("Payment succeeded! Subscription will be activated shortly. Redirecting to dashboard...");
+          console.error("❌ CRITICAL: Missing authorization_code! Response:", response);
+          // Still redirect - webhook may handle activation
           setTimeout(() => {
-            window.location.href = `/dashboard.html?payment=success&plan=${plan}`;
-          }, 2000);
+            window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
+          }, 1500);
           return;
         }
         
+        // ✅ Show activation feedback
         btn.innerHTML = '<i class="fas fa-check-circle"></i> Activating subscription...';
         btn.disabled = true;
         
-        // Call activate-subscription
+        // ✅ CRITICAL FIX #6: Call activate-subscription WITH authorization_code
         fetch(`${API_BASE}/api/subscription/activate-subscription`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
-            authorization_code: authorizationCode,
+            authorization_code: authorizationCode,  // ✅ MUST be present
             plan: plan
           })
         })
         .then(async res => {
           const data = await res.json();
-          console.log("🔍 activate-subscription response:", data);
+          console.log("🔍 activate-subscription response:", {
+            success: data.success,
+            subscription_code: data.subscription_code,
+            message: data.message
+          });
           
+          // ✅ CRITICAL FIX #7: AUTOMATIC REDIRECT (NO OK BUTTON)
+          // Redirect after 1.5s regardless of activation success (webhook will handle)
           setTimeout(() => {
-            window.location.href = `/dashboard.html?payment=success&plan=${plan}`;
-          }, 2000);
+            window.location.href = `/dashboard.html?payment=success&plan=${plan}&activated=${data.success ? 'true' : 'false'}`;
+          }, 1500);
         })
         .catch(err => {
           console.error("❌ activate-subscription error:", err);
+          // ✅ Still redirect automatically (don't block user)
           setTimeout(() => {
-            window.location.href = `/dashboard.html?payment=success&plan=${plan}`;
-          }, 2000);
+            window.location.href = `/dashboard.html?payment=success&plan=${plan}&activation_error=true`;
+          }, 1500);
         });
       },
       
@@ -543,7 +522,7 @@ document.getElementById("paystackBtn").onclick = async () => {
         btn.innerHTML = '<i class="fas fa-credit-card"></i> Proceed to Payment';
         btn.disabled = false;
         isProcessingPayment = false;
-        alert("Payment window closed. You can retry payment anytime from your dashboard.");
+        console.log("ℹ️ Payment window closed by user");
       }
     });
     
