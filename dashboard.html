@@ -493,11 +493,11 @@
   </footer>
 
   <script>
-let currentPlan = 'basic';
+let currentPlan = null; // ✅ START NULL - never assume Basic
 let isSubscriptionActive = true;
 let subscriptionExpiryDate = null;
 let isAccountSuspended = false;
-let subscriptionStatus = 'active'; // 'active', 'expired', 'cancelled', 'inactive', 'suspended'
+let subscriptionStatus = 'active';
 
 document.addEventListener("DOMContentLoaded", async () => {
   const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
@@ -538,34 +538,43 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("📡 Full API Response:", data);
 
     if (data.success) {
-      // ✅ Normalize plan to lowercase
-      currentPlan = (data.plan || data.data?.current_plan || 'basic').toLowerCase();
+      // ✅ CRITICAL FIX #1: STRICT plan enforcement - NO fallback to 'basic'
+      // User's explicitly chosen plan is the single source of truth
+      const rawPlan = data.plan || data.current_plan || data.data?.current_plan;
+      
+      if (!rawPlan || !['basic', 'pro'].includes(rawPlan.toLowerCase())) {
+        console.error("❌ CRITICAL: Missing or invalid plan in API response:", {
+          plan: data.plan,
+          current_plan: data.current_plan,
+          data_plan: data.data?.current_plan
+        });
+        
+        // ✅ BLOCK dashboard access - show error overlay
+        showPlanConfigurationError();
+        return;
+      }
+      
+      currentPlan = rawPlan.toLowerCase();
       
       // ✅ Get subscription status and expiry
-      subscriptionStatus = (data.data?.subscription_status || data.subscription_status || 'active').toLowerCase().trim();
+      subscriptionStatus = (data.subscription_status || data.data?.subscription_status || 'active').toLowerCase().trim();
       subscriptionExpiryDate = data.expiryDate || data.data?.subscription_expiry || null;
       isAccountSuspended = data.isSuspended || data.data?.is_suspended || false;
       
       // ✅ SIMPLE STATUS CHECK: subscription_status is the ONLY source of truth
-      // ✅ NO grace period, NO date fallback — just explicit status
       let isExpired = false;
       
-      // Check subscription_status explicitly
       if (subscriptionStatus === 'expired' || 
           subscriptionStatus === 'cancelled' || 
           subscriptionStatus === 'inactive') {
         isExpired = true;
       }
       
-      // That's it. No date checks. No grace period.
-      // If backend says 'active', dashboard shows active.
-      // If backend says 'expired', dashboard shows expired.
-      
       isSubscriptionActive = !isAccountSuspended && !isExpired;
       
       console.log("✅ Plan (normalized):", currentPlan);
       console.log("✅ Subscription Status:", subscriptionStatus);
-      console.log("✅ Is Expired (simple check):", isExpired);
+      console.log("✅ Is Expired:", isExpired);
       console.log("✅ Is Active:", isSubscriptionActive);
       
       // ✅ Show appropriate overlay if not active
@@ -574,102 +583,169 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else if (!isSubscriptionActive) {
         showSubscriptionBlocked(subscriptionStatus === 'cancelled' || subscriptionStatus === 'inactive');
       }
+      
+      // ✅ Save plan to localStorage ONLY after successful validation
+      localStorage.setItem('last_known_plan', currentPlan);
+    } else {
+      // ✅ API returned success:false - treat as configuration error
+      console.error("❌ API returned success:false:", data.message || "Unknown error");
+      showPlanConfigurationError();
+      return;
     }
   } catch (err) {
     console.error("❌ Failed to fetch account status:", err);
-    document.getElementById('planBadge').textContent = "ERROR";
-    document.getElementById('planBadge').className = "plan-badge expired";
+    
+    // ✅ CRITICAL FIX #2: NEVER fallback to Basic on error
+    // Try to recover last-known VALID plan from localStorage
+    const lastKnownPlan = localStorage.getItem('last_known_plan');
+    
+    if (lastKnownPlan && ['basic', 'pro'].includes(lastKnownPlan)) {
+      console.log("✅ Recovering last-known valid plan:", lastKnownPlan);
+      currentPlan = lastKnownPlan;
+      
+      // ✅ Show degraded UI with warning (not error overlay)
+      showPlanRecoveryWarning(lastKnownPlan);
+      applyPlanRestrictions();
+    } else {
+      // ✅ NO valid plan available - BLOCK dashboard access
+      showPlanConfigurationError();
+      return;
+    }
   }
 
   // ✅ Update UI after fetch — PRESERVE LAST PAID PLAN ON BADGE
   setTimeout(() => {
     const badge = document.getElementById('planBadge');
-    if (badge) {
-      if (isAccountSuspended) {
-        badge.textContent = "SUSPENDED";
-        badge.className = "plan-badge suspended";
-      } else if (!isSubscriptionActive) {
-        // ✅ Show last paid plan + (EXPIRED) — preserves Pro/Basic even when expired
-        badge.textContent = `${currentPlan.toUpperCase()} (EXPIRED)`;
-        badge.className = "plan-badge expired";
-      } else {
-        // ✅ Active subscription - show plan normally
-        badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-        badge.className = `plan-badge ${currentPlan}`;
-      }
+    if (!badge) return;
+    
+    if (isAccountSuspended) {
+      badge.textContent = "SUSPENDED";
+      badge.className = "plan-badge suspended";
+    } else if (!isSubscriptionActive) {
+      // ✅ Show last paid plan + (EXPIRED) — preserves Pro/Basic even when expired
+      badge.textContent = `${currentPlan.toUpperCase()} (EXPIRED)`;
+      badge.className = "plan-badge expired";
+    } else {
+      // ✅ Active subscription - show plan normally
+      badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+      badge.className = `plan-badge ${currentPlan}`;
     }
+    
     applyPlanRestrictions();
   }, 100);
 });
 
-// ✅ SHOW SUBSCRIPTION BLOCKED OVERLAY (Expired OR Cancelled)
-function showSubscriptionBlocked(isCancelled) {
-  console.log("🔒 Subscription blocked - locking dashboard");
+// ✅ SHOW PLAN CONFIGURATION ERROR OVERLAY (BLOCKS ALL ACCESS)
+function showPlanConfigurationError() {
+  console.log("❌ Plan configuration error - blocking dashboard access");
   
-  const overlay = document.getElementById("subscriptionOverlay");
+  // Create error overlay if doesn't exist
+  let overlay = document.getElementById('planErrorOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'planErrorOverlay';
+    overlay.className = 'subscription-overlay active';
+    overlay.innerHTML = `
+      <div class="expired-card" style="background: rgba(255, 255, 255, 0.95); max-width: 500px;">
+        <div class="warning-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <h2 style="color: #2d3748; font-size: 1.8rem; margin-bottom: 15px; font-weight: 700;">
+          Account Configuration Error
+        </h2>
+        <p style="color: #718096; font-size: 1rem; line-height: 1.6; margin-bottom: 30px;">
+          Your account plan information is missing or invalid. This is not a downgrade — your original plan selection is preserved but requires administrator intervention to restore access.
+        </p>
+        <button class="renew-btn" onclick="contactSupport()" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); margin-bottom: 20px;">
+          Contact Support
+        </button>
+        <div class="expired-note" style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 12px 15px; border-radius: 8px; font-size: 0.9rem; color: #718096;">
+          <strong>Note:</strong> This is NOT a downgrade to Basic plan. Your original plan selection remains intact in our records. Support will restore your access within 24 hours.
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
+  
+  // Blur dashboard
   const dashboardContainer = document.getElementById("dashboardContainer");
-  const expiredTitle = document.getElementById("expiredTitle");
-  const expiredMessage = document.getElementById("expiredMessage");
-  
-  // ✅ Update message based on reason
-  if (expiredTitle) {
-    expiredTitle.textContent = isCancelled ? "Subscription Cancelled!" : "Subscription Expired!";
-  }
-  
-  if (expiredMessage) {
-    expiredMessage.textContent = isCancelled 
-      ? "Your Gradely subscription has been cancelled. Please renew to continue using all features."
-      : "Your Gradely subscription has expired. Please renew to continue using all features.";
-  }
-  
-  // ✅ Show the overlay
-  if (overlay) {
-    overlay.classList.add("active");
-  }
-  
-  // ✅ Blur and disable dashboard content
   if (dashboardContainer) {
     dashboardContainer.classList.add("dashboard-blurred");
   }
   
-  // ✅ Disable all interactive elements except overlay
-  const interactiveElements = document.querySelectorAll("button, a, input, select, textarea, .card, [onclick]");
-  interactiveElements.forEach(el => {
+  // Disable all interactive elements
+  document.querySelectorAll("button, a, input, select, textarea, .card, [onclick]").forEach(el => {
     if (!el.closest(".expired-card") && !el.classList.contains("renew-btn")) {
       el.style.pointerEvents = "none";
       el.setAttribute("tabindex", "-1");
-      if (el.onclick) {
-        el.dataset.originalOnclick = el.onclick.toString();
-        el.onclick = null;
-      }
     }
   });
   
-  // ✅ Prevent back button from bypassing overlay
+  // Prevent back navigation
   history.pushState(null, null, location.href);
   window.addEventListener("popstate", () => {
     history.pushState(null, null, location.href);
   });
 }
 
-// ✅ SHOW SUSPENDED OVERLAY
-function showAccountSuspended() {
-  console.log("🔒 Account suspended - locking dashboard");
-  document.getElementById('dashboardContainer').classList.add('dashboard-blurred');
-  document.getElementById('suspendedOverlay').classList.add('active');
+// ✅ SHOW PLAN RECOVERY WARNING (DEGRADED UI - NOT BLOCKED)
+function showPlanRecoveryWarning(recoveredPlan) {
+  console.log("⚠️ Recovered plan from localStorage:", recoveredPlan);
   
-  // ✅ Disable all interactive elements except suspended overlay
-  const interactiveElements = document.querySelectorAll("button, a, input, select, textarea, .card, [onclick]");
-  interactiveElements.forEach(el => {
-    if (!el.closest(".suspended-modal") && !el.classList.contains("contact-btn")) {
-      el.style.pointerEvents = "none";
-      el.setAttribute("tabindex", "-1");
-    }
-  });
+  const badge = document.getElementById('planBadge');
+  if (badge) {
+    badge.textContent = `${recoveredPlan.toUpperCase()} (RECOVERED)`;
+    badge.className = `plan-badge ${recoveredPlan} expired`;
+  }
+  
+  // Show non-blocking warning toast
+  const warning = document.createElement('div');
+  warning.style.position = 'fixed';
+  warning.style.top = '20px';
+  warning.style.right = '20px';
+  warning.style.background = 'rgba(255, 193, 7, 0.9)';
+  warning.style.color = '#000';
+  warning.style.padding = '15px 25px';
+  warning.style.borderRadius = '10px';
+  warning.style.zIndex = '9999';
+  warning.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
+  warning.style.maxWidth = '400px';
+  warning.style.fontSize = '0.95rem';
+  warning.innerHTML = `
+    ⚠️ Plan information temporarily unavailable.<br>
+    Showing last-known plan: <strong>${recoveredPlan.toUpperCase()}</strong><br>
+    <small>Full access will be restored when connection is re-established.</small>
+  `;
+  document.body.appendChild(warning);
+  
+  // Auto-dismiss after 10 seconds
+  setTimeout(() => {
+    warning.style.opacity = '0';
+    warning.style.transition = 'opacity 0.5s ease';
+    setTimeout(() => warning.remove(), 500);
+  }, 10000);
+}
+
+// ✅ CONTACT SUPPORT HANDLER
+function contactSupport() {
+  const email = 'support@gradely.info';
+  const subject = encodeURIComponent('Account Plan Configuration Error - ' + localStorage.getItem('school_id'));
+  window.location.href = `mailto:${email}?subject=${subject}&body=School ID: ${localStorage.getItem('school_id')}\n\nI'm unable to access my dashboard due to a plan configuration error. Please restore my account access.`;
 }
 
 // ✅ APPLY PLAN RESTRICTIONS (VISUAL ONLY)
 function applyPlanRestrictions() {
+  // ✅ CRITICAL FIX #3: BLOCK access if plan is NULL (never assume Basic)
+  if (!currentPlan || !['basic', 'pro'].includes(currentPlan)) {
+    console.error("❌ Cannot apply restrictions - currentPlan is invalid:", currentPlan);
+    showPlanConfigurationError();
+    return;
+  }
+  
   const proCards = document.querySelectorAll('.pro-only');
   
   if (!isAccountSuspended && isSubscriptionActive) {
@@ -715,6 +791,12 @@ function handleProFeature(url) {
     return;
   }
   
+  // ✅ CRITICAL FIX #4: BLOCK access if plan is NULL (never assume Basic)
+  if (!currentPlan || !['basic', 'pro'].includes(currentPlan)) {
+    showPlanConfigurationError();
+    return;
+  }
+  
   // ✅ Pro users go directly to feature
   if (currentPlan === 'pro') {
     window.location.href = url;
@@ -743,6 +825,12 @@ function goTo(page) {
     return;
   }
   
+  // ✅ CRITICAL FIX #5: BLOCK navigation if plan is NULL
+  if (!currentPlan || !['basic', 'pro'].includes(currentPlan)) {
+    showPlanConfigurationError();
+    return;
+  }
+  
   window.location.href = page;
 }
 
@@ -750,6 +838,7 @@ function goTo(page) {
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
   if (confirm("Are you sure you want to logout?")) {
     sessionStorage.removeItem('proFeatureAlertShown');
+    localStorage.removeItem('last_known_plan'); // ✅ Clear plan on logout
     localStorage.clear();
     sessionStorage.clear();
     window.location.href = "index.html";
