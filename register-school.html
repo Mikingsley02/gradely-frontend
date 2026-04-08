@@ -245,16 +245,14 @@
   // ✅ FIXED: Clean API_BASE (NO trailing spaces)
   const API_BASE = "https://api.gradely.info";
 
-  // ✅ Toggle password visibility - Works with existing onclick (fieldId only)
+  // ✅ Toggle password visibility
   function togglePasswordVisibility(fieldId) {
     const input = document.getElementById(fieldId);
     if (!input) return;
     
-    // Toggle input type
     const isPassword = input.type === 'password';
     input.type = isPassword ? 'text' : 'password';
     
-    // Find and update the associated eye icon
     const wrapper = input.closest('.password-wrapper');
     if (wrapper) {
       const icon = wrapper.querySelector('.toggle-password');
@@ -264,16 +262,14 @@
     }
   }
 
-  // ✅ Wait for DOM to be ready before attaching event listeners
+  // ✅ Wait for DOM to be ready
   document.addEventListener("DOMContentLoaded", () => {
-    
     // ===============================
-    // ✅ CONSOLIDATED: Auto-select plan from URL param OR sessionStorage
+    // ✅ Restore plan selection from URL/session
     // ===============================
     const urlParams = new URLSearchParams(window.location.search);
     const planFromUrl = urlParams.get('plan');
     const planFromSession = sessionStorage.getItem('selected_plan');
-    
     const selectedPlan = planFromUrl || planFromSession;
     
     const planInput = document.getElementById("plan");
@@ -311,12 +307,11 @@
     }
 
     // ===============================
-    // ✅ Select Plan button (navigate to plan comparison)
+    // ✅ Select Plan button
     // ===============================
     const selectPlanBtn = document.getElementById("selectPlanBtn");
     if (selectPlanBtn) {
       selectPlanBtn.addEventListener("click", () => {
-        // ✅ Save ALL form data including passwords (temporary, for registration flow only)
         sessionStorage.setItem('register_form_data', JSON.stringify({
           schoolName: document.getElementById('schoolName')?.value,
           adminId: document.getElementById('adminNumber')?.value,
@@ -326,13 +321,12 @@
           confirmPassword: document.getElementById('confirmPassword')?.value
         }));
         
-        // ✅ Redirect to plan comparison with new=true flag
         window.location.href = 'plan-comparison.html?new=true';
       });
     }
     
     // ===============================
-    // ✅ Restore form data if user returns from plan selection (INCLUDING passwords)
+    // ✅ Restore form data if returning from plan selection
     // ===============================
     const formData = sessionStorage.getItem('register_form_data');
     if (formData) {
@@ -344,18 +338,15 @@
         if (data.phone) document.getElementById('phone').value = data.phone;
         if (data.password) document.getElementById('password').value = data.password;
         if (data.confirmPassword) document.getElementById('confirmPassword').value = data.confirmPassword;
-        
-        // ✅ Clear after restoring (one-time use, security best practice)
         sessionStorage.removeItem('register_form_data');
       } catch (e) {
-        console.warn("⚠️ Could not restore form ", e);
+        console.warn("⚠️ Could not restore form data:", e);
       }
     }
-
-  }); // ✅ End of DOMContentLoaded
+  });
 
   // ===============================
-  // ✅ Registration handler (payment required BEFORE account activation)
+  // ✅ Registration handler - CRITICAL FIX: Pass email to payment page
   // ===============================
   async function handleRegistration() {
     const submitBtn = document.getElementById("submitBtn");
@@ -370,41 +361,32 @@
       return;
     }
 
-    // ✅ Set button to loading state
     submitBtn.textContent = "⏳ Creating account...";
     submitBtn.disabled = true;
 
     // ✅ Gather form values
-    const schoolNameEl = document.getElementById("schoolName");
-    const adminIdEl = document.getElementById("adminNumber");
-    const emailEl = document.getElementById("email");
-    const phoneEl = document.getElementById("phone");
-    const passwordEl = document.getElementById("password");
-    const confirmPasswordEl = document.getElementById("confirmPassword");
-    const planEl = document.getElementById("plan");
-
-    const school_name = schoolNameEl?.value.trim() || "";
-    const admin_id = adminIdEl?.value.trim() || "";
-    const email = emailEl?.value.trim() || "";
-    const phone = phoneEl?.value.trim() || "";
-    const password = passwordEl?.value.trim() || "";
-    const confirm_password = confirmPasswordEl?.value.trim() || "";
-    const subscription_plan = planEl?.value || "";
+    const schoolName = document.getElementById("schoolName")?.value.trim() || "";
+    const adminId = document.getElementById("adminNumber")?.value.trim() || "";
+    const email = document.getElementById("email")?.value.trim() || "";
+    const phone = document.getElementById("phone")?.value.trim() || "";
+    const password = document.getElementById("password")?.value.trim() || "";
+    const confirmPassword = document.getElementById("confirmPassword")?.value.trim() || "";
+    const subscriptionPlan = document.getElementById("plan")?.value || "";
 
     // ✅ Validate inputs
-    if (!subscription_plan) {
+    if (!subscriptionPlan) {
       alert("⚠️ Please select a subscription plan first.");
       resetSubmitBtn();
       return;
     }
 
-    if (!school_name || !admin_id || !email || !phone || !password || !confirm_password) {
+    if (!schoolName || !adminId || !email || !phone || !password || !confirmPassword) {
       alert("⚠️ Please fill in all fields.");
       resetSubmitBtn();
       return;
     }
 
-    if (password !== confirm_password) {
+    if (password !== confirmPassword) {
       alert("❌ Password does not match. Please try again.");
       resetSubmitBtn();
       return;
@@ -412,12 +394,12 @@
 
     // ✅ Prepare request data
     const data = {
-      school_name,
-      admin_id,
-      email,
-      phone,
-      password,
-      subscription_plan,
+      school_name: schoolName,
+      admin_id: adminId,
+      email: email,
+      phone: phone,
+      password: password,
+      subscription_plan: subscriptionPlan,
       terms_accepted: agreeTerms.checked
     };
 
@@ -429,10 +411,10 @@
       });
 
       const result = await res.json();
-      console.log("✅ Server response:", result);
+      console.log("✅ Registration response:", result);
 
       if (res.ok && result.success) {
-        // ✅ Show redirecting message on page (NO alert popup)
+        // ✅ CRITICAL FIX: Pass EMAIL to payment page via URL parameter
         if (redirectStatus) {
           redirectStatus.textContent = "✅ Account created! Redirecting to payment...";
           redirectStatus.style.display = "block";
@@ -440,18 +422,18 @@
         submitBtn.textContent = "🔄 Redirecting...";
         submitBtn.disabled = true;
 
-        // Clean up session storage
+        // ✅ Clean up session storage
         sessionStorage.removeItem("selected_plan");
         sessionStorage.removeItem("plan_return_url");
         sessionStorage.removeItem("register_form_data");
 
-        // ✅ FIXED: Access nested result.data fields for redirect
+        // ✅ CRITICAL: Include email in redirect URL for payment flow
         const schoolId = result.data?.school_id || result.data?.admin_id;
         const adminId = result.data?.admin_id;
         
-        // ✅ Auto-redirect after 1 second (no OK button needed)
+        // ✅ Auto-redirect after 1 second (NO OK button)
         setTimeout(() => {
-          window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(subscription_plan)}&new=true&pending=true`;
+          window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(subscriptionPlan)}&email=${encodeURIComponent(email)}&new=true&pending=true`;
         }, 1000);
         
       } else {
@@ -466,7 +448,7 @@
   }
 
   // ===============================
-  // ✅ Reset submit button to default state
+  // ✅ Reset submit button
   // ===============================
   function resetSubmitBtn() {
     const submitBtn = document.getElementById("submitBtn");
