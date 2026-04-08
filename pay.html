@@ -314,10 +314,10 @@ const admin_id = params.get("admin_id")
   || localStorage.getItem("admin_id") 
   || sessionStorage.getItem("admin_id");
 
-// ✅ CRITICAL FIX #1: Prioritize URL email parameter (most reliable for new registrations)
-let customerEmail = params.get("email")                    // From registration flow
-                || localStorage.getItem("email")           // Session storage
-                || sessionStorage.getItem("email")         // Session storage
+// ✅ CRITICAL FIX #1: Prioritize URL email parameter (from registration flow)
+let customerEmail = params.get("email")                    // URL param (MOST RELIABLE)
+                || localStorage.getItem("email")           // localStorage
+                || sessionStorage.getItem("email")         // sessionStorage
                 || localStorage.getItem("school_email")    // Fallback
                 || sessionStorage.getItem("school_email")  // Fallback
                 || '';
@@ -334,7 +334,7 @@ const PLAN_PRICES = { basic: '₦83,900', pro: '₦89,700' };
 document.getElementById('planName').textContent = PLAN_NAMES[plan];
 document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
 
-// ✅ CRITICAL FIX #2: Email recovery with proper fallbacks
+// ✅ CRITICAL FIX #2: Email recovery with multiple fallbacks
 async function recoverEmail(schoolId) {
   console.log("🔍 Recovering email for school:", schoolId);
   
@@ -360,7 +360,7 @@ async function recoverEmail(schoolId) {
     return regEmail;
   }
   
-  // Fallback 3: Generate placeholder email (valid format for Paystack)
+  // Fallback 3: Generate valid placeholder email (Paystack accepts any valid format)
   const placeholderEmail = `${schoolId.toLowerCase().replace(/[^a-z0-9]/gi, '')}@gradely.info`;
   console.warn("⚠️ Using placeholder email:", placeholderEmail);
   return placeholderEmail;
@@ -445,6 +445,7 @@ document.getElementById("paystackBtn").onclick = async () => {
       currency: "NGN",
       ref: reference,
       
+      // ✅ CRITICAL FIX #4: CORRECTED SYNTAX (metadata: { ... } not meta { ... })
       metadata: {
         school_id: school_id,
         admin_id: admin_id,
@@ -455,11 +456,10 @@ document.getElementById("paystackBtn").onclick = async () => {
         ]
       },
       
-      // ✅ CRITICAL FIX #4: Proper callback handling with NO OK BUTTON
+      // ✅ CRITICAL FIX #5: Proper callback with AUTO-REDIRECT (NO OK BUTTON)
       callback: function(response) {
         console.log("✅ Paystack payment SUCCESS:", {
           reference: response.reference,
-          status: response.status,
           authorization_code: response.authorization?.authorization_code
         });
         
@@ -467,13 +467,12 @@ document.getElementById("paystackBtn").onclick = async () => {
         localStorage.setItem('school_id', school_id);
         localStorage.setItem('plan', plan);
         localStorage.setItem('email', customerEmail);
-        sessionStorage.setItem('last_payment_ref', response.reference);
         
-        // ✅ CRITICAL FIX #5: Extract authorization_code CORRECTLY
+        // ✅ CRITICAL FIX #6: Extract authorization_code CORRECTLY
         const authorizationCode = response.authorization?.authorization_code;
         
         if (!authorizationCode) {
-          console.error("❌ CRITICAL: Missing authorization_code! Response:", response);
+          console.error("❌ Missing authorization_code! Response:", response);
           // Still redirect - webhook may handle activation
           setTimeout(() => {
             window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
@@ -485,7 +484,7 @@ document.getElementById("paystackBtn").onclick = async () => {
         btn.innerHTML = '<i class="fas fa-check-circle"></i> Activating subscription...';
         btn.disabled = true;
         
-        // ✅ CRITICAL FIX #6: Call activate-subscription WITH authorization_code
+        // ✅ CRITICAL FIX #7: Call activate-subscription WITH authorization_code
         fetch(`${API_BASE}/api/subscription/activate-subscription`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -503,7 +502,7 @@ document.getElementById("paystackBtn").onclick = async () => {
             message: data.message
           });
           
-          // ✅ CRITICAL FIX #7: AUTOMATIC REDIRECT (NO OK BUTTON)
+          // ✅ CRITICAL FIX #8: AUTOMATIC REDIRECT (NO OK BUTTON)
           // Redirect after 1.5s regardless of activation success (webhook will handle)
           setTimeout(() => {
             window.location.href = `/dashboard.html?payment=success&plan=${plan}&activated=${data.success ? 'true' : 'false'}`;
