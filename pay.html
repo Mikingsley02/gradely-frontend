@@ -457,59 +457,68 @@ document.getElementById("paystackBtn").onclick = async () => {
       },
       
       // ✅ FIXED: Paystack-compatible callback (regular function wrapping async IIFE)
-      callback: function(response) {
-        (async () => {
-          console.log("✅ Paystack payment SUCCESS:", {
-            reference: response.reference,
-            authorization_code: response.authorization?.authorization_code
-          });
-          
-          // Save session data
-          localStorage.setItem('school_id', school_id);
-          localStorage.setItem('plan', plan);
-          localStorage.setItem('email', customerEmail);
-          
-          const authorizationCode = response.authorization?.authorization_code;
-          
-          if (!authorizationCode) {
-            console.warn("⚠️ No authorization_code - webhook may still activate account");
-            setTimeout(() => {
-              window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
-            }, 1500);
-            return;
-          }
-          
-          // Show activation state
-          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enabling auto-renewal...';
-          btn.disabled = true;
-          
-          try {
-            // ✅ CORRECT ENDPOINT + school_id included
-            const setupRes = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({
-                authorization_code: authorizationCode,
-                plan: plan,
-                school_id: school_id
-              })
-            });
-            
-            const setupData = await setupRes.json();
-            console.log("🔄 Auto-renewal setup:", setupData);
-            
-          } catch (err) {
-            console.error("❌ Auto-renewal setup failed (non-critical):", err);
-            // Account still works - just won't auto-renew
-          }
-          
-          // ✅ Always redirect after short delay
-          setTimeout(() => {
-            window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
-          }, 1500);
-        })(); // 👈 Immediately invoke async function
-      },
+      // ✅ REPLACE your current callback with this hardened version:
+callback: function(response) {
+  (async () => {
+    console.log("✅ Paystack payment SUCCESS:", {
+      reference: response.reference,
+      authorization_code: response.authorization?.authorization_code
+    });
+    
+    localStorage.setItem('school_id', school_id);
+    localStorage.setItem('plan', plan);
+    localStorage.setItem('email', customerEmail);
+    
+    const authorizationCode = response.authorization?.authorization_code;
+    
+    if (!authorizationCode) {
+      console.warn("⚠️ No authorization_code - webhook activated account only");
+      setTimeout(() => {
+        window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
+      }, 1500);
+      return;
+    }
+    
+    // Show activation state
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enabling auto-renewal...';
+    btn.disabled = true;
+    
+    try {
+      // ✅ Wait for setup-subscription to COMPLETE before redirecting
+      const setupRes = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // 🔑 CRITICAL: sends session cookie
+        body: JSON.stringify({
+          authorization_code: authorizationCode,
+          plan: plan,
+          school_id: school_id
+        })
+      });
+      
+      const setupData = await setupRes.json();
+      console.log("🔄 Auto-renewal setup result:", {
+        success: setupData.success,
+        subscription_code: setupData.subscription_code,
+        status: setupRes.status
+      });
+      
+      if (!setupData.success) {
+        console.warn("⚠️ Auto-renewal setup failed:", setupData.message);
+        // Still redirect - account is active, just no auto-renewal
+      }
+      
+    } catch (err) {
+      console.error("❌ Auto-renewal setup fetch failed:", err);
+      // Still redirect - don't block user experience
+    }
+    
+    // ✅ Redirect ONLY after setup attempt completes
+    setTimeout(() => {
+      window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}&autorenew=${setupData?.success ? 'ok' : 'pending'}`;
+    }, 1000); // Shorter delay since we already awaited
+  })();
+},
       
       onClose: function() {
         btn.innerHTML = '<i class="fas fa-credit-card"></i> Proceed to Payment';
