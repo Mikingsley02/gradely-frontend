@@ -456,58 +456,60 @@ document.getElementById("paystackBtn").onclick = async () => {
         ]
       },
       
-      // ✅ CRITICAL FIX #5: Proper callback with AUTO-REDIRECT (NO OK BUTTON)
-      callback: async function(response) {
-  console.log("✅ Paystack payment SUCCESS:", {
-    reference: response.reference,
-    authorization_code: response.authorization?.authorization_code
-  });
-  
-  // Save session data
-  localStorage.setItem('school_id', school_id);
-  localStorage.setItem('plan', plan);
-  localStorage.setItem('email', customerEmail);
-  
-  const authorizationCode = response.authorization?.authorization_code;
-  
-  if (!authorizationCode) {
-    console.warn("⚠️ No authorization_code - webhook may still activate account");
-    setTimeout(() => {
-      window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
-    }, 1500);
-    return;
-  }
-  
-  // Show activation state
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enabling auto-renewal...';
-  btn.disabled = true;
-  
-  try {
-    // ✅ CORRECT ENDPOINT + school_id included
-    const setupRes = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        authorization_code: authorizationCode,
-        plan: plan,
-        school_id: school_id
-      })
-    });
-    
-    const setupData = await setupRes.json();
-    console.log("🔄 Auto-renewal setup:", setupData);
-    
-  } catch (err) {
-    console.error("❌ Auto-renewal setup failed (non-critical):", err);
-    // Account still works - just won't auto-renew
-  }
-  
-  // ✅ Always redirect after short delay
-  setTimeout(() => {
-    window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
-  }, 1500);
-},
+      // ✅ FIXED: Paystack-compatible callback (regular function wrapping async IIFE)
+      callback: function(response) {
+        (async () => {
+          console.log("✅ Paystack payment SUCCESS:", {
+            reference: response.reference,
+            authorization_code: response.authorization?.authorization_code
+          });
+          
+          // Save session data
+          localStorage.setItem('school_id', school_id);
+          localStorage.setItem('plan', plan);
+          localStorage.setItem('email', customerEmail);
+          
+          const authorizationCode = response.authorization?.authorization_code;
+          
+          if (!authorizationCode) {
+            console.warn("⚠️ No authorization_code - webhook may still activate account");
+            setTimeout(() => {
+              window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
+            }, 1500);
+            return;
+          }
+          
+          // Show activation state
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enabling auto-renewal...';
+          btn.disabled = true;
+          
+          try {
+            // ✅ CORRECT ENDPOINT + school_id included
+            const setupRes = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                authorization_code: authorizationCode,
+                plan: plan,
+                school_id: school_id
+              })
+            });
+            
+            const setupData = await setupRes.json();
+            console.log("🔄 Auto-renewal setup:", setupData);
+            
+          } catch (err) {
+            console.error("❌ Auto-renewal setup failed (non-critical):", err);
+            // Account still works - just won't auto-renew
+          }
+          
+          // ✅ Always redirect after short delay
+          setTimeout(() => {
+            window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
+          }, 1500);
+        })(); // 👈 Immediately invoke async function
+      },
       
       onClose: function() {
         btn.innerHTML = '<i class="fas fa-credit-card"></i> Proceed to Payment';
