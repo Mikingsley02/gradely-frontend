@@ -457,69 +457,69 @@ document.getElementById("paystackBtn").onclick = async () => {
       },
       
       // ✅ FIXED: Paystack-compatible callback (regular function wrapping async IIFE)
-      // ✅ REPLACE your current callback with this hardened version:
-callback: function(response) {
+      callback: function(response) {
   (async () => {
-    console.log("✅ Paystack payment SUCCESS:", {
-      reference: response.reference,
-      authorization_code: response.authorization?.authorization_code
-    });
+    console.log("🔍 [CALLBACK START] Raw Paystack response:", response);
     
+    // Save session data
     localStorage.setItem('school_id', school_id);
     localStorage.setItem('plan', plan);
     localStorage.setItem('email', customerEmail);
     
-    const authorizationCode = response.authorization?.authorization_code;
-    
+    // Extract authorization code (fallback to nested path if needed)
+    const authorizationCode = 
+      response?.authorization?.authorization_code || 
+      response?.authorization_code || 
+      response?.data?.authorization?.authorization_code;
+
+    console.log("🔑 Extracted authorizationCode:", authorizationCode);
+
     if (!authorizationCode) {
-      console.warn("⚠️ No authorization_code - webhook activated account only");
+      console.warn("⚠️ [EARLY EXIT] No authorization_code found. Skipping auto-renewal setup.");
+      console.warn("Paystack response structure:", JSON.stringify(response.authorization, null, 2));
       setTimeout(() => {
         window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
       }, 1500);
       return;
     }
-    
-    // Show activation state
+
+    // Show UI feedback
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enabling auto-renewal...';
     btn.disabled = true;
-    
+
     try {
-      // ✅ Wait for setup-subscription to COMPLETE before redirecting
+      console.log("📡 [FETCH START] Calling /setup-subscription...");
+      console.log("📤 Payload:", { authorization_code: authorizationCode, plan, school_id });
+
       const setupRes = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // 🔑 CRITICAL: sends session cookie
+        credentials: 'include', // 🔑 Sends session cookie
         body: JSON.stringify({
           authorization_code: authorizationCode,
           plan: plan,
           school_id: school_id
         })
       });
-      
+
+      console.log("📥 [FETCH RESPONSE] Status:", setupRes.status);
       const setupData = await setupRes.json();
-      console.log("🔄 Auto-renewal setup result:", {
-        success: setupData.success,
-        subscription_code: setupData.subscription_code,
-        status: setupRes.status
-      });
-      
+      console.log("🔄 Auto-renewal setup result:", setupData);
+
       if (!setupData.success) {
-        console.warn("⚠️ Auto-renewal setup failed:", setupData.message);
-        // Still redirect - account is active, just no auto-renewal
+        console.warn("⚠️ Backend returned success: false →", setupData.message);
       }
-      
     } catch (err) {
-      console.error("❌ Auto-renewal setup fetch failed:", err);
-      // Still redirect - don't block user experience
+      console.error("❌ [FETCH CATCH] Network or JS error during setup-subscription:", err);
     }
-    
-    // ✅ Redirect ONLY after setup attempt completes
+
+    // Redirect after attempt
     setTimeout(() => {
-      window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}&autorenew=${setupData?.success ? 'ok' : 'pending'}`;
-    }, 1000); // Shorter delay since we already awaited
+      window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
+    }, 1000);
   })();
 },
-
+      
       onClose: function() {
         btn.innerHTML = '<i class="fas fa-credit-card"></i> Proceed to Payment';
         btn.disabled = false;
