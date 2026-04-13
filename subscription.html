@@ -553,10 +553,11 @@ function showPlanSelection() {
 // ✅ NEW: Auto-Renewal Setup Functions (FIXED - Zero Errors)
 
 // 🔹 Start verification payment to get authorization_code
+// 🔹 Start verification payment to get authorization_code (FIXED)
 async function startVerificationPayment() {
   const btn = document.querySelector('#autorenewStep1 .btn');
   const originalText = btn.innerHTML;
-  const planToUse = currentPlan || 'basic'; // ✅ FIX #3: Fallback if null
+  const planToUse = currentPlan || 'basic';
   
   try {
     btn.disabled = true;
@@ -573,7 +574,7 @@ async function startVerificationPayment() {
     const data = await res.json();
     if (!data.success) throw new Error(data.message);
     
-    // Load Paystack key with error handling ✅ FIX #4
+    // Load Paystack key with error handling
     let paystackKey;
     try {
       const keyRes = await fetch(`${API_BASE}/api/config/paystack-key`);
@@ -585,27 +586,17 @@ async function startVerificationPayment() {
       throw new Error('Payment configuration not available. Please try again.');
     }
     
-    // ✅ FIX #6: Validate amount
-    const verificationAmount = 1000; // ₦10
-    if (typeof verificationAmount !== 'number' || verificationAmount < 100) {
-      throw new Error('Invalid verification amount');
-    }
+    // Generate reference (Paystack validates format server-side)
+    const ref = `GRD-VERIFY-${schoolId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    // ✅ FIX #7: Generate valid reference
-    const ref = `GRD-VERIFY-${schoolId}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-    if (!/^[A-Z0-9\-]{10,}$/.test(ref)) {
-      throw new Error('Invalid reference format');
-    }
-    
-    // ✅ FIX #2: Paystack-compatible callback (regular function + IIFE)
+    // ✅ Paystack-compatible callback (regular function + IIFE)
     const handler = PaystackPop.setup({
       key: paystackKey,
       email: localStorage.getItem('email') || 'user@gradely.info',
-      amount: verificationAmount,
+      amount: 1000, // ₦10 verification (refunded)
       currency: 'NGN',
       ref: ref,
-      // ✅ FIX #1: metadata (not meta)
-      metadata: {
+      metadata: {  // ✅ Fixed: was 'meta', should be 'metadata'
         school_id: schoolId,
         action: 'authorization_verification'
       },
@@ -656,6 +647,7 @@ async function startVerificationPayment() {
     btn.innerHTML = originalText;
   }
 }
+
 
 // 🔹 Call /setup-subscription with authorization_code
 async function setupAutoRenewal(authorizationCode) {
