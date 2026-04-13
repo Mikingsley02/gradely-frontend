@@ -8,886 +8,229 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🏫 School Dashboard | Gradely.info</title>
   <style>
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #6a11cb, #2575fc);
-      min-height: 100vh;
-      margin: 0;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-    }
+    /* ... [KEEP ALL YOUR EXISTING CSS] ... */
 
-    header {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 15px 25px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-      z-index: 100;
-      position: relative;
-    }
-
-    header h1 {
-      font-size: 1.3rem;
-      margin: 0;
-    }
-
-    .plan-badge {
-      background: #00d2ff;
-      color: #0c2461;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: bold;
-      margin-left: 12px;
-    }
-
-    .plan-badge.basic { background: #ffcc00; color: #000; }
-    .plan-badge.pro { background: #00e676; color: #000; }
-    .plan-badge.expired { background: #ef4444; color: #fff; animation: pulse 2s infinite; }
-    .plan-badge.suspended { background: #9e9e9e; color: #fff; animation: pulse 2s infinite; }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-
-    .logout-btn {
-      background: #ff5f6d;
-      border: none;
-      color: #fff;
-      padding: 10px 18px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      z-index: 101;
-      position: relative;
-    }
-
-    .logout-btn:hover {
-      background: #ff3b4a;
-      transform: scale(1.05);
-    }
-
-    .dashboard-container {
-      flex: 1;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      padding: 40px 25px;
-      position: relative;
-      z-index: 1;
-      transition: filter 0.3s ease, opacity 0.3s ease;
-    }
-
-    .card {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 15px;
-      padding: 25px;
-      text-align: center;
-      backdrop-filter: blur(8px);
-      transition: all 0.3s ease;
-      cursor: pointer;
-      position: relative;
-      z-index: 2;
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-      background: rgba(255, 255, 255, 0.15);
-    }
-
-    .card.pro-only {
-      position: relative;
-    }
-
-    .card.pro-only::after {
-      content: "🔒 Pro";
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: #ffcc00;
-      color: #000;
-      font-size: 0.7rem;
-      padding: 2px 6px;
-      border-radius: 10px;
-      font-weight: bold;
-    }
-
-    .card.disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .card.disabled:hover {
-      transform: none;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .upgrade-prompt {
-      grid-column: 1 / -1;
-      background: rgba(0, 0, 0, 0.2);
-      border: 2px dashed #00e676;
-      border-radius: 15px;
-      padding: 20px;
-      text-align: center;
-      cursor: pointer;
-    }
-
-    .upgrade-prompt:hover {
-      background: rgba(0, 230, 118, 0.2);
-    }
-
-    .icon {
-      font-size: 2.2rem;
-      margin-bottom: 10px;
-    }
-
-    h3 {
-      font-size: 1.2rem;
-      margin: 10px 0 5px;
-    }
-
-    p {
-      font-size: 0.9rem;
-      opacity: 0.85;
-      margin: 0;
-    }
-
-    footer {
-      text-align: center;
-      padding: 15px;
-      font-size: 0.9rem;
-      opacity: 0.8;
-    }
-
-    /* ✅ Subscription Expired/Cancelled Overlay - ERROR RED DESIGN */
-    .subscription-overlay {
+    /* ✅ NEW: Auto-Renewal Popup Modal */
+    .autorenew-modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
       display: none;
       justify-content: center;
       align-items: center;
-      z-index: 9999;
+      z-index: 1001;
       padding: 20px;
     }
 
-    .subscription-overlay.active {
+    .autorenew-modal-overlay.active {
       display: flex;
     }
 
-    .expired-card {
+    .autorenew-modal {
       background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
       border-radius: 20px;
-      padding: 40px 30px;
-      max-width: 480px;
+      padding: 30px;
+      max-width: 450px;
       width: 100%;
       text-align: center;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      animation: slideUp 0.4s ease;
-    }
-
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .warning-icon {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 20px;
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
-    }
-
-    .warning-icon svg {
-      width: 40px;
-      height: 40px;
-      color: white;
-    }
-
-    .expired-card h2 {
+      animation: modalSlideIn 0.4s ease;
       color: #2d3748;
-      font-size: 1.8rem;
+    }
+
+    .autorenew-modal .icon {
+      font-size: 3rem;
       margin-bottom: 15px;
+      color: #4361ee;
+    }
+
+    .autorenew-modal h3 {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+      color: #1e293b;
       font-weight: 700;
     }
 
-    .expired-card p {
-      color: #718096;
+    .autorenew-modal p {
       font-size: 1rem;
+      color: #64748b;
       line-height: 1.6;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
     }
 
-    .renew-btn {
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    .autorenew-modal .btn-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .autorenew-btn {
+      background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
       color: white;
       border: none;
-      padding: 16px 40px;
-      border-radius: 12px;
-      font-size: 1.1rem;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
-      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
-      margin-bottom: 20px;
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
     }
 
-    .renew-btn:hover {
+    .autorenew-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(239, 68, 68, 0.5);
+      box-shadow: 0 8px 20px rgba(67, 97, 238, 0.4);
     }
 
-    .renew-btn:active {
+    .autorenew-btn:active {
       transform: translateY(0);
     }
 
-    .expired-note {
-      background: rgba(239, 68, 68, 0.1);
-      border-left: 4px solid #ef4444;
-      padding: 12px 15px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      color: #718096;
+    .skip-btn {
+      background: rgba(100, 116, 139, 0.1);
+      color: #64748b;
+      border: 1px solid #cbd5e1;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
 
-    .expired-note strong {
-      color: #ef4444;
+    .skip-btn:hover {
+      background: rgba(100, 116, 139, 0.2);
+      color: #475569;
     }
 
-    /* ✅ Blur dashboard when overlay is active */
-    .dashboard-blurred {
-      filter: blur(5px) grayscale(0.8);
-      pointer-events: none;
-      user-select: none;
-      opacity: 0.5;
+    .autorenew-note {
+      margin-top: 20px;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      line-height: 1.5;
     }
 
-    /* Suspended Account Overlay */
-    .suspended-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(8px);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      flex-direction: column;
-    }
-
-    .suspended-overlay.active {
-      display: flex;
-    }
-
-    .suspended-modal {
-      background: linear-gradient(135deg, #6c757d 0%, #343a40 100%);
-      border-radius: 20px;
-      padding: 40px;
-      max-width: 500px;
-      width: 90%;
-      text-align: center;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      animation: modalSlideIn 0.5s ease-out;
+    .autorenew-note strong {
+      color: #4361ee;
     }
 
     @keyframes modalSlideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-50px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .suspended-modal .suspended-icon {
-      font-size: 4rem;
-      margin-bottom: 20px;
-      color: #9e9e9e;
-      animation: shake 0.5s ease-in-out infinite;
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      75% { transform: translateX(5px); }
-    }
-
-    .suspended-modal h2 {
-      font-size: 2rem;
-      margin-bottom: 15px;
-      color: #fff;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    .suspended-modal p {
-      font-size: 1.1rem;
-      margin-bottom: 25px;
-      color: rgba(255, 255, 255, 0.9);
-      line-height: 1.6;
-    }
-
-    .contact-btn {
-      background: linear-gradient(135deg, #6c757d, #495057);
-      border: none;
-      color: #fff;
-      padding: 15px 40px;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
-      margin-top: 10px;
-    }
-
-    .contact-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 20px rgba(108, 117, 125, 0.6);
-      background: linear-gradient(135deg, #495057, #343a40);
-    }
-
-    .contact-btn:active {
-      transform: scale(0.98);
-    }
-
-    @media (max-width: 600px) {
-      .dashboard-container {
-        padding: 25px 15px;
-      }
-      h3 {
-        font-size: 1.1rem;
-      }
-      .expired-card,
-      .suspended-modal {
-        padding: 30px 20px;
-      }
-      .expired-card h2,
-      .suspended-modal h2 {
-        font-size: 1.5rem;
-      }
-      .warning-icon,
-      .suspended-modal .suspended-icon {
-        width: 60px;
-        height: 60px;
-      }
-      .warning-icon svg,
-      .suspended-modal .suspended-icon {
-        width: 30px;
-        height: 30px;
-      }
+    @media (max-width: 480px) {
+      .autorenew-modal { padding: 25px 20px; }
+      .autorenew-modal h3 { font-size: 1.2rem; }
+      .btn-group { flex-direction: column; }
+      .autorenew-btn, .skip-btn { width: 100%; }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>🎓 gradely.info — School Dashboard 
-      <span id="planBadge" class="plan-badge">Loading...</span>
-    </h1>
-    <button class="logout-btn" id="logoutBtn">Logout</button>
-  </header>
+  <!-- ... [KEEP ALL YOUR EXISTING HEADER/OVERLAYS] ... -->
 
-  <!-- ✅ Subscription Expired/Cancelled Overlay - ERROR RED DESIGN -->
-  <div class="subscription-overlay" id="subscriptionOverlay">
-    <div class="expired-card">
-      <div class="warning-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-          <line x1="12" y1="9" x2="12" y2="13"></line>
-          <line x1="12" y1="17" x2="12.01" y2="17"></line>
-        </svg>
+  <!-- ✅ NEW: Auto-Renewal Popup Modal -->
+  <div class="autorenew-modal-overlay" id="autorenewModal">
+    <div class="autorenew-modal">
+      <div class="icon">🔄</div>
+      <h3>Enable Auto-Renewal?</h3>
+      <p>Your subscription is active, but auto-renewal is not enabled. Set it up once to avoid service interruptions.</p>
+      
+      <div class="btn-group">
+        <button class="autorenew-btn" onclick="enableAutoRenewal()">Enable Auto-Renewal</button>
+        <button class="skip-btn" onclick="dismissAutoRenewal()">Maybe Later</button>
       </div>
-      <h2 id="expiredTitle">Subscription Expired!</h2>
-      <p id="expiredMessage">Your Gradely subscription has expired. Please renew to continue using all features.</p>
-      <button class="renew-btn" onclick="window.location.href='subscription.html'">
-        Renew Subscription Now
-      </button>
-      <div class="expired-note">
-        <strong>Note:</strong> All dashboard features are temporarily disabled until renewal.
-      </div>
+      
+      <p class="autorenew-note">
+        <strong>Note:</strong> You can enable or cancel auto-renewal anytime from your <a href="subscription.html" style="color:#4361ee;text-decoration:none;font-weight:600">Subscription page</a>.
+      </p>
     </div>
   </div>
 
-  <!-- Suspended Account Overlay -->
-  <div class="suspended-overlay" id="suspendedOverlay">
-    <div class="suspended-modal">
-      <div class="suspended-icon">🔒</div>
-      <h2>Account Suspended!</h2>
-      <p>Your school account has been suspended. Please contact the administrator for assistance.</p>
-      <button class="contact-btn" onclick="contactAdmin()">Contact Administrator</button>
-      <div class="subscription-info">
-        <p><strong>Note:</strong> All dashboard features are temporarily disabled.</p>
-      </div>
-    </div>
-  </div>
-
-  <main class="dashboard-container" id="dashboardContainer">
-    <div class="card" onclick="goTo('manage-students.html')">
-      <div class="icon">👩‍🏫</div>
-      <h3>Manage Students</h3>
-      <p>Add, edit, or remove student records.</p>
-    </div>
-
-    <div class="card" onclick="goTo('upload.html')">
-      <div class="icon">📊</div>
-      <h3>Upload Results</h3>
-      <p>Post student results for instant access.</p>
-    </div>
-
-    <div class="card pro-only" id="manageClassesCard" onclick="handleProFeature('manage-classes.html')">
-      <div class="icon">🏫</div>
-      <h3>Manage Classes</h3>
-      <p>Set up class time-table and assign teachers.</p>
-    </div>
-
-    <div class="card pro-only" onclick="handleProFeature('announcement.html')">
-      <div class="icon">📢</div>
-      <h3>School Announcements</h3>
-      <p>Send alerts to all parents via SMS/email.</p>
-    </div>
-
-    <div class="card" onclick="goTo('subscription.html')">
-      <div class="icon">💳</div>
-      <h3>Subscription</h3>
-      <p>View plan details, renew, or cancel your subscription.</p>
-    </div>
-
-    <div class="card" onclick="goTo('settings.html')">
-      <div class="icon">⚙️</div>
-      <h3>Settings</h3>
-      <p>Update your school info and login credentials.</p>
-    </div>
-  </main>
-
-  <footer>
-    © 2026 gradely.info. All rights reserved. | Powered by RIS<br>
-    <a href="terms.html">Terms</a> • 
-    <a href="privacy.html">Privacy</a> • 
-    <a href="refund-policy.html">Refund Policy</a>
-  </footer>
+  <!-- ... [KEEP ALL YOUR EXISTING DASHBOARD CONTENT] ... -->
 
   <script>
-let currentPlan = null;
-let isSubscriptionActive = true;
-let subscriptionExpiryDate = null;
-let isAccountSuspended = false;
-let subscriptionStatus = 'active';
+// ... [KEEP ALL YOUR EXISTING JS VARIABLES & FUNCTIONS] ...
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
-  console.log("🔍 school_id from storage:", schoolId);
-  
-  if (!schoolId) {
-    alert("⚠️ Session expired. Please log in again.");
-    window.location.href = "admin-login.html";
-    return;
-  }
-
-  if (!sessionStorage.getItem("school_id")) {
-    sessionStorage.setItem("school_id", schoolId);
-  }
-
-  const timestamp = Date.now();
-  const apiUrl = `/api/subscription/status?school_id=${encodeURIComponent(schoolId)}&t=${timestamp}`;
-  console.log("📡 Fetching subscription status from:", apiUrl);
+  // ... [KEEP YOUR EXISTING DOMContentLoaded LOGIC] ...
 
   try {
-    const res = await fetch(apiUrl, {
-      credentials: 'include',
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
-    });
-    
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("📡 API Error Body:", text);
-      throw new Error(`HTTP ${res.status}`);
-    }
-
+    const res = await fetch(apiUrl, { /* your existing fetch config */ });
     const data = await res.json();
-    console.log("📡 Full API Response:", data);
 
     if (data.success) {
-      // ✅ STRICT plan validation
-      const rawPlan = data.plan || data.current_plan || data.data?.current_plan;
-      if (!rawPlan || !['basic', 'pro'].includes(rawPlan.toLowerCase())) {
-        console.error("❌ CRITICAL: Missing or invalid plan:", data);
-        showPlanConfigurationError();
-        return;
-      }
-      currentPlan = rawPlan.toLowerCase();
-      
-      // ✅ GET EXPIRY DATE (CRITICAL FOR CANCELLATION LOGIC)
-      subscriptionExpiryDate = data.expiryDate || data.data?.subscription_expiry || null;
-      subscriptionStatus = (data.subscription_status || data.status || 'active').toLowerCase().trim();
-      isAccountSuspended = data.isSuspended || data.data?.is_suspended || false;
-      
-      // ✅ CORRECT LOGIC: Account remains ACTIVE until expiry date (even if cancelled)
-      // DO NOT block immediately on 'cancelled' status
-      let isExpired = false;
-      
-      // Check actual expiry date (NOT status)
-      if (subscriptionExpiryDate) {
-        const expiry = new Date(subscriptionExpiryDate);
-        const now = new Date();
-        isExpired = now > expiry;
-        console.log(`📅 Expiry check: now=${now.toISOString()}, expiry=${expiry.toISOString()}, isExpired=${isExpired}`);
-      }
-      
-      // Only block if actually expired OR suspended
-      isSubscriptionActive = !isAccountSuspended && !isExpired;
-      
-      console.log("✅ Plan:", currentPlan);
-      console.log("✅ Subscription Status:", subscriptionStatus);
-      console.log("✅ Expiry Date:", subscriptionExpiryDate);
-      console.log("✅ Is Expired (by date):", isExpired);
-      console.log("✅ Is Active:", isSubscriptionActive);
-      
-      // ✅ Show overlay ONLY if actually expired or suspended
-      if (isAccountSuspended) {
-        showAccountSuspended();
-      } else if (isExpired) {
-        // Show "expired" overlay (not "cancelled")
-        showSubscriptionBlocked(false);
-      } else if (subscriptionStatus === 'cancelled') {
-        // ✅ CRITICAL FIX: Show NON-BLOCKING warning for cancelled (still active until expiry)
-        showCancelledWarning();
+      // ... [KEEP YOUR EXISTING PLAN/STATUS LOGIC] ...
+
+      // ✅ NEW: Check if auto-renewal is NOT set up (but account is active)
+      const hasAutoRenewal = data.hasSubscription || false;
+      const isEligibleForPrompt = 
+        isSubscriptionActive && 
+        !isAccountSuspended && 
+        !hasAutoRenewal && 
+        subscriptionStatus !== 'cancelled';
+
+      console.log("🔄 Auto-renewal check:", { hasAutoRenewal, isEligibleForPrompt });
+
+      // Show popup if eligible AND not dismissed this session
+      if (isEligibleForPrompt && !sessionStorage.getItem('autorenew_dismissed')) {
+        setTimeout(() => {
+          showAutoRenewalModal();
+        }, 2000); // Delay 2s for better UX
       }
     }
   } catch (err) {
-    console.error("❌ Failed to fetch account status:", err);
-    
-    // Try to recover last-known plan
-    const lastKnownPlan = localStorage.getItem('last_known_plan');
-    if (lastKnownPlan && ['basic', 'pro'].includes(lastKnownPlan)) {
-      console.log("✅ Recovering last-known valid plan:", lastKnownPlan);
-      currentPlan = lastKnownPlan;
-      showPlanRecoveryWarning(lastKnownPlan);
-      applyPlanRestrictions();
-    } else {
-      showPlanConfigurationError();
-      return;
-    }
+    // ... [KEEP YOUR EXISTING ERROR HANDLING] ...
   }
 
-  // Update UI
-  setTimeout(() => {
-    const badge = document.getElementById('planBadge');
-    if (!badge) return;
-    
-    if (isAccountSuspended) {
-      badge.textContent = "SUSPENDED";
-      badge.className = "plan-badge suspended";
-    } else if (!isSubscriptionActive) {
-      badge.textContent = `${currentPlan.toUpperCase()} (EXPIRED)`;
-      badge.className = "plan-badge expired";
-    } else if (subscriptionStatus === 'cancelled') {
-      // ✅ Show "CANCELLED" badge but keep access active
-      badge.textContent = `${currentPlan.toUpperCase()} (CANCELLED)`;
-      badge.className = "plan-badge expired";
-    } else {
-      badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-      badge.className = `plan-badge ${currentPlan}`;
-    }
-    
-    applyPlanRestrictions();
-  }, 100);
+  // ... [KEEP REST OF YOUR EXISTING CODE] ...
 });
 
-// ✅ REQUIRED OVERLAY FUNCTIONS (FIXES ReferenceError)
-function showSubscriptionBlocked(isCancelled) {
-  console.log("🔒 Subscription expired - locking dashboard");
+// ✅ NEW: Auto-Renewal Modal Functions
+function showAutoRenewalModal() {
+  console.log("🔄 Showing auto-renewal prompt");
+  document.getElementById('autorenewModal')?.classList.add('active');
   
-  const overlay = document.getElementById("subscriptionOverlay");
-  const dashboardContainer = document.getElementById("dashboardContainer");
-  const expiredTitle = document.getElementById("expiredTitle");
-  const expiredMessage = document.getElementById("expiredMessage");
-  
-  if (expiredTitle) {
-    expiredTitle.textContent = isCancelled ? "Subscription Cancelled!" : "Subscription Expired!";
-  }
-  
-  if (expiredMessage) {
-    expiredMessage.textContent = isCancelled 
-      ? "Your subscription was cancelled. Renew now to continue using all features."
-      : "Your subscription has expired. Renew now to continue using all features.";
-  }
-  
-  if (overlay) overlay.classList.add("active");
-  if (dashboardContainer) dashboardContainer.classList.add("dashboard-blurred");
-  
-  // Disable interactive elements
-  document.querySelectorAll("button, a, .card, [onclick]").forEach(el => {
-    if (!el.closest(".expired-card") && !el.classList.contains("renew-btn")) {
-      el.style.pointerEvents = "none";
-      el.setAttribute("tabindex", "-1");
-    }
-  });
-  
-  history.pushState(null, null, location.href);
-  window.addEventListener("popstate", () => {
-    history.pushState(null, null, location.href);
-  });
-}
-
-// ✅ NEW: Non-blocking warning for cancelled subscriptions (still active until expiry)
-function showCancelledWarning() {
-  console.log("⚠️ Subscription cancelled but still active until expiry");
-  
-  // Show non-intrusive toast notification
-  const warning = document.createElement('div');
-  warning.style.position = 'fixed';
-  warning.style.top = '20px';
-  warning.style.right = '20px';
-  warning.style.background = 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)';
-  warning.style.color = '#fff';
-  warning.style.padding = '15px 25px';
-  warning.style.borderRadius = '10px';
-  warning.style.zIndex = '9999';
-  warning.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
-  warning.style.maxWidth = '400px';
-  warning.style.fontSize = '0.95rem';
-  warning.innerHTML = `
-    ⚠️ <strong>Subscription Cancelled</strong><br>
-    Auto-renewal is off. Your access remains active until:<br>
-    <strong>${subscriptionExpiryDate ? new Date(subscriptionExpiryDate).toLocaleDateString() : 'unknown date'}</strong><br>
-    <small>Renew anytime to continue uninterrupted service.</small>
-  `;
-  document.body.appendChild(warning);
-  
-  // Auto-dismiss after 15 seconds
-  setTimeout(() => {
-    warning.style.opacity = '0';
-    warning.style.transition = 'opacity 0.5s ease';
-    setTimeout(() => warning.remove(), 500);
-  }, 15000);
-}
-
-function showAccountSuspended() {
-  console.log("🔒 Account suspended - locking dashboard");
-  document.getElementById('dashboardContainer')?.classList.add('dashboard-blurred');
-  document.getElementById('suspendedOverlay')?.classList.add('active');
-  
-  document.querySelectorAll("button, a, .card, [onclick]").forEach(el => {
-    if (!el.closest(".suspended-modal") && !el.classList.contains("contact-btn")) {
-      el.style.pointerEvents = "none";
-      el.setAttribute("tabindex", "-1");
-    }
-  });
-}
-
-function contactAdmin() {
-  const email = 'support@gradely.info';
-  const subject = encodeURIComponent('Account Suspended - ' + localStorage.getItem('school_id'));
-  window.location.href = `mailto:${email}?subject=${subject}&body=School ID: ${localStorage.getItem('school_id')}\n\nMy account has been suspended. Please assist.`;
-}
-
-function contactSupport() {
-  const email = 'support@gradely.info';
-  const subject = encodeURIComponent('Account Plan Configuration Error - ' + localStorage.getItem('school_id'));
-  window.location.href = `mailto:${email}?subject=${subject}&body=School ID: ${localStorage.getItem('school_id')}\n\nI'm unable to access my dashboard due to a plan configuration error. Please restore my account access.`;
-}
-
-function showPlanConfigurationError() {
-  console.log("❌ Plan configuration error - blocking dashboard access");
-  
-  let overlay = document.getElementById('planErrorOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'planErrorOverlay';
-    overlay.className = 'subscription-overlay active';
-    overlay.innerHTML = `
-      <div class="expired-card" style="background: rgba(255, 255, 255, 0.95); max-width: 500px;">
-        <div class="warning-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-            <line x1="12" y1="9" x2="12" y2="13"></line>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
-        </div>
-        <h2 style="color: #2d3748; font-size: 1.8rem; margin-bottom: 15px; font-weight: 700;">
-          Account Configuration Error
-        </h2>
-        <p style="color: #718096; font-size: 1rem; line-height: 1.6; margin-bottom: 30px;">
-          Your account plan information is missing or invalid. This is not a downgrade — your original plan selection is preserved but requires administrator intervention to restore access.
-        </p>
-        <button class="renew-btn" onclick="contactSupport()" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); margin-bottom: 20px;">
-          Contact Support
-        </button>
-        <div class="expired-note" style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 12px 15px; border-radius: 8px; font-size: 0.9rem; color: #718096;">
-          <strong>Note:</strong> This is NOT a downgrade to Basic plan. Your original plan selection remains intact in our records. Support will restore your access within 24 hours.
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-  }
-  
-  document.getElementById("dashboardContainer")?.classList.add("dashboard-blurred");
-  
-  document.querySelectorAll("button, a, input, select, textarea, .card, [onclick]").forEach(el => {
-    if (!el.closest(".expired-card") && !el.classList.contains("renew-btn")) {
-      el.style.pointerEvents = "none";
-      el.setAttribute("tabindex", "-1");
-    }
-  });
-  
-  history.pushState(null, null, location.href);
-  window.addEventListener("popstate", () => {
-    history.pushState(null, null, location.href);
-  });
-}
-
-function showPlanRecoveryWarning(recoveredPlan) {
-  console.log("⚠️ Recovered plan from localStorage:", recoveredPlan);
-  
-  const badge = document.getElementById('planBadge');
-  if (badge) {
-    badge.textContent = `${recoveredPlan.toUpperCase()} (RECOVERED)`;
-    badge.className = `plan-badge ${recoveredPlan} expired`;
-  }
-  
-  const warning = document.createElement('div');
-  warning.style.position = 'fixed';
-  warning.style.top = '20px';
-  warning.style.right = '20px';
-  warning.style.background = 'rgba(255, 193, 7, 0.9)';
-  warning.style.color = '#000';
-  warning.style.padding = '15px 25px';
-  warning.style.borderRadius = '10px';
-  warning.style.zIndex = '9999';
-  warning.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
-  warning.style.maxWidth = '400px';
-  warning.style.fontSize = '0.95rem';
-  warning.innerHTML = `
-    ⚠️ Plan information temporarily unavailable.<br>
-    Showing last-known plan: <strong>${recoveredPlan.toUpperCase()}</strong><br>
-    <small>Full access will be restored when connection is re-established.</small>
-  `;
-  document.body.appendChild(warning);
-  
-  setTimeout(() => {
-    warning.style.opacity = '0';
-    warning.style.transition = 'opacity 0.5s ease';
-    setTimeout(() => warning.remove(), 500);
-  }, 10000);
-}
-
-function applyPlanRestrictions() {
-  if (!currentPlan || !['basic', 'pro'].includes(currentPlan)) {
-    console.error("❌ Invalid currentPlan:", currentPlan);
-    showPlanConfigurationError();
-    return;
-  }
-  
-  const proCards = document.querySelectorAll('.pro-only');
-  
-  if (!isAccountSuspended && isSubscriptionActive) {
-    if (currentPlan === 'basic') {
-      proCards.forEach(card => card.classList.add('disabled'));
-      
-      if (!document.querySelector('.upgrade-prompt')) {
-        const container = document.getElementById('dashboardContainer');
-        const upgradeCard = document.createElement('div');
-        upgradeCard.className = 'upgrade-prompt';
-        upgradeCard.innerHTML = `
-          <div class="icon">✨</div>
-          <h3>Upgrade to Pro!</h3>
-          <p>Unlock bulk student registration, Class Management, School announcements & SMS features.</p>
-        `;
-        upgradeCard.onclick = () => window.location.href = 'subscription.html?plan=pro';
-        container.appendChild(upgradeCard);
-      }
-    } else if (currentPlan === 'pro') {
-      proCards.forEach(card => card.classList.remove('disabled'));
-      document.querySelector('.upgrade-prompt')?.remove();
-    }
+  // Optional: blur dashboard slightly (non-blocking)
+  const dashboard = document.getElementById('dashboardContainer');
+  if (dashboard) {
+    dashboard.style.filter = 'blur(2px)';
+    dashboard.style.pointerEvents = 'none';
+    dashboard.style.userSelect = 'none';
   }
 }
 
-function handleProFeature(url) {
-  if (isAccountSuspended) {
-    showAccountSuspended();
-    return;
+function dismissAutoRenewal() {
+  console.log("⏭️ Auto-renewal prompt dismissed");
+  document.getElementById('autorenewModal')?.classList.remove('active');
+  
+  // Restore dashboard
+  const dashboard = document.getElementById('dashboardContainer');
+  if (dashboard) {
+    dashboard.style.filter = 'none';
+    dashboard.style.pointerEvents = '';
+    dashboard.style.userSelect = '';
   }
   
-  if (!isSubscriptionActive) {
-    showSubscriptionBlocked(subscriptionStatus === 'cancelled' || subscriptionStatus === 'inactive');
-    return;
-  }
-  
-  if (!currentPlan || !['basic', 'pro'].includes(currentPlan)) {
-    showPlanConfigurationError();
-    return;
-  }
-  
-  if (currentPlan === 'pro') {
-    window.location.href = url;
-    return;
-  }
-  
-  if (!sessionStorage.getItem('proFeatureAlertShown')) {
-    alert("💡 This feature is available only on Pro plan. Upgrade to unlock!");
-    sessionStorage.setItem('proFeatureAlertShown', 'true');
-  }
+  // Remember dismissal for this session
+  sessionStorage.setItem('autorenew_dismissed', 'true');
 }
 
-function goTo(page) {
-  if (isAccountSuspended) {
-    showAccountSuspended();
-    return;
-  }
+function enableAutoRenewal() {
+  console.log("🔗 Redirecting to enable auto-renewal flow");
   
-  if (!isSubscriptionActive) {
-    showSubscriptionBlocked(subscriptionStatus === 'cancelled' || subscriptionStatus === 'inactive');
-    return;
-  }
-  
-  if (!currentPlan || !['basic', 'pro'].includes(currentPlan)) {
-    showPlanConfigurationError();
-    return;
-  }
-  
-  window.location.href = page;
+  // Redirect to subscription page with flag
+  const schoolId = localStorage.getItem('school_id') || sessionStorage.getItem('school_id');
+  window.location.href = `subscription.html?enable_autorenew=true&school_id=${encodeURIComponent(schoolId)}`;
 }
 
-document.getElementById("logoutBtn")?.addEventListener("click", () => {
-  if (confirm("Are you sure you want to logout?")) {
-    sessionStorage.removeItem('proFeatureAlertShown');
-    localStorage.removeItem('last_known_plan');
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.href = "index.html";
-  }
-});
+// ... [KEEP ALL YOUR EXISTING FUNCTIONS: goTo, handleProFeature, logout, etc.] ...
 </script>
 
   <script src="js/kaima-chatbot.js"></script>
