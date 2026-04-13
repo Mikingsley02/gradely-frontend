@@ -179,9 +179,7 @@
 
     <div class="btn-group" id="mainButtons">
       <button class="btn btn-renew" onclick="renewSubscription()" id="renewBtn">🔄 Renew Now</button>
-      <button class="btn btn-cancel" id="cancelBtn" onclick="cancelSubscription()">
-      🛑 Cancel Auto-Renewal
-     </button>
+      <button class="btn btn-cancel" id="cancelBtn">🛑 Cancel Auto-Renewal</button>
       <button class="btn btn-upgrade" onclick="upgradeToPro()" id="upgradeBtn" style="display:none;">✨ Upgrade to Pro</button>
       <button class="btn btn-downgrade" onclick="downgradeToBasic()" id="downgradeBtn" style="display:none;">⬇️ Downgrade to Basic</button>
     </div>
@@ -196,13 +194,13 @@
         Set up automatic monthly renewals to avoid service interruptions.
       </p>
       
-      <!-- Step 1: Get authorization code -->
+      <!-- Step 1: Check for existing authorization_code -->
       <div id="autorenewStep1">
-        <button class="btn btn-upgrade" onclick="startVerificationPayment()" style="width:100%; margin-bottom:10px;">
-          🔐 Verify Payment Method
+        <button class="btn btn-upgrade" onclick="enableAutoRenewal()" style="width:100%; margin-bottom:10px;">
+          ✅ Enable Auto-Renewal
         </button>
         <p class="autorenew-note">
-          <strong>Note:</strong> A small ₦10 verification charge (refunded instantly) is required by Paystack for recurring billing.
+          <strong>Note:</strong> No extra charge. Your next renewal will be automatic on <span id="nextBillingPreview">your expiry date</span>.
         </p>
       </div>
       
@@ -225,12 +223,14 @@
         </button>
       </div>
       
-      <!-- Step 4: Error -->
+      <!-- Step 4: Error / Needs Payment -->
       <div id="autorenewStep4" style="display:none;">
-        <div style="font-size:2.5rem; margin-bottom:10px; color:#ef4444;">⚠️</div>
-        <p id="autorenewError" style="color:#ef4444; margin-bottom:15px;"></p>
-        <button class="btn btn-cancel" onclick="retryAutoRenewal()" style="width:100%;">
-          Try Again
+        <div style="font-size:2.5rem; margin-bottom:10px; color:#ff9800;">💳</div>
+        <p id="autorenewError" style="color:#555; margin-bottom:15px;">
+          To enable auto-renewal, please complete a payment first.
+        </p>
+        <button class="btn btn-upgrade" onclick="renewSubscription()" style="width:100%;">
+          Make a Payment to Enable Auto-Renewal
         </button>
       </div>
     </div>
@@ -258,6 +258,7 @@ let adminId = null;
 let currentExpiry = null;
 let currentPlan = null;
 let isCancelled = false;
+let schoolEmail = null; // ✅ Store verified email from backend
 
 document.addEventListener("DOMContentLoaded", async () => {
   schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
@@ -342,7 +343,7 @@ function unlockProFeatures() {
 }
 
 // =====================
-// FETCH STATUS
+// FETCH STATUS (WITH DYNAMIC BUTTON + EMAIL)
 // =====================
 async function fetchSubscriptionStatus() {
   try {
@@ -355,6 +356,9 @@ async function fetchSubscriptionStatus() {
     const data = await res.json();
     if (!data.success) throw new Error(data.message || "Failed to load subscription");
 
+    // ✅ Store verified email from backend for consistency
+    schoolEmail = data.data?.email || localStorage.getItem('email');
+    
     currentPlan = data.plan || data.current_plan || data.data?.current_plan || 'basic';
     document.getElementById("plan").textContent =
       currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
@@ -375,6 +379,9 @@ async function fetchSubscriptionStatus() {
       expiryEl.textContent = expiryDate.toLocaleDateString("en-GB", {
         day: "numeric", month: "short", year: "numeric"
       });
+      // ✅ Preview next billing date in auto-renewal section
+      const preview = document.getElementById('nextBillingPreview');
+      if (preview) preview.textContent = expiryDate.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" });
     } else {
       expiryEl.textContent = "Not set";
     }
@@ -414,15 +421,34 @@ async function fetchSubscriptionStatus() {
     if (isCancelled) {
       statusEl.textContent = "Active (Auto-Renew Off)";
       statusEl.className = "";
-      cancelBtn.style.display = "none";
     } else if (subscriptionStatus === 'active') {
       statusEl.textContent = "Active (Auto-Renew On)";
       statusEl.className = "";
-      cancelBtn.style.display = "block";
     } else {
       statusEl.textContent = accountStatus.charAt(0).toUpperCase() + accountStatus.slice(1);
       statusEl.className = "";
-      cancelBtn.style.display = "none";
+    }
+
+    // ✅ DYNAMIC BUTTON LOGIC: Enable vs Cancel based on hasSubscription
+    const hasSubscription = data.hasSubscription || false;
+    
+    if (cancelBtn) {
+      if (hasSubscription) {
+        // ✅ Auto-renewal IS active → show Cancel button
+        cancelBtn.textContent = "🛑 Cancel Auto-Renewal";
+        cancelBtn.className = "btn btn-cancel";
+        cancelBtn.onclick = cancelSubscription;
+        cancelBtn.style.display = "block";
+      } else {
+        // ✅ Auto-renewal NOT set up → show Enable button
+        cancelBtn.textContent = "✨ Enable Auto-Renewal";
+        cancelBtn.className = "btn btn-upgrade";
+        cancelBtn.onclick = function() {
+          // Redirect to same-page flow with flag
+          window.location.href = `subscription.html?enable_autorenew=true&school_id=${encodeURIComponent(schoolId)}#autorenewSection`;
+        };
+        cancelBtn.style.display = "block";
+      }
     }
 
     if (showButtons) {
@@ -550,112 +576,66 @@ function showPlanSelection() {
   container.insertAdjacentHTML("beforeend", html);
 }
 
-// ✅ NEW: Auto-Renewal Setup Functions (FIXED - Zero Errors)
+// ✅ NEW: Auto-Renewal Setup Functions (SIMPLIFIED - NO ₦10 CHARGE)
 
-// 🔹 Start verification payment to get authorization_code
-// 🔹 Start verification payment to get authorization_code (FIXED)
-async function startVerificationPayment() {
+// 🔹 Enable auto-renewal using existing authorization_code
+async function enableAutoRenewal() {
   const btn = document.querySelector('#autorenewStep1 .btn');
   const originalText = btn.innerHTML;
   const planToUse = currentPlan || 'basic';
   
   try {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Setting up...';
     
-    // Initialize payment
-    const res = await fetch(`${API_BASE}/api/subscription/upgrade`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ plan: planToUse, school_id: schoolId })
-    });
+    // ✅ STEP 1: Try to use cached authorization_code from recent payment
+    const cachedAuth = localStorage.getItem('recent_authorization_code');
     
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    
-    // Load Paystack key with error handling
-    let paystackKey;
-    try {
-      const keyRes = await fetch(`${API_BASE}/api/config/paystack-key`);
-      const keyData = await keyRes.json();
-      paystackKey = keyData.data?.paystackPublicKey;
-      if (!paystackKey) throw new Error('Key missing in response');
-    } catch (keyErr) {
-      console.error("❌ Failed to load Paystack key:", keyErr);
-      throw new Error('Payment configuration not available. Please try again.');
+    if (cachedAuth) {
+      console.log("🔑 Using cached authorization_code");
+      await setupAutoRenewal(cachedAuth);
+      return;
     }
     
-    // Generate reference (Paystack validates format server-side)
-    const ref = `GRD-VERIFY-${schoolId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
-    // ✅ Paystack-compatible callback (regular function + IIFE)
-    const handler = PaystackPop.setup({
-      key: paystackKey,
-      email: localStorage.getItem('email') || 'user@gradely.info',
-      amount: 1000, // ₦10 verification (refunded)
-      currency: 'NGN',
-      ref: ref,
-      metadata: {  // ✅ Fixed: was 'meta', should be 'metadata'
-        school_id: schoolId,
-        action: 'authorization_verification'
-      },
-      callback: function(response) {
-        (async () => {
-          try {
-            console.log("✅ Verification payment success:", response.reference);
-            
-            const verifyRes = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({
-                payment_reference: response.reference,
-                school_id: schoolId,
-                plan: planToUse
-              })
-            });
-            
-            const verifyData = await verifyRes.json();
-            if (verifyData.success && verifyData.authorization_code) {
-              localStorage.setItem('recent_authorization_code', verifyData.authorization_code);
-              await setupAutoRenewal(verifyData.authorization_code);
-            } else {
-              throw new Error(verifyData.message || 'Could not retrieve authorization code');
-            }
-          } catch (err) {
-            console.error("❌ Verification callback error:", err);
-            showAutoRenewalError(err.message || 'Verification failed');
-          } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-          }
-        })();
-      },
-      onClose: function() {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-      }
+    // ✅ STEP 2: If no cached code, try to get one from backend status
+    // (Some backends return authorization_code in /status if available)
+    const statusRes = await fetch(`${API_BASE}/api/subscription/status`, {
+      credentials: 'include'
     });
+    const statusData = await statusRes.json();
     
-    handler.openIframe();
+    if (statusData.success && statusData.authorization_code) {
+      console.log("🔑 Using authorization_code from backend");
+      await setupAutoRenewal(statusData.authorization_code);
+      return;
+    }
+    
+    // ✅ STEP 3: No authorization_code available → user must make a payment first
+    console.log("⚠️ No authorization_code available - redirecting to payment");
+    document.getElementById('autorenewStep1').style.display = 'none';
+    document.getElementById('autorenewStep4').style.display = 'block';
     
   } catch (err) {
-    console.error("❌ Verification payment failed:", err);
-    showAutoRenewalError(err.message || 'Payment verification failed');
+    console.error("❌ Enable auto-renewal failed:", err);
+    document.getElementById('autorenewStep1').style.display = 'none';
+    document.getElementById('autorenewStep4').style.display = 'block';
+    document.getElementById('autorenewError').textContent = err.message || 'Setup failed. Please try making a payment first.';
+  } finally {
     btn.disabled = false;
     btn.innerHTML = originalText;
   }
 }
 
-
-// 🔹 Call /setup-subscription with authorization_code
+// 🔹 Call /setup-subscription with authorization_code (NO PAYMENT)
 async function setupAutoRenewal(authorizationCode) {
   document.getElementById('autorenewStep1').style.display = 'none';
   document.getElementById('autorenewStep2').style.display = 'block';
   
   try {
     const planToUse = currentPlan || 'basic';
+    
+    // ✅ Use backend-verified email for consistency
+    const emailToUse = schoolEmail || localStorage.getItem('email');
     
     const res = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
       method: 'POST',
@@ -664,7 +644,8 @@ async function setupAutoRenewal(authorizationCode) {
       body: JSON.stringify({
         authorization_code: authorizationCode,
         plan: planToUse,
-        school_id: schoolId
+        school_id: schoolId,
+        email: emailToUse  // ✅ Ensure email matches authorization_code owner
       })
     });
     
@@ -683,9 +664,11 @@ async function setupAutoRenewal(authorizationCode) {
       
       localStorage.removeItem('recent_authorization_code');
       
+      // Refresh status to update button text
       setTimeout(() => {
+        fetchSubscriptionStatus();
         window.location.href = 'dashboard.html?autorenew=success';
-      }, 3000);
+      }, 2000);
       
     } else {
       throw new Error(data.message || 'Setup failed');
@@ -693,18 +676,20 @@ async function setupAutoRenewal(authorizationCode) {
     
   } catch (err) {
     console.error("❌ Auto-renewal setup failed:", err);
-    showAutoRenewalError(err.message || 'Failed to enable auto-renewal');
+    document.getElementById('autorenewStep2').style.display = 'none';
+    document.getElementById('autorenewStep4').style.display = 'block';
+    document.getElementById('autorenewError').textContent = err.message || 'Failed to enable auto-renewal';
   }
 }
 
-// 🔹 Show error state
+// 🔹 Show error state (kept for compatibility)
 function showAutoRenewalError(message) {
   document.getElementById('autorenewStep2').style.display = 'none';
   document.getElementById('autorenewStep4').style.display = 'block';
   document.getElementById('autorenewError').textContent = message;
 }
 
-// 🔹 Retry handler
+// 🔹 Retry handler (kept for compatibility)
 function retryAutoRenewal() {
   document.getElementById('autorenewStep4').style.display = 'none';
   document.getElementById('autorenewStep1').style.display = 'block';
