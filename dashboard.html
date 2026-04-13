@@ -376,6 +376,114 @@
       transform: scale(0.98);
     }
 
+    /* ✅ NEW: Auto-Renewal Modal Styles */
+    .autorenew-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1001;
+      padding: 20px;
+    }
+
+    .autorenew-modal-overlay.active {
+      display: flex;
+    }
+
+    .autorenew-modal {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 450px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: modalSlideIn 0.4s ease;
+      color: #2d3748;
+    }
+
+    .autorenew-modal .icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      color: #4361ee;
+    }
+
+    .autorenew-modal h3 {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+      color: #1e293b;
+      font-weight: 700;
+    }
+
+    .autorenew-modal p {
+      font-size: 1rem;
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    .autorenew-modal .btn-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .autorenew-btn {
+      background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .autorenew-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(67, 97, 238, 0.4);
+    }
+
+    .autorenew-btn:active {
+      transform: translateY(0);
+    }
+
+    .skip-btn {
+      background: rgba(100, 116, 139, 0.1);
+      color: #64748b;
+      border: 1px solid #cbd5e1;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .skip-btn:hover {
+      background: rgba(100, 116, 139, 0.2);
+      color: #475569;
+    }
+
+    .autorenew-note {
+      margin-top: 20px;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .autorenew-note strong {
+      color: #4361ee;
+    }
+
     @media (max-width: 600px) {
       .dashboard-container {
         padding: 25px 15px;
@@ -401,6 +509,10 @@
         width: 30px;
         height: 30px;
       }
+      .autorenew-modal { padding: 25px 20px; }
+      .autorenew-modal h3 { font-size: 1.2rem; }
+      .btn-group { flex-direction: column; }
+      .autorenew-btn, .skip-btn { width: 100%; }
     }
   </style>
 </head>
@@ -444,6 +556,24 @@
       <div class="subscription-info">
         <p><strong>Note:</strong> All dashboard features are temporarily disabled.</p>
       </div>
+    </div>
+  </div>
+
+  <!-- ✅ NEW: Auto-Renewal Modal -->
+  <div class="autorenew-modal-overlay" id="autorenewModal">
+    <div class="autorenew-modal">
+      <div class="icon">🔄</div>
+      <h3>Enable Auto-Renewal?</h3>
+      <p>Your subscription is active, but auto-renewal is not enabled. Set it up once to avoid service interruptions.</p>
+      
+      <div class="btn-group">
+        <button class="autorenew-btn" onclick="enableAutoRenewal()">Enable Auto-Renewal</button>
+        <button class="skip-btn" onclick="dismissAutoRenewal()">Maybe Later</button>
+      </div>
+      
+      <p class="autorenew-note">
+        <strong>Note:</strong> You can enable or cancel auto-renewal anytime from your <a href="subscription.html" style="color:#4361ee;text-decoration:none;font-weight:600">Subscription page</a>.
+      </p>
     </div>
   </div>
 
@@ -581,6 +711,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else if (subscriptionStatus === 'cancelled') {
         // ✅ CRITICAL FIX: Show NON-BLOCKING warning for cancelled (still active until expiry)
         showCancelledWarning();
+      }
+
+      // ✅ NEW: Check if auto-renewal is NOT set up (but account is active)
+      const hasAutoRenewal = data.hasSubscription || false;
+      const isEligibleForPrompt = 
+        isSubscriptionActive && 
+        !isAccountSuspended && 
+        !hasAutoRenewal && 
+        subscriptionStatus !== 'cancelled';
+
+      console.log("🔄 Auto-renewal check:", { hasAutoRenewal, isEligibleForPrompt });
+
+      // Show popup if eligible AND not dismissed this session
+      if (isEligibleForPrompt && !sessionStorage.getItem('autorenew_dismissed')) {
+        setTimeout(() => {
+          showAutoRenewalModal();
+        }, 2000); // Delay 2s for better UX
       }
     }
   } catch (err) {
@@ -888,6 +1035,45 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
     window.location.href = "index.html";
   }
 });
+
+// ✅ NEW: Auto-Renewal Modal Functions
+function showAutoRenewalModal() {
+  console.log("🔄 Showing auto-renewal prompt");
+  const modal = document.getElementById('autorenewModal');
+  if (modal) {
+    modal.classList.add('active');
+  }
+  // Optional: soft blur dashboard (non-blocking)
+  const dashboard = document.getElementById('dashboardContainer');
+  if (dashboard) {
+    dashboard.style.filter = 'blur(2px)';
+    dashboard.style.pointerEvents = 'none';
+    dashboard.style.userSelect = 'none';
+  }
+}
+
+function dismissAutoRenewal() {
+  console.log("⏭️ Auto-renewal prompt dismissed");
+  const modal = document.getElementById('autorenewModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+  // Restore dashboard
+  const dashboard = document.getElementById('dashboardContainer');
+  if (dashboard) {
+    dashboard.style.filter = 'none';
+    dashboard.style.pointerEvents = '';
+    dashboard.style.userSelect = '';
+  }
+  // Remember dismissal for this session
+  sessionStorage.setItem('autorenew_dismissed', 'true');
+}
+
+function enableAutoRenewal() {
+  console.log("🔗 Redirecting to enable auto-renewal flow");
+  const schoolId = localStorage.getItem('school_id') || sessionStorage.getItem('school_id');
+  window.location.href = `subscription.html?enable_autorenew=true&school_id=${encodeURIComponent(schoolId)}`;
+}
 </script>
 
   <script src="js/kaima-chatbot.js"></script>
