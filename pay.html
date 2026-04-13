@@ -459,61 +459,76 @@ document.getElementById("paystackBtn").onclick = async () => {
       // ✅ FIXED: Paystack-compatible callback (regular function wrapping async IIFE)
       callback: function(response) {
   (async () => {
-    console.log("🔍 [CALLBACK START] Raw Paystack response:", response);
+    console.log("✅ Paystack payment SUCCESS:", {
+      reference: response.reference,
+      status: response.status
+    });
     
     // Save session data
     localStorage.setItem('school_id', school_id);
     localStorage.setItem('plan', plan);
     localStorage.setItem('email', customerEmail);
     
-    // Extract authorization code (fallback to nested path if needed)
-    const authorizationCode = 
-      response?.authorization?.authorization_code || 
-      response?.authorization_code || 
-      response?.data?.authorization?.authorization_code;
-
-    console.log("🔑 Extracted authorizationCode:", authorizationCode);
-
-    if (!authorizationCode) {
-      console.warn("⚠️ [EARLY EXIT] No authorization_code found. Skipping auto-renewal setup.");
-      console.warn("Paystack response structure:", JSON.stringify(response.authorization, null, 2));
-      setTimeout(() => {
-        window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
-      }, 1500);
-      return;
-    }
-
     // Show UI feedback
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enabling auto-renewal...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying payment...';
     btn.disabled = true;
-
+    
     try {
-      console.log("📡 [FETCH START] Calling /setup-subscription...");
-      console.log("📤 Payload:", { authorization_code: authorizationCode, plan, school_id });
-
+      // 🔹 STEP 1: Verify payment with backend (this returns authorization_code)
+      console.log("📡 Calling /upgrade/complete...");
+      const verifyRes = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          payment_reference: response.reference,
+          school_id: school_id,
+          plan: plan
+        })
+      });
+      
+      const verifyData = await verifyRes.json();
+      console.log("🔍 /upgrade/complete response:", verifyData);
+      
+      if (!verifyData.success) {
+        throw new Error(verifyData.message || 'Payment verification failed');
+      }
+      
+      // 🔹 STEP 2: Extract authorization_code from backend response (NOT Paystack callback)
+      const authorizationCode = verifyData.authorization_code;
+      console.log("🔑 authorization_code from backend:", authorizationCode);
+      
+      if (!authorizationCode) {
+        console.warn("⚠️ No authorization_code returned. Account activated, but auto-renewal skipped.");
+        setTimeout(() => {
+          window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
+        }, 1500);
+        return;
+      }
+      
+      // 🔹 STEP 3: Enable auto-renewal using the code from backend
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enabling auto-renewal...';
+      
       const setupRes = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // 🔑 Sends session cookie
+        credentials: 'include',
         body: JSON.stringify({
-          authorization_code: authorizationCode,
+          authorization_code: authorizationCode,  // ← From backend, not Paystack callback
           plan: plan,
           school_id: school_id
         })
       });
-
-      console.log("📥 [FETCH RESPONSE] Status:", setupRes.status);
+      
       const setupData = await setupRes.json();
       console.log("🔄 Auto-renewal setup result:", setupData);
-
-      if (!setupData.success) {
-        console.warn("⚠️ Backend returned success: false →", setupData.message);
-      }
+      
     } catch (err) {
-      console.error("❌ [FETCH CATCH] Network or JS error during setup-subscription:", err);
+      console.error("❌ Payment flow error:", err);
+      // Still redirect - account may be active via webhook
     }
-
-    // Redirect after attempt
+    
+    // 🔹 STEP 4: Redirect after all steps complete
     setTimeout(() => {
       window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
     }, 1000);
