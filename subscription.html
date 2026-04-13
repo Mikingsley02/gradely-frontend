@@ -325,7 +325,7 @@ function unlockProFeatures() {
 }
 
 // =====================
-// FETCH STATUS (UPDATED LOGIC)
+// FETCH STATUS (UPDATED WITH CORRECT STATUS TEXT)
 // =====================
 async function fetchSubscriptionStatus() {
   try {
@@ -388,31 +388,46 @@ async function fetchSubscriptionStatus() {
       cancelStatusEl.style.display = 'none';
     }
 
-    // ✅ Update status text
+    // ✅ Update status text based on actual state
     if (isSuspended) {
       statusEl.textContent = "Suspended";
       statusEl.className = "error";
-    } else if (isExpired) {
+      mainButtons.style.display = "none";
+      return;
+    }
+
+    if (isExpired) {
       statusEl.textContent = "Expired";
       statusEl.className = "error";
-    } else if (isCancelled) {
+      mainButtons.style.display = "none";
+      showPlanSelection();
+      return;
+    }
+
+    // ✅ For active accounts: show accurate auto-renew status
+    if (isCancelled) {
       statusEl.textContent = "Active (Auto-Renew Off)";
       statusEl.className = "";
     } else if (subscriptionStatus === 'active') {
-      statusEl.textContent = "Active (Auto-Renew On)";
+      // ✅ FIXED: Check hasSubscription for accurate status
+      if (hasSubscription) {
+        statusEl.textContent = "Active (Auto-Renew On)";
+      } else {
+        statusEl.textContent = "Active (Auto-Renew Off)";
+      }
       statusEl.className = "";
     } else {
       statusEl.textContent = accountStatus.charAt(0).toUpperCase() + accountStatus.slice(1);
       statusEl.className = "";
     }
 
-    // ✅ BUTTON LOGIC: Always show Renew + Cancel (if applicable) + Upgrade/Downgrade
+    // ✅ Button logic
     mainButtons.style.display = "flex";
     
     // Renew button: always visible
     renewBtn.style.display = "block";
     
-    // Cancel button: only show if auto-renewal is active
+    // Cancel button: only show if auto-renewal is actually active
     if (hasSubscription) {
       cancelBtn.style.display = "block";
     } else {
@@ -428,7 +443,7 @@ async function fetchSubscriptionStatus() {
       downgradeBtn.style.display = "block";
     }
 
-    // ✅ AUTO-RENEWAL SECTION: Show active/inactive state
+    // ✅ Update auto-renewal section UI
     updateAutoRenewalSection(hasSubscription, isExpired, isSuspended);
 
   } catch (err) {
