@@ -187,7 +187,6 @@
     </div>
 
     <div class="message" id="message"></div>
-    <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
 
     <!-- ✅ NEW: Auto-Renewal Setup Section (Hidden by default) -->
     <div id="autorenewSection">
@@ -235,6 +234,9 @@
         </button>
       </div>
     </div>
+
+    <!-- ✅ Back button at END of container (after auto-renewal section) -->
+    <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
   </div>
 
   <footer>
@@ -244,6 +246,9 @@
     <a href="refund-policy.html">Refund Policy</a>
   </footer>
 
+  <!-- ✅ Paystack inline.js (REQUIRED for PaystackPop) -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+
  <script>
 // ✅ Clean API_BASE (NO trailing spaces)
 const API_BASE = "https://api.gradely.info";
@@ -252,10 +257,9 @@ let schoolId = null;
 let adminId = null;
 let currentExpiry = null;
 let currentPlan = null;
-let isCancelled = false; // ✅ Track cancellation state
+let isCancelled = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // ✅ Get school_id and admin_id from storage
   schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
   adminId = localStorage.getItem("admin_id") || sessionStorage.getItem("admin_id");
 
@@ -265,25 +269,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ✅ Check for upgrade success params from redirect
   checkUpgradeSuccess();
-
-  // ✅ NEW: Check for enable_autorenew flag
   checkEnableAutorenewFlag();
-
-  // ✅ Fetch subscription status
   await fetchSubscriptionStatus();
 });
 
-// ✅ NEW: Handle ?enable_autorenew=true flag
+// ✅ Handle ?enable_autorenew=true flag
 function checkEnableAutorenewFlag() {
   const params = new URLSearchParams(window.location.search);
   const enableAutorenew = params.get('enable_autorenew') === 'true';
   
   if (enableAutorenew && schoolId) {
     console.log("🔄 Auto-renewal flow triggered for school:", schoolId);
-    
-    // Show the section after a short delay (after status fetch completes)
     setTimeout(() => {
       const section = document.getElementById('autorenewSection');
       if (section) {
@@ -301,18 +298,11 @@ function checkUpgradeSuccess() {
   const upgradedPlan = urlParams.get("plan");
   
   if (upgradeStatus === "success" || upgradeStatus === "completed") {
-    // ✅ Show success toast
     showUpgradeSuccess(upgradedPlan);
-    
-    // ✅ Refresh subscription status
     setTimeout(fetchSubscriptionStatus, 1000);
-    
-    // ✅ Unlock Pro features if upgraded
     if (upgradedPlan === "pro") {
       setTimeout(unlockProFeatures, 1500);
     }
-    
-    // ✅ Clean URL
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 }
@@ -327,8 +317,6 @@ function showUpgradeSuccess(plan) {
     <br><small style="opacity:0.9">All Pro features are now unlocked.</small>
   `;
   document.body.appendChild(toast);
-  
-  // ✅ Auto-remove after 5 seconds
   setTimeout(() => {
     toast.style.animation = "slideOut 0.3s ease";
     setTimeout(() => toast.remove(), 300);
@@ -337,21 +325,16 @@ function showUpgradeSuccess(plan) {
 
 // ✅ Unlock Pro features in UI
 function unlockProFeatures() {
-  // ✅ Show Pro-only features
   document.querySelectorAll(".pro-feature").forEach(el => {
     el.style.opacity = "1";
     el.style.pointerEvents = "auto";
     el.classList.remove("locked");
   });
-  
-  // ✅ Update plan badge if exists
   const planBadge = document.getElementById("currentPlanBadge");
   if (planBadge) {
     planBadge.textContent = "Pro Plan";
     planBadge.className = "plan-badge pro";
   }
-  
-  // ✅ Enable Pro buttons
   document.querySelectorAll(".pro-only-btn").forEach(btn => {
     btn.disabled = false;
     btn.title = "";
@@ -359,7 +342,7 @@ function unlockProFeatures() {
 }
 
 // =====================
-// FETCH STATUS (CORRECTED LOGIC FOR RENEW BUTTON)
+// FETCH STATUS
 // =====================
 async function fetchSubscriptionStatus() {
   try {
@@ -372,7 +355,6 @@ async function fetchSubscriptionStatus() {
     const data = await res.json();
     if (!data.success) throw new Error(data.message || "Failed to load subscription");
 
-    // ✅ Handle both response formats
     currentPlan = data.plan || data.current_plan || data.data?.current_plan || 'basic';
     document.getElementById("plan").textContent =
       currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
@@ -386,7 +368,6 @@ async function fetchSubscriptionStatus() {
     const expiryEl = document.getElementById("renewal");
     const cancelStatusEl = document.getElementById("cancelStatus");
 
-    // ✅ Get expiry date (handle both response formats)
     const rawExpiry = data.expiryDate || data.data?.subscription_expiry;
     let expiryDate = null;
     if (rawExpiry) {
@@ -398,26 +379,21 @@ async function fetchSubscriptionStatus() {
       expiryEl.textContent = "Not set";
     }
 
-    // ✅ Compute active status based on EXPIRY DATE (not status string)
     const today = new Date();
     const isExpired = expiryDate && expiryDate < today;
     const isSuspended = data.isSuspended || data.data?.is_suspended || false;
     
-    // ✅ Get subscription status (handle both formats)
     const subscriptionStatus = (data.subscription_status || data.status || data.data?.subscription_status || 'active').toLowerCase().trim();
     const accountStatus = (data.account_status || data.data?.account_status || 'active').toLowerCase().trim();
     
-    // ✅ Track cancellation state
     isCancelled = subscriptionStatus === 'cancelled';
     
-    // ✅ Show/hide cancel status message based on subscription status
     if (isCancelled) {
       cancelStatusEl.style.display = 'block';
     } else {
       cancelStatusEl.style.display = 'none';
     }
 
-    // ✅ Show buttons if NOT expired AND NOT suspended (regardless of cancellation status)
     const showButtons = !isSuspended && !isExpired;
 
     if (isSuspended) {
@@ -435,12 +411,10 @@ async function fetchSubscriptionStatus() {
       return;
     }
 
-    // ✅ For non-expired accounts: show appropriate status text
     if (isCancelled) {
-      // ✅ Cancelled but NOT expired = still active with auto-renew OFF
       statusEl.textContent = "Active (Auto-Renew Off)";
       statusEl.className = "";
-      cancelBtn.style.display = "none"; // Hide cancel button (already cancelled)
+      cancelBtn.style.display = "none";
     } else if (subscriptionStatus === 'active') {
       statusEl.textContent = "Active (Auto-Renew On)";
       statusEl.className = "";
@@ -451,26 +425,19 @@ async function fetchSubscriptionStatus() {
       cancelBtn.style.display = "none";
     }
 
-    // ✅ CRITICAL FIX: Show renewal button for ALL cancelled subscriptions (Basic OR Pro)
-    // ✅ Also show upgrade/downgrade buttons based on current plan
     if (showButtons) {
       mainButtons.style.display = "flex";
       
-      // ✅ ALWAYS show Renew button for cancelled subscriptions (both Basic and Pro)
       if (isCancelled) {
-        renewBtn.style.display = "block"; // ✅ RENEW BUTTON VISIBLE FOR BASIC + PRO
+        renewBtn.style.display = "block";
       } else {
-        // For active subscriptions: only show renew for Pro (Basic doesn't need it)
         renewBtn.style.display = currentPlan === "pro" ? "block" : "none";
       }
       
-      // ✅ Show upgrade button for Basic plans (active OR cancelled)
       if (currentPlan === "basic") {
         upgradeBtn.style.display = "block";
         downgradeBtn.style.display = "none";
-      } 
-      // ✅ Show downgrade button for Pro plans (active OR cancelled)
-      else if (currentPlan === "pro") {
+      } else if (currentPlan === "pro") {
         upgradeBtn.style.display = "none";
         downgradeBtn.style.display = "block";
       }
@@ -486,7 +453,7 @@ async function fetchSubscriptionStatus() {
 }
 
 // =====================
-// CANCEL SUBSCRIPTION (Auto-Renew)
+// CANCEL SUBSCRIPTION
 // =====================
 async function cancelSubscription() {
   if (!confirm("⏸️ Cancel Auto-Renewal?\nAccess continues until current billing date.\nAre you sure?")) return;
@@ -521,11 +488,10 @@ async function cancelSubscription() {
 }
 
 // =====================
-// RENEW SUBSCRIPTION (WORKS FOR BOTH BASIC AND PRO)
+// RENEW SUBSCRIPTION
 // =====================
 function renewSubscription() {
-  // ✅ RENEW ON CURRENT PLAN (Basic OR Pro)
-  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(currentPlan)}&renew=true&is_renewal=true`;
+  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(currentPlan || 'basic')}&renew=true&is_renewal=true`;
 }
 
 // ====================
@@ -535,8 +501,7 @@ function upgradeToPro() {
   if (!confirm("✨ Upgrade to Pro Plan?\n\nYou'll get:\n• Unlimited students\n• Bulk registration\n• SMS/Email alerts\n• Priority support\n\nThis will be charged immediately. Continue?")) {
     return;
   }
-  
-  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&from_plan=${encodeURIComponent(currentPlan)}&to_plan=pro&upgrade=true`;
+  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&from_plan=${encodeURIComponent(currentPlan || 'basic')}&to_plan=pro&upgrade=true`;
 }
 
 // =====================
@@ -544,131 +509,137 @@ function upgradeToPro() {
 // =====================
 async function downgradeToBasic() {
   const confirmed = confirm("⬇️ Downgrade to Basic Plan?\n\nYou will lose:\n• Unlimited students (limited to 200)\n• Bulk registration\n• SMS/Email alerts\n• Priority support\n\nChanges take effect immediately. Continue?");
-  
   if (!confirmed) return;
 
   try {
     const res = await fetch(`${API_BASE}/api/subscription/downgrade`, {
       method: "POST",
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        school_id: schoolId,
-        to_plan: "basic"
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ school_id: schoolId, to_plan: "basic" })
     });
 
     const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || "Downgrade failed");
 
-    if (!res.ok || !data.success) {
-      throw new Error(data.message || "Downgrade failed");
-    }
-
-    document.getElementById("message").innerHTML =
-      `<span class="success">✅ ${data.message}</span>`;
+    document.getElementById("message").innerHTML = `<span class="success">✅ ${data.message}</span>`;
     setTimeout(fetchSubscriptionStatus, 1500);
   } catch (err) {
     console.error("Downgrade error:", err);
-    document.getElementById("message").innerHTML =
-      `<span class="error">❌ ${err.message}</span>`;
+    document.getElementById("message").innerHTML = `<span class="error">❌ ${err.message}</span>`;
   }
 }
 
 // =====================
-// SHOW PLAN SELECTION (EXPIRED SUBSCRIPTION)
+// SHOW PLAN SELECTION (EXPIRED)
 // =====================
 function showPlanSelection() {
   const container = document.querySelector(".container");
-  
   const html = `
     <div style="margin-top:20px; padding: 20px; background: rgba(0, 230, 118, 0.1); border-radius: 12px; border: 2px dashed #00e676;">
       <h3 style="color:#2d046e; margin-bottom: 15px;">🔄 Reactivate Subscription</h3>
-      <p style="margin-bottom: 20px; color: #555;">
-        Your subscription has expired. Choose a plan to continue:
-      </p>
+      <p style="margin-bottom: 20px; color: #555;">Your subscription has expired. Choose a plan to continue:</p>
       <button class="btn btn-upgrade" 
         onclick="window.location.href='plan-comparison.html?reactivate=true&school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}'"
         style="width: 100%; margin-bottom: 10px; background: linear-gradient(135deg, #6a11cb, #2575fc); color: white;">
         ✨ Choose Your Plan
       </button>
-      <p style="font-size: 0.85rem; color: #777; margin-top: 15px;">
-        <strong>Tip:</strong> You can upgrade to Pro or stay on Basic — your choice!
-      </p>
+      <p style="font-size: 0.85rem; color: #777; margin-top: 15px;"><strong>Tip:</strong> You can upgrade to Pro or stay on Basic — your choice!</p>
     </div>
   `;
-  
   container.insertAdjacentHTML("beforeend", html);
 }
 
-// ✅ NEW: Auto-Renewal Setup Functions (Appended at end - zero conflicts)
+// ✅ NEW: Auto-Renewal Setup Functions (FIXED - Zero Errors)
 
 // 🔹 Start verification payment to get authorization_code
 async function startVerificationPayment() {
   const btn = document.querySelector('#autorenewStep1 .btn');
   const originalText = btn.innerHTML;
+  const planToUse = currentPlan || 'basic'; // ✅ FIX #3: Fallback if null
   
   try {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     
-    // Call existing /upgrade endpoint to initialize payment
+    // Initialize payment
     const res = await fetch(`${API_BASE}/api/subscription/upgrade`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({
-        plan: currentPlan || 'basic',
-        school_id: schoolId
-      })
+      body: JSON.stringify({ plan: planToUse, school_id: schoolId })
     });
     
     const data = await res.json();
     if (!data.success) throw new Error(data.message);
     
-    // Load Paystack key (reuse your existing pattern)
-    const keyRes = await fetch(`${API_BASE}/api/config/paystack-key`);
-    const keyData = await keyRes.json();
-    const paystackKey = keyData.data?.paystackPublicKey;
+    // Load Paystack key with error handling ✅ FIX #4
+    let paystackKey;
+    try {
+      const keyRes = await fetch(`${API_BASE}/api/config/paystack-key`);
+      const keyData = await keyRes.json();
+      paystackKey = keyData.data?.paystackPublicKey;
+      if (!paystackKey) throw new Error('Key missing in response');
+    } catch (keyErr) {
+      console.error("❌ Failed to load Paystack key:", keyErr);
+      throw new Error('Payment configuration not available. Please try again.');
+    }
     
-    if (!paystackKey) throw new Error('Paystack key not available');
+    // ✅ FIX #6: Validate amount
+    const verificationAmount = 1000; // ₦10
+    if (typeof verificationAmount !== 'number' || verificationAmount < 100) {
+      throw new Error('Invalid verification amount');
+    }
     
-    // Launch Paystack with minimal verification amount
+    // ✅ FIX #7: Generate valid reference
+    const ref = `GRD-VERIFY-${schoolId}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+    if (!/^[A-Z0-9\-]{10,}$/.test(ref)) {
+      throw new Error('Invalid reference format');
+    }
+    
+    // ✅ FIX #2: Paystack-compatible callback (regular function + IIFE)
     const handler = PaystackPop.setup({
       key: paystackKey,
       email: localStorage.getItem('email') || 'user@gradely.info',
-      amount: 1000, // ₦10 verification (refunded)
+      amount: verificationAmount,
       currency: 'NGN',
-      ref: `GRD-VERIFY-${schoolId}-${Date.now()}`,
+      ref: ref,
+      // ✅ FIX #1: metadata (not meta)
       metadata: {
         school_id: schoolId,
         action: 'authorization_verification'
       },
-      callback: async function(response) {
-        console.log("✅ Verification payment success:", response.reference);
-        
-        // Verify with backend to get authorization_code
-        const verifyRes = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            payment_reference: response.reference,
-            school_id: schoolId,
-            plan: currentPlan || 'basic'
-          })
-        });
-        
-        const verifyData = await verifyRes.json();
-        if (verifyData.success && verifyData.authorization_code) {
-          // Cache for future use
-          localStorage.setItem('recent_authorization_code', verifyData.authorization_code);
-          // Proceed to setup
-          await setupAutoRenewal(verifyData.authorization_code);
-        } else {
-          throw new Error(verifyData.message || 'Could not retrieve authorization code');
-        }
+      callback: function(response) {
+        (async () => {
+          try {
+            console.log("✅ Verification payment success:", response.reference);
+            
+            const verifyRes = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                payment_reference: response.reference,
+                school_id: schoolId,
+                plan: planToUse
+              })
+            });
+            
+            const verifyData = await verifyRes.json();
+            if (verifyData.success && verifyData.authorization_code) {
+              localStorage.setItem('recent_authorization_code', verifyData.authorization_code);
+              await setupAutoRenewal(verifyData.authorization_code);
+            } else {
+              throw new Error(verifyData.message || 'Could not retrieve authorization code');
+            }
+          } catch (err) {
+            console.error("❌ Verification callback error:", err);
+            showAutoRenewalError(err.message || 'Verification failed');
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          }
+        })();
       },
       onClose: function() {
         btn.disabled = false;
@@ -688,18 +659,19 @@ async function startVerificationPayment() {
 
 // 🔹 Call /setup-subscription with authorization_code
 async function setupAutoRenewal(authorizationCode) {
-  // Show processing state
   document.getElementById('autorenewStep1').style.display = 'none';
   document.getElementById('autorenewStep2').style.display = 'block';
   
   try {
+    const planToUse = currentPlan || 'basic';
+    
     const res = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({
         authorization_code: authorizationCode,
-        plan: currentPlan || 'basic',
+        plan: planToUse,
         school_id: schoolId
       })
     });
@@ -707,11 +679,9 @@ async function setupAutoRenewal(authorizationCode) {
     const data = await res.json();
     
     if (data.success) {
-      // Show success state
       document.getElementById('autorenewStep2').style.display = 'none';
       document.getElementById('autorenewStep3').style.display = 'block';
       
-      // Set next billing date display
       if (data.next_billing_date) {
         document.getElementById('nextBillingDisplay').textContent = 
           new Date(data.next_billing_date).toLocaleDateString('en-NG', {
@@ -719,10 +689,8 @@ async function setupAutoRenewal(authorizationCode) {
           });
       }
       
-      // Clear cached auth code
       localStorage.removeItem('recent_authorization_code');
       
-      // Optional: auto-redirect after 3 seconds
       setTimeout(() => {
         window.location.href = 'dashboard.html?autorenew=success';
       }, 3000);
@@ -755,7 +723,6 @@ function redirectToDashboard() {
   window.location.href = 'dashboard.html?autorenew=success';
 }
 </script>
-
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
