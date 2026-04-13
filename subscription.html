@@ -126,6 +126,36 @@
       .btn-group { flex-direction: column; }
       .btn { width: 100%; }
     }
+
+    /* ✅ NEW: Auto-Renewal Setup Section Styles */
+    #autorenewSection {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      background: rgba(0, 230, 118, 0.08);
+      border: 2px solid #00e676;
+      border-radius: 12px;
+      text-align: center;
+    }
+    #autorenewSection.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .autorenew-icon { font-size: 2.5rem; margin-bottom: 10px; color: #4361ee; }
+    .autorenew-note {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+    .autorenew-note strong { color: #4361ee; }
+    .spinner {
+      width: 30px; height: 30px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #4361ee;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 15px auto;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -158,6 +188,53 @@
 
     <div class="message" id="message"></div>
     <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+
+    <!-- ✅ NEW: Auto-Renewal Setup Section (Hidden by default) -->
+    <div id="autorenewSection">
+      <div class="autorenew-icon">🔄</div>
+      <h3 style="color:#2d046e; margin-bottom:8px;">Enable Auto-Renewal</h3>
+      <p style="color:#555; font-size:0.95rem; margin-bottom:15px;">
+        Set up automatic monthly renewals to avoid service interruptions.
+      </p>
+      
+      <!-- Step 1: Get authorization code -->
+      <div id="autorenewStep1">
+        <button class="btn btn-upgrade" onclick="startVerificationPayment()" style="width:100%; margin-bottom:10px;">
+          🔐 Verify Payment Method
+        </button>
+        <p class="autorenew-note">
+          <strong>Note:</strong> A small ₦10 verification charge (refunded instantly) is required by Paystack for recurring billing.
+        </p>
+      </div>
+      
+      <!-- Step 2: Processing -->
+      <div id="autorenewStep2" style="display:none;">
+        <div class="spinner"></div>
+        <p style="color:#555;">Setting up auto-renewal...</p>
+      </div>
+      
+      <!-- Step 3: Success -->
+      <div id="autorenewStep3" style="display:none;">
+        <div style="font-size:2.5rem; margin-bottom:10px; color:#22c55e;">✅</div>
+        <p style="color:#22c55e; font-weight:600; margin-bottom:15px;">Auto-Renewal Enabled!</p>
+        <p style="color:#555; font-size:0.9rem; margin-bottom:20px;">
+          Your subscription will renew automatically on<br>
+          <strong id="nextBillingDisplay">next month</strong>
+        </p>
+        <button class="btn btn-renew" onclick="redirectToDashboard()" style="width:100%;">
+          Return to Dashboard
+        </button>
+      </div>
+      
+      <!-- Step 4: Error -->
+      <div id="autorenewStep4" style="display:none;">
+        <div style="font-size:2.5rem; margin-bottom:10px; color:#ef4444;">⚠️</div>
+        <p id="autorenewError" style="color:#ef4444; margin-bottom:15px;"></p>
+        <button class="btn btn-cancel" onclick="retryAutoRenewal()" style="width:100%;">
+          Try Again
+        </button>
+      </div>
+    </div>
   </div>
 
   <footer>
@@ -191,9 +268,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ✅ Check for upgrade success params from redirect
   checkUpgradeSuccess();
 
+  // ✅ NEW: Check for enable_autorenew flag
+  checkEnableAutorenewFlag();
+
   // ✅ Fetch subscription status
   await fetchSubscriptionStatus();
 });
+
+// ✅ NEW: Handle ?enable_autorenew=true flag
+function checkEnableAutorenewFlag() {
+  const params = new URLSearchParams(window.location.search);
+  const enableAutorenew = params.get('enable_autorenew') === 'true';
+  
+  if (enableAutorenew && schoolId) {
+    console.log("🔄 Auto-renewal flow triggered for school:", schoolId);
+    
+    // Show the section after a short delay (after status fetch completes)
+    setTimeout(() => {
+      const section = document.getElementById('autorenewSection');
+      if (section) {
+        section.classList.add('active');
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 500);
+  }
+}
 
 // ✅ Check for upgrade success after redirect from payment
 function checkUpgradeSuccess() {
@@ -501,6 +600,159 @@ function showPlanSelection() {
   `;
   
   container.insertAdjacentHTML("beforeend", html);
+}
+
+// ✅ NEW: Auto-Renewal Setup Functions (Appended at end - zero conflicts)
+
+// 🔹 Start verification payment to get authorization_code
+async function startVerificationPayment() {
+  const btn = document.querySelector('#autorenewStep1 .btn');
+  const originalText = btn.innerHTML;
+  
+  try {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    
+    // Call existing /upgrade endpoint to initialize payment
+    const res = await fetch(`${API_BASE}/api/subscription/upgrade`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        plan: currentPlan || 'basic',
+        school_id: schoolId
+      })
+    });
+    
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    
+    // Load Paystack key (reuse your existing pattern)
+    const keyRes = await fetch(`${API_BASE}/api/config/paystack-key`);
+    const keyData = await keyRes.json();
+    const paystackKey = keyData.data?.paystackPublicKey;
+    
+    if (!paystackKey) throw new Error('Paystack key not available');
+    
+    // Launch Paystack with minimal verification amount
+    const handler = PaystackPop.setup({
+      key: paystackKey,
+      email: localStorage.getItem('email') || 'user@gradely.info',
+      amount: 1000, // ₦10 verification (refunded)
+      currency: 'NGN',
+      ref: `GRD-VERIFY-${schoolId}-${Date.now()}`,
+      metadata: {
+        school_id: schoolId,
+        action: 'authorization_verification'
+      },
+      callback: async function(response) {
+        console.log("✅ Verification payment success:", response.reference);
+        
+        // Verify with backend to get authorization_code
+        const verifyRes = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            payment_reference: response.reference,
+            school_id: schoolId,
+            plan: currentPlan || 'basic'
+          })
+        });
+        
+        const verifyData = await verifyRes.json();
+        if (verifyData.success && verifyData.authorization_code) {
+          // Cache for future use
+          localStorage.setItem('recent_authorization_code', verifyData.authorization_code);
+          // Proceed to setup
+          await setupAutoRenewal(verifyData.authorization_code);
+        } else {
+          throw new Error(verifyData.message || 'Could not retrieve authorization code');
+        }
+      },
+      onClose: function() {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    });
+    
+    handler.openIframe();
+    
+  } catch (err) {
+    console.error("❌ Verification payment failed:", err);
+    showAutoRenewalError(err.message || 'Payment verification failed');
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+// 🔹 Call /setup-subscription with authorization_code
+async function setupAutoRenewal(authorizationCode) {
+  // Show processing state
+  document.getElementById('autorenewStep1').style.display = 'none';
+  document.getElementById('autorenewStep2').style.display = 'block';
+  
+  try {
+    const res = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        authorization_code: authorizationCode,
+        plan: currentPlan || 'basic',
+        school_id: schoolId
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (data.success) {
+      // Show success state
+      document.getElementById('autorenewStep2').style.display = 'none';
+      document.getElementById('autorenewStep3').style.display = 'block';
+      
+      // Set next billing date display
+      if (data.next_billing_date) {
+        document.getElementById('nextBillingDisplay').textContent = 
+          new Date(data.next_billing_date).toLocaleDateString('en-NG', {
+            year: 'numeric', month: 'long', day: 'numeric'
+          });
+      }
+      
+      // Clear cached auth code
+      localStorage.removeItem('recent_authorization_code');
+      
+      // Optional: auto-redirect after 3 seconds
+      setTimeout(() => {
+        window.location.href = 'dashboard.html?autorenew=success';
+      }, 3000);
+      
+    } else {
+      throw new Error(data.message || 'Setup failed');
+    }
+    
+  } catch (err) {
+    console.error("❌ Auto-renewal setup failed:", err);
+    showAutoRenewalError(err.message || 'Failed to enable auto-renewal');
+  }
+}
+
+// 🔹 Show error state
+function showAutoRenewalError(message) {
+  document.getElementById('autorenewStep2').style.display = 'none';
+  document.getElementById('autorenewStep4').style.display = 'block';
+  document.getElementById('autorenewError').textContent = message;
+}
+
+// 🔹 Retry handler
+function retryAutoRenewal() {
+  document.getElementById('autorenewStep4').style.display = 'none';
+  document.getElementById('autorenewStep1').style.display = 'block';
+}
+
+// 🔹 Redirect to dashboard
+function redirectToDashboard() {
+  window.location.href = 'dashboard.html?autorenew=success';
 }
 </script>
 
