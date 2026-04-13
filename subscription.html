@@ -127,17 +127,16 @@
       .btn { width: 100%; }
     }
 
-    /* ✅ NEW: Auto-Renewal Setup Section Styles */
+    /* ✅ Auto-Renewal Section — Always Visible */
     #autorenewSection {
-      display: none;
-      margin-top: 20px;
-      padding: 20px;
+      margin-top: 30px;
+      padding: 25px;
       background: rgba(0, 230, 118, 0.08);
       border: 2px solid #00e676;
       border-radius: 12px;
       text-align: center;
+      animation: fadeIn 0.3s ease;
     }
-    #autorenewSection.active { display: block; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .autorenew-icon { font-size: 2.5rem; margin-bottom: 10px; color: #4361ee; }
     .autorenew-note {
@@ -177,56 +176,56 @@
       </p>
     </div>
 
+    <!-- ✅ SIMPLIFIED BUTTON GROUP -->
     <div class="btn-group" id="mainButtons">
       <button class="btn btn-renew" onclick="renewSubscription()" id="renewBtn">🔄 Renew Now</button>
-      <button class="btn btn-cancel" id="cancelBtn">🛑 Cancel Auto-Renewal</button>
+      <button class="btn btn-cancel" id="cancelBtn" onclick="cancelSubscription()" style="display:none;">🛑 Cancel Auto-Renewal</button>
       <button class="btn btn-upgrade" onclick="upgradeToPro()" id="upgradeBtn" style="display:none;">✨ Upgrade to Pro</button>
       <button class="btn btn-downgrade" onclick="downgradeToBasic()" id="downgradeBtn" style="display:none;">⬇️ Downgrade to Basic</button>
     </div>
 
     <div class="message" id="message"></div>
 
-    <!-- ✅ NEW: Auto-Renewal Setup Section (Hidden by default) -->
+    <!-- ✅ AUTO-RENEWAL SECTION — ALWAYS VISIBLE -->
     <div id="autorenewSection">
       <div class="autorenew-icon">🔄</div>
-      <h3 style="color:#2d046e; margin-bottom:8px;">Enable Auto-Renewal</h3>
-      <p style="color:#555; font-size:0.95rem; margin-bottom:15px;">
-        Set up automatic monthly renewals to avoid service interruptions.
-      </p>
+      <h3 style="color:#2d046e; margin-bottom:8px;">Auto-Renewal Settings</h3>
       
-      <!-- Step 1: Check for existing authorization_code -->
-      <div id="autorenewStep1">
-        <button class="btn btn-upgrade" onclick="enableAutoRenewal()" style="width:100%; margin-bottom:10px;">
-          ✅ Enable Auto-Renewal
-        </button>
+      <!-- State: Auto-renewal ACTIVE -->
+      <div id="autorenewActive" style="display:none;">
+        <p style="color:#22c55e; font-weight:600; margin-bottom:10px;">✅ Auto-Renewal is Active</p>
+        <p style="color:#555; font-size:0.9rem; margin-bottom:15px;">
+          Your subscription will renew automatically on<br>
+          <strong id="nextBillingDisplay">next month</strong>
+        </p>
         <p class="autorenew-note">
-          <strong>Note:</strong> No extra charge. Your next renewal will be automatic on <span id="nextBillingPreview">your expiry date</span>.
+          <strong>Note:</strong> You can cancel auto-renewal anytime. Access continues until your expiry date.
         </p>
       </div>
       
-      <!-- Step 2: Processing -->
-      <div id="autorenewStep2" style="display:none;">
+      <!-- State: Auto-renewal NOT SET UP -->
+      <div id="autorenewInactive" style="display:none;">
+        <p style="color:#555; font-size:0.95rem; margin-bottom:15px;">
+          Auto-renewal is not enabled. Set it up to avoid service interruptions.
+        </p>
+        <button class="btn btn-upgrade" onclick="enableAutoRenewal()" style="width:100%; margin-bottom:10px;">
+          ✨ Enable Auto-Renewal
+        </button>
+        <p class="autorenew-note">
+          <strong>Note:</strong> No extra charge. Uses your existing payment method for future renewals.
+        </p>
+      </div>
+      
+      <!-- State: Processing -->
+      <div id="autorenewProcessing" style="display:none;">
         <div class="spinner"></div>
         <p style="color:#555;">Setting up auto-renewal...</p>
       </div>
       
-      <!-- Step 3: Success -->
-      <div id="autorenewStep3" style="display:none;">
-        <div style="font-size:2.5rem; margin-bottom:10px; color:#22c55e;">✅</div>
-        <p style="color:#22c55e; font-weight:600; margin-bottom:15px;">Auto-Renewal Enabled!</p>
-        <p style="color:#555; font-size:0.9rem; margin-bottom:20px;">
-          Your subscription will renew automatically on<br>
-          <strong id="nextBillingDisplay">next month</strong>
-        </p>
-        <button class="btn btn-renew" onclick="redirectToDashboard()" style="width:100%;">
-          Return to Dashboard
-        </button>
-      </div>
-      
-      <!-- Step 4: Error / Needs Payment -->
-      <div id="autorenewStep4" style="display:none;">
+      <!-- State: Error / Needs Payment -->
+      <div id="autorenewError" style="display:none;">
         <div style="font-size:2.5rem; margin-bottom:10px; color:#ff9800;">💳</div>
-        <p id="autorenewError" style="color:#555; margin-bottom:15px;">
+        <p id="autorenewErrorMessage" style="color:#555; margin-bottom:15px;">
           To enable auto-renewal, please complete a payment first.
         </p>
         <button class="btn btn-upgrade" onclick="renewSubscription()" style="width:100%;">
@@ -235,7 +234,7 @@
       </div>
     </div>
 
-    <!-- ✅ Back button at END of container (after auto-renewal section) -->
+    <!-- ✅ Back button at END of container -->
     <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
   </div>
 
@@ -258,7 +257,8 @@ let adminId = null;
 let currentExpiry = null;
 let currentPlan = null;
 let isCancelled = false;
-let schoolEmail = null; // ✅ Store verified email from backend
+let schoolEmail = null;
+let hasSubscription = false; // Tracks if paystack_subscription_code exists
 
 document.addEventListener("DOMContentLoaded", async () => {
   schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
@@ -271,26 +271,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   checkUpgradeSuccess();
-  checkEnableAutorenewFlag();
   await fetchSubscriptionStatus();
 });
-
-// ✅ Handle ?enable_autorenew=true flag
-function checkEnableAutorenewFlag() {
-  const params = new URLSearchParams(window.location.search);
-  const enableAutorenew = params.get('enable_autorenew') === 'true';
-  
-  if (enableAutorenew && schoolId) {
-    console.log("🔄 Auto-renewal flow triggered for school:", schoolId);
-    setTimeout(() => {
-      const section = document.getElementById('autorenewSection');
-      if (section) {
-        section.classList.add('active');
-        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 500);
-  }
-}
 
 // ✅ Check for upgrade success after redirect from payment
 function checkUpgradeSuccess() {
@@ -343,7 +325,7 @@ function unlockProFeatures() {
 }
 
 // =====================
-// FETCH STATUS (WITH DYNAMIC BUTTON + EMAIL)
+// FETCH STATUS (UPDATED LOGIC)
 // =====================
 async function fetchSubscriptionStatus() {
   try {
@@ -356,7 +338,7 @@ async function fetchSubscriptionStatus() {
     const data = await res.json();
     if (!data.success) throw new Error(data.message || "Failed to load subscription");
 
-    // ✅ Store verified email from backend for consistency
+    // ✅ Store verified email from backend
     schoolEmail = data.data?.email || localStorage.getItem('email');
     
     currentPlan = data.plan || data.current_plan || data.data?.current_plan || 'basic';
@@ -379,9 +361,11 @@ async function fetchSubscriptionStatus() {
       expiryEl.textContent = expiryDate.toLocaleDateString("en-GB", {
         day: "numeric", month: "short", year: "numeric"
       });
-      // ✅ Preview next billing date in auto-renewal section
-      const preview = document.getElementById('nextBillingPreview');
-      if (preview) preview.textContent = expiryDate.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" });
+      // ✅ Update next billing display in auto-renewal section
+      const nextBillingDisplay = document.getElementById('nextBillingDisplay');
+      if (nextBillingDisplay) {
+        nextBillingDisplay.textContent = expiryDate.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" });
+      }
     } else {
       expiryEl.textContent = "Not set";
     }
@@ -395,30 +379,23 @@ async function fetchSubscriptionStatus() {
     
     isCancelled = subscriptionStatus === 'cancelled';
     
+    // ✅ Track if auto-renewal is set up
+    hasSubscription = data.hasSubscription || false;
+    
     if (isCancelled) {
       cancelStatusEl.style.display = 'block';
     } else {
       cancelStatusEl.style.display = 'none';
     }
 
-    const showButtons = !isSuspended && !isExpired;
-
+    // ✅ Update status text
     if (isSuspended) {
       statusEl.textContent = "Suspended";
       statusEl.className = "error";
-      mainButtons.style.display = "none";
-      return;
-    }
-
-    if (isExpired) {
+    } else if (isExpired) {
       statusEl.textContent = "Expired";
       statusEl.className = "error";
-      mainButtons.style.display = "none";
-      showPlanSelection();
-      return;
-    }
-
-    if (isCancelled) {
+    } else if (isCancelled) {
       statusEl.textContent = "Active (Auto-Renew Off)";
       statusEl.className = "";
     } else if (subscriptionStatus === 'active') {
@@ -429,52 +406,64 @@ async function fetchSubscriptionStatus() {
       statusEl.className = "";
     }
 
-    // ✅ DYNAMIC BUTTON LOGIC: Enable vs Cancel based on hasSubscription
-    const hasSubscription = data.hasSubscription || false;
+    // ✅ BUTTON LOGIC: Always show Renew + Cancel (if applicable) + Upgrade/Downgrade
+    mainButtons.style.display = "flex";
     
-    if (cancelBtn) {
-      if (hasSubscription) {
-        // ✅ Auto-renewal IS active → show Cancel button
-        cancelBtn.textContent = "🛑 Cancel Auto-Renewal";
-        cancelBtn.className = "btn btn-cancel";
-        cancelBtn.onclick = cancelSubscription;
-        cancelBtn.style.display = "block";
-      } else {
-        // ✅ Auto-renewal NOT set up → show Enable button
-        cancelBtn.textContent = "✨ Enable Auto-Renewal";
-        cancelBtn.className = "btn btn-upgrade";
-        cancelBtn.onclick = function() {
-          // Redirect to same-page flow with flag
-          window.location.href = `subscription.html?enable_autorenew=true&school_id=${encodeURIComponent(schoolId)}#autorenewSection`;
-        };
-        cancelBtn.style.display = "block";
-      }
+    // Renew button: always visible
+    renewBtn.style.display = "block";
+    
+    // Cancel button: only show if auto-renewal is active
+    if (hasSubscription) {
+      cancelBtn.style.display = "block";
+    } else {
+      cancelBtn.style.display = "none";
+    }
+    
+    // Upgrade/Downgrade: based on current plan
+    if (currentPlan === "basic") {
+      upgradeBtn.style.display = "block";
+      downgradeBtn.style.display = "none";
+    } else if (currentPlan === "pro") {
+      upgradeBtn.style.display = "none";
+      downgradeBtn.style.display = "block";
     }
 
-    if (showButtons) {
-      mainButtons.style.display = "flex";
-      
-      if (isCancelled) {
-        renewBtn.style.display = "block";
-      } else {
-        renewBtn.style.display = currentPlan === "pro" ? "block" : "none";
-      }
-      
-      if (currentPlan === "basic") {
-        upgradeBtn.style.display = "block";
-        downgradeBtn.style.display = "none";
-      } else if (currentPlan === "pro") {
-        upgradeBtn.style.display = "none";
-        downgradeBtn.style.display = "block";
-      }
-    } else {
-      mainButtons.style.display = "none";
-    }
+    // ✅ AUTO-RENEWAL SECTION: Show active/inactive state
+    updateAutoRenewalSection(hasSubscription, isExpired, isSuspended);
 
   } catch (err) {
     console.error("Subscription fetch error:", err);
     document.getElementById("message").innerHTML =
       `<span class="error">Unable to load subscription: ${err.message}</span>`;
+  }
+}
+
+// ✅ Update auto-renewal section UI based on state
+function updateAutoRenewalSection(hasSubscription, isExpired, isSuspended) {
+  const activeDiv = document.getElementById('autorenewActive');
+  const inactiveDiv = document.getElementById('autorenewInactive');
+  const processingDiv = document.getElementById('autorenewProcessing');
+  const errorDiv = document.getElementById('autorenewError');
+  
+  // Hide all states first
+  [activeDiv, inactiveDiv, processingDiv, errorDiv].forEach(div => {
+    if (div) div.style.display = 'none';
+  });
+  
+  // Show appropriate state
+  if (isExpired || isSuspended) {
+    // Show error state if account not active
+    if (errorDiv) {
+      errorDiv.style.display = 'block';
+      document.getElementById('autorenewErrorMessage').textContent = 
+        'Auto-renewal cannot be enabled while your subscription is expired or suspended.';
+    }
+  } else if (hasSubscription) {
+    // Auto-renewal is active
+    if (activeDiv) activeDiv.style.display = 'block';
+  } else {
+    // Auto-renewal not set up
+    if (inactiveDiv) inactiveDiv.style.display = 'block';
   }
 }
 
@@ -514,27 +503,163 @@ async function cancelSubscription() {
 }
 
 // =====================
-// RENEW SUBSCRIPTION
+// RENEW SUBSCRIPTION (NO PAYMENT IF AUTH CODE EXISTS)
 // =====================
-function renewSubscription() {
-  window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(currentPlan || 'basic')}&renew=true&is_renewal=true`;
+async function renewSubscription() {
+  const planToUse = currentPlan || 'basic';
+  
+  try {
+    // ✅ Try to enable auto-renewal using existing authorization_code
+    // First, check if we have a cached code
+    const cachedAuth = localStorage.getItem('recent_authorization_code');
+    
+    if (cachedAuth) {
+      console.log("🔑 Using cached authorization_code for renewal");
+      await setupAutoRenewal(cachedAuth, planToUse);
+      return;
+    }
+    
+    // ✅ Try to get code from backend status
+    const statusRes = await fetch(`${API_BASE}/api/subscription/status`, {
+      credentials: 'include'
+    });
+    const statusData = await statusRes.json();
+    
+    if (statusData.success && statusData.authorization_code) {
+      console.log("🔑 Using authorization_code from backend for renewal");
+      await setupAutoRenewal(statusData.authorization_code, planToUse);
+      return;
+    }
+    
+    // ✅ No authorization_code available → user must make a payment first
+    console.log("⚠️ No authorization_code available - redirecting to payment for renewal");
+    
+    // Redirect to pay.html for renewal payment
+    window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(planToUse)}&renew=true&is_renewal=true`;
+    
+  } catch (err) {
+    console.error("❌ Renewal setup failed:", err);
+    document.getElementById("message").innerHTML =
+      `<span class="error">❌ ${err.message || 'Renewal setup failed. Please try making a payment first.'}</span>`;
+  }
+}
+
+// =====================
+// ENABLE AUTO-RENEWAL (Called from auto-renewal section)
+// =====================
+async function enableAutoRenewal() {
+  const planToUse = currentPlan || 'basic';
+  
+  // Show processing state
+  document.getElementById('autorenewInactive').style.display = 'none';
+  document.getElementById('autorenewProcessing').style.display = 'block';
+  
+  try {
+    // ✅ Try cached code first
+    const cachedAuth = localStorage.getItem('recent_authorization_code');
+    if (cachedAuth) {
+      await setupAutoRenewal(cachedAuth, planToUse);
+      return;
+    }
+    
+    // ✅ Try backend code
+    const statusRes = await fetch(`${API_BASE}/api/subscription/status`, {
+      credentials: 'include'
+    });
+    const statusData = await statusRes.json();
+    
+    if (statusData.success && statusData.authorization_code) {
+      await setupAutoRenewal(statusData.authorization_code, planToUse);
+      return;
+    }
+    
+    // ✅ No code available → show error state with payment option
+    document.getElementById('autorenewProcessing').style.display = 'none';
+    document.getElementById('autorenewError').style.display = 'block';
+    document.getElementById('autorenewErrorMessage').textContent = 
+      'No valid payment method found. Please complete a payment to enable auto-renewal.';
+    
+  } catch (err) {
+    console.error("❌ Enable auto-renewal failed:", err);
+    document.getElementById('autorenewProcessing').style.display = 'none';
+    document.getElementById('autorenewError').style.display = 'block';
+    document.getElementById('autorenewErrorMessage').textContent = err.message || 'Setup failed. Please try again.';
+  }
+}
+
+// =====================
+// SETUP AUTO-RENEWAL (Internal helper - calls backend)
+// =====================
+async function setupAutoRenewal(authorizationCode, planToUse) {
+  try {
+    const emailToUse = schoolEmail || localStorage.getItem('email');
+    
+    const res = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        authorization_code: authorizationCode,
+        plan: planToUse,
+        school_id: schoolId,
+        email: emailToUse
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (data.success) {
+      // ✅ Success: update UI and refresh status
+      document.getElementById('autorenewProcessing').style.display = 'none';
+      document.getElementById('autorenewActive').style.display = 'block';
+      
+      if (data.next_billing_date) {
+        document.getElementById('nextBillingDisplay').textContent = 
+          new Date(data.next_billing_date).toLocaleDateString('en-NG', {
+            year: 'numeric', month: 'long', day: 'numeric'
+          });
+      }
+      
+      // Clear cached code
+      localStorage.removeItem('recent_authorization_code');
+      
+      // Refresh button states
+      setTimeout(fetchSubscriptionStatus, 1000);
+      
+      // Show success message
+      document.getElementById("message").innerHTML =
+        `<span class="success">✅ Auto-renewal enabled successfully!</span>`;
+      
+    } else {
+      throw new Error(data.message || 'Setup failed');
+    }
+    
+  } catch (err) {
+    console.error("❌ Auto-renewal setup failed:", err);
+    document.getElementById('autorenewProcessing').style.display = 'none';
+    document.getElementById('autorenewError').style.display = 'block';
+    document.getElementById('autorenewErrorMessage').textContent = err.message || 'Failed to enable auto-renewal';
+  }
 }
 
 // ====================
-// UPGRADE TO PRO
+// UPGRADE TO PRO (REQUIRES PAYMENT)
 // ====================
 function upgradeToPro() {
   if (!confirm("✨ Upgrade to Pro Plan?\n\nYou'll get:\n• Unlimited students\n• Bulk registration\n• SMS/Email alerts\n• Priority support\n\nThis will be charged immediately. Continue?")) {
     return;
   }
+  
+  // Redirect to pay.html for upgrade payment
   window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&from_plan=${encodeURIComponent(currentPlan || 'basic')}&to_plan=pro&upgrade=true`;
 }
 
 // =====================
-// DOWNGRADE TO BASIC
+// DOWNGRADE TO BASIC (NO PAYMENT)
 // =====================
 async function downgradeToBasic() {
   const confirmed = confirm("⬇️ Downgrade to Basic Plan?\n\nYou will lose:\n• Unlimited students (limited to 200)\n• Bulk registration\n• SMS/Email alerts\n• Priority support\n\nChanges take effect immediately. Continue?");
+  
   if (!confirmed) return;
 
   try {
@@ -574,130 +699,6 @@ function showPlanSelection() {
     </div>
   `;
   container.insertAdjacentHTML("beforeend", html);
-}
-
-// ✅ NEW: Auto-Renewal Setup Functions (SIMPLIFIED - NO ₦10 CHARGE)
-
-// 🔹 Enable auto-renewal using existing authorization_code
-async function enableAutoRenewal() {
-  const btn = document.querySelector('#autorenewStep1 .btn');
-  const originalText = btn.innerHTML;
-  const planToUse = currentPlan || 'basic';
-  
-  try {
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Setting up...';
-    
-    // ✅ STEP 1: Try to use cached authorization_code from recent payment
-    const cachedAuth = localStorage.getItem('recent_authorization_code');
-    
-    if (cachedAuth) {
-      console.log("🔑 Using cached authorization_code");
-      await setupAutoRenewal(cachedAuth);
-      return;
-    }
-    
-    // ✅ STEP 2: If no cached code, try to get one from backend status
-    // (Some backends return authorization_code in /status if available)
-    const statusRes = await fetch(`${API_BASE}/api/subscription/status`, {
-      credentials: 'include'
-    });
-    const statusData = await statusRes.json();
-    
-    if (statusData.success && statusData.authorization_code) {
-      console.log("🔑 Using authorization_code from backend");
-      await setupAutoRenewal(statusData.authorization_code);
-      return;
-    }
-    
-    // ✅ STEP 3: No authorization_code available → user must make a payment first
-    console.log("⚠️ No authorization_code available - redirecting to payment");
-    document.getElementById('autorenewStep1').style.display = 'none';
-    document.getElementById('autorenewStep4').style.display = 'block';
-    
-  } catch (err) {
-    console.error("❌ Enable auto-renewal failed:", err);
-    document.getElementById('autorenewStep1').style.display = 'none';
-    document.getElementById('autorenewStep4').style.display = 'block';
-    document.getElementById('autorenewError').textContent = err.message || 'Setup failed. Please try making a payment first.';
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = originalText;
-  }
-}
-
-// 🔹 Call /setup-subscription with authorization_code (NO PAYMENT)
-async function setupAutoRenewal(authorizationCode) {
-  document.getElementById('autorenewStep1').style.display = 'none';
-  document.getElementById('autorenewStep2').style.display = 'block';
-  
-  try {
-    const planToUse = currentPlan || 'basic';
-    
-    // ✅ Use backend-verified email for consistency
-    const emailToUse = schoolEmail || localStorage.getItem('email');
-    
-    const res = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        authorization_code: authorizationCode,
-        plan: planToUse,
-        school_id: schoolId,
-        email: emailToUse  // ✅ Ensure email matches authorization_code owner
-      })
-    });
-    
-    const data = await res.json();
-    
-    if (data.success) {
-      document.getElementById('autorenewStep2').style.display = 'none';
-      document.getElementById('autorenewStep3').style.display = 'block';
-      
-      if (data.next_billing_date) {
-        document.getElementById('nextBillingDisplay').textContent = 
-          new Date(data.next_billing_date).toLocaleDateString('en-NG', {
-            year: 'numeric', month: 'long', day: 'numeric'
-          });
-      }
-      
-      localStorage.removeItem('recent_authorization_code');
-      
-      // Refresh status to update button text
-      setTimeout(() => {
-        fetchSubscriptionStatus();
-        window.location.href = 'dashboard.html?autorenew=success';
-      }, 2000);
-      
-    } else {
-      throw new Error(data.message || 'Setup failed');
-    }
-    
-  } catch (err) {
-    console.error("❌ Auto-renewal setup failed:", err);
-    document.getElementById('autorenewStep2').style.display = 'none';
-    document.getElementById('autorenewStep4').style.display = 'block';
-    document.getElementById('autorenewError').textContent = err.message || 'Failed to enable auto-renewal';
-  }
-}
-
-// 🔹 Show error state (kept for compatibility)
-function showAutoRenewalError(message) {
-  document.getElementById('autorenewStep2').style.display = 'none';
-  document.getElementById('autorenewStep4').style.display = 'block';
-  document.getElementById('autorenewError').textContent = message;
-}
-
-// 🔹 Retry handler (kept for compatibility)
-function retryAutoRenewal() {
-  document.getElementById('autorenewStep4').style.display = 'none';
-  document.getElementById('autorenewStep1').style.display = 'block';
-}
-
-// 🔹 Redirect to dashboard
-function redirectToDashboard() {
-  window.location.href = 'dashboard.html?autorenew=success';
 }
 </script>
 
