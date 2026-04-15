@@ -602,22 +602,47 @@ async function enableAutoRenewal() {
   }
 }
 
+
 // =====================
-// SETUP AUTO-RENEWAL (Internal helper - calls backend)
+// SETUP AUTO-RENEWAL (Email Consistency Fix)
 // =====================
 async function setupAutoRenewal(authorizationCode, planToUse) {
+  document.getElementById('autorenewStep1').style.display = 'none';
+  document.getElementById('autorenewProcessing').style.display = 'block';
+  
   try {
-    const emailToUse = schoolEmail || localStorage.getItem('email');
+    // ✅ CRITICAL: Fetch the exact email Paystack tied to the authorization_code
+    // This prevents "Authorization does not belong to customer" errors
+    const statusRes = await fetch(`${API_BASE}/api/subscription/status`, {
+      credentials: 'include',
+      cache: 'no-store'
+    });
     
+    if (!statusRes.ok) {
+      throw new Error(`Failed to fetch subscription status: ${statusRes.status}`);
+    }
+    
+    const statusData = await statusRes.json();
+    
+    // ✅ Priority order for email: backend verified > cached > fallback
+    const exactEmail = 
+      statusData.data?.email ||                    // ✅ Backend-verified email (highest priority)
+      statusData.paystack_customer_email ||        // ✅ Saved from previous payment
+      schoolEmail ||                               // ✅ Cached in frontend state
+      localStorage.getItem('email') ||             // ✅ Fallback to localStorage
+      'user@gradely.info';                         // ✅ Last resort fallback
+
+    console.log("🔑 Using email for auto-renewal setup:", exactEmail);
+
     const res = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({
         authorization_code: authorizationCode,
-        plan: planToUse,
+        plan: planToUse || currentPlan || 'basic',
         school_id: schoolId,
-        email: emailToUse
+        email: exactEmail  // ✅ MUST match Paystack's record for this authorization_code
       })
     });
     
@@ -646,6 +671,10 @@ async function setupAutoRenewal(authorizationCode, planToUse) {
         `<span class="success">✅ Auto-renewal enabled successfully!</span>`;
       
     } else {
+      // ✅ Handle specific Paystack errors
+      if (data.message?.includes('does not belong to customer')) {
+        throw new Error('Payment method mismatch. Please complete a new payment to enable auto-renewal.');
+      }
       throw new Error(data.message || 'Setup failed');
     }
     
@@ -653,9 +682,20 @@ async function setupAutoRenewal(authorizationCode, planToUse) {
     console.error("❌ Auto-renewal setup failed:", err);
     document.getElementById('autorenewProcessing').style.display = 'none';
     document.getElementById('autorenewError').style.display = 'block';
-    document.getElementById('autorenewErrorMessage').textContent = err.message || 'Failed to enable auto-renewal';
+    
+    // ✅ User-friendly error messages
+    let userMessage = err.message || 'Failed to enable auto-renewal';
+    if (userMessage.includes('network') || userMessage.includes('fetch')) {
+      userMessage = 'Connection error. Please check your internet and try again.';
+    } else if (userMessage.includes('mismatch') || userMessage.includes('belong to customer')) {
+      userMessage = 'Payment method verification failed. Please <a href="pay.html?renew=true" style="color:#00e676;text-decoration:underline">complete a payment</a> to enable auto-renewal.';
+    }
+    
+    document.getElementById('autorenewErrorMessage').innerHTML = userMessage;
   }
 }
+
+
 
 // ====================
 // UPGRADE TO PRO (REQUIRES PAYMENT)
