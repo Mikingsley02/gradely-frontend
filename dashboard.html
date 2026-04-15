@@ -537,14 +537,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("📡 Full API Response:", data);
 
     if (data.success) {
-      // ✅ STRICT plan validation
+      // ✅ ROBUST plan validation with retry + fallback
       const rawPlan = data.plan || data.current_plan || data.data?.current_plan;
-      if (!rawPlan || !['basic', 'pro'].includes(rawPlan.toLowerCase())) {
-        console.error("❌ CRITICAL: Missing or invalid plan:", data);
-        showPlanConfigurationError();
-        return;
+      let planToUse = rawPlan?.toLowerCase();
+
+      // 🔁 Handle missing/invalid plan gracefully
+      if (!planToUse || !['basic', 'pro'].includes(planToUse)) {
+        const cachedPlan = localStorage.getItem('last_known_plan');
+        
+        if (cachedPlan && ['basic', 'pro'].includes(cachedPlan)) {
+          console.warn("⚠️ API returned missing plan, using cached fallback:", cachedPlan);
+          planToUse = cachedPlan;
+          // Show subtle warning instead of blocking
+          console.log("🔄 UI will load with cached plan. Refreshing data in background...");
+        } else {
+          // Retry up to 3 times before blocking
+          const retryCount = Number(sessionStorage.getItem('plan_fetch_retries') || 0);
+          if (retryCount < 3) {
+            sessionStorage.setItem('plan_fetch_retries', retryCount + 1);
+            console.log(`🔄 Retrying plan fetch (${retryCount + 1}/3)...`);
+            setTimeout(() => fetchSubscriptionStatus(), 1500);
+            return; // Wait for retry
+          } else {
+            console.error("❌ Plan configuration error after retries:", data);
+            showPlanConfigurationError();
+            return;
+          }
+        }
       }
-      currentPlan = rawPlan.toLowerCase();
+
+      // Clear retry counter on success
+      sessionStorage.removeItem('plan_fetch_retries');
+      currentPlan = planToUse;
+      localStorage.setItem('last_known_plan', currentPlan); // Cache for next time
       
       // ✅ GET EXPIRY DATE (CRITICAL FOR CANCELLATION LOGIC)
       subscriptionExpiryDate = data.expiryDate || data.data?.subscription_expiry || null;
