@@ -411,6 +411,13 @@
           localStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
           localStorage.setItem("admin_email", email); // ✅ Also save as admin_email for redundancy
 
+          // ✅ JWT FALLBACK: Store token if returned by backend (for cross-subdomain auth)
+          if (data.token) {
+          localStorage.setItem('gradely_token', data.token);
+          console.log('✅ JWT token stored for auto-renewal fallback');
+          }
+
+
           // ✅ Auto-redirect to dashboard (no alert delay)
           window.location.href = "dashboard.html";
         } else {
