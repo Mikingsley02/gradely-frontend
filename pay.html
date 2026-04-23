@@ -419,10 +419,17 @@ document.getElementById("paystackBtn").onclick = async () => {
 
   try {
     const paystackKey = await loadPaystackKey();
+
+  const token = localStorage.getItem('gradely_token');
+  const headers = { 'Content-Type': 'application/json' };
+
+  if (token) {
+  headers['Authorization'] = `Bearer ${token}`;
+  }
     
     const response = await fetch(`${API_BASE}/api/subscription/upgrade`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers,
       credentials: 'include',
       body: JSON.stringify({ plan: plan, school_id: school_id })
     });
@@ -514,7 +521,7 @@ document.getElementById("paystackBtn").onclick = async () => {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          authorization_code: authorizationCode,  // ← From backend, not Paystack callback
+          authorization_code: authorizationCode,
           plan: plan,
           school_id: school_id
         })
