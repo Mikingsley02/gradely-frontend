@@ -193,68 +193,97 @@
   </div>
 
   <script src="js/kaima-chatbot.js"></script>
-  <script>
-    const overlay = document.getElementById("cookieOverlay");
-    const savedConsent = localStorage.getItem("gradely_cookie_consent");
+  
+  
+<script>
+  const overlay = document.getElementById("cookieOverlay");
+  const savedConsent = localStorage.getItem("gradely_cookie_consent");
 
-    // ✅ FUNCTION: Load analytics/tracking scripts ONLY if user accepted
-    function loadNonEssentialScripts() {
-      if (localStorage.getItem("gradely_cookie_consent") === "accepted") {
-        
-        // ✅ Google Analytics 4 (YOUR ID: G-8G4E0GYWT1)
-        const gaScript = document.createElement("script");
-        gaScript.src = "https://www.googletagmanager.com/gtag/js?id=G-8G4E0GYWT1";
-        gaScript.async = true;
-        document.head.appendChild(gaScript);
-        
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){ dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-8G4E0GYWT1', {
-          // ✅ Optional: Track user type
-          user_type: localStorage.getItem("adminId") ? 'admin' : 
-                     localStorage.getItem("school_id") ? 'school' : 'visitor'
-        });
-        
-        console.log("✅ Google Analytics loaded (G-8G4E0GYWT1)");
-        
-      } else {
-        console.log("⚠️ Non-essential cookies rejected - analytics blocked");
-      }
+  // ✅ COMPLETE: Load analytics/tracking scripts ONLY if user accepted
+  function loadNonEssentialScripts() {
+    if (localStorage.getItem("gradely_cookie_consent") === "accepted") {
+      
+      // ✅ Google Analytics 4 (GA ID: G-8G4E0GYWT1)
+      const gaScript = document.createElement("script");
+      gaScript.src = "https://www.googletagmanager.com/gtag/js?id=G-8G4E0GYWT1";
+      gaScript.async = true;
+      document.head.appendChild(gaScript);
+      
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-8G4E0GYWT1', {
+        user_type: localStorage.getItem("adminId") ? 'admin' : 
+                   localStorage.getItem("school_id") ? 'school' : 'visitor'
+      });
+      
+      console.log("✅ Google Analytics loaded (G-8G4E0GYWT1)");
+      
+    } else {
+      console.log("⚠️ Non-essential cookies rejected - analytics blocked");
     }
+  }
 
-    // ✅ Accept: Save consent + load non-essential scripts
-    function acceptCookies() {
-      localStorage.setItem("gradely_cookie_consent", "accepted");
-      overlay.style.display = "none";
-      loadNonEssentialScripts(); // ✅ Actually enable analytics now
+  // ✅ NEW: Generate anonymous visitor ID
+  function getVisitorId() {
+    let id = localStorage.getItem('gradely_visitor_id');
+    if (!id) {
+      id = 'v-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('gradely_visitor_id', id);
     }
+    return id;
+  }
 
-    // ✅ Reject: Save consent + do NOT load non-essential scripts
-    function rejectCookies() {
-      localStorage.setItem("gradely_cookie_consent", "rejected");
-      overlay.style.display = "none";
-      // ✅ Analytics NOT loaded - essential cookies still work
-    }
+  // ✅ NEW: Accept with backend logging
+  async function acceptCookies() {
+    localStorage.setItem("gradely_cookie_consent", "accepted");
+    overlay.style.display = "none";
+    loadNonEssentialScripts();  // ✅ GA loads here
 
-    // ✅ Allow users to change consent later via footer link
-    function openCookieSettings() {
-      localStorage.removeItem("gradely_cookie_consent");
+    fetch('https://api.gradely.info/api/consent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        visitorId: getVisitorId(),
+        accepted: true,
+        categories: ['necessary', 'analytics', 'marketing']
+      })
+    }).catch(err => console.warn('⚠️ Consent log failed:', err));
+  }
+
+  // ✅ NEW: Reject with backend logging
+  async function rejectCookies() {
+    localStorage.setItem("gradely_cookie_consent", "rejected");
+    overlay.style.display = "none";
+
+    fetch('https://api.gradely.info/api/consent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        visitorId: getVisitorId(),
+        accepted: false,
+        categories: ['necessary']
+      })
+    }).catch(err => console.warn('⚠️ Consent log failed:', err));
+  }
+
+  // ✅ Allow users to change consent later via footer link
+  function openCookieSettings() {
+    localStorage.removeItem("gradely_cookie_consent");
+    overlay.style.display = "flex";
+  }
+
+  // ✅ On page load: show banner ONLY if no consent exists
+  if (!savedConsent) {
+    if (window.location.pathname === "/" || window.location.pathname.endsWith("index.html")) {
       overlay.style.display = "flex";
     }
-
-    // ✅ On page load: show banner ONLY if no consent exists
-    // ✅ This ensures banner shows on FIRST visit, not on logout
-    if (!savedConsent) {
-      // ✅ Only show on index.html (homepage), not on other pages
-      if (window.location.pathname === "/" || window.location.pathname.endsWith("index.html")) {
-        overlay.style.display = "flex";
-      }
-    } else {
-      // User already chose - load scripts if they accepted
-      loadNonEssentialScripts();
-    }
-  </script>
+  } else {
+    loadNonEssentialScripts();  // ✅ GA loads on return visits if already accepted
+  }
+</script>
 
 </body>
 </html>
