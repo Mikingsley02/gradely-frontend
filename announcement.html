@@ -17,8 +17,15 @@ h1 { text-align: center; color: #0c2461; margin: 0 0 22px; }
 .form-group { margin-bottom: 16px; }
 input, textarea { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 1rem; }
 textarea { height: 190px; resize: none; }
-.toggle-row { display: flex; justify-content: center; gap: 36px; margin: 18px 0 26px; font-weight: 600; }
-.toggle-row label { display: flex; align-items: center; gap: 8px; }
+.toggle-row { display: flex; justify-content: center; gap: 36px; margin: 18px 0 26px; font-weight: 600; flex-wrap: wrap; }
+.toggle-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap; }
+.toggle-row input[type="checkbox"] {
+  width: 18px;  /* ✅ Fixed size for consistency */
+  height: 18px;
+  margin: 0;  /* ✅ Remove default margin */
+  cursor: pointer;
+  flex-shrink: 0;  /* ✅ Prevent checkbox from shrinking */
+}
 button { background: #3498db; color: white; border: none; padding: 12px 26px; border-radius: 8px; cursor: pointer; font-weight: bold; display: block; margin: 0 auto; }
 button:hover { background: #2980b9; }
 .back-link { display: block; text-align: center; margin-top: 14px; color: #3498db; text-decoration: none; font-weight: 600; }
@@ -32,7 +39,30 @@ button:hover { background: #2980b9; }
 .footer { text-align: center; padding: 18px 10px 22px; font-size: 0.85rem; color: #555; }
 .footer a { color: #3498db; text-decoration: none; margin: 0 6px; }
 .footer a:hover { text-decoration: underline; }
-@media (max-width: 480px) { textarea { height: 160px; } .toggle-row { gap: 24px; } }
+
+@media (max-width: 768px) {
+  .toggle-row { 
+    gap: 24px;  /* ✅ Reduce gap on tablet */
+  }
+}
+
+@media (max-width: 480px) { 
+  textarea { height: 160px; } 
+  
+  .toggle-row { 
+    gap: 20px;  /* ✅ Even smaller gap on phone */
+    margin: 16px 0 20px;  /* ✅ Adjust margins */
+  }
+  
+  .toggle-row label {
+    font-size: 0.95rem;  /* ✅ Slightly smaller text on mobile */
+  }
+  
+  .toggle-row input[type="checkbox"] {
+    width: 16px;  /* ✅ Slightly smaller checkbox on mobile */
+    height: 16px;
+  }
+}
 </style>
 </head>
 
@@ -106,7 +136,6 @@ window.addEventListener("DOMContentLoaded", () => {
    LOAD ANNOUNCEMENTS
 ================================ */
 async function loadAnnouncements() {
-  // ✅ Removed getToken() check - backend uses session cookies, not JWT
   
   try {
     const res = await fetch(`${API_BASE}/api/announcement`, {
@@ -161,7 +190,6 @@ async function loadAnnouncements() {
    POST ANNOUNCEMENTS
 ================================ */
 async function postAnnouncement() {
-  // ✅ Removed getToken() check - backend uses session cookies, not JWT
   
   const title = titleInput.value.trim();
   const message = messageInput.value.trim();
