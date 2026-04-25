@@ -17,6 +17,7 @@
       min-height: 100vh;
       padding: 20px;
       line-height: 1.7;
+      overflow-x: hidden;
     }
 
     .container {
@@ -28,6 +29,7 @@
       overflow: hidden;
       padding-bottom: 40px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      width: calc(100% - 40px);
     }
 
     header {
@@ -49,12 +51,14 @@
 
     .content {
       padding: 40px 30px;
+      width: 100%;
     }
 
     .contact-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 35px;
+      width: 100%;
     }
 
     .contact-info {
@@ -62,6 +66,7 @@
       padding: 25px;
       border-radius: 12px;
       min-height: 100%;
+      width: 100%;
     }
 
     .contact-info h2 {
@@ -86,11 +91,13 @@
 
     .contact-form {
       min-height: 100%;
+      width: 100%;
     }
 
     .contact-form input,
     .contact-form textarea {
       width: 100%;
+      max-width: 100%;
       padding: 14px 16px;
       margin: 10px 0;
       border: none;
@@ -116,6 +123,7 @@
       cursor: pointer;
       font-weight: 600;
       width: 100%;
+      max-width: 100%;
     }
 
     .contact-form button:hover {
@@ -139,19 +147,105 @@
 
 
       /* Mobile-only placeholder size fix */
-      @media (max-width: 480px) {
-      input::placeholder,
-       textarea::placeholder {
-        font-size: 14px !important;
-        line-height: 1.2 !important;
-    }
-
-    /* brighter placeholder color */
-      input::placeholder,
-      textarea::placeholder {
-       color: rgba(255, 255, 255, 0.85) !important;
+      @media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+  
+  .container {
+    margin: 20px auto;
+    width: calc(100% - 20px);  /* ✅ Adjust for smaller padding */
+  }
+  
+  .content {
+    padding: 25px 20px;  /* ✅ Reduced padding */
+  }
+  
+  .contact-grid {
+    grid-template-columns: 1fr;  /* ✅ Stack on tablet */
+    gap: 25px;
+  }
 }
 
+
+
+      @media (max-width: 480px) {
+  body {
+    padding: 8px;
+  }
+  
+  .container {
+    margin: 15px auto;
+    width: calc(100% - 16px);  /* ✅ Ensure no overflow */
+    border-radius: 15px;
+  }
+  
+  header {
+    padding: 35px 20px;
+  }
+  
+  header h1 {
+    font-size: 1.8rem;
+  }
+  
+  header p {
+    font-size: 1rem;
+  }
+  
+  .content {
+    padding: 20px 15px;  /* ✅ Reduced padding for small screens */
+  }
+  
+  .contact-grid {
+    grid-template-columns: 1fr;  /* ✅ Single column on mobile */
+    gap: 20px;
+  }
+  
+  .contact-info,
+  .contact-form {
+    padding: 20px 15px;  /* ✅ Adjust internal padding */
+  }
+  
+  .contact-form input,
+  .contact-form textarea {
+    padding: 12px 14px;  /* ✅ Slightly smaller padding */
+    font-size: 16px;  /* ✅ Prevent iOS zoom */
+  }
+  
+  .contact-form button {
+    padding: 12px 18px;
+    font-size: 16px;  /* ✅ Prevent iOS zoom */
+  }
+  
+  footer {
+    padding: 20px 10px;
+    font-size: 0.85rem;
+  }
+  
+  footer img {
+    height: 22px;
+  }
+  
+  /* Mobile-only placeholder size fix */
+  input::placeholder,
+  textarea::placeholder {
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+}
+
+/* Make placeholders visible */
+::placeholder {
+  color: #d9d9d9 !important;
+  opacity: 1 !important;
+}
+
+/* For cross-browser compatibility */
+input::placeholder,
+textarea::placeholder {
+  color: #d9d9d9 !important;
+  opacity: 1 !important;
 }
 
       /* Make placeholders visible */
