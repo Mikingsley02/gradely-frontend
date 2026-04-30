@@ -26,6 +26,7 @@
       backdrop-filter: blur(10px);
       box-shadow: 0 8px 25px rgba(0,0,0,0.2);
       text-align: center;
+       margin-bottom: 40px;
     }
     h2 { margin-bottom: 10px; font-size: 1.8rem; color: #fff; }
     p { font-size: 0.95rem; margin-bottom: 20px; opacity: 0.9; }
@@ -166,11 +167,29 @@
       display: none;
       animation: fadeIn 0.3s ease;
     }
-    
+
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+
+    
+@media (max-width: 600px) {
+  .container {
+    margin-bottom: 30px;
+    padding: 30px 20px;
+  }
+  
+  footer {
+    padding: 15px 10px;
+    font-size: 0.85rem;
+  }
+}
+
+
+
   </style>
 </head>
 <body>
