@@ -513,6 +513,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     sessionStorage.setItem("school_id", schoolId);
   }
 
+  // ✅ Fetch subscription status FIRST, then update UI
+  await checkAndApplySubscription();
+  
+  // ✅ Only update badge AFTER plan is confirmed
+  updatePlanBadge();
+});
+
+// ✅ NEW: Dedicated function to fetch + apply subscription logic
+async function checkAndApplySubscription() {
+  const schoolId = localStorage.getItem("school_id");
   const timestamp = Date.now();
   const apiUrl = `/api/subscription/status?school_id=${encodeURIComponent(schoolId)}&t=${timestamp}`;
   console.log("📡 Fetching subscription status from:", apiUrl);
@@ -537,50 +547,54 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("📡 Full API Response:", data);
 
     if (data.success) {
-      // ✅ ROBUST plan validation with retry + fallback
-      const rawPlan = data.plan || data.current_plan || data.data?.current_plan;
-      let planToUse = rawPlan?.toLowerCase();
-
-      // 🔁 Handle missing/invalid plan gracefully
-      if (!planToUse || !['basic', 'pro'].includes(planToUse)) {
+      // ✅ ROBUST plan extraction - check ALL possible field names
+      const rawPlan = (
+        data.plan || 
+        data.current_plan || 
+        data.subscription_plan || 
+        data.data?.current_plan || 
+        data.data?.subscription_plan ||
+        ''
+      ).toLowerCase().trim();
+      
+      // ✅ Validate plan value
+      if (!rawPlan || !['basic', 'pro'].includes(rawPlan)) {
+        // Try cached fallback
         const cachedPlan = localStorage.getItem('last_known_plan');
-        
-        if (cachedPlan && ['basic', 'pro'].includes(cachedPlan)) {
-          console.warn("⚠️ API returned missing plan, using cached fallback:", cachedPlan);
-          planToUse = cachedPlan;
-          // Show subtle warning instead of blocking
-          console.log("🔄 UI will load with cached plan. Refreshing data in background...");
+        if (cachedPlan && ['basic', 'pro'].includes(cachedPlan.toLowerCase())) {
+          console.warn("⚠️ API returned invalid plan, using cached fallback:", cachedPlan);
+          currentPlan = cachedPlan.toLowerCase();
         } else {
-          // Retry up to 3 times before blocking
-          const retryCount = Number(sessionStorage.getItem('plan_fetch_retries') || 0);
-          if (retryCount < 3) {
-            sessionStorage.setItem('plan_fetch_retries', retryCount + 1);
-            console.log(`🔄 Retrying plan fetch (${retryCount + 1}/3)...`);
-            setTimeout(() => fetchSubscriptionStatus(), 1500);
-            return; // Wait for retry
-          } else {
-            console.error("❌ Plan configuration error after retries:", data);
-            showPlanConfigurationError();
-            return;
-          }
+          console.error("❌ Invalid plan value:", rawPlan, "- using default 'basic'");
+          currentPlan = 'basic'; // Graceful fallback instead of blocking
         }
+      } else {
+        currentPlan = rawPlan;
       }
-
-      // Clear retry counter on success
-      sessionStorage.removeItem('plan_fetch_retries');
-      currentPlan = planToUse;
-      localStorage.setItem('last_known_plan', currentPlan); // Cache for next time
       
-      // ✅ GET EXPIRY DATE (CRITICAL FOR CANCELLATION LOGIC)
-      subscriptionExpiryDate = data.expiryDate || data.data?.subscription_expiry || null;
-      subscriptionStatus = (data.subscription_status || data.status || 'active').toLowerCase().trim();
-      isAccountSuspended = data.isSuspended || data.data?.is_suspended || false;
+      // ✅ Cache for next time
+      localStorage.setItem('last_known_plan', currentPlan);
       
-      // ✅ CORRECT LOGIC: Account remains ACTIVE until expiry date (even if cancelled)
-      // DO NOT block immediately on 'cancelled' status
+      // ✅ Extract expiry and status with fallbacks
+      subscriptionExpiryDate = (
+        data.expiryDate || 
+        data.subscription_expiry || 
+        data.data?.subscription_expiry || 
+        data.data?.expiry_date ||
+        null
+      );
+      
+      subscriptionStatus = (
+        data.subscription_status || 
+        data.status || 
+        data.data?.subscription_status || 
+        'active'
+      ).toLowerCase().trim();
+      
+      isAccountSuspended = !!(data.isSuspended || data.data?.is_suspended);
+      
+      // ✅ Check actual expiry date (NOT just status)
       let isExpired = false;
-      
-      // Check actual expiry date (NOT status)
       if (subscriptionExpiryDate) {
         const expiry = new Date(subscriptionExpiryDate);
         const now = new Date();
@@ -588,7 +602,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log(`📅 Expiry check: now=${now.toISOString()}, expiry=${expiry.toISOString()}, isExpired=${isExpired}`);
       }
       
-      // Only block if actually expired OR suspended
+      // ✅ Account is active if NOT suspended AND NOT expired
       isSubscriptionActive = !isAccountSuspended && !isExpired;
       
       console.log("✅ Plan:", currentPlan);
@@ -597,58 +611,62 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.log("✅ Is Expired (by date):", isExpired);
       console.log("✅ Is Active:", isSubscriptionActive);
       
-      // ✅ Show overlay ONLY if actually expired or suspended
+      // ✅ Show overlays ONLY when actually blocked
       if (isAccountSuspended) {
         showAccountSuspended();
       } else if (isExpired) {
-        // Show "expired" overlay (not "cancelled")
         showSubscriptionBlocked(false);
       } else if (subscriptionStatus === 'cancelled') {
-        // ✅ CRITICAL FIX: Show NON-BLOCKING warning for cancelled (still active until expiry)
+        // ✅ Non-blocking warning for cancelled (still active until expiry)
         showCancelledWarning();
       }
+      
+      // ✅ Apply restrictions NOW that plan is confirmed
+      applyPlanRestrictions();
+      
+    } else {
+      throw new Error(data.message || 'Subscription check failed');
     }
+    
   } catch (err) {
     console.error("❌ Failed to fetch account status:", err);
     
-    // Try to recover last-known plan
+    // ✅ Graceful fallback: use cached plan or default to basic
     const lastKnownPlan = localStorage.getItem('last_known_plan');
-    if (lastKnownPlan && ['basic', 'pro'].includes(lastKnownPlan)) {
+    if (lastKnownPlan && ['basic', 'pro'].includes(lastKnownPlan.toLowerCase())) {
       console.log("✅ Recovering last-known valid plan:", lastKnownPlan);
-      currentPlan = lastKnownPlan;
-      showPlanRecoveryWarning(lastKnownPlan);
+      currentPlan = lastKnownPlan.toLowerCase();
+      showPlanRecoveryWarning(currentPlan);
       applyPlanRestrictions();
     } else {
-      showPlanConfigurationError();
-      return;
+      console.warn("⚠️ No valid cached plan - defaulting to 'basic'");
+      currentPlan = 'basic';
+      applyPlanRestrictions();
     }
   }
+}
 
-  // Update UI
-  setTimeout(() => {
-    const badge = document.getElementById('planBadge');
-    if (!badge) return;
-    
-    if (isAccountSuspended) {
-      badge.textContent = "SUSPENDED";
-      badge.className = "plan-badge suspended";
-    } else if (!isSubscriptionActive) {
-      badge.textContent = `${currentPlan.toUpperCase()} (EXPIRED)`;
-      badge.className = "plan-badge expired";
-    } else if (subscriptionStatus === 'cancelled') {
-      // ✅ Show "CANCELLED" badge but keep access active
-      badge.textContent = `${currentPlan.toUpperCase()} (CANCELLED)`;
-      badge.className = "plan-badge expired";
-    } else {
-      badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-      badge.className = `plan-badge ${currentPlan}`;
-    }
-    
-    applyPlanRestrictions();
-  }, 100);
-});
+// ✅ Update badge separately (called after plan is confirmed)
+function updatePlanBadge() {
+  const badge = document.getElementById('planBadge');
+  if (!badge || !currentPlan) return;
+  
+  if (isAccountSuspended) {
+    badge.textContent = "SUSPENDED";
+    badge.className = "plan-badge suspended";
+  } else if (!isSubscriptionActive) {
+    badge.textContent = `${currentPlan.toUpperCase()} (EXPIRED)`;
+    badge.className = "plan-badge expired";
+  } else if (subscriptionStatus === 'cancelled') {
+    badge.textContent = `${currentPlan.toUpperCase()} (CANCELLED)`;
+    badge.className = "plan-badge expired";
+  } else {
+    badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+    badge.className = `plan-badge ${currentPlan}`;
+  }
+}
 
-// ✅ REQUIRED OVERLAY FUNCTIONS (FIXES ReferenceError)
+// ✅ REQUIRED OVERLAY FUNCTIONS
 function showSubscriptionBlocked(isCancelled) {
   console.log("🔒 Subscription expired - locking dashboard");
   
@@ -684,11 +702,9 @@ function showSubscriptionBlocked(isCancelled) {
   });
 }
 
-// ✅ NEW: Non-blocking warning for cancelled subscriptions (still active until expiry)
 function showCancelledWarning() {
   console.log("⚠️ Subscription cancelled but still active until expiry");
   
-  // Show non-intrusive toast notification
   const warning = document.createElement('div');
   warning.style.position = 'fixed';
   warning.style.top = '20px';
@@ -709,7 +725,6 @@ function showCancelledWarning() {
   `;
   document.body.appendChild(warning);
   
-  // Auto-dismiss after 15 seconds
   setTimeout(() => {
     warning.style.opacity = '0';
     warning.style.transition = 'opacity 0.5s ease';
@@ -827,7 +842,9 @@ function showPlanRecoveryWarning(recoveredPlan) {
 }
 
 function applyPlanRestrictions() {
-  if (!currentPlan || !['basic', 'pro'].includes(currentPlan)) {
+  if (currentPlan === null) return; 
+  
+  if (!['basic', 'pro'].includes(currentPlan)) {
     console.error("❌ Invalid currentPlan:", currentPlan);
     showPlanConfigurationError();
     return;
@@ -870,7 +887,7 @@ function handleProFeature(url) {
   }
   
   if (!currentPlan || !['basic', 'pro'].includes(currentPlan)) {
-    showPlanConfigurationError();
+    console.warn("⚠️ Pro feature blocked: plan not confirmed yet");
     return;
   }
   
@@ -897,7 +914,7 @@ function goTo(page) {
   }
   
   if (!currentPlan || !['basic', 'pro'].includes(currentPlan)) {
-    showPlanConfigurationError();
+    console.warn("⚠️ Navigation blocked: plan not confirmed yet");
     return;
   }
   
