@@ -346,6 +346,11 @@
         <h2 style="color:#0c2461;margin-bottom:10px;text-align:center;">🔐 Two-Factor Authentication</h2>
         <p id="2faMethodHint" style="color:#7f8c8d;margin-bottom:20px;font-size:0.95rem;text-align:center;">Enter your verification code</p>
         
+        <!-- ✅ Resend SMS button (only shown for SMS method) -->
+        <button id="resendSmsBtn" onclick="resendSmsCode()" style="display:none;width:100%;padding:10px;margin-bottom:15px;background:#f39c12;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;">
+          🔄 Resend SMS Code
+        </button>
+        
         <div style="margin-bottom:15px;">
           <input type="text" id="2faCodeInput" maxlength="6" placeholder="000000" 
                  style="width:100%;padding:15px;font-size:1.5rem;letter-spacing:6px;text-align:center;border:2px solid #bdc3c7;border-radius:8px;" />
@@ -358,7 +363,7 @@
         
         <p id="2faErrorMessage" style="color:#e74c3c;margin-top:15px;font-size:0.9rem;text-align:center;"></p>
         
-        <!-- ✅ Back to Home link at BOTTOM (after Verify button) -->
+        <!-- ✅ Back to Home link at BOTTOM -->
         <a href="index.html" style="display:inline-block;margin-top:15px;color:#3498db;text-decoration:none;font-weight:600;font-size:0.95rem;">
           ← Back to Home
         </a>
@@ -427,6 +432,44 @@
       }
     }
 
+    // ✅ Resend SMS Code Function
+    async function resendSmsCode() {
+      const messageEl = document.getElementById('2faErrorMessage');
+      const resendBtn = document.getElementById('resendSmsBtn');
+      
+      messageEl.textContent = '⏳ Sending new code...';
+      resendBtn.disabled = true;
+      
+      try {
+        const schoolId = localStorage.getItem('pending_2fa_school_id');
+        
+        const res = await fetch(`${API_BASE}/api/auth/2fa/resend-sms`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ school_id: schoolId }),
+          credentials: 'include'
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+          messageEl.textContent = '✅ New code sent! Check your phone.';
+          messageEl.className = 'message success';
+          
+          // Re-enable button after 30 seconds
+          setTimeout(() => {
+            resendBtn.disabled = false;
+          }, 30000);
+        } else {
+          throw new Error(result.message);
+        }
+      } catch (err) {
+        messageEl.textContent = `❌ ${err.message}`;
+        messageEl.className = 'message error';
+        resendBtn.disabled = false;
+      }
+    }
+
     // ✅ Cancel 2FA and return to login form
     function cancel2FALogin() {
       localStorage.removeItem('pending_2fa_school_id');
@@ -484,11 +527,17 @@
           localStorage.setItem('pending_2fa_school_id', admin_id);
           localStorage.setItem('pending_2fa_method', data.method);
           
-          // Show method hint
-          document.getElementById('2faMethodHint').innerHTML = 
-  data.method === 'sms' 
-    ? 'SMS code sent to your phone' 
-    : 'Enter code from authenticator app<br><small style="color:#e74c3c;font-weight:normal;">💡 Ensure your device time is auto-synced</small>';
+          // ✅ Show method hint + resend button based on method
+          const methodHint = document.getElementById('2faMethodHint');
+          const resendBtn = document.getElementById('resendSmsBtn');
+          
+          if (data.method === 'sms') {
+            methodHint.innerHTML = 'SMS code sent to your phone<br><small style="color:#7f8c8d;">Didn\'t receive it? Click "Resend SMS Code"</small>';
+            resendBtn.style.display = 'block';
+          } else {
+            methodHint.innerHTML = 'Enter code from authenticator app<br><small style="color:#e74c3c;font-weight:normal;">💡 Ensure your device time is auto-synced</small>';
+            resendBtn.style.display = 'none';
+          }
           
           // Clear loading state
           btn.classList.remove("loading");
