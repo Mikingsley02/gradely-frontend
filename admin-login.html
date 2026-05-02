@@ -378,44 +378,51 @@
 
     // ✅ 2FA Verification Functions (added, minimal, matches existing style)
     async function verify2FALogin() {
-      const code = document.getElementById('2faCodeInput').value.trim();
-      const messageEl = document.getElementById('2faErrorMessage');
-      
-      if (!code || code.length !== 6) {
-        messageEl.textContent = '❌ Please enter a valid 6-digit code';
-        return;
-      }
-      
-      messageEl.textContent = '⏳ Verifying...';
-      
-      try {
-        const schoolId = localStorage.getItem('pending_2fa_school_id');
-        const method = localStorage.getItem('pending_2fa_method');
-        
-        const API_BASE = window.location.hostname.includes("localhost")
-          ? "http://localhost:5000"
-          : "https://api.gradely.info";
-        
-        const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ school_id: schoolId, code, method }),
-          credentials: 'include'
-        });
-        
-        const result = await res.json();
-        
-        if (result.success) {
-          localStorage.removeItem('pending_2fa_school_id');
-          localStorage.removeItem('pending_2fa_method');
-          window.location.href = 'dashboard.html';
-        } else {
-          throw new Error(result.message);
-        }
-      } catch (err) {
-        messageEl.textContent = `❌ ${err.message}`;
-      }
+  const code = document.getElementById('2faCodeInput').value.trim();
+  const messageEl = document.getElementById('2faErrorMessage');
+  
+  if (!code || code.length !== 6) {
+    messageEl.textContent = '❌ Please enter a valid 6-digit code';
+    return;
+  }
+  
+  messageEl.textContent = '⏳ Verifying...';
+  
+  try {
+    const schoolId = localStorage.getItem('pending_2fa_school_id');
+    const method = localStorage.getItem('pending_2fa_method');
+    
+    // ✅ DEBUG: Log what we're sending
+    console.log('🔍 [Frontend] Sending 2FA verify:', { schoolId, method, codeLength: code.length });
+    
+    const API_BASE = window.location.hostname.includes("localhost")
+      ? "http://localhost:5000"
+      : "https://api.gradely.info";
+    
+    const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ school_id: schoolId, code, method }),
+      credentials: 'include'
+    });
+    
+    // ✅ DEBUG: Log raw response
+    console.log('🔍 [Frontend] Response status:', res.status);
+    const result = await res.json();
+    console.log('🔍 [Frontend] Response body:', result);
+    
+    if (result.success) {
+      localStorage.removeItem('pending_2fa_school_id');
+      localStorage.removeItem('pending_2fa_method');
+      window.location.href = 'dashboard.html';
+    } else {
+      throw new Error(result.message);
     }
+  } catch (err) {
+    messageEl.textContent = `❌ ${err.message}`;
+    console.error('❌ [Frontend] verify2FALogin error:', err);
+  }
+}
 
     function cancel2FALogin() {
       localStorage.removeItem('pending_2fa_school_id');
