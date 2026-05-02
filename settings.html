@@ -178,12 +178,85 @@
 
         <button type="submit">💾 Save Changes</button>
 
-        <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
-
         <div id="message" class="message"></div>
       </form>
-    </div>
-  </div>
+
+      <!-- ✅ 2FA Setup Section -->
+      <div style="margin-top:25px;padding-top:20px;border-top:1px solid #ecf0f1;">
+        <h3 style="color:#0c2461;margin-bottom:10px;font-size:1.2rem;">🔐 Two-Factor Authentication</h3>
+        <p style="color:#7f8c8d;font-size:0.9rem;margin-bottom:15px;">
+          Add an extra layer of security. Requires a code from your phone after password.
+        </p>
+        
+        <!-- 2FA Status Display -->
+        <div id="2faStatus">
+          <p id="2faEnabledMsg" style="display:none;color:#27ae60;font-weight:600;">
+            ✅ Two-factor authentication is <strong>ENABLED</strong>
+          </p>
+          <p id="2faDisabledMsg" style="display:none;color:#e74c3c;font-weight:600;">
+            ❌ Two-factor authentication is <strong>DISABLED</strong>
+          </p>
+        </div>
+
+        <!-- Setup Form (shown when disabled) -->
+        <div id="2faSetupForm" style="display:none;margin-top:15px;">
+          <div class="form-group">
+            <label>Choose Method</label>
+            <select id="2faMethod" style="width:100%;padding:10px;border-radius:6px;border:1px solid #bdc3c7;">
+              <option value="app">Authenticator App (Google Authenticator, Authy)</option>
+              <option value="sms">SMS Code</option>
+            </select>
+          </div>
+          
+          <div id="appSetup" style="display:none;margin-top:10px;">
+            <p style="font-size:0.9rem;margin-bottom:10px;">Scan this QR code with your authenticator app:</p>
+            <img id="qrCode" src="" alt="QR Code" style="max-width:200px;border:1px solid #bdc3c7;border-radius:8px;padding:10px;background:#fff;display:block;margin:0 auto;" />
+            <p style="font-size:0.85rem;color:#7f8c8d;margin:10px 0;text-align:center;">Or enter manually: <strong id="secretCode" style="color:#3498db;"></strong></p>
+          </div>
+          
+          <div id="smsSetup" style="display:none;margin-top:10px;">
+            <div class="form-group">
+              <label>Phone Number for SMS</label>
+              <input type="tel" id="2faPhone" placeholder="+2348031234567" style="width:100%;padding:10px;border-radius:6px;border:1px solid #bdc3c7;" />
+            </div>
+          </div>
+          
+          <div class="form-group" style="margin-top:15px;">
+            <label>Enter 6-Digit Code</label>
+            <input type="text" id="2faCode" maxlength="6" placeholder="000000" style="width:100%;padding:12px;font-size:1.3rem;letter-spacing:5px;text-align:center;border-radius:6px;border:2px solid #bdc3c7;" />
+          </div>
+          
+          <button type="button" id="enable2faBtn" onclick="enable2FA()" style="background:#9b59b6;color:#fff;padding:12px;border:none;border-radius:6px;font-weight:600;cursor:pointer;width:100%;margin-top:10px;">
+            Enable Two-Factor Authentication
+          </button>
+          <p id="2faMessage" style="margin-top:15px;font-size:0.9rem;text-align:center;"></p>
+        </div>
+
+        <!-- Disable Button (shown when enabled) -->
+        <button type="button" id="disable2faBtn" onclick="disable2FA()" style="display:none;background:#e74c3c;color:#fff;padding:12px;border:none;border-radius:6px;font-weight:600;cursor:pointer;width:100%;margin-top:15px;">
+          Disable Two-Factor Authentication
+        </button>
+      </div>
+
+      <!-- ✅ BACK TO DASHBOARD BUTTON (MOVED HERE - after 2FA section) -->
+      <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+
+      <!-- Backup Codes Modal (hidden by default) -->
+      <div id="backupCodesModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;">
+        <div style="background:#fff;padding:30px;border-radius:12px;max-width:450px;width:90%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+          <h3 style="color:#27ae60;margin-bottom:15px;">✅ 2FA Enabled Successfully!</h3>
+          <p style="color:#7f8c8d;margin-bottom:20px;font-size:0.95rem;">
+            <strong>Save these backup codes</strong> in a safe place. Use one to login if you lose your phone.
+          </p>
+          <div id="backupCodesList" style="background:#f8f9fa;padding:15px;border-radius:8px;font-family:monospace;font-size:0.9rem;text-align:left;margin-bottom:20px;max-height:180px;overflow-y:auto;border:1px solid #ecf0f1;"></div>
+          <button onclick="document.getElementById('backupCodesModal').style.display='none'" style="background:#3498db;color:#fff;padding:10px 24px;border-radius:6px;border:none;font-weight:600;cursor:pointer;">
+            I've Saved These Codes
+          </button>
+        </div>
+      </div>
+
+    </div> <!-- ✅ END .settings-body -->
+  </div> <!-- ✅ END .settings-card -->
 
   <div class="footer">
     &copy; 2026 <strong>gradely.info</strong>. All rights reserved.<br/>
@@ -200,7 +273,6 @@ const API_BASE = window.location.hostname.includes("localhost")
 
 // ✅ Check if user is logged in (via session, not token)
 function isLoggedIn() {
-  // ✅ Check for school_id in localStorage (set during login)
   return !!(localStorage.getItem("school_id") || sessionStorage.getItem("school_id"));
 }
 
@@ -216,13 +288,11 @@ async function loadSchoolData() {
   const msgEl = document.getElementById("message");
   msgEl.textContent = "⏳ Loading settings...";
   msgEl.className = "message";
-
-  // ✅ Removed token check - backend uses session cookies, not JWT
   
   try {
     const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
       method: "GET",
-      credentials: "include"  // ✅ Sends session cookie
+      credentials: "include"
     });
 
     if (res.status === 401) {
@@ -258,11 +328,8 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   msgEl.className = "message";
   msgEl.textContent = "⏳ Saving changes...";
 
-  // ✅ Removed token check - backend uses session cookies, not JWT
-
   const payload = {};
 
-  // ✅ Fixed: Use document.getElementById() for form fields
   const schoolNameEl = document.getElementById("school_name");
   const emailEl = document.getElementById("email");
   const phoneEl = document.getElementById("phone_number");
@@ -297,10 +364,8 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   try {
     const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
       method: "PUT",
-      credentials: "include",  // ✅ Sends session cookie
-      headers: {
-        "Content-Type": "application/json"
-      },
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
 
@@ -321,7 +386,6 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
     msgEl.className = "message success";
     msgEl.textContent = "✅ Settings updated successfully";
 
-    // ✅ Clear password fields only
     currentPasswordEl.value = "";
     newPasswordEl.value = "";
     confirmPasswordEl.value = "";
@@ -341,6 +405,134 @@ function togglePassword(fieldId, icon) {
   } else {
     input.type = "password";
     icon.textContent = "👁️";
+  }
+}
+
+// ✅ 2FA Functions
+document.addEventListener('DOMContentLoaded', async () => {
+  await load2FAStatus();
+});
+
+async function load2FAStatus() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
+      credentials: 'include'
+    });
+    
+    if (res.ok) {
+      const data = await res.json();
+      const is2FAEnabled = data.school?.two_factor_enabled || false;
+      
+      if (is2FAEnabled) {
+        document.getElementById('2faEnabledMsg').style.display = 'block';
+        document.getElementById('2faDisabledMsg').style.display = 'none';
+        document.getElementById('2faSetupForm').style.display = 'none';
+        document.getElementById('disable2faBtn').style.display = 'block';
+      } else {
+        document.getElementById('2faEnabledMsg').style.display = 'none';
+        document.getElementById('2faDisabledMsg').style.display = 'block';
+        document.getElementById('2faSetupForm').style.display = 'block';
+        document.getElementById('disable2faBtn').style.display = 'none';
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load 2FA status:', err);
+    document.getElementById('2faSetupForm').style.display = 'block';
+  }
+}
+
+document.getElementById('2faMethod')?.addEventListener('change', function() {
+  document.getElementById('appSetup').style.display = this.value === 'app' ? 'block' : 'none';
+  document.getElementById('smsSetup').style.display = this.value === 'sms' ? 'block' : 'none';
+  
+  if (this.value === 'app') {
+    fetchQRCode();
+  }
+});
+
+async function fetchQRCode() {
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/2fa/setup`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: 'app' })
+    });
+    
+    const result = await res.json();
+    if (result.success) {
+      document.getElementById('qrCode').src = result.qr_code;
+      document.getElementById('secretCode').textContent = result.secret;
+    }
+  } catch (err) {
+    console.error('Failed to fetch QR code:', err);
+    document.getElementById('2faMessage').textContent = '❌ Failed to load QR code';
+    document.getElementById('2faMessage').className = 'message error';
+  }
+}
+
+async function enable2FA() {
+  const method = document.getElementById('2faMethod').value;
+  const code = document.getElementById('2faCode').value.trim();
+  const messageEl = document.getElementById('2faMessage');
+  
+  if (!code || code.length !== 6) {
+    messageEl.textContent = '❌ Please enter a valid 6-digit code';
+    messageEl.className = 'message error';
+    return;
+  }
+  
+  messageEl.textContent = '⏳ Verifying...';
+  messageEl.className = 'message';
+  
+  try {
+    const payload = { method, code };
+    
+    if (method === 'sms') {
+      payload.phone = document.getElementById('2faPhone').value.trim();
+      if (!payload.phone) throw new Error('Phone number required for SMS');
+    }
+    
+    const res = await fetch(`${API_BASE}/api/auth/2fa/verify`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    const result = await res.json();
+    
+    if (result.success) {
+      const codesList = document.getElementById('backupCodesList');
+      codesList.innerHTML = result.backup_codes.map(c => 
+        `<div style="padding:6px 0;border-bottom:1px solid #ecf0f1;font-weight:600;letter-spacing:2px;">${c}</div>`
+      ).join('');
+      document.getElementById('backupCodesModal').style.display = 'flex';
+      
+      document.getElementById('2faSetupForm').style.display = 'none';
+      document.getElementById('disable2faBtn').style.display = 'block';
+      document.getElementById('2faEnabledMsg').style.display = 'block';
+      document.getElementById('2faDisabledMsg').style.display = 'none';
+      
+      messageEl.textContent = '';
+    } else {
+      throw new Error(result.message);
+    }
+  } catch (err) {
+    messageEl.textContent = `❌ ${err.message}`;
+    messageEl.className = 'message error';
+  }
+}
+
+async function disable2FA() {
+  if (!confirm('Are you sure you want to disable two-factor authentication? This reduces your account security.')) {
+    return;
+  }
+  
+  try {
+    alert('2FA disable endpoint not implemented yet. Please contact support to disable.');
+  } catch (err) {
+    console.error('Disable 2FA error:', err);
   }
 }
 </script>
