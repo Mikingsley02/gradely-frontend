@@ -381,6 +381,7 @@
   </footer>
 
   <!-- ✅ Scripts -->
+   <!-- ✅ Scripts -->
   <script>
     // ✅ GLOBAL API_BASE (accessible to all functions)
     const API_BASE = window.location.hostname.includes("localhost")
@@ -406,72 +407,51 @@
       }
       
       messageEl.textContent = '⏳ Verifying...';
+      messageEl.className = 'message';
       
       try {
         const schoolId = localStorage.getItem('pending_2fa_school_id');
         const method = localStorage.getItem('pending_2fa_method');
         
+        console.log('🔍 [Frontend] Verifying 2FA:', { schoolId, method, codeLength: code.length });
+        
         const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ school_id: schoolId, code, method }),
-          credentials: 'include'
+          credentials: 'include'  // ✅ Critical: sends session cookie
         });
         
+        console.log('🔍 [Frontend] 2FA verify response status:', res.status);
         const result = await res.json();
+        console.log('🔍 [Frontend] 2FA verify response body:', result);
         
         if (result.success) {
+          console.log('✅ [Frontend] 2FA verified, redirecting to dashboard...');
+          
+          // ✅ Clear pending data FIRST
           localStorage.removeItem('pending_2fa_school_id');
           localStorage.removeItem('pending_2fa_method');
-          window.location.href = 'dashboard.html';
-        } else {
-          throw new Error(result.message);
-        }
-      } catch (err) {
-        messageEl.textContent = `❌ ${err.message}`;
-      }
-    }
-
-    // ✅ Resend SMS Code Function
-    async function resendSmsCode() {
-      const messageEl = document.getElementById('2faErrorMessage');
-      const resendBtn = document.getElementById('resendSmsBtn');
-      
-      messageEl.textContent = '⏳ Sending new code...';
-      resendBtn.disabled = true;
-      
-      try {
-        const schoolId = localStorage.getItem('pending_2fa_school_id');
-        
-        const res = await fetch(`${API_BASE}/api/auth/2fa/resend-sms`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ school_id: schoolId }),
-          credentials: 'include'
-        });
-        
-        const result = await res.json();
-        
-        if (result.success) {
-          messageEl.textContent = '✅ New code sent! Check your phone.';
-          messageEl.className = 'message success';
           
-          // Re-enable button after 30 seconds
-          setTimeout(() => {
-            resendBtn.disabled = false;
-          }, 30000);
+          // ✅ Redirect to dashboard (NOT login)
+          window.location.href = 'dashboard.html';
+          
+          // ✅ Don't return here - let redirect happen
         } else {
+          console.warn('❌ [Frontend] 2FA verification failed:', result.message);
           throw new Error(result.message);
         }
       } catch (err) {
+        console.error('❌ [Frontend] verify2FALogin error:', err);
         messageEl.textContent = `❌ ${err.message}`;
         messageEl.className = 'message error';
-        resendBtn.disabled = false;
       }
     }
 
     // ✅ Cancel 2FA and return to login form
     function cancel2FALogin() {
+      console.log('🔍 [Frontend] Canceling 2FA, returning to login form');
+      
       localStorage.removeItem('pending_2fa_school_id');
       localStorage.removeItem('pending_2fa_method');
       
@@ -484,6 +464,9 @@
       if (mainBackLink) {
         mainBackLink.style.display = 'block';
       }
+      
+      // Clear any error messages
+      document.getElementById('2faErrorMessage').textContent = '';
     }
 
     // ✅ Main Login Form Handler
@@ -502,17 +485,23 @@
       spinner.style.display = "block";
 
       try {
+        console.log('🔍 [Frontend] Attempting login:', { admin_id });
+        
         const res = await fetch(`${API_BASE}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          credentials: "include",  // ✅ Critical: sends session cookie
           body: JSON.stringify({ admin_id, password }),
         });
 
+        console.log('🔍 [Frontend] Login response status:', res.status);
         const data = await res.json();
+        console.log('🔍 [Frontend] Login response body:', data);
 
         // ✅ If 2FA is required, show 2FA prompt
         if (data.requires_2fa) {
+          console.log('🔍 [Frontend] 2FA required, showing prompt');
+          
           // Hide login form, show 2FA prompt
           document.getElementById('adminLoginForm').style.display = 'none';
           document.getElementById('2faPrompt').style.display = 'block';
@@ -527,16 +516,16 @@
           localStorage.setItem('pending_2fa_school_id', admin_id);
           localStorage.setItem('pending_2fa_method', data.method);
           
-          // ✅ Show method hint + resend button based on method
+          // Show method hint + resend button based on method
           const methodHint = document.getElementById('2faMethodHint');
           const resendBtn = document.getElementById('resendSmsBtn');
           
           if (data.method === 'sms') {
             methodHint.innerHTML = 'SMS code sent to your phone<br><small style="color:#7f8c8d;">Didn\'t receive it? Click "Resend SMS Code"</small>';
-            resendBtn.style.display = 'block';
+            if (resendBtn) resendBtn.style.display = 'block';
           } else {
             methodHint.innerHTML = 'Enter code from authenticator app<br><small style="color:#e74c3c;font-weight:normal;">💡 Ensure your device time is auto-synced</small>';
-            resendBtn.style.display = 'none';
+            if (resendBtn) resendBtn.style.display = 'none';
           }
           
           // Clear loading state
@@ -549,6 +538,8 @@
 
         // ✅ Normal login success (only reached if 2FA not required)
         if (data.success && data.admin) {
+          console.log('✅ [Frontend] Login successful, storing session data');
+          
           // ✅ NOW safe to access data.admin.email
           const email = data.admin.email || admin_id + "@gradely.info";
           localStorage.setItem("email", email);
@@ -567,12 +558,14 @@
           }
 
           // ✅ Auto-redirect to dashboard
+          console.log('✅ [Frontend] Redirecting to dashboard.html');
           window.location.href = "dashboard.html";
         } else {
+          console.warn('❌ [Frontend] Login failed:', data.message);
           alert("❌ " + (data.message || "Login failed."));
         }
       } catch (err) {
-        console.error("❌ Network or server error:", err);
+        console.error("❌ [Frontend] Network or server error:", err);
         alert("❌ Network or server error. Please try again.");
       } finally {
         // Only reset button if we're not showing 2FA prompt
