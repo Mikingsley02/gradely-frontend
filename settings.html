@@ -476,6 +476,8 @@ async function enable2FA() {
   const code = document.getElementById('2faCode').value.trim();
   const messageEl = document.getElementById('2faMessage');
   
+  console.log('🔍 [Frontend] enable2FA called:', { method, codeLength: code.length });
+  
   if (!code || code.length !== 6) {
     messageEl.textContent = '❌ Please enter a valid 6-digit code';
     messageEl.className = 'message error';
@@ -493,6 +495,8 @@ async function enable2FA() {
       if (!payload.phone) throw new Error('Phone number required for SMS');
     }
     
+    console.log('🔍 [Frontend] Sending /verify request:', payload);
+    
     const res = await fetch(`${API_BASE}/api/auth/2fa/verify`, {
       method: 'POST',
       credentials: 'include',
@@ -500,15 +504,19 @@ async function enable2FA() {
       body: JSON.stringify(payload)
     });
     
+    console.log('🔍 [Frontend] Response status:', res.status);
     const result = await res.json();
+    console.log('🔍 [Frontend] Response body:', result);
     
     if (result.success) {
+      // Show backup codes modal
       const codesList = document.getElementById('backupCodesList');
       codesList.innerHTML = result.backup_codes.map(c => 
         `<div style="padding:6px 0;border-bottom:1px solid #ecf0f1;font-weight:600;letter-spacing:2px;">${c}</div>`
       ).join('');
       document.getElementById('backupCodesModal').style.display = 'flex';
       
+      // Update UI
       document.getElementById('2faSetupForm').style.display = 'none';
       document.getElementById('disable2faBtn').style.display = 'block';
       document.getElementById('2faEnabledMsg').style.display = 'block';
@@ -521,6 +529,7 @@ async function enable2FA() {
   } catch (err) {
     messageEl.textContent = `❌ ${err.message}`;
     messageEl.className = 'message error';
+    console.error('❌ [Frontend] enable2FA error:', err);
   }
 }
 
