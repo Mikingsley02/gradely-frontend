@@ -493,7 +493,20 @@ async function load2FAStatus() {
     
     if (res.ok) {
       const data = await res.json();
-      const is2FAEnabled = data.school?.two_factor_enabled || false;
+      
+      // ✅ DEBUG: Log exactly what we received
+      console.log('🔍 [Frontend] /school-info response:', {
+        fullData: data,
+        schoolObject: data.school,
+        two_factor_enabled_value: data.school?.two_factor_enabled,
+        two_factor_enabled_type: typeof data.school?.two_factor_enabled
+      });
+      
+      // ✅ CRITICAL: Check the exact field name and type
+      // Backend returns boolean, so use strict equality
+      const is2FAEnabled = data.school?.two_factor_enabled === true;
+      
+      console.log('🔍 [Frontend] 2FA status evaluation:', { is2FAEnabled });
       
       if (is2FAEnabled) {
         document.getElementById('2faEnabledMsg').style.display = 'block';
@@ -505,15 +518,12 @@ async function load2FAStatus() {
         document.getElementById('2faDisabledMsg').style.display = 'block';
         document.getElementById('2faSetupForm').style.display = 'block';
         document.getElementById('disable2faBtn').style.display = 'none';
-        
-        // ✅ Auto-show QR code on page load (since "app" is default)
-        setTimeout(() => {
-          handle2FAMethodChange();
-        }, 100);
       }
+    } else {
+      console.warn('⚠️ [Frontend] /school-info request failed:', res.status);
     }
   } catch (err) {
-    console.warn('Could not load 2FA status:', err);
+    console.warn('❌ [Frontend] Could not load 2FA status:', err);
     document.getElementById('2faSetupForm').style.display = 'block';
   }
 }
