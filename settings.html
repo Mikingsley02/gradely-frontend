@@ -202,7 +202,8 @@
         <div id="2faSetupForm" style="display:none;margin-top:15px;">
           <div class="form-group">
             <label>Choose Method</label>
-            <select id="2faMethod" style="width:100%;padding:10px;border-radius:6px;border:1px solid #bdc3c7;">
+            <!-- ✅ Added onchange handler -->
+            <select id="2faMethod" onchange="handle2FAMethodChange()" style="width:100%;padding:10px;border-radius:6px;border:1px solid #bdc3c7;">
               <option value="app">Authenticator App (Google Authenticator, Authy)</option>
               <option value="sms">SMS Code</option>
             </select>
@@ -413,6 +414,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   await load2FAStatus();
 });
 
+// ✅ NEW: Handle 2FA method selection change
+function handle2FAMethodChange() {
+  const method = document.getElementById('2faMethod').value;
+  
+  // Show/hide appropriate setup sections
+  document.getElementById('appSetup').style.display = method === 'app' ? 'block' : 'none';
+  document.getElementById('smsSetup').style.display = method === 'sms' ? 'block' : 'none';
+  
+  // Auto-fetch QR code if App is selected
+  if (method === 'app') {
+    fetchQRCode();
+  }
+}
+
 async function load2FAStatus() {
   try {
     const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
@@ -433,6 +448,11 @@ async function load2FAStatus() {
         document.getElementById('2faDisabledMsg').style.display = 'block';
         document.getElementById('2faSetupForm').style.display = 'block';
         document.getElementById('disable2faBtn').style.display = 'none';
+        
+        // ✅ Auto-show QR code on page load (since "app" is default)
+        setTimeout(() => {
+          handle2FAMethodChange();
+        }, 100);
       }
     }
   } catch (err) {
@@ -441,13 +461,9 @@ async function load2FAStatus() {
   }
 }
 
+// ✅ Updated to use new handler function
 document.getElementById('2faMethod')?.addEventListener('change', function() {
-  document.getElementById('appSetup').style.display = this.value === 'app' ? 'block' : 'none';
-  document.getElementById('smsSetup').style.display = this.value === 'sms' ? 'block' : 'none';
-  
-  if (this.value === 'app') {
-    fetchQRCode();
-  }
+  handle2FAMethodChange();
 });
 
 async function fetchQRCode() {
