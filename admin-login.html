@@ -335,26 +335,35 @@
         </p>
       </div>
   
-      <div class="admin-link">
+      <!-- ✅ Hidden during 2FA prompt - shown only on main login form -->
+      <div class="admin-link" id="mainBackToHome">
         <a href="index.html">← Back to Home</a>
       </div>
 
-      <!-- ✅ 2FA Prompt Section (hidden by default, minimal inline style to match UI) -->
-      <div id="2faPrompt" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid #ecf0f1;">
-        <p style="color:#2c3e50;font-weight:600;margin-bottom:10px;">🔐 Two-Factor Authentication</p>
-        <p id="2faMethodHint" style="color:#7f8c8d;font-size:0.9rem;margin-bottom:15px;">Enter your verification code</p>
-        <input type="text" id="2faCodeInput" maxlength="6" placeholder="000000" 
-               style="width:100%;padding:12px;font-size:1.3rem;letter-spacing:5px;text-align:center;border:2px solid #bdc3c7;border-radius:8px;margin-bottom:15px;" />
-        <button type="button" onclick="verify2FALogin()" 
+      <!-- ✅ 2FA Code Prompt (hidden by default) -->
+      <div id="2faPrompt" style="display:none;max-width:400px;margin:20px auto;padding:25px;background:#fff;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.15);">
+        
+        <h2 style="color:#0c2461;margin-bottom:10px;text-align:center;">🔐 Two-Factor Authentication</h2>
+        <p id="2faMethodHint" style="color:#7f8c8d;margin-bottom:20px;font-size:0.95rem;text-align:center;">Enter your verification code</p>
+        
+        <div style="margin-bottom:15px;">
+          <input type="text" id="2faCodeInput" maxlength="6" placeholder="000000" 
+                 style="width:100%;padding:15px;font-size:1.5rem;letter-spacing:6px;text-align:center;border:2px solid #bdc3c7;border-radius:8px;" />
+        </div>
+        
+        <button onclick="verify2FALogin()" 
                 style="width:100%;padding:12px;background:#9b59b6;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;margin-bottom:10px;">
           Verify & Continue
         </button>
-        <p id="2faErrorMessage" style="color:#e74c3c;font-size:0.9rem;"></p>
-        <button type="button" onclick="cancel2FALogin()" 
-                style="width:100%;padding:10px;background:transparent;color:#7f8c8d;border:1px solid #bdc3c7;border-radius:6px;cursor:pointer;">
-          ← Back to Login
-        </button>
-      </div>
+        
+        <p id="2faErrorMessage" style="color:#e74c3c;margin-top:15px;font-size:0.9rem;text-align:center;"></p>
+        
+        <!-- ✅ Back to Home link at BOTTOM (after Verify button) -->
+        <a href="index.html" style="display:inline-block;margin-top:15px;color:#3498db;text-decoration:none;font-weight:600;font-size:0.95rem;">
+          ← Back to Home
+        </a>
+      </div>  
+
     </div>
   </div>
 
@@ -368,6 +377,11 @@
 
   <!-- ✅ Scripts -->
   <script>
+    // ✅ GLOBAL API_BASE (accessible to all functions)
+    const API_BASE = window.location.hostname.includes("localhost")
+      ? "http://localhost:5000"
+      : "https://api.gradely.info";
+
     // ✅ PASSWORD TOGGLE FUNCTIONALITY
     document.getElementById('togglePassword').addEventListener('click', function() {
       const passwordField = document.getElementById('adminPassword');
@@ -376,62 +390,60 @@
       this.textContent = type === 'password' ? '👁️' : '🙈';
     });
 
-    // ✅ 2FA Verification Functions (added, minimal, matches existing style)
+    // ✅ 2FA Verification Function
     async function verify2FALogin() {
-  const code = document.getElementById('2faCodeInput').value.trim();
-  const messageEl = document.getElementById('2faErrorMessage');
-  
-  if (!code || code.length !== 6) {
-    messageEl.textContent = '❌ Please enter a valid 6-digit code';
-    return;
-  }
-  
-  messageEl.textContent = '⏳ Verifying...';
-  
-  try {
-    const schoolId = localStorage.getItem('pending_2fa_school_id');
-    const method = localStorage.getItem('pending_2fa_method');
-    
-    // ✅ DEBUG: Log what we're sending
-    console.log('🔍 [Frontend] Sending 2FA verify:', { schoolId, method, codeLength: code.length });
-    
-    const API_BASE = window.location.hostname.includes("localhost")
-      ? "http://localhost:5000"
-      : "https://api.gradely.info";
-    
-    const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ school_id: schoolId, code, method }),
-      credentials: 'include'
-    });
-    
-    // ✅ DEBUG: Log raw response
-    console.log('🔍 [Frontend] Response status:', res.status);
-    const result = await res.json();
-    console.log('🔍 [Frontend] Response body:', result);
-    
-    if (result.success) {
-      localStorage.removeItem('pending_2fa_school_id');
-      localStorage.removeItem('pending_2fa_method');
-      window.location.href = 'dashboard.html';
-    } else {
-      throw new Error(result.message);
+      const code = document.getElementById('2faCodeInput').value.trim();
+      const messageEl = document.getElementById('2faErrorMessage');
+      
+      if (!code || code.length !== 6) {
+        messageEl.textContent = '❌ Please enter a valid 6-digit code';
+        return;
+      }
+      
+      messageEl.textContent = '⏳ Verifying...';
+      
+      try {
+        const schoolId = localStorage.getItem('pending_2fa_school_id');
+        const method = localStorage.getItem('pending_2fa_method');
+        
+        const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ school_id: schoolId, code, method }),
+          credentials: 'include'
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+          localStorage.removeItem('pending_2fa_school_id');
+          localStorage.removeItem('pending_2fa_method');
+          window.location.href = 'dashboard.html';
+        } else {
+          throw new Error(result.message);
+        }
+      } catch (err) {
+        messageEl.textContent = `❌ ${err.message}`;
+      }
     }
-  } catch (err) {
-    messageEl.textContent = `❌ ${err.message}`;
-    console.error('❌ [Frontend] verify2FALogin error:', err);
-  }
-}
 
+    // ✅ Cancel 2FA and return to login form
     function cancel2FALogin() {
       localStorage.removeItem('pending_2fa_school_id');
       localStorage.removeItem('pending_2fa_method');
+      
+      // Hide 2FA prompt, show login form
       document.getElementById('2faPrompt').style.display = 'none';
       document.getElementById('adminLoginForm').style.display = 'block';
-      document.getElementById('message')?.remove();
+      
+      // Show main back to home link
+      const mainBackLink = document.getElementById('mainBackToHome');
+      if (mainBackLink) {
+        mainBackLink.style.display = 'block';
+      }
     }
 
+    // ✅ Main Login Form Handler
     document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -446,10 +458,6 @@
       text.style.opacity = "0";
       spinner.style.display = "block";
 
-      const API_BASE = window.location.hostname.includes("localhost")
-        ? "http://localhost:5000"
-        : "https://api.gradely.info";
-
       try {
         const res = await fetch(`${API_BASE}/api/auth/login`, {
           method: "POST",
@@ -460,16 +468,17 @@
 
         const data = await res.json();
 
-        if (!res.ok) {
-          alert("❌ " + (data.message || "Login failed."));
-          return;
-        }
-
-        // ✅ CRITICAL FIX: Handle 2FA required response BEFORE accessing data.admin
+        // ✅ If 2FA is required, show 2FA prompt
         if (data.requires_2fa) {
           // Hide login form, show 2FA prompt
           document.getElementById('adminLoginForm').style.display = 'none';
           document.getElementById('2faPrompt').style.display = 'block';
+          
+          // Hide main back link (2FA prompt has its own)
+          const mainBackLink = document.getElementById('mainBackToHome');
+          if (mainBackLink) {
+            mainBackLink.style.display = 'none';
+          }
           
           // Store pending data for 2FA verification
           localStorage.setItem('pending_2fa_school_id', admin_id);
