@@ -485,10 +485,10 @@
           localStorage.setItem('pending_2fa_method', data.method);
           
           // Show method hint
-          document.getElementById('2faMethodHint').textContent = 
-            data.method === 'sms' 
-              ? 'SMS code sent to your phone' 
-              : 'Enter code from authenticator app';
+          document.getElementById('2faMethodHint').innerHTML = 
+  data.method === 'sms' 
+    ? 'SMS code sent to your phone' 
+    : 'Enter code from authenticator app<br><small style="color:#e74c3c;font-weight:normal;">💡 Ensure your device time is auto-synced</small>';
           
           // Clear loading state
           btn.classList.remove("loading");
