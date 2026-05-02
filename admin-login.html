@@ -19,8 +19,8 @@
       justify-content: center;
       align-items: center;
       padding: 20px;
-      position: relative; /* Required for absolute top nav */
-      flex-direction: column; /* ✅ Allows footer to sit below */
+      position: relative;
+      flex-direction: column;
     }
     
     /* ✅ TOP NAVIGATION STYLES */
@@ -53,7 +53,7 @@
       text-align: center;
       transform: translateY(0);
       transition: transform 0.3s ease;
-      margin-bottom: 20px; /* ✅ Space for footer */
+      margin-bottom: 20px;
     }
     .container:hover {
       transform: translateY(-5px);
@@ -67,7 +67,6 @@
       font-size: 1.8rem;
       font-weight: 600;
     }
-    /* ✅ REMOVED BOLD FROM HEADER PARAGRAPHS */
     .header p {
       font-size: 1rem;
       opacity: 0.9;
@@ -188,91 +187,50 @@
 
     /* === MOBILE RESPONSIVENESS === */
     @media (max-width: 480px) {
-      body {
-        padding: 10px;
-      }
-      .top-nav {
-        font-size: 0.85rem;
-        gap: 10px;
-        right: 15px;
-        top: 25px;
-      }
+      body { padding: 10px; }
+      .top-nav { font-size: 0.85rem; gap: 10px; right: 15px; top: 25px; }
       .container {
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  width: 100%;
-  max-width: 450px;
-  overflow: hidden;
-  text-align: center;
-  transform: translateY(0);
-  transition: transform 0.3s ease;
-  margin-bottom: 20px;
-}
-      .header h1 {
-        font-size: 1.6rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        width: 100%;
+        max-width: 450px;
+        overflow: hidden;
+        text-align: center;
+        transform: translateY(0);
+        transition: transform 0.3s ease;
+        margin-bottom: 20px;
       }
-      .header p,
-      .content p,
-      label,
-      button {
-        font-size: 0.95rem;
-      }
-      input {
-        font-size: 1rem;
-      }
-      .content {
-        padding: 20px;
-      }
-      footer {
-        font-size: 0.8rem;
-        padding: 12px;
-      }
-      .toggle-password {
-        font-size: 1.2rem;
-      }
+      .header h1 { font-size: 1.6rem; }
+      .header p, .content p, label, button { font-size: 0.95rem; }
+      input { font-size: 1rem; }
+      .content { padding: 20px; }
+      footer { font-size: 0.8rem; padding: 12px; }
+      .toggle-password { font-size: 1.2rem; }
     }
 
-    /* Prevent iOS zoom on input focus */
     @media (max-width: 480px) {
-  body {
-    padding: 10px;
-  }
-  
-  .top-nav {
-    position: absolute;
-    top: 20px;  /* ✅ Consistent top position */
-    right: 15px;  /* ✅ Right-aligned */
-    flex-direction: column;
-    align-items: flex-end;  /* ✅ Align items to right */
-    gap: 6px;
-    font-size: 0.8rem;
-  }
-  
-  .container {
-    background: white;
-    border-radius: 12px;
-    max-width: 100%;
-    margin: 100px auto 20px;  /* ✅ Top margin for nav spacing */
-  }
-
-  .header h1 {
-    font-size: 1.6rem;
-  }
-  .header p,
-  .content p,
-  label,
-  button {
-    font-size: 0.95rem;
-  }
-  input {
-    font-size: 1rem;
-  }
-  .content {
-    padding: 20px;
-  }
-}
-
+      body { padding: 10px; }
+      .top-nav {
+        position: absolute;
+        top: 20px;
+        right: 15px;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        font-size: 0.8rem;
+      }
+      .container {
+        background: white;
+        border-radius: 12px;
+        max-width: 100%;
+        margin: 100px auto 20px;
+      }
+      .header h1 { font-size: 1.6rem; }
+      .header p, .content p, label, button { font-size: 0.95rem; }
+      input { font-size: 1rem; }
+      .content { padding: 20px; }
+    }
 
     /* Footer Styling */
     footer {
@@ -280,16 +238,14 @@
       color: #f4eeee;
       text-align: center;
       width: 100%;
-      max-width: 450px; /* ✅ Match container width */
+      max-width: 450px;
     }
     footer a {
       color: #1ab5f3;
       text-decoration: none;
       margin: 0 5px;
     }
-    footer a:hover {
-      text-decoration: underline;
-    }
+    footer a:hover { text-decoration: underline; }
 
     /* ✅ GOLDEN .info BRAND COLOR */
     .info-text {
@@ -357,34 +313,49 @@
         </button>
       </form>
 
-<!-- ✅ ADMIN LOGIN: Signup prompt for new schools -->
-<div class="options" style="margin-top: 20px; font-size: 0.95rem;">
-  <p>Forgot password? <a href="forgot-password.html" style="color: #3498db; text-decoration: none;">Reset here</a></p>
-  <div class="divider" style="
-    display: flex;
-    align-items: center;
-    text-align: center;
-    margin: 20px 0;
-    color: rgba(0,0,0,0.5);
-  ">
-    <div style="flex:1; border-bottom:1px solid rgba(0,0,0,0.2);"></div>
-    <span style="padding:0 10px; font-weight:600;">OR</span>
-    <div style="flex:1; border-bottom:1px solid rgba(0,0,0,0.2);"></div>
-  </div>
-  <p style="margin:0;">
-    New to Gradely? 
-    <a href="register-school.html" style="color: #27ae60; text-decoration: none; font-weight: 600;">
-      ✨ Register your school today
-    </a>
-  </p>
-</div>
+      <!-- ✅ ADMIN LOGIN: Signup prompt for new schools -->
+      <div class="options" style="margin-top: 20px; font-size: 0.95rem;">
+        <p>Forgot password? <a href="forgot-password.html" style="color: #3498db; text-decoration: none;">Reset here</a></p>
+        <div class="divider" style="
+          display: flex;
+          align-items: center;
+          text-align: center;
+          margin: 20px 0;
+          color: rgba(0,0,0,0.5);
+        ">
+          <div style="flex:1; border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+          <span style="padding:0 10px; font-weight:600;">OR</span>
+          <div style="flex:1; border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+        </div>
+        <p style="margin:0;">
+          New to Gradely? 
+          <a href="register-school.html" style="color: #27ae60; text-decoration: none; font-weight: 600;">
+            ✨ Register your school today
+          </a>
+        </p>
+      </div>
   
-
       <div class="admin-link">
         <a href="index.html">← Back to Home</a>
       </div>
+
+      <!-- ✅ 2FA Prompt Section (hidden by default, minimal inline style to match UI) -->
+      <div id="2faPrompt" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid #ecf0f1;">
+        <p style="color:#2c3e50;font-weight:600;margin-bottom:10px;">🔐 Two-Factor Authentication</p>
+        <p id="2faMethodHint" style="color:#7f8c8d;font-size:0.9rem;margin-bottom:15px;">Enter your verification code</p>
+        <input type="text" id="2faCodeInput" maxlength="6" placeholder="000000" 
+               style="width:100%;padding:12px;font-size:1.3rem;letter-spacing:5px;text-align:center;border:2px solid #bdc3c7;border-radius:8px;margin-bottom:15px;" />
+        <button type="button" onclick="verify2FALogin()" 
+                style="width:100%;padding:12px;background:#9b59b6;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;margin-bottom:10px;">
+          Verify & Continue
+        </button>
+        <p id="2faErrorMessage" style="color:#e74c3c;font-size:0.9rem;"></p>
+        <button type="button" onclick="cancel2FALogin()" 
+                style="width:100%;padding:10px;background:transparent;color:#7f8c8d;border:1px solid #bdc3c7;border-radius:6px;cursor:pointer;">
+          ← Back to Login
+        </button>
+      </div>
     </div>
-    <!-- ✅ Footer moved OUTSIDE container (below the page) -->
   </div>
 
   <!-- ✅ FIXED FOOTER: Now outside container, below the page -->
@@ -405,6 +376,55 @@
       this.textContent = type === 'password' ? '👁️' : '🙈';
     });
 
+    // ✅ 2FA Verification Functions (added, minimal, matches existing style)
+    async function verify2FALogin() {
+      const code = document.getElementById('2faCodeInput').value.trim();
+      const messageEl = document.getElementById('2faErrorMessage');
+      
+      if (!code || code.length !== 6) {
+        messageEl.textContent = '❌ Please enter a valid 6-digit code';
+        return;
+      }
+      
+      messageEl.textContent = '⏳ Verifying...';
+      
+      try {
+        const schoolId = localStorage.getItem('pending_2fa_school_id');
+        const method = localStorage.getItem('pending_2fa_method');
+        
+        const API_BASE = window.location.hostname.includes("localhost")
+          ? "http://localhost:5000"
+          : "https://api.gradely.info";
+        
+        const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ school_id: schoolId, code, method }),
+          credentials: 'include'
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+          localStorage.removeItem('pending_2fa_school_id');
+          localStorage.removeItem('pending_2fa_method');
+          window.location.href = 'dashboard.html';
+        } else {
+          throw new Error(result.message);
+        }
+      } catch (err) {
+        messageEl.textContent = `❌ ${err.message}`;
+      }
+    }
+
+    function cancel2FALogin() {
+      localStorage.removeItem('pending_2fa_school_id');
+      localStorage.removeItem('pending_2fa_method');
+      document.getElementById('2faPrompt').style.display = 'none';
+      document.getElementById('adminLoginForm').style.display = 'block';
+      document.getElementById('message')?.remove();
+    }
+
     document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -419,8 +439,6 @@
       text.style.opacity = "0";
       spinner.style.display = "block";
 
-    
-      // ✅ FIXED: Clean API_BASE (NO trailing spaces)
       const API_BASE = window.location.hostname.includes("localhost")
         ? "http://localhost:5000"
         : "https://api.gradely.info";
@@ -440,26 +458,50 @@
           return;
         }
 
-        if (data.success) {
-          // ✅ CRITICAL FIX: Save email to localStorage for pay.html to use
-          const email = data.admin.email || document.getElementById("adminId").value + "@gradely.info";
+        // ✅ CRITICAL FIX: Handle 2FA required response BEFORE accessing data.admin
+        if (data.requires_2fa) {
+          // Hide login form, show 2FA prompt
+          document.getElementById('adminLoginForm').style.display = 'none';
+          document.getElementById('2faPrompt').style.display = 'block';
+          
+          // Store pending data for 2FA verification
+          localStorage.setItem('pending_2fa_school_id', admin_id);
+          localStorage.setItem('pending_2fa_method', data.method);
+          
+          // Show method hint
+          document.getElementById('2faMethodHint').textContent = 
+            data.method === 'sms' 
+              ? 'SMS code sent to your phone' 
+              : 'Enter code from authenticator app';
+          
+          // Clear loading state
+          btn.classList.remove("loading");
+          text.style.opacity = "1";
+          spinner.style.display = "none";
+          
+          return; // Stop here - wait for 2FA code
+        }
+
+        // ✅ Normal login success (only reached if 2FA not required)
+        if (data.success && data.admin) {
+          // ✅ NOW safe to access data.admin.email
+          const email = data.admin.email || admin_id + "@gradely.info";
           localStorage.setItem("email", email);
           
-          // ✅ Session-only: store only essential session data (no tokens)
+          // ✅ Session-only: store only essential session data
           localStorage.setItem("adminId", data.admin.admin_id);
           localStorage.setItem("school_id", data.admin.school_id || data.admin.admin_id);
           localStorage.setItem("school_name", data.admin.school_name || "");
           localStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
-          localStorage.setItem("admin_email", email); // ✅ Also save as admin_email for redundancy
+          localStorage.setItem("admin_email", email);
 
-          // ✅ JWT FALLBACK: Store token if returned by backend (for cross-subdomain auth)
+          // ✅ JWT FALLBACK: Store token if returned by backend
           if (data.token) {
-          localStorage.setItem('gradely_token', data.token);
-          console.log('✅ JWT token stored for auto-renewal fallback');
+            localStorage.setItem('gradely_token', data.token);
+            console.log('✅ JWT token stored for auto-renewal fallback');
           }
 
-
-          // ✅ Auto-redirect to dashboard (no alert delay)
+          // ✅ Auto-redirect to dashboard
           window.location.href = "dashboard.html";
         } else {
           alert("❌ " + (data.message || "Login failed."));
@@ -468,9 +510,12 @@
         console.error("❌ Network or server error:", err);
         alert("❌ Network or server error. Please try again.");
       } finally {
-        btn.classList.remove("loading");
-        text.style.opacity = "1";
-        spinner.style.display = "none";
+        // Only reset button if we're not showing 2FA prompt
+        if (document.getElementById('adminLoginForm').style.display !== 'none') {
+          btn.classList.remove("loading");
+          text.style.opacity = "1";
+          spinner.style.display = "none";
+        }
       }
     });
   </script>
