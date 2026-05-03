@@ -621,17 +621,68 @@ async function enable2FA() {
   }
 }
 
+
+
 async function disable2FA() {
+  // ✅ Require password confirmation before disabling
+  const password = prompt('🔐 For security, please enter your current password to disable 2FA:');
+  
+  if (!password) {
+    document.getElementById('2faMessage').textContent = '❌ Password required to disable 2FA';
+    document.getElementById('2faMessage').className = 'message error';
+    return;
+  }
+  
   if (!confirm('Are you sure you want to disable two-factor authentication? This reduces your account security.')) {
     return;
   }
   
+  const messageEl = document.getElementById('2faMessage');
+  messageEl.textContent = '⏳ Disabling 2FA...';
+  messageEl.className = 'message';
+  
   try {
-    alert('2FA disable endpoint not implemented yet. Please contact support to disable.');
+    const res = await fetch(`${API_BASE}/api/auth/2fa/disable`, {
+      method: 'POST',
+      credentials: 'include',  // ✅ Sends session cookie
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        password, 
+        confirm_disable: true  // ✅ Explicit confirmation flag
+      })
+    });
+    
+    const result = await res.json();
+    
+    if (result.success) {
+      // ✅ Update UI to show 2FA is disabled
+      document.getElementById('2faEnabledMsg').style.display = 'none';
+      document.getElementById('2faDisabledMsg').style.display = 'block';
+      document.getElementById('2faSetupForm').style.display = 'block';
+      document.getElementById('disable2faBtn').style.display = 'none';
+      
+      messageEl.textContent = '✅ Two-factor authentication disabled';
+      messageEl.className = 'message success';
+      
+      // ✅ Clear any pending 2FA data
+      localStorage.removeItem('pending_2fa_school_id');
+      localStorage.removeItem('pending_2fa_method');
+      
+      // ✅ Reload page after 2 seconds to refresh state
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      throw new Error(result.message);
+    }
   } catch (err) {
-    console.error('Disable 2FA error:', err);
+    messageEl.textContent = `❌ ${err.message}`;
+    messageEl.className = 'message error';
+    console.error('❌ [Frontend] disable2FA error:', err);
   }
 }
+
+
 </script>
 
 <script src="js/kaima-chatbot.js"></script>
