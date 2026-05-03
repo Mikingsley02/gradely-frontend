@@ -398,8 +398,7 @@
 
     
 
-    // ✅ 2FA Verification Function
-async function verify2FALogin() {
+    async function verify2FALogin() {
   const code = document.getElementById('2faCodeInput').value.trim();
   const messageEl = document.getElementById('2faErrorMessage');
   
@@ -415,48 +414,46 @@ async function verify2FALogin() {
     const schoolId = localStorage.getItem('pending_2fa_school_id');
     const method = localStorage.getItem('pending_2fa_method');
     
-    console.log('🔍 [Frontend] Verifying 2FA:', { schoolId, method, codeLength: code.length });
+    // ✅ MOBILE DEBUG: Log session state before request
+    console.log('🔍 [Mobile Debug] Verifying 2FA:', { 
+      schoolId, 
+      method, 
+      codeLength: code.length,
+      hasCookies: document.cookie.length > 0,
+      userAgent: navigator.userAgent
+    });
     
     const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ school_id: schoolId, code, method }),
-      credentials: 'include'  // ✅ Critical: sends session cookie
+      credentials: 'include',  // ✅ CRITICAL: Must be present
+      body: JSON.stringify({ school_id: schoolId, code, method })
     });
     
-    console.log('🔍 [Frontend] 2FA verify response status:', res.status);
-    const result = await res.json();
-    console.log('🔍 [Frontend] 2FA verify response body:', result);
+    console.log('🔍 [Mobile Debug] Response status:', res.status);
+    console.log('🔍 [Mobile Debug] Response headers:', Object.fromEntries(res.headers.entries()));
+    
+    // ✅ Handle non-JSON responses gracefully
+    const contentType = res.headers.get('content-type');
+    let result;
+    if (contentType && contentType.includes('application/json')) {
+      result = await res.json();
+    } else {
+      const text = await res.text();
+      console.error('❌ Expected JSON, got:', text.substring(0, 200));
+      throw new Error('Server configuration error. Please try on desktop or contact support.');
+    }
     
     if (result.success) {
-      console.log('✅ [Frontend] 2FA verified, storing session data...');
-      
-      // ✅ Store session data if returned by backend
-      if (result.admin) {
-        const email = result.admin.admin_id + "@gradely.info";
-        localStorage.setItem("email", email);
-        localStorage.setItem("adminId", result.admin.admin_id);
-        localStorage.setItem("school_id", result.admin.school_id);
-        localStorage.setItem("school_name", result.admin.school_name || "");
-        localStorage.setItem("subscription_plan", result.admin.subscription_plan || "basic");
-        localStorage.setItem("admin_email", email);
-        console.log('✅ [Frontend] Session data stored:', result.admin);
-      }
-      
-      // ✅ Clear pending data
+      console.log('✅ 2FA verified, redirecting to dashboard...');
       localStorage.removeItem('pending_2fa_school_id');
       localStorage.removeItem('pending_2fa_method');
-      
-      // ✅ Redirect to dashboard
-      console.log('✅ [Frontend] Redirecting to dashboard.html');
       window.location.href = 'dashboard.html';
-      
     } else {
-      console.warn('❌ [Frontend] 2FA verification failed:', result.message);
-      throw new Error(result.message);
+      throw new Error(result.message || 'Verification failed');
     }
   } catch (err) {
-    console.error('❌ [Frontend] verify2FALogin error:', err);
+    console.error('❌ verify2FALogin error:', err);
     messageEl.textContent = `❌ ${err.message}`;
     messageEl.className = 'message error';
   }
