@@ -520,6 +520,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   updatePlanBadge();
 });
 
+
+
 // ✅ NEW: Dedicated function to fetch + apply subscription logic
 async function checkAndApplySubscription() {
   const schoolId = localStorage.getItem("school_id");
@@ -628,33 +630,53 @@ async function checkAndApplySubscription() {
       throw new Error(data.message || 'Subscription check failed');
     }
     
-  
-} catch (err) {
-  console.error('❌ Failed to fetch account status:', err);
-  
-  // ✅ CRITICAL: Do NOT default to 'basic' - show error instead
-  // This prevents silent downgrades when API fails
-  const cachedPlan = localStorage.getItem('subscription_plan');
-  
-  if (cachedPlan && ['basic', 'pro'].includes(cachedPlan)) {
-    console.log('🔍 [Dashboard] Using cached plan:', cachedPlan);
-    applyPlanToUI(cachedPlan);
-  } else {
-    // No valid cache + API failed = show error, don't guess
-    console.warn('⚠️ [Dashboard] No valid plan available - showing error state');
+  } catch (err) {  // ✅ Added missing } to close try block
+    console.error('❌ Failed to fetch account status:', err);
     
-    // Show error UI instead of defaulting
-    document.getElementById('proFeatures')?.style.display = 'none';
-    document.getElementById('basicFeatures')?.style.display = 'block';
+    // ✅ CRITICAL: Do NOT default to 'basic' - use cached plan or show error
+    const cachedPlan = localStorage.getItem('last_known_plan');  // ✅ Use correct key
     
-    // Optional: Show a warning banner
-    const warning = document.createElement('div');
-    warning.className = 'alert alert-warning';
-    warning.innerHTML = '⚠️ Unable to verify subscription. Some features may be limited. <a href="#" onclick="location.reload()">Retry</a>';
-    document.querySelector('.dashboard-header')?.prepend(warning);
+    if (cachedPlan && ['basic', 'pro'].includes(cachedPlan.toLowerCase())) {
+      console.log('🔍 [Dashboard] Using cached plan:', cachedPlan);
+      currentPlan = cachedPlan.toLowerCase();  // ✅ Set currentPlan
+      applyPlanRestrictions();  // ✅ Use existing function
+    } else {
+      // No valid cache + API failed = show error, don't guess
+      console.warn('⚠️ [Dashboard] No valid plan available - showing error state');
+      
+      // Show error UI instead of defaulting
+      const proCards = document.querySelectorAll('.pro-only');
+      proCards.forEach(card => card.classList.add('disabled'));
+      
+      // Optional: Show a warning banner
+      const warning = document.createElement('div');
+      warning.style.position = 'fixed';
+      warning.style.top = '20px';
+      warning.style.right = '20px';
+      warning.style.background = 'rgba(255, 193, 7, 0.9)';
+      warning.style.color = '#000';
+      warning.style.padding = '15px 25px';
+      warning.style.borderRadius = '10px';
+      warning.style.zIndex = '9999';
+      warning.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
+      warning.style.maxWidth = '400px';
+      warning.style.fontSize = '0.95rem';
+      warning.innerHTML = `
+        ⚠️ Plan information temporarily unavailable.<br>
+        Showing last-known plan: <strong>${currentPlan?.toUpperCase() || 'UNKNOWN'}</strong><br>
+        <small>Full access will be restored when connection is re-established.</small>
+      `;
+      document.body.appendChild(warning);
+      
+      setTimeout(() => {
+        warning.style.opacity = '0';
+        warning.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => warning.remove(), 500);
+      }, 10000);
+    }
   }
 }
-}
+
 
 
 
