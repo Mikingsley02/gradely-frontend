@@ -628,23 +628,35 @@ async function checkAndApplySubscription() {
       throw new Error(data.message || 'Subscription check failed');
     }
     
-  } catch (err) {
-    console.error("❌ Failed to fetch account status:", err);
+  
+} catch (err) {
+  console.error('❌ Failed to fetch account status:', err);
+  
+  // ✅ CRITICAL: Do NOT default to 'basic' - show error instead
+  // This prevents silent downgrades when API fails
+  const cachedPlan = localStorage.getItem('subscription_plan');
+  
+  if (cachedPlan && ['basic', 'pro'].includes(cachedPlan)) {
+    console.log('🔍 [Dashboard] Using cached plan:', cachedPlan);
+    applyPlanToUI(cachedPlan);
+  } else {
+    // No valid cache + API failed = show error, don't guess
+    console.warn('⚠️ [Dashboard] No valid plan available - showing error state');
     
-    // ✅ Graceful fallback: use cached plan or default to basic
-    const lastKnownPlan = localStorage.getItem('last_known_plan');
-    if (lastKnownPlan && ['basic', 'pro'].includes(lastKnownPlan.toLowerCase())) {
-      console.log("✅ Recovering last-known valid plan:", lastKnownPlan);
-      currentPlan = lastKnownPlan.toLowerCase();
-      showPlanRecoveryWarning(currentPlan);
-      applyPlanRestrictions();
-    } else {
-      console.warn("⚠️ No valid cached plan - defaulting to 'basic'");
-      currentPlan = 'basic';
-      applyPlanRestrictions();
-    }
+    // Show error UI instead of defaulting
+    document.getElementById('proFeatures')?.style.display = 'none';
+    document.getElementById('basicFeatures')?.style.display = 'block';
+    
+    // Optional: Show a warning banner
+    const warning = document.createElement('div');
+    warning.className = 'alert alert-warning';
+    warning.innerHTML = '⚠️ Unable to verify subscription. Some features may be limited. <a href="#" onclick="location.reload()">Retry</a>';
+    document.querySelector('.dashboard-header')?.prepend(warning);
   }
 }
+}
+
+
 
 // ✅ Update badge separately (called after plan is confirmed)
 function updatePlanBadge() {
