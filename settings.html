@@ -273,6 +273,35 @@
         </div>
       </div>
 
+      <!-- ✅ Custom Password Confirmation Modal (for 2FA disable) -->
+      <div id="passwordModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10000;justify-content:center;align-items:center;">
+        <div style="background:#fff;padding:30px;border-radius:12px;max-width:450px;width:90%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+          <h3 style="color:#2c3e50;margin-bottom:15px;font-size:1.3rem;">🔐 Confirm Your Password</h3>
+          <p style="color:#7f8c8d;margin-bottom:20px;font-size:0.95rem;">
+            Enter your login password to disable two-factor authentication.
+          </p>
+          
+          <div style="margin-bottom:20px;text-align:left;">
+            <label style="display:block;font-weight:600;margin-bottom:6px;color:#2c3e50;">Password</label>
+            <div style="position:relative;">
+              <input type="password" id="disablePasswordInput" placeholder="Enter your login password" style="width:100%;padding:12px 40px 12px 14px;border:1px solid #bdc3c7;border-radius:6px;font-size:1rem;" />
+              <span onclick="togglePasswordVisibility('disablePasswordInput')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#888;font-size:1.1rem;">👁️</span>
+            </div>
+          </div>
+          
+          <div style="display:flex;gap:10px;justify-content:center;">
+            <button onclick="confirmDisable2FA()" style="background:#e74c3c;color:#fff;padding:10px 24px;border:none;border-radius:6px;font-weight:600;cursor:pointer;flex:1;">
+              Disable 2FA
+            </button>
+            <button onclick="closePasswordModal()" style="background:#95a5a6;color:#fff;padding:10px 24px;border:none;border-radius:6px;font-weight:600;cursor:pointer;flex:1;">
+              Cancel
+            </button>
+          </div>
+          
+          <p id="passwordModalMessage" style="margin-top:15px;font-size:0.9rem;text-align:center;"></p>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -423,6 +452,18 @@ function togglePassword(fieldId, icon) {
   } else {
     input.type = "password";
     icon.textContent = "👁️";
+  }
+}
+
+// ✅ Toggle password visibility in custom modal
+function togglePasswordVisibility(inputId) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    input.nextElementSibling.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    input.nextElementSibling.textContent = '👁️';
   }
 }
 
@@ -638,24 +679,51 @@ async function enable2FA() {
   }
 }
 
+// ✅ Global variable to store pending disable action
+let pendingDisable = false;
 
-
-async function disable2FA() {
-  // ✅ Show warning BEFORE password prompt (not after code entry)
-  if (!confirm('⚠️ Disabling two-factor authentication reduces your account security. Are you sure you want to proceed?')) {
+// ✅ Show password modal for 2FA disable
+function disable2FA() {
+  // ✅ Show red warning banner
+  const warning = document.getElementById('disableWarning');
+  if (warning) {
+    warning.style.display = 'block';
+    setTimeout(() => {
+      warning.style.display = 'none';
+    }, 10000);
+  }
+  
+  // ✅ Require explicit confirmation
+  if (!confirm('Are you sure you want to disable two-factor authentication? This reduces your account security.')) {
     return;
   }
   
-  // ✅ Require password confirmation
-  const password = prompt('🔐 For security, please enter your LOGIN PASSWORD to disable 2FA:');
+  // ✅ Show custom password modal (not prompt)
+  document.getElementById('passwordModal').style.display = 'flex';
+  document.getElementById('disablePasswordInput').value = '';
+  document.getElementById('passwordModalMessage').textContent = '';
+  document.getElementById('disablePasswordInput').focus();
+  
+  pendingDisable = true;
+}
+
+// ✅ Close password modal
+function closePasswordModal() {
+  document.getElementById('passwordModal').style.display = 'none';
+  pendingDisable = false;
+}
+
+// ✅ Confirm disable with password from modal
+async function confirmDisable2FA() {
+  const password = document.getElementById('disablePasswordInput').value.trim();
+  const messageEl = document.getElementById('passwordModalMessage');
   
   if (!password) {
-    document.getElementById('2faMessage').textContent = '❌ Password required to disable 2FA';
-    document.getElementById('2faMessage').className = 'message error';
+    messageEl.textContent = '❌ Password is required';
+    messageEl.className = 'message error';
     return;
   }
   
-  const messageEl = document.getElementById('2faMessage');
   messageEl.textContent = '⏳ Disabling 2FA...';
   messageEl.className = 'message';
   
@@ -681,14 +749,17 @@ async function disable2FA() {
     const result = await res.json();
     
     if (result.success) {
+      // ✅ Close modal
+      closePasswordModal();
+      
       // ✅ Update UI to show 2FA is disabled
       document.getElementById('2faEnabledMsg').style.display = 'none';
       document.getElementById('2faDisabledMsg').style.display = 'block';
       document.getElementById('2faSetupForm').style.display = 'block';
       document.getElementById('disable2faBtn').style.display = 'none';
       
-      messageEl.textContent = '✅ Two-factor authentication disabled';
-      messageEl.className = 'message success';
+      document.getElementById('2faMessage').textContent = '✅ Two-factor authentication disabled';
+      document.getElementById('2faMessage').className = 'message success';
       
       // ✅ Clear any pending 2FA data
       localStorage.removeItem('pending_2fa_school_id');
@@ -704,10 +775,17 @@ async function disable2FA() {
   } catch (err) {
     messageEl.textContent = `❌ ${err.message}`;
     messageEl.className = 'message error';
-    console.error('❌ [Frontend] disable2FA error:', err);
+    console.error('❌ [Frontend] confirmDisable2FA error:', err);
   }
 }
 
+// ✅ Allow Enter key to submit password in modal
+document.getElementById('disablePasswordInput')?.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    confirmDisable2FA();
+  }
+});
 
 </script>
 
