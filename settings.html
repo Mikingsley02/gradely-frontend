@@ -203,6 +203,7 @@
           <div class="form-group">
             <label>Choose Method</label>
             <select id="2faMethod" onchange="handle2FAMethodChange()" style="width:100%;padding:10px;border-radius:6px;border:1px solid #bdc3c7;">
+               <option value="" selected disabled>— Choose a method —</option>
               <option value="app">Authenticator App (Google Authenticator, Authy)</option>
               <option value="sms">SMS Code</option>
             </select>
@@ -272,8 +273,8 @@
         </div>
       </div>
 
-    </div> <!-- ✅ END .settings-body -->
-  </div> <!-- ✅ END .settings-card -->
+    </div>
+  </div>
 
   <div class="footer">
     &copy; 2026 <strong>gradely.info</strong>. All rights reserved.<br/>
@@ -434,23 +435,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 function handle2FAMethodChange() {
   const method = document.getElementById('2faMethod').value;
   
-  // Show/hide appropriate setup sections
-  document.getElementById('appSetup').style.display = method === 'app' ? 'block' : 'none';
-  document.getElementById('smsSetup').style.display = method === 'sms' ? 'block' : 'none';
+  // Hide all setup sections by default
+  document.getElementById('appSetup').style.display = 'none';
+  document.getElementById('smsSetup').style.display = 'none';
   
   // Show/hide SMS send button
   const smsSendBtn = document.getElementById('sendSmsCodeBtn');
   if (smsSendBtn) {
-    smsSendBtn.style.display = method === 'sms' ? 'block' : 'none';
+    smsSendBtn.style.display = 'none';
   }
   
-  // Auto-fetch QR code if App is selected
+  // Only show setup sections if a real method is selected (not placeholder)
   if (method === 'app') {
-    fetchQRCode();
+    document.getElementById('appSetup').style.display = 'block';
+    fetchQRCode();  // Fetch QR code only when App is explicitly selected
+  } else if (method === 'sms') {
+    document.getElementById('smsSetup').style.display = 'block';
+    if (smsSendBtn) {
+      smsSendBtn.style.display = 'block';
+    }
   }
-  
-  // Clear SMS status when switching methods
-  document.getElementById('smsStatus').textContent = '';
+  // If method is "" (placeholder), keep everything hidden
 }
 
 // ✅ NEW: Send SMS Code Function
