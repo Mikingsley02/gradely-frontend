@@ -624,16 +624,17 @@ async function enable2FA() {
 
 
 async function disable2FA() {
-  // ✅ Require password confirmation before disabling
+  // ✅ Show warning BEFORE password prompt (not after code entry)
+  if (!confirm('⚠️ Disabling two-factor authentication reduces your account security. Are you sure you want to proceed?')) {
+    return;
+  }
+  
+  // ✅ Require password confirmation
   const password = prompt('🔐 For security, please enter your current password to disable 2FA:');
   
   if (!password) {
     document.getElementById('2faMessage').textContent = '❌ Password required to disable 2FA';
     document.getElementById('2faMessage').className = 'message error';
-    return;
-  }
-  
-  if (!confirm('Are you sure you want to disable two-factor authentication? This reduces your account security.')) {
     return;
   }
   
@@ -644,13 +645,21 @@ async function disable2FA() {
   try {
     const res = await fetch(`${API_BASE}/api/auth/2fa/disable`, {
       method: 'POST',
-      credentials: 'include',  // ✅ Sends session cookie
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         password, 
-        confirm_disable: true  // ✅ Explicit confirmation flag
+        confirm_disable: true
       })
     });
+    
+    // ✅ Handle non-JSON responses (e.g., 404 HTML page)
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await res.text();
+      console.error('❌ [Frontend] Expected JSON but got:', contentType, text.substring(0, 200));
+      throw new Error(`Server returned ${res.status} ${res.statusText}. Please try again.`);
+    }
     
     const result = await res.json();
     
