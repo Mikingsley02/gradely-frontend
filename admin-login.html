@@ -396,57 +396,74 @@
       this.textContent = type === 'password' ? '👁️' : '🙈';
     });
 
+    
+
     // ✅ 2FA Verification Function
-    async function verify2FALogin() {
-      const code = document.getElementById('2faCodeInput').value.trim();
-      const messageEl = document.getElementById('2faErrorMessage');
+async function verify2FALogin() {
+  const code = document.getElementById('2faCodeInput').value.trim();
+  const messageEl = document.getElementById('2faErrorMessage');
+  
+  if (!code || code.length !== 6) {
+    messageEl.textContent = '❌ Please enter a valid 6-digit code';
+    return;
+  }
+  
+  messageEl.textContent = '⏳ Verifying...';
+  messageEl.className = 'message';
+  
+  try {
+    const schoolId = localStorage.getItem('pending_2fa_school_id');
+    const method = localStorage.getItem('pending_2fa_method');
+    
+    console.log('🔍 [Frontend] Verifying 2FA:', { schoolId, method, codeLength: code.length });
+    
+    const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ school_id: schoolId, code, method }),
+      credentials: 'include'  // ✅ Critical: sends session cookie
+    });
+    
+    console.log('🔍 [Frontend] 2FA verify response status:', res.status);
+    const result = await res.json();
+    console.log('🔍 [Frontend] 2FA verify response body:', result);
+    
+    if (result.success) {
+      console.log('✅ [Frontend] 2FA verified, storing session data...');
       
-      if (!code || code.length !== 6) {
-        messageEl.textContent = '❌ Please enter a valid 6-digit code';
-        return;
+      // ✅ Store session data if returned by backend
+      if (result.admin) {
+        const email = result.admin.admin_id + "@gradely.info";
+        localStorage.setItem("email", email);
+        localStorage.setItem("adminId", result.admin.admin_id);
+        localStorage.setItem("school_id", result.admin.school_id);
+        localStorage.setItem("school_name", result.admin.school_name || "");
+        localStorage.setItem("subscription_plan", result.admin.subscription_plan || "basic");
+        localStorage.setItem("admin_email", email);
+        console.log('✅ [Frontend] Session data stored:', result.admin);
       }
       
-      messageEl.textContent = '⏳ Verifying...';
-      messageEl.className = 'message';
+      // ✅ Clear pending data
+      localStorage.removeItem('pending_2fa_school_id');
+      localStorage.removeItem('pending_2fa_method');
       
-      try {
-        const schoolId = localStorage.getItem('pending_2fa_school_id');
-        const method = localStorage.getItem('pending_2fa_method');
-        
-        console.log('🔍 [Frontend] Verifying 2FA:', { schoolId, method, codeLength: code.length });
-        
-        const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ school_id: schoolId, code, method }),
-          credentials: 'include'  // ✅ Critical: sends session cookie
-        });
-        
-        console.log('🔍 [Frontend] 2FA verify response status:', res.status);
-        const result = await res.json();
-        console.log('🔍 [Frontend] 2FA verify response body:', result);
-        
-        if (result.success) {
-          console.log('✅ [Frontend] 2FA verified, redirecting to dashboard...');
-          
-          // ✅ Clear pending data FIRST
-          localStorage.removeItem('pending_2fa_school_id');
-          localStorage.removeItem('pending_2fa_method');
-          
-          // ✅ Redirect to dashboard (NOT login)
-          window.location.href = 'dashboard.html';
-          
-          // ✅ Don't return here - let redirect happen
-        } else {
-          console.warn('❌ [Frontend] 2FA verification failed:', result.message);
-          throw new Error(result.message);
-        }
-      } catch (err) {
-        console.error('❌ [Frontend] verify2FALogin error:', err);
-        messageEl.textContent = `❌ ${err.message}`;
-        messageEl.className = 'message error';
-      }
+      // ✅ Redirect to dashboard
+      console.log('✅ [Frontend] Redirecting to dashboard.html');
+      window.location.href = 'dashboard.html';
+      
+    } else {
+      console.warn('❌ [Frontend] 2FA verification failed:', result.message);
+      throw new Error(result.message);
     }
+  } catch (err) {
+    console.error('❌ [Frontend] verify2FALogin error:', err);
+    messageEl.textContent = `❌ ${err.message}`;
+    messageEl.className = 'message error';
+  }
+}
+
+
+
 
     // ✅ Cancel 2FA and return to login form
     function cancel2FALogin() {
