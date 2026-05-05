@@ -573,9 +573,17 @@
             methodHint.innerHTML = 'SMS code sent to your phone<br><small style="color:#7f8c8d;">Didn\'t receive it? Click "Resend SMS Code"</small>';
             if (resendBtn) resendBtn.style.display = 'block';
           } else {
-            methodHint.innerHTML = 'Enter code from authenticator app<br><small style="color:#e74c3c;font-weight:normal;">💡 Ensure your device time is auto-synced</small>';
-            if (resendBtn) resendBtn.style.display = 'none';
-          }
+  methodHint.innerHTML = `
+    Enter code from authenticator app<br>
+    <small style="color:#e74c3c;font-weight:normal;">
+      💡 If code fails, sync your authenticator app time:<br>
+      <strong>Google Authenticator:</strong> ⋮ → Settings → Time correction → Sync now<br>
+      <strong>Authy:</strong> Settings → Time Correction → Enable<br>
+      <strong>iOS/Android:</strong> Ensure "Set Automatically" is ON in Date & Time settings
+    </small>
+  `;
+  if (resendBtn) resendBtn.style.display = 'none';
+}
           
           // Clear loading state
           btn.classList.remove("loading");
