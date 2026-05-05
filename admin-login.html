@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>🔐 Admin Login - gradely.info</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
@@ -22,278 +18,90 @@
       position: relative;
       flex-direction: column;
     }
-    
-    /* ✅ TOP NAVIGATION STYLES */
     .top-nav {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      gap: 15px;
-      font-size: 0.9rem;
-      z-index: 10;
+      position: absolute; top: 20px; right: 20px; display: flex; gap: 15px; font-size: 0.9rem; z-index: 10;
     }
-    .top-nav a {
-      color: #00d2ff;
-      text-decoration: none;
-      transition: all 0.3s ease;
-    }
-    .top-nav a:hover {
-      color: white;
-      text-shadow: 0 0 5px rgba(0, 210, 255, 0.5);
-    }
-
+    .top-nav a { color: #00d2ff; text-decoration: none; transition: all 0.3s ease; }
+    .top-nav a:hover { color: white; text-shadow: 0 0 5px rgba(0, 210, 255, 0.5); }
     .container {
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      width: 100%;
-      max-width: 450px;
-      overflow: hidden;
-      text-align: center;
-      transform: translateY(0);
-      transition: transform 0.3s ease;
-      margin-bottom: 20px;
+      background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      width: 100%; max-width: 450px; overflow: hidden; text-align: center;
+      transform: translateY(0); transition: transform 0.3s ease; margin-bottom: 20px;
     }
-    .container:hover {
-      transform: translateY(-5px);
-    }
-    .header {
-      background: #0c2461;
-      color: white;
-      padding: 30px;
-    }
-    .header h1 {
-      font-size: 1.8rem;
-      font-weight: 600;
-    }
-    .header p {
-      font-size: 1rem;
-      opacity: 0.9;
-      font-weight: normal;
-      line-height: 1.4;
-      margin: 5px 0;
-    }
-    .content {
-      padding: 30px;
-    }
-    .form-group {
-      margin-bottom: 20px;
-      text-align: left;
-    }
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 0.9rem;
-    }
-
-    /* Password field wrapper */
-    .password-wrapper {
-      position: relative;
-      width: 100%;
-    }
+    .container:hover { transform: translateY(-5px); }
+    .header { background: #0c2461; color: white; padding: 30px; }
+    .header h1 { font-size: 1.8rem; font-weight: 600; }
+    .header p { font-size: 1rem; opacity: 0.9; font-weight: normal; line-height: 1.4; margin: 5px 0; }
+    .content { padding: 30px; }
+    .form-group { margin-bottom: 20px; text-align: left; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50; font-size: 0.9rem; }
+    .password-wrapper { position: relative; width: 100%; }
     input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #bdc3c7;
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: all 0.3s;
-      font-family: inherit;
+      width: 100%; padding: 12px; border: 1px solid #bdc3c7; border-radius: 8px;
+      font-size: 1rem; transition: all 0.3s; font-family: inherit;
     }
-    input:focus {
-      border-color: #ffd700;
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-    }
-    
-    /* ✅ TOGGLE PASSWORD ICON STYLES */
+    input:focus { border-color: #ffd700; outline: none; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); }
     .toggle-password {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      cursor: pointer;
-      font-size: 1.3rem;
-      color: #666;
-      user-select: none;
-      z-index: 5;
-      padding: 5px;
-      border-radius: 50%;
-      transition: all 0.2s ease;
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      cursor: pointer; font-size: 1.3rem; color: #666; user-select: none; z-index: 5;
+      padding: 5px; border-radius: 50%; transition: all 0.2s ease;
     }
-    .toggle-password:hover {
-      color: #00d2ff;
-      background: rgba(0, 210, 255, 0.1);
-    }
-
+    .toggle-password:hover { color: #00d2ff; background: rgba(0, 210, 255, 0.1); }
     button {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(120deg, #3498db, #2980b9);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
+      width: 100%; padding: 14px; background: linear-gradient(120deg, #3498db, #2980b9);
+      color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600;
+      cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden;
     }
-    button:hover {
-      background: linear-gradient(120deg, #2980b9, #1a69a4);
-      transform: scale(1.02);
-    }
-    button:active {
-      transform: scale(0.98);
-    }
-    button.loading {
-      background: #27ae60;
-      pointer-events: none;
-    }
-    button .text {
-      transition: opacity 0.3s ease;
-    }
+    button:hover { background: linear-gradient(120deg, #2980b9, #1a69a4); transform: scale(1.02); }
+    button:active { transform: scale(0.98); }
+    button.loading { background: #27ae60; pointer-events: none; }
+    button .text { transition: opacity 0.3s ease; }
     button .spinner {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 16px;
-      height: 16px;
-      border: 2px solid white;
-      border-top: 2px solid transparent;
-      border-radius: 50%;
+      display: none; position: absolute; top: 50%; left: 50%; width: 16px; height: 16px;
+      border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-    @keyframes spin {
-      0% { transform: translate(-50%, -50%) rotate(0deg); }
-      100% { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-    .admin-link {
-      margin-top: 20px;
-      font-size: 0.9rem;
-    }
-    .admin-link a {
-      color: #3498db;
-      text-decoration: none;
-    }
-    .admin-link a:hover {
-      text-decoration: underline;
-    }
-
-    /* === MOBILE RESPONSIVENESS === */
+    @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+    .admin-link { margin-top: 20px; font-size: 0.9rem; }
+    .admin-link a { color: #3498db; text-decoration: none; }
+    .admin-link a:hover { text-decoration: underline; }
     @media (max-width: 480px) {
       body { padding: 10px; }
       .top-nav { font-size: 0.85rem; gap: 10px; right: 15px; top: 25px; }
-      .container {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        width: 100%;
-        max-width: 450px;
-        overflow: hidden;
-        text-align: center;
-        transform: translateY(0);
-        transition: transform 0.3s ease;
-        margin-bottom: 20px;
-      }
-      .header h1 { font-size: 1.6rem; }
-      .header p, .content p, label, button { font-size: 0.95rem; }
-      input { font-size: 1rem; }
-      .content { padding: 20px; }
-      footer { font-size: 0.8rem; padding: 12px; }
-      .toggle-password { font-size: 1.2rem; }
-    }
-
-    @media (max-width: 480px) {
-      body { padding: 10px; }
-      .top-nav {
-        position: absolute;
-        top: 20px;
-        right: 15px;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 6px;
-        font-size: 0.8rem;
-      }
-      .container {
-        background: white;
-        border-radius: 12px;
-        max-width: 100%;
-        margin: 100px auto 20px;
-      }
+      .container { max-width: 100%; margin: 80px auto 20px; }
       .header h1 { font-size: 1.6rem; }
       .header p, .content p, label, button { font-size: 0.95rem; }
       input { font-size: 1rem; }
       .content { padding: 20px; }
     }
-
-    /* Footer Styling */
-    footer {
-      font-size: 0.85rem;
-      color: #f4eeee;
-      text-align: center;
-      width: 100%;
-      max-width: 450px;
-    }
-    footer a {
-      color: #1ab5f3;
-      text-decoration: none;
-      margin: 0 5px;
-    }
+    footer { font-size: 0.85rem; color: #f4eeee; text-align: center; width: 100%; max-width: 450px; }
+    footer a { color: #1ab5f3; text-decoration: none; margin: 0 5px; }
     footer a:hover { text-decoration: underline; }
-
-    /* ✅ GOLDEN .info BRAND COLOR */
-    .info-text {
-      color: #ffd700;
-      font-weight: 700;
-    }
+    .info-text { color: #ffd700; font-weight: 700; }
   </style>
 </head>
 <body>
-  <!-- ✅ TOP NAVIGATION: Home, About Us, Contact Us -->
   <div class="top-nav">
     <a href="index.html">🏠 Home</a>
     <a href="about.html">ℹ️ About Us</a>
     <a href="contact.html">📞 Contact Us</a>
   </div>
 
-  <!-- Admin Login Form -->
   <div class="container">
     <div class="header">
       <div style="text-align: center; margin-bottom: 20px;">
-        <div style="
-          display: inline-block;
-          padding: 10px 25px;
-          background: #0c2461;
-          color: white;
-          border-radius: 12px;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        ">
-          <h1 style="
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-          ">
+        <div style="display: inline-block; padding: 10px 25px; background: #0c2461; color: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+          <h1 style="margin: 0; font-size: 1.8rem; font-weight: 700; letter-spacing: -0.5px;">
             gradely<span class="info-text">.info</span>
           </h1>
-          <p style="margin: 5px 0 0; font-size: 0.9rem; opacity: 0.9; font-weight: normal;">
-            Secure access only
-          </p>
+          <p style="margin: 5px 0 0; font-size: 0.9rem; opacity: 0.9; font-weight: normal;">Secure access only</p>
         </div>
       </div>
       <p>Admin Dashboard Login</p>
     </div>
 
     <div class="content">
-      <p style="margin-bottom: 20px; color: #555; font-weight: normal;">
-        Enter your credentials to access the admin dashboard.
-      </p>
+      <p style="margin-bottom: 20px; color: #555; font-weight: normal;">Enter your credentials to access the admin dashboard.</p>
 
       <form id="adminLoginForm">
         <div class="form-group">
@@ -313,82 +121,63 @@
         </button>
       </form>
 
-      <!-- ✅ ADMIN LOGIN: Signup prompt for new schools -->
-      <div class="options" style="margin-top: 20px; font-size: 0.95rem;">
+      <!-- ✅ Main Form Helper Links (Visible before 2FA) -->
+      <div class="options" id="mainFormOptions" style="margin-top: 20px; font-size: 0.95rem;">
         <p>Forgot password? <a href="forgot-password.html" style="color: #3498db; text-decoration: none;">Reset here</a></p>
-        <div class="divider" style="
-          display: flex;
-          align-items: center;
-          text-align: center;
-          margin: 20px 0;
-          color: rgba(0,0,0,0.5);
-        ">
+        <div class="divider" style="display: flex; align-items: center; text-align: center; margin: 20px 0; color: rgba(0,0,0,0.5);">
           <div style="flex:1; border-bottom:1px solid rgba(0,0,0,0.2);"></div>
           <span style="padding:0 10px; font-weight:600;">OR</span>
           <div style="flex:1; border-bottom:1px solid rgba(0,0,0,0.2);"></div>
         </div>
-        <p style="margin:0;">
-          New to Gradely? 
-          <a href="register-school.html" style="color: #27ae60; text-decoration: none; font-weight: 600;">
-            ✨ Register your school today
-          </a>
-        </p>
+        <p style="margin:0;">New to Gradely? <a href="register-school.html" style="color: #27ae60; text-decoration: none; font-weight: 600;">✨ Register your school today</a></p>
       </div>
   
-      <!-- ✅ Hidden during 2FA prompt - shown only on main login form -->
       <div class="admin-link" id="mainBackToHome">
         <a href="index.html">← Back to Home</a>
       </div>
 
-      <!-- ✅ 2FA Code Prompt (hidden by default) -->
-      <div id="2faPrompt" style="display:none;max-width:400px;margin:20px auto;padding:25px;background:#fff;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.15);">
+      <!-- ✅ 2FA Code Prompt -->
+      <div id="2faPrompt" style="display:none; max-width:400px; margin:20px auto; padding:25px; background:#fff; border-radius:12px; box-shadow:0 8px 25px rgba(0,0,0,0.15); text-align: center;">
+        <h2 style="color:#0c2461; margin-bottom:10px;">🔐 Two-Factor Authentication</h2>
+        <p id="2faMethodHint" style="color:#7f8c8d; margin-bottom:20px; font-size:0.95rem;">Enter your verification code</p>
         
-        <h2 style="color:#0c2461;margin-bottom:10px;text-align:center;">🔐 Two-Factor Authentication</h2>
-        <p id="2faMethodHint" style="color:#7f8c8d;margin-bottom:20px;font-size:0.95rem;text-align:center;">Enter your verification code</p>
-        
-        <!-- ✅ Resend SMS button (only shown for SMS method) -->
-        <button id="resendSmsBtn" onclick="resendSmsCode()" style="display:none;width:100%;padding:10px;margin-bottom:15px;background:#f39c12;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;">
-          🔄 Resend SMS Code
-        </button>
+        <!-- Resend Button (Hidden until SMS logic completes) -->
+        <button id="resendSmsBtn" style="display:none; width:100%; padding:10px; margin-bottom:15px; background:#f39c12; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">🔄 Resend SMS Code</button>
         
         <div style="margin-bottom:15px;">
-          <input type="text" id="2faCodeInput" maxlength="6" placeholder="000000" 
-                 style="width:100%;padding:15px;font-size:1.5rem;letter-spacing:6px;text-align:center;border:2px solid #bdc3c7;border-radius:8px;" />
+          <input type="text" id="2faCodeInput" maxlength="6" placeholder="000000" style="width:100%; padding:15px; font-size:1.5rem; letter-spacing:6px; text-align:center; border:2px solid #bdc3c7; border-radius:8px;" />
         </div>
         
-        <button onclick="verify2FALogin()" 
-                style="width:100%;padding:12px;background:#9b59b6;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;margin-bottom:10px;">
-          Verify & Continue
-        </button>
+        <!-- ✅ 1. Verify & Continue Button (First) -->
+        <button onclick="verify2FALogin()" style="width:100%; padding:12px; background:#9b59b6; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer; margin-bottom:20px;">Verify & Continue</button>
         
-        <p id="2faErrorMessage" style="color:#e74c3c;margin-top:15px;font-size:0.9rem;text-align:center;"></p>
-        
-        <!-- ✅ Back to Home link at BOTTOM -->
-        <a href="index.html" style="display:inline-block;margin-top:15px;color:#3498db;text-decoration:none;font-weight:600;font-size:0.95rem;">
-          ← Back to Home
-        </a>
-      </div>  
+        <!-- ✅ 2. Helper Links (Second - Center Aligned) -->
+        <div style="margin: 10px 0; font-size: 0.9rem; text-align: center;">
+          <p style="margin-bottom:8px;">Forgot password? <a href="forgot-password.html" style="color: #3498db; text-decoration: none;">Reset here</a></p>
+          <div style="display: flex; align-items: center; justify-content: center; margin: 8px 0; color: rgba(0,0,0,0.5);">
+            <div style="flex:1; border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+            <span style="padding:0 10px; font-weight:600;">OR</span>
+            <div style="flex:1; border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+          </div>
+          <p style="margin:0;">New to Gradely? <a href="register-school.html" style="color: #27ae60; text-decoration: none; font-weight: 600;">✨ Register your school today</a></p>
+        </div>
 
+        <!-- ✅ 3. Back to Home (Third - At the very bottom) -->
+        <a href="index.html" style="display:inline-block; margin-top:20px; margin-bottom:10px; color:#3498db; text-decoration:none; font-weight:600; font-size:0.95rem;">← Back to Home</a>
+
+        <p id="2faErrorMessage" style="color:#e74c3c; margin-top:15px; font-size:0.9rem;"></p>
+      </div>  
     </div>
   </div>
 
-  <!-- ✅ FIXED FOOTER: Now outside container, below the page -->
   <footer>
     <strong>© 2026 gradely<span class="info-text">.info</span></strong>. All rights reserved. | Powered by RIS<br>
-    <a href="terms.html">Terms</a> • 
-    <a href="privacy.html">Privacy</a> •
-    <a href="refund-policy.html">Refund</a>
+    <a href="terms.html">Terms</a> • <a href="privacy.html">Privacy</a> • <a href="refund-policy.html">Refund</a>
   </footer>
 
-  <!-- ✅ Scripts -->
-   <!-- ✅ Scripts -->
   <script>
-    // ✅ GLOBAL API_BASE (accessible to all functions)
-    const API_BASE = window.location.hostname.includes("localhost")
-      ? "http://localhost:5000"
-      : "https://api.gradely.info";
+    const API_BASE = window.location.hostname.includes("localhost") ? "http://localhost:5000" : "https://api.gradely.info";
 
-    // ✅ PASSWORD TOGGLE FUNCTIONALITY
     document.getElementById('togglePassword').addEventListener('click', function() {
       const passwordField = document.getElementById('adminPassword');
       const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -396,295 +185,135 @@
       this.textContent = type === 'password' ? '👁️' : '🙈';
     });
 
-    
-
-
-// ✅ NEW: Send SMS code for login flow (uses /resend-sms endpoint)
-async function sendSmsCodeForLogin(schoolId) {
-  try {
-    console.log('🔍 [Login SMS] Sending code for school:', schoolId);
-    
-    const res = await fetch(`${API_BASE}/api/auth/2fa/resend-sms`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ school_id: schoolId }),
-      credentials: 'include'
-    });
-    
-    const result = await res.json();
-    
-    if (result.success) {
-      console.log('✅ [Login SMS] Code sent successfully');
-      return true;
-    } else {
-      console.warn('❌ [Login SMS] Failed to send code:', result.message);
-      return false;
+    async function sendSmsCodeForLogin(schoolId) {
+      try {
+        console.log('🔍 [Login SMS] Sending code for school:', schoolId);
+        const res = await fetch(`${API_BASE}/api/auth/2fa/resend-sms`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ school_id: schoolId }), credentials: 'include'
+        });
+        const result = await res.json();
+        console.log('🔍 [Login SMS] Response:', result);
+        return result.success;
+      } catch (err) { console.error('❌ [Login SMS] Error:', err); return false; }
     }
-  } catch (err) {
-    console.error('❌ [Login SMS] Error sending code:', err);
-    return false;
-  }
-}
-
-
-
-
 
     async function verify2FALogin() {
-  const code = document.getElementById('2faCodeInput').value.trim();
-  const messageEl = document.getElementById('2faErrorMessage');
-  
-  if (!code || code.length !== 6) {
-    messageEl.textContent = '❌ Please enter a valid 6-digit code';
-    messageEl.className = 'message error';
-    return;
-  }
-  
-  messageEl.textContent = '⏳ Verifying...';
-  messageEl.className = 'message';
-  
-  try {
-    // ✅ CRITICAL: Retrieve values from localStorage with fallbacks
-    const schoolId = localStorage.getItem('pending_2fa_school_id') || 
-                    sessionStorage.getItem('pending_2fa_school_id') ||
-                    localStorage.getItem('school_id') ||
-                    sessionStorage.getItem('school_id');
-                    
-    const method = localStorage.getItem('pending_2fa_method') || 'app';
-    
-    // ✅ DEBUG: Log exactly what we're sending
-    console.log('🔍 [Mobile Debug] Sending verify-login request:', {
-      API_BASE,
-      payload: { school_id: schoolId, code, method },
-      hasCredentials: true,
-      schoolIdSource: localStorage.getItem('pending_2fa_school_id') ? 'localStorage:pending' : 
-                     sessionStorage.getItem('pending_2fa_school_id') ? 'sessionStorage:pending' :
-                     localStorage.getItem('school_id') ? 'localStorage:school_id' : 'unknown'
-    });
-    
-    if (!schoolId) {
-      throw new Error('School ID not found. Please log in again.');
-    }
-    
-    const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ school_id: schoolId, code, method }),
-      credentials: 'include'  // ✅ CRITICAL: Must be present
-    });
-    
-    console.log('🔍 [Mobile Debug] Response status:', res.status);
-    console.log('🔍 [Mobile Debug] Response headers:', Object.fromEntries(res.headers.entries()));
-    
-    // ✅ Handle non-JSON responses gracefully
-    const contentType = res.headers.get('content-type');
-    let result;
-    if (contentType && contentType.includes('application/json')) {
-      result = await res.json();
-    } else {
-      const text = await res.text();
-      console.error('❌ Expected JSON, got:', text.substring(0, 200));
-      throw new Error('Server configuration error. Please try on desktop or contact support.');
-    }
-    
-    if (result.success) {
-      console.log('✅ 2FA verified, storing session data...');
+      const code = document.getElementById('2faCodeInput').value.trim();
+      const messageEl = document.getElementById('2faErrorMessage');
+      if (!code || code.length !== 6) { messageEl.textContent = '❌ Please enter a valid 6-digit code'; return; }
+      messageEl.textContent = '⏳ Verifying...'; messageEl.className = 'message';
       
-      // ✅ Store session data in localStorage for dashboard auth check
-      if (schoolId) {
-        localStorage.setItem('school_id', schoolId);
-        localStorage.setItem('adminId', schoolId);
-      }
-      
-      // ✅ Also store plan info if available from response
-      if (result.admin) {
-        localStorage.setItem('subscription_plan', result.admin.subscription_plan || 'basic');
-        localStorage.setItem('current_plan', result.admin.current_plan || 'basic');
-      }
-      
-      // ✅ Clear pending data
-      localStorage.removeItem('pending_2fa_school_id');
-      localStorage.removeItem('pending_2fa_method');
-      
-      // ✅ Redirect to dashboard
-      console.log('✅ [Frontend] Redirecting to dashboard.html');
-      window.location.href = 'dashboard.html';
-    } else {
-      throw new Error(result.message || 'Verification failed');
-    }
-  } catch (err) {
-    console.error('❌ verify2FALogin error:', err);
-    messageEl.textContent = `❌ ${err.message}`;
-    messageEl.className = 'message error';
-  }
-}
-
-
-
-
-    // ✅ Cancel 2FA and return to login form
-    function cancel2FALogin() {
-      console.log('🔍 [Frontend] Canceling 2FA, returning to login form');
-      
-      localStorage.removeItem('pending_2fa_school_id');
-      localStorage.removeItem('pending_2fa_method');
-      
-      // Hide 2FA prompt, show login form
-      document.getElementById('2faPrompt').style.display = 'none';
-      document.getElementById('adminLoginForm').style.display = 'block';
-      
-      // Show main back to home link
-      const mainBackLink = document.getElementById('mainBackToHome');
-      if (mainBackLink) {
-        mainBackLink.style.display = 'block';
-      }
-      
-      // Clear any error messages
-      document.getElementById('2faErrorMessage').textContent = '';
+      try {
+        const schoolId = localStorage.getItem('pending_2fa_school_id') || localStorage.getItem('school_id') || '';
+        const method = localStorage.getItem('pending_2fa_method') || 'app';
+        if (!schoolId) throw new Error('School ID not found. Please log in again.');
+        
+        const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ school_id: schoolId, code, method }), credentials: 'include'
+        });
+        const result = await res.json();
+        if (result.success) {
+          localStorage.setItem('school_id', schoolId);
+          localStorage.setItem('adminId', schoolId);
+          if (result.admin) {
+            localStorage.setItem('subscription_plan', result.admin.subscription_plan || 'basic');
+            localStorage.setItem('current_plan', result.admin.current_plan || 'basic');
+          }
+          localStorage.removeItem('pending_2fa_school_id');
+          localStorage.removeItem('pending_2fa_method');
+          window.location.href = 'dashboard.html';
+        } else { throw new Error(result.message); }
+      } catch (err) { messageEl.textContent = `❌ ${err.message}`; }
     }
 
-    // ✅ Main Login Form Handler
     document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-
       const admin_id = document.getElementById("adminId").value.trim();
       const password = document.getElementById("adminPassword").value.trim();
-
       const btn = e.target.querySelector("button");
       const text = btn.querySelector(".text");
       const spinner = btn.querySelector(".spinner");
-
-      btn.classList.add("loading");
-      text.style.opacity = "0";
-      spinner.style.display = "block";
+      btn.classList.add("loading"); text.style.opacity = "0"; spinner.style.display = "block";
 
       try {
-        console.log('🔍 [Frontend] Attempting login:', { admin_id });
-        
         const res = await fetch(`${API_BASE}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",  // ✅ Critical: sends session cookie
-          body: JSON.stringify({ admin_id, password }),
+          method: "POST", headers: { "Content-Type": "application/json" },
+          credentials: "include", body: JSON.stringify({ admin_id, password })
         });
-
-        console.log('🔍 [Frontend] Login response status:', res.status);
         const data = await res.json();
-        console.log('🔍 [Frontend] Login response body:', data);
 
-        // ✅ If 2FA is required, show 2FA prompt
-        // ✅ If 2FA is required, show 2FA prompt
-if (data.requires_2fa) {
-  // Hide login form, show 2FA prompt
-  document.getElementById('adminLoginForm').style.display = 'none';
-  document.getElementById('2faPrompt').style.display = 'block';
-  
-  // Store pending data for 2FA verification
-  localStorage.setItem('pending_2fa_school_id', admin_id);
-  localStorage.setItem('pending_2fa_method', data.method);
-  
-  // Clear loading state
-  btn.classList.remove("loading");
-  text.style.opacity = "1";
-  spinner.style.display = "none";
-  
-  // Show method hint + resend button based on method
-  const methodHint = document.getElementById('2faMethodHint');
-  const resendBtn = document.getElementById('resendSmsBtn');
-  
-  if (data.method === 'sms') {
-    // ✅ AUTO-SEND SMS CODE on login for SMS method
-    methodHint.innerHTML = '⏳ Sending SMS code...';
-    if (resendBtn) resendBtn.style.display = 'none'; // Hide until send completes
-    
-    // Auto-send SMS code
-    sendSmsCodeForLogin(admin_id).then(sent => {
-      if (sent) {
-        methodHint.innerHTML = 'SMS code sent to your phone<br><small style="color:#7f8c8d;">Didn\'t receive it? Click "Resend SMS Code"</small>';
-        if (resendBtn) resendBtn.style.display = 'block';
-      } else {
-        methodHint.innerHTML = '❌ Failed to send SMS code. Click "Resend SMS Code" to try again.';
-        if (resendBtn) resendBtn.style.display = 'block';
-      }
-    });
-  } else {
-    methodHint.innerHTML = 'Enter code from authenticator app<br><small style="color:#e74c3c;font-weight:normal;">💡 Ensure your device time is auto-synced</small>';
-    if (resendBtn) resendBtn.style.display = 'none';
-  }
-  
-  return;
+        if (data.requires_2fa) {
+          // Hide main form, show 2FA prompt
+          document.getElementById('adminLoginForm').style.display = 'none';
+          document.getElementById('mainFormOptions').style.display = 'none';
+          document.getElementById('mainBackToHome').style.display = 'none';
+          document.getElementById('2faPrompt').style.display = 'block';
           
- 
+          // Store data
+          localStorage.setItem('pending_2fa_school_id', admin_id);
+          localStorage.setItem('pending_2fa_method', data.method);
+          btn.classList.remove("loading"); text.style.opacity = "1"; spinner.style.display = "none";
+          
+          // Handle SMS Auto-Send Logic
+          const methodHint = document.getElementById('2faMethodHint');
+          const resendBtn = document.getElementById('resendSmsBtn');
+          
+          if (data.method === 'sms') {
+            methodHint.innerHTML = '⏳ Sending SMS code...';
+            resendBtn.style.display = 'none'; // Hide until send completes
+
+            // ✅ FIXED: Fire SMS sending immediately using async/await
+            (async () => {
+              const sent = await sendSmsCodeForLogin(admin_id);
+              if (sent) {
+                methodHint.innerHTML = '✅ SMS code sent to your phone<br><small style="color:#7f8c8d;">Didn\'t receive it? Click "Resend SMS Code"</small>';
+                resendBtn.style.display = 'block';
+              } else {
+                methodHint.innerHTML = '❌ Failed to send SMS code. Click "Resend SMS Code" to try again.';
+                resendBtn.style.display = 'block';
+              }
+            })();
+
+          } else {
+            // App method
+            methodHint.innerHTML = 'Enter code from authenticator app<br><small style="color:#e74c3c;font-weight:normal;">💡 Ensure your device time is auto-synced</small>';
+            resendBtn.style.display = 'none';
+          }
+          return;
         }
 
-        // ✅ Normal login success (only reached if 2FA not required)
         if (data.success && data.admin) {
-          console.log('✅ [Frontend] Login successful, storing session data');
-          
-          // ✅ NOW safe to access data.admin.email
           const email = data.admin.email || admin_id + "@gradely.info";
           localStorage.setItem("email", email);
-          
-          // ✅ Session-only: store only essential session data
           localStorage.setItem("adminId", data.admin.admin_id);
           localStorage.setItem("school_id", data.admin.school_id || data.admin.admin_id);
           localStorage.setItem("school_name", data.admin.school_name || "");
           localStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
           localStorage.setItem("admin_email", email);
-
-          // ✅ JWT FALLBACK: Store token if returned by backend
-          if (data.token) {
-            localStorage.setItem('gradely_token', data.token);
-            console.log('✅ JWT token stored for auto-renewal fallback');
-          }
-
-          // ✅ Auto-redirect to dashboard
-          console.log('✅ [Frontend] Redirecting to dashboard.html');
+          if (data.token) localStorage.setItem('gradely_token', data.token);
           window.location.href = "dashboard.html";
-        } else {
-          console.warn('❌ [Frontend] Login failed:', data.message);
-          alert("❌ " + (data.message || "Login failed."));
-        }
-      } catch (err) {
-        console.error("❌ [Frontend] Network or server error:", err);
-        alert("❌ Network or server error. Please try again.");
-      } finally {
-        // Only reset button if we're not showing 2FA prompt
+        } else { alert("❌ " + (data.message || "Login failed.")); }
+      } catch (err) { alert("❌ Network or server error. Please try again."); }
+      finally {
         if (document.getElementById('adminLoginForm').style.display !== 'none') {
-          btn.classList.remove("loading");
-          text.style.opacity = "1";
-          spinner.style.display = "none";
+          btn.classList.remove("loading"); text.style.opacity = "1"; spinner.style.display = "none";
         }
       }
     });
 
-
-
-    // ✅ Handle "Resend SMS Code" button click in login flow
-document.getElementById('resendSmsBtn')?.addEventListener('click', async () => {
-  const schoolId = localStorage.getItem('pending_2fa_school_id');
-  const methodHint = document.getElementById('2faMethodHint');
-  
-  if (!schoolId) {
-    methodHint.textContent = '❌ Session expired. Please log in again.';
-    return;
-  }
-  
-  methodHint.textContent = '⏳ Sending new code...';
-  
-  const sent = await sendSmsCodeForLogin(schoolId);
-  
-  if (sent) {
-    methodHint.innerHTML = '✅ New code sent! Check your phone.<br><small style="color:#7f8c8d;">Code valid for 5 minutes</small>';
-  } else {
-    methodHint.textContent = '❌ Failed to send code. Please try again.';
-  }
-});
-
-
+    // Handle Resend Button Click
+    document.getElementById('resendSmsBtn')?.addEventListener('click', async () => {
+      const schoolId = localStorage.getItem('pending_2fa_school_id');
+      const methodHint = document.getElementById('2faMethodHint');
+      if (!schoolId) { methodHint.textContent = '❌ Session expired. Please log in again.'; return; }
+      methodHint.textContent = '⏳ Sending new code...';
+      const sent = await sendSmsCodeForLogin(schoolId);
+      if (sent) methodHint.innerHTML = '✅ New code sent! Check your phone.<br><small style="color:#7f8c8d;">Code valid for 5 minutes</small>';
+      else methodHint.textContent = '❌ Failed to send code. Please try again.';
+    });
   </script>
-
-  <!-- Chatbot -->
   <script src="js/kaima-chatbot.js"></script>
 </body>
 </html>
