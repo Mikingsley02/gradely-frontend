@@ -459,12 +459,32 @@
       throw new Error('Server configuration error. Please try on desktop or contact support.');
     }
     
-    if (result.success) {
-      console.log('✅ 2FA verified, redirecting to dashboard...');
+        if (result.success) {
+      console.log('✅ [Frontend] 2FA verified, storing session data...');
+      
+      // ✅ Store session data in localStorage for dashboard auth check
+      const schoolId = localStorage.getItem('pending_2fa_school_id');
+      if (schoolId) {
+        localStorage.setItem('school_id', schoolId);
+        localStorage.setItem('adminId', schoolId); // For consistency
+      }
+      
+      // ✅ Also store plan info if available from response
+      if (result.admin) {
+        localStorage.setItem('subscription_plan', result.admin.subscription_plan || 'basic');
+        localStorage.setItem('current_plan', result.admin.current_plan || 'basic');
+      }
+      
+      // ✅ Clear pending data
       localStorage.removeItem('pending_2fa_school_id');
       localStorage.removeItem('pending_2fa_method');
+      
+      // ✅ Redirect to dashboard
+      console.log('✅ [Frontend] Redirecting to dashboard.html');
       window.location.href = 'dashboard.html';
-    } else {
+    }
+    
+    else {
       throw new Error(result.message || 'Verification failed');
     }
   } catch (err) {
