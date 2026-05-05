@@ -398,6 +398,38 @@
 
     
 
+
+// ✅ NEW: Send SMS code for login flow (uses /resend-sms endpoint)
+async function sendSmsCodeForLogin(schoolId) {
+  try {
+    console.log('🔍 [Login SMS] Sending code for school:', schoolId);
+    
+    const res = await fetch(`${API_BASE}/api/auth/2fa/resend-sms`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ school_id: schoolId }),
+      credentials: 'include'
+    });
+    
+    const result = await res.json();
+    
+    if (result.success) {
+      console.log('✅ [Login SMS] Code sent successfully');
+      return true;
+    } else {
+      console.warn('❌ [Login SMS] Failed to send code:', result.message);
+      return false;
+    }
+  } catch (err) {
+    console.error('❌ [Login SMS] Error sending code:', err);
+    return false;
+  }
+}
+
+
+
+
+
     async function verify2FALogin() {
   const code = document.getElementById('2faCodeInput').value.trim();
   const messageEl = document.getElementById('2faErrorMessage');
@@ -541,45 +573,48 @@
         console.log('🔍 [Frontend] Login response body:', data);
 
         // ✅ If 2FA is required, show 2FA prompt
-        if (data.requires_2fa) {
-          console.log('🔍 [Frontend] 2FA required, showing prompt');
+        // ✅ If 2FA is required, show 2FA prompt
+if (data.requires_2fa) {
+  // Hide login form, show 2FA prompt
+  document.getElementById('adminLoginForm').style.display = 'none';
+  document.getElementById('2faPrompt').style.display = 'block';
+  
+  // Store pending data for 2FA verification
+  localStorage.setItem('pending_2fa_school_id', admin_id);
+  localStorage.setItem('pending_2fa_method', data.method);
+  
+  // Clear loading state
+  btn.classList.remove("loading");
+  text.style.opacity = "1";
+  spinner.style.display = "none";
+  
+  // Show method hint + resend button based on method
+  const methodHint = document.getElementById('2faMethodHint');
+  const resendBtn = document.getElementById('resendSmsBtn');
+  
+  if (data.method === 'sms') {
+    // ✅ AUTO-SEND SMS CODE on login for SMS method
+    methodHint.innerHTML = '⏳ Sending SMS code...';
+    if (resendBtn) resendBtn.style.display = 'none'; // Hide until send completes
+    
+    // Auto-send SMS code
+    sendSmsCodeForLogin(admin_id).then(sent => {
+      if (sent) {
+        methodHint.innerHTML = 'SMS code sent to your phone<br><small style="color:#7f8c8d;">Didn\'t receive it? Click "Resend SMS Code"</small>';
+        if (resendBtn) resendBtn.style.display = 'block';
+      } else {
+        methodHint.innerHTML = '❌ Failed to send SMS code. Click "Resend SMS Code" to try again.';
+        if (resendBtn) resendBtn.style.display = 'block';
+      }
+    });
+  } else {
+    methodHint.innerHTML = 'Enter code from authenticator app<br><small style="color:#e74c3c;font-weight:normal;">💡 Ensure your device time is auto-synced</small>';
+    if (resendBtn) resendBtn.style.display = 'none';
+  }
+  
+  return; // Stop here - wait for 2FA code
           
-          // Hide login form, show 2FA prompt
-          document.getElementById('adminLoginForm').style.display = 'none';
-          document.getElementById('2faPrompt').style.display = 'block';
-          
-          // Hide main back link (2FA prompt has its own)
-          const mainBackLink = document.getElementById('mainBackToHome');
-          if (mainBackLink) {
-            mainBackLink.style.display = 'none';
-          }
-          
-          // Store pending data for 2FA verification
-          localStorage.setItem('pending_2fa_school_id', admin_id);
-          localStorage.setItem('pending_2fa_method', data.method);
-          
-          // Show method hint + resend button based on method
-          const methodHint = document.getElementById('2faMethodHint');
-          const resendBtn = document.getElementById('resendSmsBtn');
-          
-          if (data.method === 'sms') {
-            methodHint.innerHTML = 'SMS code sent to your phone<br><small style="color:#7f8c8d;">Didn\'t receive it? Click "Resend SMS Code"</small>';
-            if (resendBtn) resendBtn.style.display = 'block';
-          } else {
-  methodHint.innerHTML = `
-    Enter code from authenticator app<br>
-    <small style="color:#e74c3c;font-weight:normal;">
-      💡 If code fails, sync your authenticator app time<br>
-  `;
-  if (resendBtn) resendBtn.style.display = 'none';
-}
-          
-          // Clear loading state
-          btn.classList.remove("loading");
-          text.style.opacity = "1";
-          spinner.style.display = "none";
-          
-          return; // Stop here - wait for 2FA code
+ 
         }
 
         // ✅ Normal login success (only reached if 2FA not required)
@@ -622,6 +657,31 @@
         }
       }
     });
+
+
+
+    // ✅ Handle "Resend SMS Code" button click in login flow
+document.getElementById('resendSmsBtn')?.addEventListener('click', async () => {
+  const schoolId = localStorage.getItem('pending_2fa_school_id');
+  const methodHint = document.getElementById('2faMethodHint');
+  
+  if (!schoolId) {
+    methodHint.textContent = '❌ Session expired. Please log in again.';
+    return;
+  }
+  
+  methodHint.textContent = '⏳ Sending new code...';
+  
+  const sent = await sendSmsCodeForLogin(schoolId);
+  
+  if (sent) {
+    methodHint.innerHTML = '✅ New code sent! Check your phone.<br><small style="color:#7f8c8d;">Code valid for 5 minutes</small>';
+  } else {
+    methodHint.textContent = '❌ Failed to send code. Please try again.';
+  }
+});
+
+
   </script>
 
   <!-- Chatbot -->
