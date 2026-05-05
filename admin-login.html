@@ -404,6 +404,7 @@
   
   if (!code || code.length !== 6) {
     messageEl.textContent = '❌ Please enter a valid 6-digit code';
+    messageEl.className = 'message error';
     return;
   }
   
@@ -411,39 +412,34 @@
   messageEl.className = 'message';
   
   try {
-    const schoolId = localStorage.getItem('pending_2fa_school_id');
-    const method = localStorage.getItem('pending_2fa_method');
+    // ✅ CRITICAL: Retrieve values from localStorage with fallbacks
+    const schoolId = localStorage.getItem('pending_2fa_school_id') || 
+                    sessionStorage.getItem('pending_2fa_school_id') ||
+                    localStorage.getItem('school_id') ||
+                    sessionStorage.getItem('school_id');
+                    
+    const method = localStorage.getItem('pending_2fa_method') || 'app';
     
-    // ✅ MOBILE DEBUG: Log session state before request
-    console.log('🔍 [Mobile Debug] Verifying 2FA:', { 
-      schoolId, 
-      method, 
-      codeLength: code.length,
-      hasCookies: document.cookie.length > 0,
-      userAgent: navigator.userAgent
-    });
-    
-    
-        // ✅ MOBILE DEBUG: Log exactly what we're sending
-    const payload = { school_id: schoolId, code, method };
+    // ✅ DEBUG: Log exactly what we're sending
     console.log('🔍 [Mobile Debug] Sending verify-login request:', {
       API_BASE,
-      payload,
+      payload: { school_id: schoolId, code, method },
       hasCredentials: true,
-      schoolIdType: typeof schoolId,
-      schoolIdValue: schoolId
+      schoolIdSource: localStorage.getItem('pending_2fa_school_id') ? 'localStorage:pending' : 
+                     sessionStorage.getItem('pending_2fa_school_id') ? 'sessionStorage:pending' :
+                     localStorage.getItem('school_id') ? 'localStorage:school_id' : 'unknown'
     });
+    
+    if (!schoolId) {
+      throw new Error('School ID not found. Please log in again.');
+    }
     
     const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ school_id: schoolId, code, method }),
       credentials: 'include'  // ✅ CRITICAL: Must be present
     });
-    
-    console.log('🔍 [Mobile Debug] Response status:', res.status);
-    console.log('🔍 [Mobile Debug] Response headers:', Object.fromEntries(res.headers.entries()));
-
     
     console.log('🔍 [Mobile Debug] Response status:', res.status);
     console.log('🔍 [Mobile Debug] Response headers:', Object.fromEntries(res.headers.entries()));
@@ -459,14 +455,13 @@
       throw new Error('Server configuration error. Please try on desktop or contact support.');
     }
     
-        if (result.success) {
-      console.log('✅ [Frontend] 2FA verified, storing session data...');
+    if (result.success) {
+      console.log('✅ 2FA verified, storing session data...');
       
       // ✅ Store session data in localStorage for dashboard auth check
-      const schoolId = localStorage.getItem('pending_2fa_school_id');
       if (schoolId) {
         localStorage.setItem('school_id', schoolId);
-        localStorage.setItem('adminId', schoolId); // For consistency
+        localStorage.setItem('adminId', schoolId);
       }
       
       // ✅ Also store plan info if available from response
@@ -482,9 +477,7 @@
       // ✅ Redirect to dashboard
       console.log('✅ [Frontend] Redirecting to dashboard.html');
       window.location.href = 'dashboard.html';
-    }
-    
-    else {
+    } else {
       throw new Error(result.message || 'Verification failed');
     }
   } catch (err) {
@@ -576,11 +569,7 @@
   methodHint.innerHTML = `
     Enter code from authenticator app<br>
     <small style="color:#e74c3c;font-weight:normal;">
-      💡 If code fails, sync your authenticator app time:<br>
-      <strong>Google Authenticator:</strong> ⋮ → Settings → Time correction → Sync now<br>
-      <strong>Authy:</strong> Settings → Time Correction → Enable<br>
-      <strong>iOS/Android:</strong> Ensure "Set Automatically" is ON in Date & Time settings
-    </small>
+      💡 If code fails, sync your authenticator app time<br>
   `;
   if (resendBtn) resendBtn.style.display = 'none';
 }
