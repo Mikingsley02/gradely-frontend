@@ -423,12 +423,27 @@
       userAgent: navigator.userAgent
     });
     
+    
+        // ✅ MOBILE DEBUG: Log exactly what we're sending
+    const payload = { school_id: schoolId, code, method };
+    console.log('🔍 [Mobile Debug] Sending verify-login request:', {
+      API_BASE,
+      payload,
+      hasCredentials: true,
+      schoolIdType: typeof schoolId,
+      schoolIdValue: schoolId
+    });
+    
     const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',  // ✅ CRITICAL: Must be present
-      body: JSON.stringify({ school_id: schoolId, code, method })
+      body: JSON.stringify(payload),
+      credentials: 'include'  // ✅ CRITICAL: Must be present
     });
+    
+    console.log('🔍 [Mobile Debug] Response status:', res.status);
+    console.log('🔍 [Mobile Debug] Response headers:', Object.fromEntries(res.headers.entries()));
+
     
     console.log('🔍 [Mobile Debug] Response status:', res.status);
     console.log('🔍 [Mobile Debug] Response headers:', Object.fromEntries(res.headers.entries()));
