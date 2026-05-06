@@ -508,11 +508,11 @@ async function triggerExport() {
   statusEl.style.color = '#64748b';
   
   try {
-    const res = await fetch('/api/admin/export-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ export_type: type, purpose })
-    });
+    const res = await fetch('/api/export/data', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ export_type: type, purpose })
+});
     
     if (!res.ok) {
       const err = await res.json();
