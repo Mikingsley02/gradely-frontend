@@ -509,29 +509,26 @@ async function triggerExport() {
   
   try {
     const res = await fetch('https://api.gradely.info/api/export/data', {
-  method: 'POST',
-  headers: { 
-    'Content-Type': 'application/json',
-    // ✅ Send session cookie for authentication
-  },
-  body: JSON.stringify({ export_type: type, purpose }),
-  credentials: 'include'  // ✅ CRITICAL: Sends gradely.sid cookie
-});
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ export_type: type, purpose }),
+      credentials: 'include'  // ✅ Sends session cookie
+    });
     
     if (!res.ok) {
       const err = await res.json();
       throw new Error(err.message || 'Export failed');
     }
     
-    // Trigger file download
-        const blob = await res.blob();
+    // ✅ Trigger file download
+    const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     
-    // ✅ Safely parse filename from Content-Disposition header
+    // ✅ Safely extract filename from backend header
     const contentDisposition = res.headers.get('Content-Disposition') || res.headers.get('content-disposition');
-    let filename = `gradely_export_${type}_${schoolId}_${new Date().toISOString().split('T')[0]}.csv`;
+    let filename = `gradely_export_${type}_${Date.now()}.csv`;
     
     if (contentDisposition && contentDisposition.includes('filename=')) {
       filename = contentDisposition.split('filename=')[1].replace(/"/g, '').trim();
@@ -542,14 +539,11 @@ async function triggerExport() {
     a.click();
     a.remove();
     window.URL.revokeObjectURL(url);
-
-
-    a.remove();
-    window.URL.revokeObjectURL(url);
     
     statusEl.textContent = '✅ Export downloaded successfully. Audit log recorded.';
     statusEl.style.color = '#16a34a';
   } catch (err) {
+    console.error('❌ Export failed:', err);
     statusEl.textContent = `❌ ${err.message}`;
     statusEl.style.color = '#dc2626';
   }
