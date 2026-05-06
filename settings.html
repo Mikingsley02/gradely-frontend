@@ -524,13 +524,26 @@ async function triggerExport() {
     }
     
     // Trigger file download
-    const blob = await res.blob();
+        const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = res.headers.get('content-disposition').split('filename=')[1];
+    
+    // ✅ Safely parse filename from Content-Disposition header
+    const contentDisposition = res.headers.get('Content-Disposition') || res.headers.get('content-disposition');
+    let filename = `gradely_export_${type}_${schoolId}_${new Date().toISOString().split('T')[0]}.csv`;
+    
+    if (contentDisposition && contentDisposition.includes('filename=')) {
+      filename = contentDisposition.split('filename=')[1].replace(/"/g, '').trim();
+    }
+    
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+
+
     a.remove();
     window.URL.revokeObjectURL(url);
     
