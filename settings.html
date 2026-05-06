@@ -176,6 +176,33 @@
             onclick="togglePassword('confirm_new_password', this)">👁️</span>
         </div>
 
+
+
+        <!-- NDPR Data Export Section -->
+<div class="settings-section" style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+  <h3 style="margin-bottom: 15px; color: #0f172a;">📥 NDPR Data Export</h3>
+  <p style="color: #64748b; margin-bottom: 15px; font-size: 0.9rem;">
+    Export school data for compliance, audits, or data subject requests. All exports are logged for NDPR accountability.
+  </p>
+  
+  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+    <select id="exportType" style="padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; min-width: 200px;">
+      <option value="students">Students</option>
+      <option value="parents">Parent Contacts</option>
+      <option value="announcements">Announcements</option>
+      <option value="full">Full School Data (All)</option>
+    </select>
+    <input type="text" id="exportPurpose" placeholder="Purpose (e.g., NDPR request, audit)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; min-width: 200px;" />
+    <button onclick="triggerExport()" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+      📤 Export Data
+    </button>
+  </div>
+  <p id="exportStatus" style="font-size: 0.85rem; color: #64748b; margin-top: 10px;"></p>
+</div>
+
+
+
+
         <button type="submit">💾 Save Changes</button>
 
         <div id="message" class="message"></div>
@@ -466,6 +493,55 @@ function togglePasswordVisibility(inputId) {
     input.nextElementSibling.textContent = '👁️';
   }
 }
+
+
+
+
+async function triggerExport() {
+  const type = document.getElementById('exportType').value;
+  const purpose = document.getElementById('exportPurpose').value.trim() || 'NDPR compliance';
+  const statusEl = document.getElementById('exportStatus');
+  
+  statusEl.textContent = '⏳ Preparing export...';
+  statusEl.style.color = '#64748b';
+  
+  try {
+    const res = await fetch('/api/admin/export-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ export_type: type, purpose })
+    });
+    
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Export failed');
+    }
+    
+    // Trigger file download
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = res.headers.get('content-disposition').split('filename=')[1];
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    
+    statusEl.textContent = '✅ Export downloaded successfully. Audit log recorded.';
+    statusEl.style.color = '#16a34a';
+  } catch (err) {
+    statusEl.textContent = `❌ ${err.message}`;
+    statusEl.style.color = '#dc2626';
+  }
+}
+
+
+
+
+
+
+
 
 // ✅ 2FA Functions
 document.addEventListener('DOMContentLoaded', async () => {
