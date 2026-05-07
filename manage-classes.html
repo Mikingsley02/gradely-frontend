@@ -125,6 +125,46 @@
       margin-top: 20px;
     }
 
+
+    /* ✅ Attendance Button */
+.attendance-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  width: 100%;
+  max-width: 300px;
+  display: inline-block;
+  transition: background 0.2s ease;
+}
+
+.attendance-btn:hover {
+  background: #2980b9;
+}
+
+/* ✅ Tablet and up - adjust action buttons layout */
+@media (min-width: 768px) {
+  .action-buttons {
+    flex-direction: row;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .export-btn,
+  .attendance-btn,
+  .back-btn {
+    width: auto;
+    min-width: 140px;
+  }
+}
+
+
     .export-btn,
     .back-btn {
       width: 100%;
@@ -237,10 +277,10 @@
     </div>
 
     <div class="action-buttons">
-      <button class="export-btn" onclick="exportPDF()">📄 Export as PDF</button>
-      <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
-    </div>
-  </div>
+  <button class="export-btn" onclick="exportPDF()">📄 Export as PDF</button>
+  <a href="attendance.html" class="attendance-btn">📋 Attendance</a>
+  <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+</div>
 
   <footer>
     © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br />
