@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>📋 Attendance Tracking | Gradely</title>
+<link rel="icon" href="https://gradely.info/favicon.ico" />
+
+<style>
+:root {
+  --primary: #3498db;
+  --success: #27ae60;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+  --bg: #f8f9fa;
+  --card: #fff;
+  --text: #0c2461;
+  --text-light: #64748b;
+  --border: #e2e8f0;
+}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:'Segoe UI',system-ui,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,
+body{
+  width:100%;
+  overflow-x:hidden;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ✅ MAIN WRAPPER */
+.container{
+  width:100%;
+  max-width:1050px;
+  margin:0 auto;
+  padding: 28px 16px 16px;
+  flex:1;
+}
+
+/* ✅ Header */
+header { 
+  margin-top: 18px;
+  margin-bottom: 42px;
+  padding-left: 8px;
+}
+
+h1{
+  font-size:1.25rem;
+  font-weight:700;
+  color:var(--text);
+}
+
+/* ✅ Controls */
+.controls-row{
+  display:flex;
+  gap:10px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+  align-items:flex-end;
+}
+
+.control-group{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex:1 1 150px;
+  min-width:130px;
+  max-width:170px;
+}
+
+.control-group label{
+  font-weight:600;
+  font-size:0.82rem;
+  color:var(--text);
+}
+
+.control-group select,
+.control-group input{
+  padding:9px 10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-size:0.88rem;
+  background:white;
+  width:100%;
+}
+
+.control-group select:focus,
+.control-group input:focus{
+  outline:2px solid var(--primary);
+  border-color:transparent;
+}
+
+.control-group .btn{
+  height:38px;
+  white-space:nowrap;
+}
+
+/* ✅ Buttons */
+.btn{
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+  font-size:0.82rem;
+  transition:.2s;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  text-decoration:none;
+  width:auto;
+}
+
+.btn-primary{
+  background:var(--primary);
+  color:white;
+}
+
+.btn-success{
+  background:var(--success);
+  color:white;
+}
+
+.btn-warning{
+  background:var(--warning);
+  color:white;
+}
+
+.btn-danger{
+  background:var(--danger);
+  color:white;
+}
+
+.btn-secondary{
+  background:var(--text-light);
+  color:white;
+}
+
+.btn:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+.btn-lg{
+  padding:10px 14px;
+  font-size:.9rem;
+}
+
+/* ✅ Pro Banner */
+.pro-banner{
+  background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  color:white;
+  padding:12px 14px;
+  border-radius:8px;
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-size:.85rem;
+}
+
+.pro-banner.upgrade{
+  background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);
+}
+
+.pro-banner button{
+  background:white;
+  color:#764ba2;
+  border:none;
+  padding:7px 12px;
+  border-radius:6px;
+  font-weight:600;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+/* ✅ Quick Actions */
+.quick-actions{
+  display:flex;
+  gap:8px;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+}
+
+.quick-actions .btn{
+  flex:0 0 auto;
+  min-width:95px;
+  max-width:115px;
+  padding:7px 10px;
+  font-size:.78rem;
+}
+
+/* ✅ Attendance Sheet */
+.sheet{
+  background:var(--card);
+  border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  overflow:hidden;
+}
+
+.sheet-header{
+  padding:11px 14px;
+  background:#f8fafc;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:600;
+  border-bottom:1px solid var(--border);
+  font-size:.88rem;
+}
+
+.sheet-header .badge{
+  background:var(--primary);
+  color:white;
+  padding:4px 8px;
+  border-radius:4px;
+  font-size:.72rem;
+}
+
+.sheet-header .locked{
+  background:var(--danger);
+}
+
+.student-list{
+  max-height:50vh;
+  overflow-y:auto;
+}
+
+.student-row{
+  display:flex;
+  align-items:center;
+  padding:10px 14px;
+  border-bottom:1px solid #f1f5f9;
+  transition:.15s;
+}
+
+.student-row:hover{
+  background:#f8fafc;
+}
+
+.student-info{
+  flex:1;
+  min-width:0;
+}
+
+.student-name{
+  font-weight:500;
+  font-size:.9rem;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.student-id{
+  font-size:.75rem;
+  color:var(--text-light);
+}
+
+.status-toggles{
+  display:flex;
+  gap:5px;
+}
+
+.status-btn{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:2px solid var(--border);
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:.65rem;
+  font-weight:700;
+  transition:.2s;
+}
+
+.status-btn.present{
+  border-color:var(--success);
+  background:var(--success);
+  color:white;
+}
+
+.status-btn.absent{
+  border-color:var(--danger);
+  background:var(--danger);
+  color:white;
+}
+
+.status-btn.late{
+  border-color:var(--warning);
+  background:var(--warning);
+  color:white;
+}
+
+.status-btn.excused{
+  border-color:#9b59b6;
+  background:#9b59b6;
+  color:white;
+}
+
+.status-btn.dim{
+  opacity:.3;
+}
+
+.sheet-footer{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:11px 14px;
+  background:#f8fafc;
+  border-top:1px solid var(--border);
+  font-size:.84rem;
+}
+
+/* ✅ Empty & Loading */
+.empty-state,
+.loading-state{
+  text-align:center;
+  padding:28px 20px;
+  color:var(--text-light);
+}
+
+.spinner{
+  border:3px solid #f3f3f3;
+  border-top:3px solid var(--primary);
+  border-radius:50%;
+  width:28px;
+  height:28px;
+  animation:spin 1s linear infinite;
+  margin:0 auto 10px;
+}
+
+@keyframes spin{
+  0%{transform:rotate(0deg);}
+  100%{transform:rotate(360deg);}
+}
+
+/* ✅ Modal */
+.modal{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,.5);
+  z-index:1000;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+}
+
+.modal.active{
+  display:flex;
+}
+
+.modal-content{
+  background:white;
+  padding:18px;
+  border-radius:12px;
+  width:100%;
+  max-width:480px;
+  max-height:90vh;
+  overflow-y:auto;
+  box-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
+}
+
+.close-modal{
+  background:none;
+  border:none;
+  font-size:1.7rem;
+  cursor:pointer;
+  color:var(--text-light);
+  line-height:1;
+}
+
+.form-group{
+  margin-bottom:14px;
+}
+
+.form-group label{
+  display:block;
+  margin-bottom:6px;
+  font-weight:500;
+  font-size:.86rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea{
+  width:100%;
+  padding:9px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-size:.9rem;
+}
+
+/* ✅ Report */
+.report-card{
+  background:#f8fafc;
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:12px;
+}
+
+.report-stat{
+  display:flex;
+  justify-content:space-between;
+  padding:6px 0;
+  border-bottom:1px solid #eee;
+}
+
+.report-stat:last-child{
+  border-bottom:none;
+}
+
+.report-log{
+  font-size:.82rem;
+  padding:8px 0;
+  border-bottom:1px dashed #eee;
+}
+
+/* ✅ Action Buttons */
+.action-buttons{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:18px;
+  flex-wrap:wrap;
+}
+
+.action-buttons .btn{
+  min-width:unset;
+  padding:8px 14px;
+  font-size:.82rem;
+}
+
+/* ✅ Footer Properly Positioned */
+footer{
+  text-align:center;
+  padding:16px 10px;
+  color:#666;
+  font-size:.78rem;
+  border-top:1px solid #eee;
+  margin-top:24px;
+  background:#fff;
+}
+
+footer a{
+  color:#6c3cff;
+  text-decoration:none;
+  margin:0 5px;
+}
+
+/* ✅ Mobile */
+@media (max-width:768px){
+
+  .container{
+    padding: 24px 12px 12px;
+  }
+
+  header {
+  margin-top: 14px;
+  margin-bottom: 36px;
+  padding-left: 4px;
+}
+
+  h1{
+    font-size:1.15rem;
+  }
+
+  .controls-row{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .control-group{
+    max-width:100%;
+    width:100%;
+  }
+
+  .status-btn{
+    width:30px;
+    height:30px;
+    font-size:.62rem;
+  }
+
+  .quick-actions{
+    justify-content:center;
+  }
+
+  .quick-actions .btn{
+    min-width:90px;
+    max-width:100px;
+    font-size:.75rem;
+    padding:7px 8px;
+  }
+
+  .btn{
+    font-size:.8rem;
+    padding:8px 10px;
+  }
+
+  .student-list{
+    max-height:45vh;
+  }
+
+  .pro-banner{
+    flex-direction:column;
+    text-align:center;
+  }
+
+  .action-buttons{
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .action-buttons .btn{
+    width:100%;
+    max-width:240px;
+  }
+}
+
+/* ✅ Tablet & Desktop */
+@media (min-width:769px){
+
+  .controls-row{
+    flex-wrap:nowrap;
+  }
+
+  .control-group{
+    flex:0 0 auto;
+  }
+
+  .control-group:nth-child(1),
+  .control-group:nth-child(2),
+  .control-group:nth-child(3){
+    min-width:135px;
+    max-width:150px;
+  }
+
+  .control-group:nth-child(4){
+    max-width:140px;
+  }
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>📋 Attendance</h1>
+  </header>
+
+  <!-- ✅ Pro Feature Banner -->
+  <div id="proBanner" class="pro-banner" style="display: none;">
+    <span>🔒 Attendance Tracking is a <strong>Pro Feature</strong>. Upgrade to unlock full functionality.</span>
+    <button onclick="window.location.href='upgrade.html'">Upgrade Now</button>
+  </div>
+
+  <!-- ✅ Unified Controls Row: Class, Group, Date, Load Button -->
+  <div class="controls-row">
+    <div class="control-group">
+      <label for="className">Select Class:</label>
+      <select id="className" onchange="onClassOrGroupChange()">
+        <option value="Basic1">Basic 1</option>
+        <option value="Basic2">Basic 2</option>
+        <option value="Basic3">Basic 3</option>
+        <option value="Basic4">Basic 4</option>
+        <option value="Basic5">Basic 5</option>
+        <option value="Basic6">Basic 6</option>
+        <option value="JSS1">JSS 1</option>
+        <option value="JSS2">JSS 2</option>
+        <option value="JSS3">JSS 3</option>
+        <option value="SSS1">SSS 1</option>
+        <option value="SSS2">SSS 2</option>
+        <option value="SSS3">SSS 3</option>
+      </select>
+    </div>
+    
+    <div class="control-group">
+      <label for="groupName">Select Group:</label>
+      <select id="groupName" onchange="onClassOrGroupChange()">
+        <option value="A">Group A</option>
+        <option value="B">Group B</option>
+        <option value="C">Group C</option>
+        <option value="">All Groups</option>
+      </select>
+    </div>
+    
+    <div class="control-group">
+      <label for="sessionDate">Date:</label>
+      <input type="date" id="sessionDate" />
+    </div>
+    
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button class="btn btn-primary" onclick="loadOrCreateSession()" style="height: 42px;">🔍 Load / Create</button>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <button class="btn btn-success" onclick="markAll('present')">✔ Present</button>
+    <button class="btn btn-danger" onclick="markAll('absent')">✖ Absent</button>
+    <button class="btn btn-warning" onclick="markAll('late')">⏰ Late</button>
+    <button class="btn btn-secondary" id="excusedBtn" onclick="markExcused()">📝 Excused</button>
+  </div>
+
+  <div class="sheet">
+    <div class="sheet-header">
+      <span id="sessionTitle">No session selected</span>
+      <span id="sessionBadge" class="badge" style="display:none;">Active</span>
+    </div>
+    <div id="studentList" class="student-list">
+      <div class="empty-state">Select class, group & date, then tap Load/Create to begin.</div>
+    </div>
+    <div class="sheet-footer">
+      <span id="summaryText">0 students</span>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveChanges()" disabled>💾 Save</button>
+    </div>
+  </div>
+
+  <div class="action-buttons">
+    <button class="btn btn-primary" onclick="exportAttendance()" style="background: #8e44ad;">📄 Export as PDF</button>
+    <a href="manage-classes.html" class="btn btn-success">← Back to Classes</a>
+  </div>
+</div>
+
+<!-- Create Session Modal -->
+<div id="createModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Create New Session</h3>
+      <button class="close-modal" onclick="closeModal('createModal')">&times;</button>
+    </div>
+    <div class="form-group">
+      <label>Session Name</label>
+      <input type="text" id="newSessionName" placeholder="e.g., Morning Register">
+    </div>
+    <div class="form-group">
+      <label>Class</label>
+      <select id="newSessionClass">
+        <option value="Basic1">Basic 1</option>
+        <option value="Basic2">Basic 2</option>
+        <option value="Basic3">Basic 3</option>
+        <option value="Basic4">Basic 4</option>
+        <option value="Basic5">Basic 5</option>
+        <option value="Basic6">Basic 6</option>
+        <option value="JSS1">JSS 1</option>
+        <option value="JSS2">JSS 2</option>
+        <option value="JSS3">JSS 3</option>
+        <option value="SSS1">SSS 1</option>
+        <option value="SSS2">SSS 2</option>
+        <option value="SSS3">SSS 3</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Group (Optional)</label>
+      <select id="newSessionGroup">
+        <option value="">All Groups</option>
+        <option value="A">Group A</option>
+        <option value="B">Group B</option>
+        <option value="C">Group C</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="newSessionDate">
+    </div>
+    <button class="btn btn-primary btn-lg" style="width:100%;" onclick="createSession()">✅ Create & Load</button>
+  </div>
+</div>
+
+<!-- Student Report Modal -->
+<div id="reportModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📊 Student Report</h3>
+      <button class="close-modal" onclick="closeModal('reportModal')">&times;</button>
+    </div>
+    <div id="reportContent"></div>
+  </div>
+</div>
+
+<!-- ✅ Footer -->
+<footer>
+  © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br />
+  <a href="terms.html">Terms</a> • 
+  <a href="privacy.html">Privacy</a> • 
+  <a href="refund-policy.html">Refund Policy</a>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+const API = "https://api.gradely.info/api/attendance";
+let currentSession = null;
+let currentStudents = [];
+let dirtyMap = new Map();
+let isPro = true; // ✅ Default to true; will check via API in production
+
+// Auth wrapper
+async function authFetch(url, opts = {}) {
+  const res = await fetch(url, {
+    ...opts,
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) }
+  });
+  if (res.status === 401) { window.location.href = 'admin-login.html'; return null; }
+  if (res.status === 403) {
+    // Pro feature gate
+    document.getElementById('proBanner').classList.add('upgrade');
+    document.getElementById('proBanner').style.display = 'flex';
+    throw new Error('Pro feature required');
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ✅ Check if school is Pro (simplified - replace with real API call in production)
+async function checkProFeature() {
+  try {
+    // In production, call: await authFetch('https://api.gradely.info/api/subscription/usage')
+    // For demo, we'll simulate:
+    const schoolPlan = localStorage.getItem('school_plan') || 'pro';
+    isPro = schoolPlan === 'pro';
+    
+    if (!isPro) {
+      document.getElementById('proBanner').style.display = 'flex';
+      // Disable interactive elements for Basic plan
+      document.querySelectorAll('.btn, select, input').forEach(el => {
+        if (!el.closest('#proBanner')) el.disabled = true;
+      });
+      document.getElementById('studentList').innerHTML = 
+        '<div class="empty-state">🔒 Attendance tracking is a Pro feature. <a href="upgrade.html" style="color:var(--primary);font-weight:600;">Upgrade now</a> to unlock.</div>';
+    }
+  } catch(e) {
+    console.warn('Pro check failed, defaulting to Pro mode');
+  }
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('sessionDate').value = today;
+  document.getElementById('newSessionDate').value = today;
+  
+  syncClassGroupSelectors();
+  checkProFeature(); // ✅ Check Pro status on load
+});
+
+function syncClassGroupSelectors() {
+  const classSelect = document.getElementById('className');
+  const groupSelect = document.getElementById('groupName');
+  const modalClass = document.getElementById('newSessionClass');
+  const modalGroup = document.getElementById('newSessionGroup');
+  
+  modalClass.value = classSelect.value;
+  classSelect.addEventListener('change', () => { modalClass.value = classSelect.value; });
+  modalClass.addEventListener('change', () => { classSelect.value = modalClass.value; });
+  
+  modalGroup.value = groupSelect.value;
+  groupSelect.addEventListener('change', () => { modalGroup.value = groupSelect.value; });
+  modalGroup.addEventListener('change', () => { groupSelect.value = modalGroup.value; });
+}
+
+function onClassOrGroupChange() {
+  currentSession = null;
+  currentStudents = [];
+  dirtyMap.clear();
+  document.getElementById('studentList').innerHTML = '<div class="empty-state">Select a date, then tap Load/Create to begin.</div>';
+  document.getElementById('sessionTitle').textContent = 'No session selected';
+  document.getElementById('sessionBadge').style.display = 'none';
+  document.getElementById('excusedBtn').disabled = true;
+  document.getElementById('saveBtn').disabled = true;
+  updateSummary();
+}
+
+async function loadOrCreateSession() {
+  if (!isPro) {
+    alert('Attendance tracking is a Pro feature. Please upgrade to continue.');
+    return;
+  }
+  
+  const classId = document.getElementById('className').value;
+  const group = document.getElementById('groupName').value;
+  const date = document.getElementById('sessionDate').value;
+  if (!date) return alert('Please select a date');
+
+  document.getElementById('studentList').innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading...</div>';
+  
+  try {
+    const sessionsRes = await authFetch(`${API}/sessions?start_date=${date}&end_date=${date}&class_id=${classId}${group ? '&group='+group : ''}`);
+    if (sessionsRes?.data?.length > 0) {
+      currentSession = sessionsRes.data[0];
+    } else {
+      document.getElementById('newSessionClass').value = classId;
+      document.getElementById('newSessionGroup').value = group || '';
+      document.getElementById('newSessionDate').value = date;
+      document.getElementById('newSessionName').value = `${classId} ${group ? group + ' ' : ''}Register`;
+      openModal('createModal');
+      return;
+    }
+    await loadSession(currentSession.id);
+  } catch(err) {
+    console.error(err);
+    if (err.message.includes('Pro')) return;
+    document.getElementById('studentList').innerHTML = `<div class="empty-state" style="color:var(--danger)">Error: ${err.message}<br><small>Tip: Ensure backend routes are mounted and database tables exist</small></div>`;
+  }
+}
+
+async function loadSession(sessionId) {
+  if (!isPro) return;
+  document.getElementById('studentList').innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading...</div>';
+  try {
+    const res = await authFetch(`${API}/sessions/${sessionId}/students`);
+    currentSession = res.data.session;
+    currentStudents = res.data.students;
+    dirtyMap.clear();
+    
+    renderSheet();
+    closeModal('createModal');
+  } catch(err) {
+    console.error(err);
+    if (err.message.includes('Pro')) return;
+    document.getElementById('studentList').innerHTML = `<div class="empty-state" style="color:var(--danger)">Failed to load session</div>`;
+  }
+}
+
+function renderSheet() {
+  const group = document.getElementById('groupName').value;
+  const groupLabel = group ? ` • Group ${group}` : '';
+  document.getElementById('sessionTitle').textContent = `${currentSession.session_name} (${currentSession.session_date})${groupLabel}`;
+  
+  const badge = document.getElementById('sessionBadge');
+  badge.style.display = 'inline-block';
+  badge.textContent = 'Active';
+  badge.className = 'badge';
+  
+  document.getElementById('excusedBtn').disabled = false;
+  
+  const list = document.getElementById('studentList');
+  if (!currentStudents.length) {
+    list.innerHTML = '<div class="empty-state">No students found for this class/group.</div>';
+    updateSummary();
+    return;
+  }
+  
+  list.innerHTML = currentStudents.map((s, i) => {
+    const status = s.attendance?.status || 'present';
+    const reasons = ['present','absent','late','excused'];
+    return `
+      <div class="student-row">
+        <div class="student-info" onclick="viewStudentReport('${s.student_id}')">
+          <div class="student-name">${s.first_name} ${s.last_name}</div>
+          <div class="student-id">${s.student_id} ${s.class_id ? '• ' + s.class_id : ''}</div>
+        </div>
+        <div class="status-toggles">
+          ${reasons.map(r => `
+            <div class="status-btn ${r} ${status === r ? '' : 'dim'}" 
+                 onclick="toggleStatus(${i}, '${r}')" 
+                 title="${r === 'excused' ? 'Parent-excused absence' : ''}">
+              ${r === 'present' ? '✔' : r === 'absent' ? '✖' : r === 'late' ? '⏰' : '📝'}
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }).join('');
+  
+  updateSummary();
+}
+
+function toggleStatus(index, status) {
+  if (!isPro) return;
+  const student = currentStudents[index];
+  const oldStatus = student.attendance?.status || 'present';
+  if (oldStatus === status) return;
+  
+  // If marking as excused, optionally add reason
+  let reason = null;
+  if (status === 'excused' && !student.attendance?.reason) {
+    reason = prompt('Enter excuse reason (optional):') || 'Parent request';
+  }
+  
+  student.attendance = { ...student.attendance, status, reason };
+  dirtyMap.set(student.student_id, { status, oldStatus, reason });
+  document.getElementById('saveBtn').disabled = false;
+  renderSheet();
+}
+
+// ✅ NEW: Mark selected students as Excused (with reason)
+async function markExcused() {
+  if (!isPro) return;
+  const reason = prompt('Enter excuse reason for absent students:') || 'Parent request';
+  if (!reason) return;
+  
+  // Find all absent students and mark them excused
+  const absentIndices = currentStudents
+    .map((s, i) => ({ s, i }))
+    .filter(({ s }) => s.attendance?.status === 'absent')
+    .map(({ i }) => i);
+  
+  if (absentIndices.length === 0) {
+    alert('No absent students to excuse.');
+    return;
+  }
+  
+  if (!confirm(`Mark ${absentIndices.length} absent student(s) as EXCUSED?\nReason: "${reason}"`)) return;
+  
+  absentIndices.forEach(i => {
+    const student = currentStudents[i];
+    student.attendance = { ...student.attendance, status: 'excused', reason };
+    dirtyMap.set(student.student_id, { status: 'excused', oldStatus: 'absent', reason });
+  });
+  
+  document.getElementById('saveBtn').disabled = false;
+  renderSheet();
+}
+
+async function markAll(status) {
+  if (!isPro || !currentSession) return;
+  if (!confirm(`Mark ALL ${currentStudents.length} students as ${status}?`)) return;
+  
+  document.getElementById('studentList').innerHTML = '<div class="loading-state"><div class="spinner"></div>Updating...</div>';
+  try {
+    await authFetch(`${API}/sessions/${currentSession.id}/mark-all`, { 
+      method: 'POST', 
+      body: JSON.stringify({ status }) 
+    });
+    await loadSession(currentSession.id);
+  } catch(err) {
+    if (err.message.includes('Pro')) return;
+    alert('Failed to update: ' + err.message);
+    renderSheet();
+  }
+}
+
+async function saveChanges() {
+  if (!isPro || dirtyMap.size === 0) return;
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('saveBtn').textContent = '⏳ Saving...';
+  
+  const promises = [];
+  dirtyMap.forEach((data, studentId) => {
+    promises.push(authFetch(`${API}/sessions/${currentSession.id}/students/${studentId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status: data.status, reason: data.reason })
+    }));
+  });
+  
+  try {
+    await Promise.all(promises);
+    dirtyMap.clear();
+    document.getElementById('saveBtn').textContent = '💾 Saved!';
+    setTimeout(() => { document.getElementById('saveBtn').textContent = '💾 Save'; }, 2000);
+    await loadSession(currentSession.id);
+  } catch(err) {
+    if (err.message.includes('Pro')) return;
+    alert('Save failed: ' + err.message);
+    document.getElementById('saveBtn').disabled = false;
+    document.getElementById('saveBtn').textContent = '💾 Save';
+  }
+}
+
+async function createSession() {
+  if (!isPro) return;
+  const name = document.getElementById('newSessionName').value.trim() || 'Daily Register';
+  const classId = document.getElementById('newSessionClass').value;
+  const group = document.getElementById('newSessionGroup').value || null;
+  const date = document.getElementById('newSessionDate').value;
+  
+  if (!date) return alert('Date is required');
+  
+  try {
+    const res = await authFetch(`${API}/sessions`, {
+      method: 'POST',
+      body: JSON.stringify({ 
+        session_name: name, 
+        class_id: classId,
+        group: group,
+        session_date: date 
+      })
+    });
+    currentSession = res.data;
+    await loadSession(currentSession.id);
+  } catch(err) {
+    if (err.message.includes('Pro')) return;
+    console.error('Create session error:', err);
+    alert(`Failed to create: ${err.message}\n\nTip: Ensure backend routes are mounted and database tables exist.`);
+  }
+}
+
+async function viewStudentReport(studentId) {
+  if (!isPro) return;
+  openModal('reportModal');
+  document.getElementById('reportContent').innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading report...</div>';
+  try {
+    const res = await authFetch(`${API}/reports/${studentId}?limit=20`);
+    const d = res.data;
+    document.getElementById('reportContent').innerHTML = `
+      <h4 style="margin-bottom:8px;">${d.student.first_name} ${d.student.last_name}</h4>
+      <div class="report-card">
+        <div class="report-stat"><span>Attendance Rate</span><strong>${d.summary.attendance_rate}%</strong></div>
+        <div class="report-stat"><span>Present</span><strong>${d.summary.present}</strong></div>
+        <div class="report-stat"><span>Absent</span><strong>${d.summary.absent}</strong></div>
+        <div class="report-stat"><span>Late</span><strong>${d.summary.late}</strong></div>
+        <div class="report-stat"><span>Excused</span><strong>${d.summary.excused || 0}</strong></div>
+        <div class="report-stat"><span>Total Sessions</span><strong>${d.summary.total_sessions}</strong></div>
+      </div>
+      <h5 style="margin:12px 0 8px;">Recent History</h5>
+      ${d.recent.map(r => `
+        <div class="report-log">
+          <strong>${r.session_name}</strong> (${r.session_date}) • 
+          <span style="color:${r.status==='present'?'var(--success)':r.status==='absent'?'var(--danger)':r.status==='excused'?'#9b59b6':'var(--warning)'}">${r.status.toUpperCase()}</span>
+          ${r.reason ? `<br><small style="color:#666;">${r.reason}</small>` : ''}
+        </div>
+      `).join('') || '<p style="color:#666;">No recent records.</p>'}
+    `;
+  } catch(err) {
+    if (err.message.includes('Pro')) return;
+    document.getElementById('reportContent').innerHTML = `<div class="empty-state" style="color:var(--danger)">Error: ${err.message}</div>`;
+  }
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function updateSummary() {
+  const counts = { present:0, absent:0, late:0, excused:0 };
+  currentStudents.forEach(s => counts[s.attendance?.status || 'present']++);
+  document.getElementById('summaryText').textContent = `${currentStudents.length} students • P:${counts.present} A:${counts.absent} L:${counts.late} E:${counts.excused}`;
+}
+
+// Close modals on outside click
+window.onclick = function(e) {
+  if (e.target.classList.contains('modal')) e.target.classList.remove('active');
+}
+
+// ✅ PDF Export
+function exportAttendance() {
+  if (!isPro || !currentSession) return alert('No session loaded');
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const className = document.getElementById('className').value;
+  const groupName = document.getElementById('groupName').value;
+  const groupLabel = groupName ? ` • Group ${groupName}` : '';
+  
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Attendance — ${currentSession.session_name}${groupLabel}`, 105, 20, null, null, 'center');
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Date: ${currentSession.session_date} | Class: ${className}`, 105, 28, null, null, 'center');
+  
+  const table = [['Student', 'ID', 'Status', 'Reason']];
+  currentStudents.forEach(s => {
+    const status = s.attendance?.status || 'present';
+    const reason = s.attendance?.reason || '-';
+    table.push([`${s.first_name} ${s.last_name}`, s.student_id, status.toUpperCase(), reason]);
+  });
+  
+  doc.autoTable({
+    startY: 35,
+    head: [table[0]],
+    body: table.slice(1),
+    theme: 'grid',
+    styles: { fontSize: 9, halign: 'left', valign: 'middle' },
+    headStyles: { fillColor: [52, 152, 219], textColor: 255 },
+    columnStyles: {
+      0: { cellWidth: 50 },
+      1: { cellWidth: 30 },
+      2: { cellWidth: 25, halign: 'center' },
+      3: { cellWidth: 40 }
+    }
+  });
+  
+  const counts = { present:0, absent:0, late:0, excused:0 };
+  currentStudents.forEach(s => counts[s.attendance?.status || 'present']++);
+  const finalY = doc.lastAutoTable.finalY + 10;
+  doc.text(`Summary: P=${counts.present} | A=${counts.absent} | L=${counts.late} | E=${counts.excused}`, 14, finalY);
+  
+  doc.save(`Attendance_${className}${groupName ? '_'+groupName : ''}_${currentSession.session_date}.pdf`);
+}
+</script>
+
+<script src="js/kaima-chatbot.js"></script>
+<script src="js/session-timeout.js"></script>
+
+</body>
+</html>
