@@ -82,20 +82,41 @@ button:hover { background: #2980b9; }
         <textarea id="message" placeholder="Write your announcement..."></textarea>
       </div>
 
-      <div class="toggle-row">
-        <label><input type="checkbox" id="send_sms" checked> SMS</label>
-        <label><input type="checkbox" id="send_email" checked> Email</label>
-      </div>
+      <!-- ✅ Template Selector (NEW) -->
+<div class="form-group" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+  <label style="font-weight: 600; margin-bottom: 6px; display: block;">📋 Use Template (Optional)</label>
+  <select id="templateSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; margin-bottom: 4px;">
+    <option value="">-- Create custom announcement --</option>
+    <!-- Templates loaded dynamically by loadTemplates() -->
+  </select>
+  <small id="templatePreview" style="color: #666; display: block; margin-top: 4px; font-style: italic; min-height: 1.2em;"></small>
+  <button type="button" onclick="openTemplateManager()" style="margin-top: 8px; background: #7f8c8d; color: white; padding: 8px 16px; font-size: 0.9rem; border: none; border-radius: 6px; cursor: pointer;">⚙️ Manage Templates</button>
+</div>
 
-      <button type="button" onclick="postAnnouncement()">Post Announcement</button>
-      <a class="back-link" href="dashboard.html">← Back to Dashboard</a>
-    </div>
+<div class="toggle-row">
+  <label><input type="checkbox" id="send_sms" checked> SMS</label>
+  <label><input type="checkbox" id="send_email" checked> Email</label>
+</div>
+
+<!-- ✅ Send Buttons (NEW) -->
+<div style="display: flex; gap: 12px; justify-content: center; margin: 10px 0;">
+  <button type="button" onclick="postAnnouncement()" style="flex: 1; background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">Post Custom</button>
+  <button type="button" onclick="sendWithTemplate()" style="flex: 1; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;" id="sendTemplateBtn" disabled>Send via Template</button>
+</div>
+
+<a class="back-link" href="dashboard.html">← Back to Dashboard</a>
+<!-- ✅ Delivery Reports Link (NEW) -->
+<a class="back-link" href="#" onclick="openDeliveryReports(); return false;" style="margin-top: 8px; display: block;">📊 View Delivery Reports</a>
 
     <div id="announcementsList">
       <p style="text-align:center; color:#888;">Loading announcements...</p>
     </div>
 
   </div>
+</div>
+
+
+ </div>
 </div>
 
 <div class="footer">
@@ -237,7 +258,307 @@ async function postAnnouncement() {
     alert("Failed to post announcement. Check console for details.");
   }
 }
+
+
+
+
+// =====================================================
+// ✅ TEMPLATE MANAGEMENT FUNCTIONS (NEW)
+// =====================================================
+
+let templates = [];
+
+async function loadTemplates() {
+  try {
+    const res = await fetch(`${API_BASE}/api/announcement/templates`, {
+      credentials: 'include'
+    });
+    if (!res.ok) throw new Error('Failed to load templates');
+    
+    const result = await res.json();
+    templates = result.data || [];
+    
+    // Populate template selector
+    const select = document.getElementById('templateSelect');
+    select.innerHTML = '<option value="">-- Create custom announcement --</option>';
+    templates.forEach(t => {
+      select.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+    });
+    
+    // Populate template manager list
+    renderTemplatesList();
+    
+  } catch (err) {
+    console.error('❌ Load templates error:', err);
+  }
+}
+
+function renderTemplatesList() {
+  const container = document.getElementById('templatesList');
+  if (!templates.length) {
+    container.innerHTML = '<p style="text-align: center; color: #888;">No templates yet. Create one above.</p>';
+    return;
+  }
+  
+  container.innerHTML = templates.map(t => `
+    <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid #3498db;">
+      <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+          <strong>${t.name}</strong>
+          <div style="font-size: 0.85rem; color: #666; margin: 4px 0;">${t.description || 'No description'}</div>
+          <div style="font-size: 0.8rem; color: #888;">
+            ${t.default_channels?.map(c => c.toUpperCase()).join(', ') || 'SMS'} • 
+            ${t.default_recipient_type?.replace('_', ' ') || 'All parents'}
+          </div>
+        </div>
+        <button onclick="deleteTemplate(${t.id})" style="background: #e74c3c; padding: 4px 10px; font-size: 0.8rem;">🗑️</button>
+      </div>
+      <div style="margin-top: 8px; font-size: 0.85rem;">
+        <strong>SMS:</strong> <code style="background: #eee; padding: 2px 6px; border-radius: 4px;">${t.template_sms?.substring(0, 60)}${t.template_sms?.length > 60 ? '...' : ''}</code>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openTemplateManager() {
+  document.getElementById('templateModal').style.display = 'block';
+  loadTemplates();
+}
+
+function closeTemplateManager() {
+  document.getElementById('templateModal').style.display = 'none';
+}
+
+async function createTemplate() {
+  const name = document.getElementById('newTemplateName').value.trim();
+  const template_sms = document.getElementById('newTemplateSMS').value.trim();
+  const template_email_subject = document.getElementById('newTemplateEmailSubject').value.trim();
+  const template_email_body = document.getElementById('newTemplateEmailBody').value.trim();
+  const default_channels = [];
+  if (document.getElementById('newTemplateSMSChannel').checked) default_channels.push('sms');
+  if (document.getElementById('newTemplateEmailChannel').checked) default_channels.push('email');
+  
+  if (!name || !template_sms) {
+    alert('Name and SMS template are required');
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${API_BASE}/api/announcement/templates`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        template_sms,
+        template_email_subject: template_email_subject || null,
+        template_email_body: template_email_body || null,
+        default_channels: default_channels.length ? default_channels : ['sms'],
+        default_recipient_type: 'all_parents'
+      })
+    });
+    
+    if (!res.ok) throw new Error('Failed to create template');
+    
+    alert('✅ Template created!');
+    // Clear form
+    document.getElementById('newTemplateName').value = '';
+    document.getElementById('newTemplateSMS').value = '';
+    document.getElementById('newTemplateEmailSubject').value = '';
+    document.getElementById('newTemplateEmailBody').value = '';
+    // Reload
+    loadTemplates();
+    
+  } catch (err) {
+    console.error('❌ Create template error:', err);
+    alert('Failed to create template');
+  }
+}
+
+async function deleteTemplate(id) {
+  if (!confirm('Deactivate this template?')) return;
+  
+  try {
+    const res = await fetch(`${API_BASE}/api/announcement/templates/${id}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    
+    if (!res.ok) throw new Error('Failed to delete template');
+    
+    alert('✅ Template deactivated');
+    loadTemplates();
+    
+  } catch (err) {
+    console.error('❌ Delete template error:', err);
+    alert('Failed to delete template');
+  }
+}
+
+// Template selector change handler
+document.getElementById('templateSelect')?.addEventListener('change', function() {
+  const template = templates.find(t => t.id == this.value);
+  const preview = document.getElementById('templatePreview');
+  const sendBtn = document.getElementById('sendTemplateBtn');
+  
+  if (template) {
+    preview.textContent = `SMS: ${template.template_sms?.substring(0, 80)}${template.template_sms?.length > 80 ? '...' : ''}`;
+    sendBtn.disabled = false;
+  } else {
+    preview.textContent = '';
+    sendBtn.disabled = true;
+  }
+});
+
+async function sendWithTemplate() {
+  const template_id = document.getElementById('templateSelect').value;
+  if (!template_id) {
+    alert('Please select a template first');
+    return;
+  }
+  
+  const send_sms = document.getElementById('send_sms').checked;
+  const send_email = document.getElementById('send_email').checked;
+  
+  if (!send_sms && !send_email) {
+    alert('Choose SMS or Email');
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${API_BASE}/api/announcement/send-with-template`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        template_id,
+        recipient_type: 'all_parents',
+        channels: [send_sms ? 'sms' : null, send_email ? 'email' : null].filter(Boolean)
+      })
+    });
+    
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Send failed');
+    }
+    
+    const result = await res.json();
+    alert(`✅ Announcement sent!\n📱 SMS: ${result.data.sms_sent}\n📧 Email: ${result.data.email_sent}\n❌ Failed: ${result.data.failed}`);
+    
+    // Reload announcements list
+    loadAnnouncements();
+    
+  } catch (err) {
+    console.error('❌ Send with template error:', err);
+    alert(`Failed: ${err.message}`);
+  }
+}
+
+// =====================================================
+// ✅ DELIVERY REPORTS FUNCTIONS (NEW)
+// =====================================================
+
+async function openDeliveryReports() {
+  document.getElementById('reportsModal').style.display = 'block';
+  await loadAnnouncementsForReport();
+}
+
+function closeDeliveryReports() {
+  document.getElementById('reportsModal').style.display = 'none';
+}
+
+async function loadAnnouncementsForReport() {
+  try {
+    const res = await fetch(`${API_BASE}/api/announcement`, {
+      credentials: 'include'
+    });
+    if (!res.ok) throw new Error('Failed to load announcements');
+    
+    const announcements = await res.json();
+    const select = document.getElementById('reportAnnouncementSelect');
+    select.innerHTML = '<option value="">-- Select an announcement --</option>';
+    
+    announcements.forEach(a => {
+      select.innerHTML += `<option value="${a.id}">${a.title} (${new Date(a.created_at).toLocaleDateString()})</option>`;
+    });
+    
+  } catch (err) {
+    console.error('❌ Load announcements for report error:', err);
+  }
+}
+
+async function loadDeliveryReport() {
+  const announcement_id = document.getElementById('reportAnnouncementSelect').value;
+  if (!announcement_id) return;
+  
+  try {
+    const res = await fetch(`${API_BASE}/api/announcement/reports/${announcement_id}`, {
+      credentials: 'include'
+    });
+    if (!res.ok) throw new Error('Failed to load report');
+    
+    const result = await res.json();
+    const { announcement, summary, logs, pagination } = result.data;
+    
+    // Show summary
+    const summaryEl = document.getElementById('reportSummary');
+    summaryEl.style.display = 'block';
+    summaryEl.innerHTML = `
+      <strong>${announcement.title}</strong><br>
+      <small style="color: #666;">Sent: ${new Date(announcement.created_at).toLocaleString()}</small><br>
+      <div style="margin-top: 8px; display: flex; gap: 16px; flex-wrap: wrap;">
+        ${summary.filter(s => s.status === 'sent').map(s => 
+          `<span style="background: #27ae60; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">${s.channel.toUpperCase()}: ${s.count} ✔</span>`
+        ).join('')}
+        ${summary.filter(s => s.status === 'failed').map(s => 
+          `<span style="background: #e74c3c; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">${s.channel.toUpperCase()}: ${s.count} ❌</span>`
+        ).join('')}
+      </div>
+    `;
+    
+    // Show logs
+    const logsEl = document.getElementById('reportLogs');
+    if (!logs.length) {
+      logsEl.innerHTML = '<p style="text-align: center; color: #888;">No delivery logs yet.</p>';
+      return;
+    }
+    
+    logsEl.innerHTML = logs.map(l => `
+      <div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: start;">
+        <div>
+          <strong>${l.first_name || ''} ${l.last_name || ''}</strong> 
+          <small style="color: #666;">(${l.recipient_identifier})</small><br>
+          <small style="color: #888;">${l.channel.toUpperCase()} • ${new Date(l.sent_at).toLocaleString()}</small>
+          ${l.error_message ? `<div style="color: #e74c3c; font-size: 0.85rem; margin-top: 4px;">❌ ${l.error_message}</div>` : ''}
+        </div>
+        <span style="padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; ${
+          l.status === 'sent' ? 'background: #27ae60; color: white' : 
+          l.status === 'failed' ? 'background: #e74c3c; color: white' : 
+          'background: #f39c12; color: white'
+        }">${l.status.toUpperCase()}</span>
+      </div>
+    `).join('');
+    
+  } catch (err) {
+    console.error('❌ Load delivery report error:', err);
+    document.getElementById('reportLogs').innerHTML = '<p style="text-align: center; color: #e74c3c;">Error loading report.</p>';
+  }
+}
+
+// =====================================================
+// ✅ INIT: Load templates on page load
+// =====================================================
+window.addEventListener('DOMContentLoaded', () => {
+  // Existing login check and loadAnnouncements() call remains...
+  // Add template loading:
+  loadTemplates();
+});
+
+
+
+
 </script>
+
 
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
