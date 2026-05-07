@@ -26,7 +26,8 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html,
+body {
   height: 100%;
 }
 
@@ -48,22 +49,22 @@ body {
 
 /* Header */
 header {
-  margin-bottom: 34px;
+  margin-bottom: 40px;
 }
 
 h1 {
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   font-weight: 700;
-  margin-bottom: 22px;
+  margin-bottom: 30px;
 }
 
-/* Class Grid */
+/* Grid */
 .class-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 14px;
-  margin-top: 12px;
-  margin-bottom: 24px;
+  margin-top: 18px;
+  margin-bottom: 30px;
 }
 
 .class-tile {
@@ -72,7 +73,7 @@ h1 {
   border-radius: 10px;
   text-align: center;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: 0.2s;
   border: 2px solid transparent;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
@@ -122,14 +123,14 @@ h1 {
 
 .search-box input {
   flex: 1;
-  padding: 10px;
+  padding: 11px;
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 0.95rem;
 }
 
 .search-box button {
-  padding: 10px 14px;
+  padding: 10px 18px;
   background: var(--primary);
   color: white;
   border: none;
@@ -208,10 +209,10 @@ h1 {
   color: white;
 }
 
-/* ✅ Bottom Back Links (Moved from header) */
-.bottom-nav {
-  margin-top: 24px;
-  padding-top: 16px;
+/* Bottom Back Button */
+.bottom-back-container {
+  margin-top: 50px;
+  padding-top: 18px;
   border-top: 1px solid var(--border);
 }
 
@@ -221,6 +222,7 @@ h1 {
   font-weight: 600;
   text-decoration: none;
   font-size: 0.95rem;
+  cursor: pointer;
 }
 
 .bottom-back:hover {
@@ -273,7 +275,7 @@ footer a {
 @media (max-width: 600px) {
 
   .container {
-    padding: 18px 12px 28px;
+    padding: 18px 12px 30px;
   }
 
   .class-grid {
@@ -291,10 +293,6 @@ footer a {
 
   .search-box button {
     width: 100%;
-  }
-
-  h1 {
-    margin-bottom: 18px;
   }
 }
 </style>
@@ -346,12 +344,9 @@ footer a {
 
   </div>
 
-  <!-- ✅ Bottom Navigation (Back Buttons) -->
-  <div class="bottom-nav">
-    <!-- Grid View Back Button -->
-    <a id="gridBackBtn" href="manage-classes.html" class="bottom-back">← Back to Classes</a>
-    <!-- Detail View Back Button (hidden by default) -->
-    <a id="detailBackBtn" href="javascript:void(0)" class="bottom-back" onclick="showGrid()" style="display: none;">← Back to Classes</a>
+  <!-- ✅ WORKING BACK BUTTON AT BOTTOM -->
+  <div class="bottom-back-container">
+    <span class="bottom-back" id="bottomBackBtn">← Back</span>
   </div>
 
 </div>
@@ -386,6 +381,7 @@ let searchTimeout = null;
 
 /* Auth */
 async function authFetch(url, opts = {}) {
+
   const res = await fetch(url, {
     ...opts,
     credentials: 'include',
@@ -400,13 +396,45 @@ async function authFetch(url, opts = {}) {
     return null;
   }
 
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  /* ✅ FIXED HTTP 500 CRASH */
+  if (!res.ok) {
+
+    let errorMessage = `HTTP ${res.status}`;
+
+    try {
+      const errorData = await res.json();
+
+      if (errorData.message) {
+        errorMessage = errorData.message;
+      }
+
+    } catch(e) {}
+
+    throw new Error(errorMessage);
+  }
 
   return res.json();
 }
 
 /* Init */
-document.addEventListener('DOMContentLoaded', renderGrid);
+document.addEventListener('DOMContentLoaded', () => {
+
+  renderGrid();
+
+  /* ✅ SMART BACK BUTTON */
+  document.getElementById('bottomBackBtn').addEventListener('click', () => {
+
+    if (currentClass) {
+
+      showGrid();
+
+    } else {
+
+      window.location.href = 'manage-classes.html';
+    }
+  });
+
+});
 
 /* Render Grid */
 function renderGrid() {
@@ -425,7 +453,10 @@ function renderGrid() {
 
 /* Counts */
 async function loadAllCounts() {
-  CLASSES.forEach(c => loadClassCount(c.id));
+
+  CLASSES.forEach(c => {
+    loadClassCount(c.id);
+  });
 }
 
 async function loadClassCount(classId) {
@@ -434,7 +465,9 @@ async function loadClassCount(classId) {
 
     const res = await authFetch(`${API}/${classId}/students`);
 
-    const count = (res.data || []).length;
+    const count = Array.isArray(res.data)
+      ? res.data.length
+      : 0;
 
     const el = document.getElementById(`count-${classId}`);
 
@@ -460,19 +493,14 @@ function openClass(classId, className) {
     name: className
   };
 
-  // ✅ Toggle views
   document.getElementById('gridView').style.display = 'none';
+
   document.getElementById('detailView').classList.add('active');
-  
-  // ✅ Toggle back buttons
-  document.getElementById('gridBackBtn').style.display = 'none';
-  document.getElementById('detailBackBtn').style.display = 'inline-block';
 
   document.getElementById('detailClassName').textContent = className;
 
   document.getElementById('searchInput').value = '';
 
-  // ✅ Fixed typo here
   document.getElementById('searchResults').innerHTML = `
     <div class="empty-state">
       Type a student's name or ID to update or assign a class
@@ -480,25 +508,32 @@ function openClass(classId, className) {
   `;
 
   loadAssignedStudents(classId);
+
+  /* ✅ Scroll page up */
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 }
 
 /* Show Grid */
 function showGrid() {
 
-  // ✅ Toggle views
-  document.getElementById('detailView').classList.remove('active');
-  document.getElementById('gridView').style.display = 'grid';
-  
-  // ✅ Toggle back buttons
-  document.getElementById('gridBackBtn').style.display = 'inline-block';
-  document.getElementById('detailBackBtn').style.display = 'none';
-
   currentClass = null;
 
+  document.getElementById('detailView').classList.remove('active');
+
+  document.getElementById('gridView').style.display = 'grid';
+
   loadAllCounts();
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 }
 
-/* Load Assigned Students */
+/* Load Students */
 async function loadAssignedStudents(classId) {
 
   const list = document.getElementById('assignedList');
@@ -514,7 +549,9 @@ async function loadAssignedStudents(classId) {
 
     const res = await authFetch(`${API}/${classId}/students`);
 
-    const students = res.data || [];
+    const students = Array.isArray(res.data)
+      ? res.data
+      : [];
 
     if (students.length === 0) {
 
@@ -532,21 +569,23 @@ async function loadAssignedStudents(classId) {
 
         <div class="student-info">
           <div class="student-name">
-            ${s.first_name} ${s.last_name}
+            ${s.first_name || ''} ${s.last_name || ''}
           </div>
 
           <div class="student-id">
-            ${s.student_id}
+            ${s.student_id || ''}
           </div>
         </div>
 
         <div class="student-actions">
+
           <button
             class="btn-sm btn-remove"
             onclick="removeStudent('${s.student_id}')"
           >
             Remove
           </button>
+
         </div>
 
       </div>
@@ -554,25 +593,16 @@ async function loadAssignedStudents(classId) {
 
   } catch (err) {
 
-    // ✅ Better error handling for 404
-    if (err.message.includes('404')) {
-      list.innerHTML = `
-        <div class="empty-state" style="color:var(--danger)">
-          Class roster endpoint not ready yet.<br>
-          <small>Ensure /api/classes/:id/students route is mounted.</small>
-        </div>
-      `;
-    } else {
-      list.innerHTML = `
-        <div class="empty-state" style="color:var(--danger)">
-          Error: ${err.message}
-        </div>
-      `;
-    }
+    list.innerHTML = `
+      <div class="empty-state" style="color:var(--danger)">
+        Failed to load students.<br>
+        <small>${err.message}</small>
+      </div>
+    `;
   }
 }
 
-/* Search Input */
+/* Search */
 function handleSearchInput() {
 
   clearTimeout(searchTimeout);
@@ -582,7 +612,6 @@ function handleSearchInput() {
   }, 300);
 }
 
-/* Search Students */
 async function searchStudents() {
 
   if (!currentClass) return;
@@ -591,7 +620,6 @@ async function searchStudents() {
 
   if (query.length < 2) {
 
-    // ✅ Fixed typo here too
     document.getElementById('searchResults').innerHTML = `
       <div class="empty-state">
         Type at least 2 characters
@@ -612,18 +640,20 @@ async function searchStudents() {
 
   try {
 
-    /* ✅ Fixed 404: Added class_id param to exclude assigned students */
+    /* ✅ FIXED SEARCH ENDPOINT */
     const res = await authFetch(
-      `${API}/students/search?q=${encodeURIComponent(query)}&class_id=${currentClass.id}`
+      `${API}/students/search?q=${encodeURIComponent(query)}`
     );
 
-    const students = res.data || [];
+    const students = Array.isArray(res.data)
+      ? res.data
+      : [];
 
     if (students.length === 0) {
 
       resultsDiv.innerHTML = `
         <div class="empty-state">
-          No unassigned students found
+          No students found
         </div>
       `;
 
@@ -637,11 +667,11 @@ async function searchStudents() {
         <div class="student-info">
 
           <div class="student-name">
-            ${s.first_name} ${s.last_name}
+            ${s.first_name || ''} ${s.last_name || ''}
           </div>
 
           <div class="student-id">
-            ${s.student_id}
+            ${s.student_id || ''}
           </div>
 
         </div>
@@ -663,25 +693,16 @@ async function searchStudents() {
 
   } catch (err) {
 
-    // ✅ Better error handling for 404
-    if (err.message.includes('404')) {
-      resultsDiv.innerHTML = `
-        <div class="empty-state" style="color:var(--danger)">
-          Search endpoint not ready yet.<br>
-          <small>Ensure /api/classes/students/search route is mounted.</small>
-        </div>
-      `;
-    } else {
-      resultsDiv.innerHTML = `
-        <div class="empty-state" style="color:var(--danger)">
-          Search failed: ${err.message}
-        </div>
-      `;
-    }
+    resultsDiv.innerHTML = `
+      <div class="empty-state" style="color:var(--danger)">
+        Search failed.<br>
+        <small>${err.message}</small>
+      </div>
+    `;
   }
 }
 
-/* Assign Student */
+/* Assign */
 async function assignStudent(studentId) {
 
   if (!currentClass) return;
@@ -697,7 +718,6 @@ async function assignStudent(studentId) {
 
     document.getElementById('searchInput').value = '';
 
-    // ✅ Fixed typo here as well
     document.getElementById('searchResults').innerHTML = `
       <div class="empty-state">
         Type a student's name or ID to update or assign a class
@@ -712,7 +732,7 @@ async function assignStudent(studentId) {
   }
 }
 
-/* Remove Student */
+/* Remove */
 async function removeStudent(studentId) {
 
   if (!currentClass) return;
