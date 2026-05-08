@@ -805,25 +805,39 @@ async function loadAnnouncementsForReport() {
 }
 
 async function loadDeliveryReport() {
-  const announcement_id = document.getElementById('reportAnnouncementSelect').value;
+  const announcement_id = document.getElementById('reportAnnouncementSelect')?.value;
   const reportSummary = document.getElementById('reportSummary');
   const reportLogs = document.getElementById('reportLogs');
   
+  // ✅ Clear previous state
+  if (reportSummary) reportSummary.style.display = 'none';
+  if (reportLogs) reportLogs.innerHTML = '';
+  
   if (!announcement_id) {
-    reportSummary.style.display = 'none';
-    reportLogs.innerHTML = '';
+    if (reportLogs) reportLogs.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">Select an announcement to view its delivery report</p>';
     return;
   }
   
   try {
     console.log('🔍 Fetching delivery report for announcement:', announcement_id);
-    const res = await fetch(`${API_BASE}/api/announcement/reports/${announcement_id}`, { credentials: 'include' });
     
+    const res = await fetch(`${API_BASE}/api/announcement/reports/${announcement_id}`, { 
+      credentials: 'include' 
+    });
+    
+    // ✅ Handle 404 gracefully (endpoint not ready or no logs)
     if (res.status === 404) {
-      console.error('❌ 404: Delivery report endpoint not found or announcement has no delivery logs');
-      reportSummary.style.display = 'block';
-      reportSummary.innerHTML = `<strong style="color: #e74c3c;">⚠️ No delivery tracking available</strong><br><small style="color: #666;">This announcement was sent before delivery tracking was implemented, or the endpoint is not configured.</small>`;
-      reportLogs.innerHTML = '';
+      console.log('ℹ️ 404: Delivery report not available yet');
+      if (reportSummary) {
+        reportSummary.style.display = 'block';
+        reportSummary.innerHTML = `
+          <div style="text-align:center;padding:20px;color:#666;">
+            <div style="font-size:2rem;margin-bottom:10px;">📊</div>
+            <p><strong>Delivery reports coming soon!</strong></p>
+            <p style="font-size:0.9rem;">This feature is being prepared. Check back later for detailed delivery stats.</p>
+          </div>
+        `;
+      }
       return;
     }
     
@@ -832,34 +846,138 @@ async function loadDeliveryReport() {
     const result = await res.json();
     console.log('✅ Delivery report loaded:', result);
     
-    const { announcement, summary, logs } = result.data || {};
-    
-    if (!announcement) {
-      reportSummary.style.display = 'block';
-      reportSummary.innerHTML = `<strong style="color: #e74c3c;">⚠️ Announcement not found</strong>`;
-      reportLogs.innerHTML = '';
+    // ✅ Handle backend "table not ready" message
+    if (result.data?.message) {
+      if (reportSummary) {
+        reportSummary.style.display = 'block';
+        reportSummary.innerHTML = `
+          <div style="text-align:center;padding:20px;color:#666;">
+            <div style="font-size:2rem;margin-bottom:10px;">📊</div>
+            <p><strong>${result.data.message}</strong></p>
+          </div>
+        `;
+      }
       return;
     }
     
-    const summaryEl = document.getElementById('reportSummary');
-    summaryEl.style.display = 'block';
-    summaryEl.innerHTML = `<strong>${announcement.title || 'Untitled'}</strong><br><small style="color: #666;">Sent: ${new Date(announcement.created_at).toLocaleString()}</small><br><div style="margin-top: 8px; display: flex; gap: 16px; flex-wrap: wrap;">${(summary || []).filter(s => s.status === 'sent').map(s => `<span style="background: #27ae60; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">${(s.channel || 'N/A').toUpperCase()}: ${s.count || 0} ✔</span>`).join('')}${(summary || []).filter(s => s.status === 'failed').map(s => `<span style="background: #e74c3c; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">${(s.channel || 'N/A').toUpperCase()}: ${s.count || 0} ❌</span>`).join('')}</div>`;
-    
-    const logsEl = document.getElementById('reportLogs');
-    if (!logs || !logs.length) { 
-      logsEl.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">No delivery logs yet. The announcement may still be processing.</p>'; 
-      return; 
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to load report');
     }
     
-    logsEl.innerHTML = logs.map(l => `<div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: start;"><div><strong>${l.first_name || ''} ${l.last_name || ''}</strong> <small style="color: #666;">(${l.recipient_identifier || 'N/A'})</small><br><small style="color: #888;">${(l.channel || 'N/A').toUpperCase()} • ${l.sent_at ? new Date(l.sent_at).toLocaleString() : 'N/A'}</small>${l.error_message ? `<div style="color: #e74c3c; font-size: 0.85rem; margin-top: 4px;">❌ ${l.error_message}</div>` : ''}</div><span style="padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; ${l.status === 'sent' ? 'background: #27ae60; color: white' : l.status === 'failed' ? 'background: #e74c3c; color: white' : 'background: #f39c12; color: white'}">${(l.status || 'pending').toUpperCase()}</span></div>`).join('');
+    const { announcement, summary, logs, pagination } = result.data || {};
+    
+    if (!announcement) {
+      if (reportSummary) {
+        reportSummary.style.display = 'block';
+        reportSummary.innerHTML = `<strong style="color:#e74c3c;">⚠️ Announcement not found</strong>`;
+      }
+      return;
+    }
+    
+    // ✅ Render summary section
+    if (reportSummary) {
+      reportSummary.style.display = 'block';
+      
+      // Calculate totals
+      const sentSMS = summary?.find(s => s.channel === 'sms' && s.status === 'sent')?.count || 0;
+      const sentEmail = summary?.find(s => s.channel === 'email' && s.status === 'sent')?.count || 0;
+      const failed = summary?.filter(s => s.status === 'failed').reduce((sum, s) => sum + (s.count || 0), 0) || 0;
+      const total = (sentSMS + sentEmail + failed) || announcement.recipient_count || 0;
+      const successRate = total > 0 ? Math.round(((sentSMS + sentEmail) / total) * 100) : 0;
+      
+      reportSummary.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <div>
+            <strong style="font-size:1.1rem;">${announcement.title || 'Untitled Announcement'}</strong>
+            <div style="font-size:0.85rem;color:#666;margin-top:4px;">
+              Sent: ${announcement.created_at ? new Date(announcement.created_at).toLocaleString('en-NG') : 'N/A'}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${sentSMS > 0 ? `<span style="background:#27ae60;color:white;padding:6px 12px;border-radius:20px;font-size:0.85rem;font-weight:600;">📱 SMS: ${sentSMS} ✔</span>` : ''}
+            ${sentEmail > 0 ? `<span style="background:#3498db;color:white;padding:6px 12px;border-radius:20px;font-size:0.85rem;font-weight:600;">✉️ Email: ${sentEmail} ✔</span>` : ''}
+            ${failed > 0 ? `<span style="background:#e74c3c;color:white;padding:6px 12px;border-radius:20px;font-size:0.85rem;font-weight:600;">❌ Failed: ${failed}</span>` : ''}
+            <span style="background:#9b59b6;color:white;padding:6px 12px;border-radius:20px;font-size:0.85rem;font-weight:600;">📈 ${successRate}% Success</span>
+          </div>
+        </div>
+      `;
+    }
+    
+    // ✅ Render logs section
+    if (reportLogs) {
+      if (!logs || logs.length === 0) { 
+        reportLogs.innerHTML = `
+          <p style="text-align:center;color:#888;padding:30px;">
+            📭 No delivery logs yet.<br>
+            <small style="color:#666;">The announcement may still be processing, or delivery tracking wasn't enabled.</small>
+          </p>
+        `;
+        return; 
+      }
+      
+      reportLogs.innerHTML = logs.map(l => {
+        const statusStyles = {
+          sent: 'background:#27ae60;color:white',
+          failed: 'background:#e74c3c;color:white',
+          pending: 'background:#f39c12;color:white',
+          partial: 'background:#9b59b6;color:white'
+        };
+        const statusIcon = {
+          sent: '✔',
+          failed: '❌',
+          pending: '⏳',
+          partial: '⚠️'
+        };
+        
+        return `
+          <div style="padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:start;gap:12px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:600;color:#2c3e50;">
+                ${l.first_name?.trim() || ''} ${l.last_name?.trim() || ''}
+                ${l.student_id ? `<small style="color:#666;font-weight:normal;margin-left:6px;">(${l.student_id})</small>` : ''}
+              </div>
+              <div style="font-size:0.85rem;color:#666;margin-top:4px;">
+                ${l.recipient_identifier || 'N/A'} • 
+                ${(l.channel || 'N/A').toUpperCase()} • 
+                ${l.sent_at ? new Date(l.sent_at).toLocaleString('en-NG') : 'N/A'}
+              </div>
+              ${l.error_message ? `<div style="color:#e74c3c;font-size:0.85rem;margin-top:6px;background:#fdedec;padding:6px 10px;border-radius:6px;">❌ ${l.error_message}</div>` : ''}
+            </div>
+            <span style="padding:6px 14px;border-radius:20px;font-size:0.85rem;font-weight:600;white-space:nowrap;${statusStyles[l.status] || 'background:#95a5a6;color:white'}">
+              ${statusIcon[l.status] || '•'} ${(l.status || 'pending').toUpperCase()}
+            </span>
+          </div>
+        `;
+      }).join('');
+      
+      // ✅ Add pagination info if available
+      if (pagination?.totalPages > 1) {
+        reportLogs.innerHTML += `
+          <div style="text-align:center;padding:12px;color:#666;font-size:0.85rem;border-top:1px solid #f1f5f9;">
+            Page ${pagination.page} of ${pagination.totalPages} • 
+            ${pagination.total} total records
+          </div>
+        `;
+      }
+    }
     
   } catch (err) { 
     console.error('❌ Load delivery report error:', err); 
-    document.getElementById('reportSummary').style.display = 'block';
-    document.getElementById('reportSummary').innerHTML = `<strong style="color: #e74c3c;">❌ Error loading report</strong><br><small style="color: #666;">${err.message}</small>`;
-    document.getElementById('reportLogs').innerHTML = '';
+    
+    if (reportSummary) {
+      reportSummary.style.display = 'block';
+      reportSummary.innerHTML = `
+        <div style="text-align:center;padding:20px;color:#e74c3c;">
+          <strong>❌ Error loading report</strong><br>
+          <small style="color:#666;">${err.message || 'Please try again later'}</small>
+        </div>
+      `;
+    }
+    if (reportLogs) reportLogs.innerHTML = '';
   }
 }
+
+
 </script>
 
 <script src="js/kaima-chatbot.js"></script>
