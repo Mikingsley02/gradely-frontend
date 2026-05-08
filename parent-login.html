@@ -432,18 +432,34 @@
     body: JSON.stringify({ student_id: studentId, password: password })
   })
   .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      localStorage.setItem("studentId", data.parent.student_id);
-      localStorage.setItem("studentData", JSON.stringify(data.parent));
-      window.location.href = 'student.html';
-    } else {
-      alert('Login failed: ' + data.message);
-      // ✅ Re-enable button on error
+    .then(data => {
+    // ✅ First check if login was successful
+    if (!data.success) {
+      alert('Login failed: ' + (data.message || 'Please check your credentials'));
       loginBtn.classList.remove('loading');
       loginBtn.disabled = false;
+      return;
     }
+    
+    // ✅ Safely access nested parent object
+    const parent = data.parent || data.student || {};
+    
+    if (!parent.student_id) {
+      console.error('❌ Parent data missing student_id:', data);
+      alert('Account data incomplete. Please contact your school.');
+      loginBtn.classList.remove('loading');
+      loginBtn.disabled = false;
+      return;
+    }
+    
+    // ✅ Safe storage and redirect
+    localStorage.setItem("studentId", parent.student_id);
+    localStorage.setItem("studentData", JSON.stringify(parent));
+    
+    // Show success and redirect
+    window.location.href = 'student.html';
   })
+  
   .catch(error => {
     console.error('Login error:', error);
     alert('Login failed. Please check your credentials and try again.');
