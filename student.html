@@ -96,12 +96,21 @@
       color: #555;
       margin-top: 20px;
     }
-    .message {
-      text-align: center;
-      padding: 20px;
-      color: #777;
-      font-style: italic;
-    }
+
+    /* ✅ Professional empty state styling */
+.message {
+  text-align: center;
+  padding: 30px 20px;
+  color: #555;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.message::before {
+  content: "ℹ️ ";
+  margin-right: 6px;
+}
+
 
     /* Added for password section */
     .change-password-section,
@@ -243,44 +252,49 @@
 
         const data = await response.json();
 
-        if (!data.success) {
+                if (!data.success) {
           document.getElementById("resultsBody").innerHTML =
-            `<tr><td colspan="5" class="message">${data.message || "No results available."}</td></tr>`;
+            `<tr><td colspan="5" class="message">${data.message || "Unable to load results."}</td></tr>`;
+          // ✅ Still show student info if available, even on error
+          if (data.student) {
+            const student = data.student;
+            document.getElementById("studentName").textContent = 
+              `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Student';
+            document.getElementById("studentClass").textContent = student.class || 'Not assigned';
+          }
           return;
         }
 
-                currentData = data;
-
-        // ✅ SAFEGUARD: Ensure student data exists before accessing properties
+        currentData = data;
         const student = data.student || {};
         
-        document.getElementById("schoolName").textContent =
-          data.school_name || "Gradely School";
-
+        // ✅ Always show actual student data if available
+        document.getElementById("schoolName").textContent = data.school_name || "Gradely School";
         document.getElementById("studentId").textContent = studentId;
-
-        // ✅ Safe name construction with fallbacks
-        const firstName = student.first_name || 'Student';
-        const middleName = student.middle_name || '';
-        const lastName = student.last_name || '';
-        const fullName = `${firstName} ${middleName} ${lastName}`.trim();
         
-        document.getElementById("studentName").textContent = fullName;
+        // ✅ Professional name display - only fallback if truly missing
+        const firstName = student.first_name?.trim() || '';
+        const middleName = student.middle_name?.trim() || '';
+        const lastName = student.last_name?.trim() || '';
+        const fullName = `${firstName} ${middleName} ${lastName}`.trim();
+        document.getElementById("studentName").textContent = fullName || 'Student';
+        
+        document.getElementById("studentClass").textContent = student.class?.trim() || 'Not assigned';
 
-        document.getElementById("studentClass").textContent =
-          student.class || "N/A";
-
+        // ✅ Handle empty results professionally
         if (!data.results || data.results.length === 0) {
           document.getElementById("resultsBody").innerHTML =
-            `<tr><td colspan="5" class="message">⚠️ No results uploaded yet.</td></tr>`;
+            `<tr><td colspan="5" class="message">📭 No results uploaded yet for this student.</td></tr>`;
+          
+          // ✅ Clear term/year fields instead of leaving "Loading..."
+          document.getElementById("studentTerm").textContent = "Not available";
+          document.getElementById("studentAcademicYear").textContent = "Not available";
           return;
         }
 
-        document.getElementById("studentTerm").textContent =
-          data.results[0].term || "N/A";
-
-        document.getElementById("studentAcademicYear").textContent =
-          data.results[0].academic_year || "N/A";
+        // ✅ Results exist - display term/year from first result
+        document.getElementById("studentTerm").textContent = data.results[0].term?.trim() || "Not specified";
+        document.getElementById("studentAcademicYear").textContent = data.results[0].academic_year?.trim() || "Not specified";
 
         document.getElementById("resultsBody").innerHTML = data.results.map(r => `
           <tr>
