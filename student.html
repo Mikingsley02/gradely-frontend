@@ -273,11 +273,41 @@
         document.getElementById("studentId").textContent = studentId;
         
         // ✅ Professional name display - only fallback if truly missing
-        const firstName = student.first_name?.trim() || '';
-        const middleName = student.middle_name?.trim() || '';
-        const lastName = student.last_name?.trim() || '';
-        const fullName = `${firstName} ${middleName} ${lastName}`.trim();
+                // ✅ DEBUG: Log actual API response structure to console
+        console.log('🔍 Student data received:', data.student || data.parent || data);
+        
+        // ✅ Robust name extraction - try multiple possible field names
+        const s = data.student || data.parent || data || {};
+        
+        // Try common name field patterns
+        let fullName = '';
+        
+        // Pattern 1: first_name + last_name
+        if (s.first_name || s.last_name) {
+          fullName = `${s.first_name?.trim() || ''} ${s.middle_name?.trim() || ''} ${s.last_name?.trim() || ''}`.trim();
+        }
+        // Pattern 2: student_name or name or full_name (single field)
+        else if (s.student_name || s.name || s.full_name) {
+          fullName = (s.student_name || s.name || s.full_name || '').trim();
+        }
+        // Pattern 3: fallback to any name-like field
+        else {
+          // Try to find any field that looks like a name
+          const nameFields = ['student_name', 'name', 'full_name', 'first_name', 'last_name'];
+          for (const field of nameFields) {
+            if (s[field] && typeof s[field] === 'string' && s[field].trim()) {
+              fullName = s[field].trim();
+              break;
+            }
+          }
+        }
+        
+        // ✅ Final fallback only if truly no name found
         document.getElementById("studentName").textContent = fullName || 'Student';
+        
+        // ✅ Same robust approach for class
+        const classValue = s.class || s.class_id || s.grade || 'Not assigned';
+        document.getElementById("studentClass").textContent = classValue.trim() || 'Not assigned';
         
         document.getElementById("studentClass").textContent = student.class?.trim() || 'Not assigned';
 
@@ -308,7 +338,7 @@
 
         renderChart(data.results);
 
-      } catch (err) { 
+            } catch (err) { 
         console.error("Fetch error:", err);
         
         const errorMsg = err.message?.includes('404') 
@@ -318,8 +348,13 @@
         document.getElementById("resultsBody").innerHTML =
           `<tr><td colspan="5" class="message">${errorMsg}</td></tr>`;
 
-        document.getElementById("studentName").textContent = "Data unavailable";
-        document.getElementById("studentClass").textContent = "N/A";
+        // ✅ Try to show name from localStorage if API failed
+        const storedData = JSON.parse(localStorage.getItem("studentData") || "{}");
+        const storedName = storedData.student_name || storedData.name || 
+                          `${storedData.first_name || ''} ${storedData.last_name || ''}`.trim();
+        
+        document.getElementById("studentName").textContent = storedName || 'Student';
+        document.getElementById("studentClass").textContent = storedData.class || storedData.class_id || 'N/A';
       }
     });
 
