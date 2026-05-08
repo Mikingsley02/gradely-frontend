@@ -164,6 +164,7 @@
 
     <div class="actions">
       <button class="btn btn-download" onclick="downloadPDF()">📥 Download PDF</button>
+      <button class="btn" style="background:#9b59b6;color:white;" onclick="openAttendanceModal()">📋 View Attendance</button>
       <button class="btn btn-logout" onclick="logout()">🔐 Logout</button>
     </div>
   </div>
@@ -588,7 +589,149 @@
   }
 
 
+
+
+// ✅ Attendance Modal Functions
+function openAttendanceModal() {
+  document.getElementById('attendanceModal').style.display = 'flex';
+  loadStudentAttendance();
+}
+
+function closeAttendanceModal() {
+  document.getElementById('attendanceModal').style.display = 'none';
+}
+
+async function loadStudentAttendance() {
+  const studentId = localStorage.getItem('studentId');
+  const summaryEl = document.getElementById('attendanceSummary');
+  const historyEl = document.getElementById('attendanceHistory');
+  
+  summaryEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;">Loading...</div>';
+  historyEl.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;">Loading...</td></tr>';
+  
+  try {
+    const res = await fetch(`${backendUrl}/api/attendance/student/${studentId}`, {
+      credentials: 'include'
+    });
+    
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    
+    const { summary, recent } = data.data;
+    
+    // ✅ Render summary cards
+    summaryEl.innerHTML = `
+      <div style="background:#e8f8f5; padding:12px; border-radius:8px; text-align:center;">
+        <div style="font-size:1.5rem; font-weight:700; color:#27ae60;">${summary.present}</div>
+        <div style="font-size:0.8rem; color:#555;">Present</div>
+      </div>
+      <div style="background:#fdedec; padding:12px; border-radius:8px; text-align:center;">
+        <div style="font-size:1.5rem; font-weight:700; color:#e74c3c;">${summary.absent}</div>
+        <div style="font-size:0.8rem; color:#555;">Absent</div>
+      </div>
+      <div style="background:#fef9e7; padding:12px; border-radius:8px; text-align:center;">
+        <div style="font-size:1.5rem; font-weight:700; color:#f39c12;">${summary.late}</div>
+        <div style="font-size:0.8rem; color:#555;">Late</div>
+      </div>
+      <div style="background:#ebf5fb; padding:12px; border-radius:8px; text-align:center;">
+        <div style="font-size:1.5rem; font-weight:700; color:#3498db;">${summary.attendance_rate}%</div>
+        <div style="font-size:0.8rem; color:#555;">Rate</div>
+      </div>
+    `;
+    
+    // ✅ Render recent history
+    if (!recent || recent.length === 0) {
+      historyEl.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:#666;">No attendance records yet</td></tr>';
+      return;
+    }
+    
+    historyEl.innerHTML = recent.map(r => {
+      const statusColors = {
+        present: '#27ae60',
+        absent: '#e74c3c', 
+        late: '#f39c12',
+        excused: '#9b59b6'
+      };
+      const statusBg = {
+        present: '#e8f8f5',
+        absent: '#fdedec',
+        late: '#fef9e7',
+        excused: '#f4ecf7'
+      };
+      
+      return `
+        <tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:12px 10px;">${new Date(r.session_date).toLocaleDateString()}</td>
+          <td style="padding:12px 10px;">${r.class_id || 'N/A'}${r.student_group ? ` • ${r.student_group}` : ''}</td>
+          <td style="padding:12px 10px;">
+            <span style="background:${statusBg[r.status]}; color:${statusColors[r.status]}; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:600;">
+              ${r.status?.toUpperCase()}
+            </span>
+          </td>
+          <td style="padding:12px 10px; color:#666; font-size:0.85rem;">${r.reason || '-'}</td>
+        </tr>
+      `;
+    }).join('');
+    
+  } catch (err) {
+    console.error('Attendance load error:', err);
+    summaryEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#e74c3c;">Failed to load attendance</div>`;
+    historyEl.innerHTML = `<tr><td colspan="4" style="padding:20px;text-align:center;color:#e74c3c;">Error loading history</td></tr>`;
+  }
+}
+
+// Close modal on outside click
+window.onclick = function(e) {
+  const modal = document.getElementById('attendanceModal');
+  if (e.target === modal) closeAttendanceModal();
+}
+
+
+
+
   </script>
+
+
+
+  <!-- ✅ Attendance Modal -->
+<div id="attendanceModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:12px; width:100%; max-width:600px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    
+    <!-- Header -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:20px; border-bottom:1px solid #eee;">
+      <h3 style="margin:0; color:#2c3e50;">📋 Attendance History</h3>
+      <button onclick="closeAttendanceModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#666;">&times;</button>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div id="attendanceSummary" style="padding:20px; display:grid; grid-template-columns:repeat(4,1fr); gap:12px; background:#f8f9fa;">
+      <!-- Filled by JS -->
+    </div>
+    
+    <!-- Recent Sessions Table -->
+    <div style="padding:0 20px 20px;">
+      <h4 style="margin:0 0 12px; color:#2c3e50;">Recent Sessions</h4>
+      <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+        <thead>
+          <tr style="background:#f1f5f9;">
+            <th style="padding:10px; text-align:left;">Date</th>
+            <th style="padding:10px; text-align:left;">Class/Group</th>
+            <th style="padding:10px; text-align:left;">Status</th>
+            <th style="padding:10px; text-align:left;">Notes</th>
+          </tr>
+        </thead>
+        <tbody id="attendanceHistory">
+          <tr><td colspan="4" style="padding:20px; text-align:center; color:#666;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    
+  </div>
+</div>
+
+
 
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
