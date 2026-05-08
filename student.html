@@ -252,15 +252,19 @@
 
         const data = await response.json();
 
-                if (!data.success) {
+        if (!data.success) {
           document.getElementById("resultsBody").innerHTML =
             `<tr><td colspan="5" class="message">${data.message || "Unable to load results."}</td></tr>`;
-          // ✅ Still show student info if available, even on error
+          
+          // ✅ Still show school name and student info if available
+          const schoolName = data.school_name || data.schoolName || 'Gradely School';
+          document.getElementById("schoolName").textContent = schoolName.trim();
+          
           if (data.student) {
-            const student = data.student;
+            const s = data.student;
             document.getElementById("studentName").textContent = 
-              `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Student';
-            document.getElementById("studentClass").textContent = student.class || 'Not assigned';
+              `${s.first_name || s.student_name || s.name || ''} ${s.last_name || ''}`.trim() || 'Student';
+            document.getElementById("studentClass").textContent = s.class || s.class_id || 'Not assigned';
           }
           return;
         }
@@ -269,7 +273,13 @@
         const student = data.student || {};
         
         // ✅ Always show actual student data if available
-        document.getElementById("schoolName").textContent = data.school_name || "Gradely School";
+                // ✅ DEBUG: Log full API response to understand structure
+        console.log('🔍 Full API response:', data);
+        
+        // ✅ Robust school name extraction - try multiple possible fields
+        const schoolName = data.school_name || data.schoolName || data.school?.name || 'Gradely School';
+        document.getElementById("schoolName").textContent = schoolName.trim() || 'Gradely School';
+        
         document.getElementById("studentId").textContent = studentId;
         
         // ✅ Professional name display - only fallback if truly missing
@@ -338,7 +348,7 @@
 
         renderChart(data.results);
 
-            } catch (err) { 
+                  } catch (err) { 
         console.error("Fetch error:", err);
         
         const errorMsg = err.message?.includes('404') 
@@ -348,16 +358,20 @@
         document.getElementById("resultsBody").innerHTML =
           `<tr><td colspan="5" class="message">${errorMsg}</td></tr>`;
 
-        // ✅ Try to show name from localStorage if API failed
+        // ✅ Try to show school name from localStorage if API failed
         const storedData = JSON.parse(localStorage.getItem("studentData") || "{}");
+        const schoolName = storedData.school_name || storedData.schoolName || 'Gradely School';
+        document.getElementById("schoolName").textContent = schoolName.trim();
+        
         const storedName = storedData.student_name || storedData.name || 
                           `${storedData.first_name || ''} ${storedData.last_name || ''}`.trim();
-        
         document.getElementById("studentName").textContent = storedName || 'Student';
         document.getElementById("studentClass").textContent = storedData.class || storedData.class_id || 'N/A';
       }
     });
 
+
+    
     function renderChart(results) {
       const ctx = document.getElementById("performanceChart").getContext("2d");
       if (chartInstance) chartInstance.destroy();
