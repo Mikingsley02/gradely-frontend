@@ -249,18 +249,26 @@
           return;
         }
 
-        currentData = data;
+                currentData = data;
 
+        // ✅ SAFEGUARD: Ensure student data exists before accessing properties
+        const student = data.student || {};
+        
         document.getElementById("schoolName").textContent =
           data.school_name || "Gradely School";
 
         document.getElementById("studentId").textContent = studentId;
 
-        document.getElementById("studentName").textContent =
-          `${data.student.first_name} ${data.student.middle_name || ""} ${data.student.last_name}`.trim();
+        // ✅ Safe name construction with fallbacks
+        const firstName = student.first_name || 'Student';
+        const middleName = student.middle_name || '';
+        const lastName = student.last_name || '';
+        const fullName = `${firstName} ${middleName} ${lastName}`.trim();
+        
+        document.getElementById("studentName").textContent = fullName;
 
         document.getElementById("studentClass").textContent =
-          data.student.class || "N/A";
+          student.class || "N/A";
 
         if (!data.results || data.results.length === 0) {
           document.getElementById("resultsBody").innerHTML =
@@ -286,10 +294,18 @@
 
         renderChart(data.results);
 
-      } catch (err) {
+      } catch (err) { 
         console.error("Fetch error:", err);
+        
+        const errorMsg = err.message?.includes('404') 
+          ? '⚠️ No results found for this student.' 
+          : '⚠️ Unable to load results. Please try again later.';
+        
         document.getElementById("resultsBody").innerHTML =
-          `<tr><td colspan="5" class="message">⚠️ Failed to load results.</td></tr>`;
+          `<tr><td colspan="5" class="message">${errorMsg}</td></tr>`;
+
+        document.getElementById("studentName").textContent = "Data unavailable";
+        document.getElementById("studentClass").textContent = "N/A";
       }
     });
 
@@ -334,8 +350,11 @@
       const lineHeight = 8;
 
       const schoolName = currentData.school_name || "Gradely School";
-      const student = currentData.student;
-      const name = `${student.first_name} ${student.middle_name || ""} ${student.last_name}`;
+      const student = currentData.student || {};
+      const firstName = student.first_name || 'Student';
+      const middleName = student.middle_name || '';
+      const lastName = student.last_name || '';
+      const name = `${firstName} ${middleName} ${lastName}`.trim();
       const id = localStorage.getItem("studentId");
       const firstResult = currentData.results[0];
       const term = firstResult?.term || "N/A";
