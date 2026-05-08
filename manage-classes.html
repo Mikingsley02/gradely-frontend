@@ -72,7 +72,7 @@
       grid-template-columns: 140px repeat(5, 1fr);
       gap: 1px;
       background: #ccc;
-      min-width: 600px; /* ensures horizontal scroll on small screens */
+      min-width: 600px;
     }
 
     .timetable div {
@@ -103,7 +103,6 @@
       cursor: pointer;
     }
 
-    /* Hide edit hint on mobile (touch doesn't support double-click well) */
     @media (min-width: 768px) {
       .editable:hover::after,
       .time-slot:hover::after {
@@ -125,47 +124,10 @@
       margin-top: 20px;
     }
 
-
-    /* ✅ Attendance Button */
-.attendance-btn {
-  background: #3498db;
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  text-align: center;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 1rem;
-  width: 100%;
-  max-width: 300px;
-  display: inline-block;
-  transition: background 0.2s ease;
-}
-
-.attendance-btn:hover {
-  background: #2980b9;
-}
-
-/* ✅ Tablet and up - adjust action buttons layout */
-@media (min-width: 768px) {
-  .action-buttons {
-    flex-direction: row;
-    justify-content: center;
-    gap: 20px;
-  }
-  
-  .export-btn,
-  .attendance-btn,
-  .back-btn {
-    width: auto;
-    min-width: 140px;
-  }
-}
-
-
+    /* ✅ Unified Button Styles - All Same Size */
     .export-btn,
+    .manage-classes-btn,
+    .attendance-btn,
     .back-btn {
       width: 100%;
       max-width: 300px;
@@ -177,25 +139,55 @@
       text-align: center;
       text-decoration: none;
       font-weight: 600;
+      display: inline-block;
+      transition: background 0.2s ease;
     }
 
     .export-btn {
       background: #6c5ce7;
       color: white;
     }
+    .export-btn:hover { background: #5a3ecf; }
 
-    .export-btn:hover {
-      background: #5a3ecf;
+    .manage-classes-btn {
+      background: #9b59b6;  /* Purple for management */
+      color: white;
     }
+    .manage-classes-btn:hover { background: #8e44ad; }
+
+    .attendance-btn {
+      background: #3498db;  /* Blue for attendance */
+      color: white;
+    }
+    .attendance-btn:hover { background: #2980b9; }
 
     .back-btn {
-      background: #209c49;
+      background: #209c49;  /* Green for back */
       color: white;
-      display: inline-block;
     }
+    .back-btn:hover { background: #17855d; }
 
-    .back-btn:hover {
-      background: #17855d;
+    /* ✅ Tablet and up - Horizontal layout */
+    @media (min-width: 768px) {
+      .class-selects {
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
+      }
+
+      .action-buttons {
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
+      }
+
+      .export-btn,
+      .manage-classes-btn,
+      .attendance-btn,
+      .back-btn {
+        width: auto;
+        min-width: 140px;
+      }
     }
 
     footer {
@@ -212,26 +204,6 @@
       text-decoration: none;
       margin: 0 6px;
     }
-
-    /* Tablet and up */
-    @media (min-width: 768px) {
-      .class-selects {
-        flex-direction: row;
-        justify-content: center;
-        gap: 20px;
-      }
-
-      .action-buttons {
-        flex-direction: row;
-        justify-content: center;
-        gap: 20px;
-      }
-
-      .export-btn,
-      .back-btn {
-        width: auto;
-      }
-    }
   </style>
 </head>
 <body>
@@ -242,24 +214,19 @@
       <div>
         <label for="className">Select Class:</label>
         <select id="className">
-  <!-- Primary Classes -->
-  <option value="Basic1">Basic 1</option>
-  <option value="Basic2">Basic 2</option>
-  <option value="Basic3">Basic 3</option>
-  <option value="Basic4">Basic 4</option>
-  <option value="Basic5">Basic 5</option>
-  <option value="Basic6">Basic 6</option>
-  
-  <!-- Junior Secondary -->
-  <option value="JSS1">JSS 1</option>
-  <option value="JSS2">JSS 2</option>
-  <option value="JSS3">JSS 3</option>
-  
-  <!-- Senior Secondary -->
-  <option value="SSS1">SSS 1</option>
-  <option value="SSS2">SSS 2</option>
-  <option value="SSS3">SSS 3</option>
-</select>
+          <option value="Basic1">Basic 1</option>
+          <option value="Basic2">Basic 2</option>
+          <option value="Basic3">Basic 3</option>
+          <option value="Basic4">Basic 4</option>
+          <option value="Basic5">Basic 5</option>
+          <option value="Basic6">Basic 6</option>
+          <option value="JSS1">JSS 1</option>
+          <option value="JSS2">JSS 2</option>
+          <option value="JSS3">JSS 3</option>
+          <option value="SSS1">SSS 1</option>
+          <option value="SSS2">SSS 2</option>
+          <option value="SSS3">SSS 3</option>
+        </select>
       </div>
       <div>
         <label for="groupName">Select Group:</label>
@@ -271,16 +238,18 @@
       </div>
     </div>
 
-    <!-- Scrollable wrapper for mobile -->
     <div class="timetable-wrapper">
       <div class="timetable" id="timetableGrid"></div>
     </div>
 
+    <!-- ✅ Updated Action Buttons: Export → Manage Classes → Attendance → Back -->
     <div class="action-buttons">
-  <button class="export-btn" onclick="exportPDF()">📄 Export as PDF</button>
-  <a href="attendance.html" class="attendance-btn">📋 Attendance</a>
-  <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
-</div>
+      <button class="export-btn" onclick="exportPDF()">📄 Export as PDF</button>
+      <a href="classes.html" class="manage-classes-btn">🏫 Manage Classes</a>
+      <a href="attendance.html" class="attendance-btn">📋 Attendance</a>
+      <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+  </div>
 
   <footer>
     © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br />
@@ -327,7 +296,6 @@
 
       timetableGrid.innerHTML = "";
 
-      // Header row
       const headerCell = document.createElement("div");
       headerCell.classList.add("header");
       headerCell.textContent = "Time / Day";
@@ -340,7 +308,6 @@
         timetableGrid.appendChild(header);
       });
 
-      // Time rows
       times.forEach((time, rowIndex) => {
         const timeDiv = document.createElement("div");
         timeDiv.classList.add("time-slot");
