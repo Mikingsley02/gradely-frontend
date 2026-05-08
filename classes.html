@@ -180,6 +180,19 @@ h1 {
   text-overflow: ellipsis;
 }
 
+/* ✅ Group Badge Styling */
+.group-badge {
+  background: #9b59b6;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  margin-left: 6px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+
 .student-id {
   font-size: 0.8rem;
   color: var(--text-light);
@@ -534,10 +547,12 @@ function showGrid() {
 }
 
 /* Load Students */
+/* Load Students */
 async function loadAssignedStudents(classId) {
 
   const list = document.getElementById('assignedList');
 
+  // ✅ Show loading state first
   list.innerHTML = `
     <div class="loading-state">
       <div class="spinner"></div>
@@ -546,53 +561,42 @@ async function loadAssignedStudents(classId) {
   `;
 
   try {
-
+    // ✅ Fetch students from API
     const res = await authFetch(`${API}/${classId}/students`);
+    const students = Array.isArray(res.data) ? res.data : [];
 
-    const students = Array.isArray(res.data)
-      ? res.data
-      : [];
-
+    // ✅ Handle empty roster
     if (students.length === 0) {
-
       list.innerHTML = `
         <div class="empty-state">
           No students assigned yet
         </div>
       `;
-
       return;
     }
 
+    // ✅ Render students with group badges
     list.innerHTML = students.map(s => `
       <div class="student-row">
-
         <div class="student-info">
           <div class="student-name">
             ${s.first_name || ''} ${s.last_name || ''}
+            ${s.student_group ? `<span class="group-badge">Group ${s.student_group}</span>` : ''}
           </div>
-
           <div class="student-id">
             ${s.student_id || ''}
           </div>
         </div>
-
         <div class="student-actions">
-
-          <button
-            class="btn-sm btn-remove"
-            onclick="removeStudent('${s.student_id}')"
-          >
+          <button class="btn-sm btn-remove" onclick="removeStudent('${s.student_id}')">
             Remove
           </button>
-
         </div>
-
       </div>
     `).join('');
 
   } catch (err) {
-
+    // ✅ Show error message
     list.innerHTML = `
       <div class="empty-state" style="color:var(--danger)">
         Failed to load students.<br>
@@ -601,6 +605,8 @@ async function loadAssignedStudents(classId) {
     `;
   }
 }
+
+
 
 /* Search */
 function handleSearchInput() {
@@ -702,35 +708,45 @@ async function searchStudents() {
   }
 }
 
-/* Assign */
+/* Assign Student — Now with Group Selection */
 async function assignStudent(studentId) {
-
   if (!currentClass) return;
 
-  try {
+  // ✅ Prompt for group (A/B/C or leave blank)
+  const group = prompt('Assign to Group (A/B/C) or leave blank for none:', '').trim().toUpperCase();
+  
+  // Validate group if provided
+  if (group && !['A', 'B', 'C'].includes(group)) {
+    alert('Invalid group. Please enter A, B, C, or leave blank.');
+    return;
+  }
 
+  try {
     await authFetch(
       `${API}/${currentClass.id}/students/${studentId}`,
       {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ student_group: group || null }) // ✅ Send group to backend
       }
     );
 
+    // Clear search and refresh roster
     document.getElementById('searchInput').value = '';
-
     document.getElementById('searchResults').innerHTML = `
       <div class="empty-state">
         Type a student's name or ID to update or assign a class
       </div>
     `;
-
     loadAssignedStudents(currentClass.id);
 
   } catch (err) {
-
-    alert('Failed to assign: ' + err.message);
+    console.error('Assign error:', err);
+    alert('Failed to assign: ' + (err.message || 'Unknown error'));
   }
 }
+
+
 
 /* Remove */
 async function removeStudent(studentId) {
