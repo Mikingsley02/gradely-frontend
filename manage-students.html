@@ -221,7 +221,7 @@ saveEditBtn.onclick = async () => {
   middle_name: editMiddleName.value,
   last_name: editLastName.value,
   phone: editPhone.value,
-  parent_email: editParentEmail.value,
+  parent_email: editParentEmail.value.trim().toLowerCase(),
   school_id: schoolId
 };
 

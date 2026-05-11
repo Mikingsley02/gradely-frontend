@@ -414,7 +414,7 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   const confirmPasswordEl = document.getElementById("confirm_new_password");
 
   if (schoolNameEl.value.trim()) payload.school_name = schoolNameEl.value.trim();
-  if (emailEl.value.trim()) payload.email = emailEl.value.trim();
+  if (emailEl.value.trim()) payload.email = emailEl.value.trim().toLowerCase();
   if (phoneEl.value.trim()) payload.phone_number = phoneEl.value.trim();
 
   const currentPassword = currentPasswordEl.value.trim();

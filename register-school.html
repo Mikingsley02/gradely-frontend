@@ -385,8 +385,8 @@
 
     // ✅ Gather form values
     const schoolName = document.getElementById("schoolName")?.value.trim() || "";
-    const adminId = document.getElementById("adminNumber")?.value.trim() || "";
-    const email = document.getElementById("email")?.value.trim() || "";
+    const adminId = document.getElementById("adminNumber")?.value.trim().toLowerCase() || "";
+    const email = document.getElementById("email")?.value.trim().toLowerCase() || "";
     const phone = document.getElementById("phone")?.value.trim() || "";
     const password = document.getElementById("password")?.value.trim() || "";
     const confirmPassword = document.getElementById("confirmPassword")?.value.trim() || "";
