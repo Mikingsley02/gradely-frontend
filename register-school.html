@@ -390,7 +390,16 @@
     const phone = document.getElementById("phone")?.value.trim() || "";
     const password = document.getElementById("password")?.value.trim() || "";
     const confirmPassword = document.getElementById("confirmPassword")?.value.trim() || "";
-    const subscriptionPlan = document.getElementById("plan")?.value || "";
+
+
+    // ✅ CRITICAL: Get plan from hidden input OR URL param (fallback)
+    let subscriptionPlan = document.getElementById("plan")?.value?.trim() || "";
+    if (!subscriptionPlan) {
+      const urlParams = new URLSearchParams(window.location.search);
+      subscriptionPlan = urlParams.get('plan')?.trim() || "";
+    }
+    subscriptionPlan = subscriptionPlan.toLowerCase(); 
+
 
     // ✅ Validate inputs
     if (!subscriptionPlan) {
