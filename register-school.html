@@ -429,7 +429,18 @@
         body: JSON.stringify(data)
       });
 
-      const result = await res.json();
+      let result;
+
+      try {
+      result = await res.json();
+    } catch (jsonErr) {
+       const text = await res.text();
+       console.error("🚫 Non-JSON response:", text);
+
+     alert("⚠️ Server returned an invalid response. Please contact support.");
+     resetSubmitBtn();
+     return;
+    }
       console.log("✅ Registration response:", result);
 
       if (res.ok && result.success) {
