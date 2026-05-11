@@ -412,7 +412,7 @@
     });
 
     document.getElementById('loginBtn').addEventListener('click', function() {
-  const studentId = document.getElementById('studentId').value.trim();
+  const studentId = document.getElementById('studentId').value.trim().toLowerCase();
   const password = document.getElementById('password').value.trim();
   const loginBtn = document.getElementById('loginBtn');
   
