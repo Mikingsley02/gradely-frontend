@@ -323,14 +323,89 @@
         <h2>11. Governing Law</h2>
         <p>These terms are governed by the laws of Nigeria. Any disputes will be resolved in Nigerian courts.</p>
 
+
+
+
+        <!-- Insert this AFTER Section 11 "Governing Law" and BEFORE the compliance-note div -->
+
+<h2>12. Referral Program Terms</h2>
+<p><strong>Last Updated:</strong> <span id="referralTermsDate">May 2026</span></p>
+
+<p>Gradely.info offers a referral program to reward schools that invite other schools to join our platform. By participating, you agree to these additional terms:</p>
+
+<h3>12.1 Eligibility</h3>
+<ul>
+  <li>Only active, paying schools on the <strong>Pro plan</strong> may participate as referrers.</li>
+  <li>Referrers must have a valid, verified email and phone number on file.</li>
+  <li>Schools with suspended, expired, or cancelled subscriptions are not eligible to earn or redeem referral rewards.</li>
+  <li>Self-referrals (referring your own school under a different account) are prohibited and will result in disqualification.</li>
+</ul>
+
+<h3>12.2 How It Works</h3>
+<ul>
+  <li>Eligible referrers receive a unique referral code (e.g., <code>REF-ABCD-1234</code>) from their dashboard.</li>
+  <li>When a new school registers using your code <strong>and completes their first paid subscription</strong>, you earn a reward.</li>
+  <li><strong>Reward:</strong> One (1) month of free subscription time added to your current plan expiry date.</li>
+  <li>Rewards are applied automatically within 24 hours of the referred school's successful payment confirmation.</li>
+  <li>Rewards cannot be exchanged for cash, transferred, or combined with other promotions unless explicitly stated.</li>
+</ul>
+
+<h3>12.3 Anti-Abuse & Fraud Prevention</h3>
+<ul>
+  <li>Gradely.info reserves the right to investigate and disqualify any referral activity suspected of fraud, including:
+    <ul>
+      <li>Creating fake or duplicate school accounts to earn rewards</li>
+      <li>Using automated scripts or bots to generate referrals</li>
+      <li>Referring schools that do not intend to use the platform legitimately</li>
+      <li>Colluding with other users to manipulate the referral system</li>
+    </ul>
+  </li>
+  <li>If fraud is detected, we may:
+    <ul>
+      <li>Revoke pending or awarded rewards</li>
+      <li>Suspend or terminate the referrer's account</li>
+      <li>Report activity to relevant authorities where required by law</li>
+    </ul>
+  </li>
+  <li>All referral decisions by Gradely.info are final.</li>
+</ul>
+
+<h3>12.4 Data Privacy (NDPR Compliance)</h3>
+<ul>
+  <li>When you refer a school, we process the referred school's email and registration data solely to validate the referral and apply rewards.</li>
+  <li>This processing is based on <strong>legitimate interest</strong> (operating the referral program) and your explicit consent via these terms.</li>
+  <li>Referred schools' data is never shared with referrers beyond confirmation that a referral was successful.</li>
+  <li>You may request deletion of your referral history at any time by contacting <a href="mailto:support@gradely.info" style="color:#3498db;">support@gradely.info</a>.</li>
+</ul>
+
+<h3>12.5 Changes to the Program</h3>
+<ul>
+  <li>Gradely.info may modify, suspend, or terminate the referral program at any time with 30 days' notice via email or dashboard notification.</li>
+  <li>Rewards already earned before a change will be honored under the terms in effect at the time of earning.</li>
+  <li>Continued participation after changes constitutes acceptance of the updated terms.</li>
+</ul>
+
+<h3>12.6 Limitation of Liability</h3>
+<ul>
+  <li>Referral rewards are provided "as is" without warranty of any kind.</li>
+  <li>Gradely.info is not liable for any indirect, incidental, or consequential damages arising from participation in the referral program.</li>
+  <li>Maximum liability for referral-related claims is limited to the value of the unearned reward at the time of the claim.</li>
+</ul>
+
+<p style="margin-top: 20px; font-style: italic; color: #666;">
+  <strong>Note:</strong> This referral program is governed by the laws of the Federal Republic of Nigeria. Any disputes shall be resolved in Nigerian courts.
+</p>
+
+
+
         <!-- ✅ UPDATED: Legal Compliance Footer -->
         <div class="compliance-note">
-          <strong>Legal Compliance:</strong> This policy complies with Nigeria's 
-          <a href="https://nitda.gov.ng/ngdata-protection-regulation/" target="_blank">NDPR 2019</a>, 
-          <a href="https://nigcybercrime.gov.ng/" target="_blank">Cybercrimes Act 2015</a>, 
-          and applicable consumer protection laws. 
-          <!-- Remit Integrated Services LTD is registered as a Data Controller with NITDA.-->
-        </div>
+      <strong>Legal Compliance:</strong> This policy complies with Nigeria's 
+     <a href="https://nitda.gov.ng/ngdata-protection-regulation/" target="_blank">NDPR 2019</a>, 
+     <a href="https://nigcybercrime.gov.ng/" target="_blank">Cybercrimes Act 2015</a>, 
+     and applicable consumer protection laws. 
+     <br/><strong>Referral Program:</strong> Governed by Section 12 above; rewards subject to anti-abuse policies and payment validation.
+    </div>
 
         <!-- ✅ UPDATED: Smart back button that returns to referring page -->
         <a id="backLink" class="back-link">← Go Back</a>
@@ -403,6 +478,19 @@
       loadPolicy();
     }
   })();
+
+
+// ✅ Auto-update referral terms date
+document.addEventListener('DOMContentLoaded', () => {
+  const dateEl = document.getElementById('referralTermsDate');
+  if (dateEl) {
+    const now = new Date();
+    const options = { month: 'short', year: 'numeric' };
+    dateEl.textContent = now.toLocaleDateString('en-NG', options);
+  }
+});
+
+
 </script>
 
 <!-- ✅ SMART BACK BUTTON: Returns to referring page (same origin) or fallback to index.html -->
