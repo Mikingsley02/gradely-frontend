@@ -210,6 +210,18 @@
       <label>Phone (WhatsApp) *</label>
       <input type="text" id="phone" placeholder="+2348031234567" required />
 
+
+      <!-- ✅ NEW: Referral Code Input (Optional) -->
+<div class="form-group">
+  <label>Referral Code (Optional)</label>
+  <input type="text" id="referralCode" placeholder="e.g., REF-1234-ABCD" 
+         pattern="[A-Z0-9\-]{10,20}" title="Enter valid referral code" />
+  <small style="color:#00e676;display:block;margin-top:4px;">
+    💡 Got a code? Enter it here for your referrer to get 1 month free!
+  </small>
+</div>
+
+
       <label>Create Password *</label>
       <div class="password-wrapper">
         <input type="password" id="password" placeholder="Enter password" required />
@@ -392,6 +404,15 @@
     const confirmPassword = document.getElementById("confirmPassword")?.value.trim() || "";
 
 
+    // ✅ NEW: Capture referral code from input OR URL param
+    let referralCode = document.getElementById("referralCode")?.value?.trim() || "";
+    if (!referralCode) {
+      const urlParams = new URLSearchParams(window.location.search);
+      referralCode = urlParams.get('referral_code')?.trim() || "";
+    }
+    referralCode = referralCode.toUpperCase();  // ✅ Normalize to uppercase
+
+
     // ✅ CRITICAL: Get plan from hidden input OR URL param (fallback)
     let subscriptionPlan = document.getElementById("plan")?.value?.trim() || "";
     if (!subscriptionPlan) {
@@ -428,6 +449,7 @@
       phone: phone,
       password: password,
       subscription_plan: subscriptionPlan,
+      referral_code: referralCode || undefined,  // ✅ Send only if provided
       terms_accepted: agreeTerms.checked
     };
 
@@ -470,9 +492,10 @@
         const schoolId = result.data?.school_id || result.data?.admin_id;
         const adminId = result.data?.admin_id;
         
-        // ✅ Auto-redirect after 1 second (NO OK button)
+               // ✅ CRITICAL: Include referral_code in redirect URL for payment flow
         setTimeout(() => {
-          window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(subscriptionPlan)}&email=${encodeURIComponent(email)}&new=true&pending=true`;
+          const referralParam = referralCode ? `&referral_code=${encodeURIComponent(referralCode)}` : '';
+          window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(subscriptionPlan)}&email=${encodeURIComponent(email)}${referralParam}&new=true&pending=true`;
         }, 1000);
         
       } else {
