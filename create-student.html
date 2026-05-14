@@ -316,28 +316,52 @@ async function showStudentUsage() {
   const submitBtn = document.querySelector(".btn-submit");
 
   try {
-    const res = await fetch(`/api/subscription/usage`, { credentials: "include" });
+
+    // ✅ FIXED API ROUTE
+    const res = await fetch(
+      "https://api.gradely.info/api/students/subscription/usage",
+      {
+        credentials: "include"
+      }
+    );
+
+    // ✅ Prevent HTML errors from crashing JSON parsing
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
     const data = await res.json();
 
-    if (!data.success) return;
+    console.log("✅ Student usage:", data);
+
+    // ✅ Your backend returns:
+    // { plan, current_students, limit }
 
     if (data.plan === "basic") {
       counter.style.display = "block";
-      counter.textContent = `🧑 Students registered: ${data.used} / ${data.limit}`;
 
-      // Disable button if reached limit
-      if (data.used >= data.limit) {
+      counter.textContent =
+        `🧑 Students registered: ${data.current_students} / ${data.limit}`;
+
+      // ✅ Disable button if limit reached
+      if (data.current_students >= data.limit) {
         submitBtn.disabled = true;
-        submitBtn.style.background = "#bdc3c7"; // grey out
+        submitBtn.style.background = "#bdc3c7";
         submitBtn.textContent = "Limit reached – Upgrade to Pro";
-        counter.textContent += " ⚠️ You have reached the maximum students for Basic plan!";
+
+        counter.textContent +=
+          " ⚠️ You have reached the maximum students for Basic plan!";
       }
+
     } else {
-      counter.style.display = "none"; // hide for pro
-      submitBtn.disabled = false;      // ensure enabled for pro
+      // ✅ Pro plan = unlimited
+      counter.style.display = "none";
+
+      submitBtn.disabled = false;
       submitBtn.style.background = "#3498db";
       submitBtn.textContent = "Create Account";
     }
+
   } catch (err) {
     console.error("❌ Could not fetch student usage:", err);
   }
@@ -345,7 +369,6 @@ async function showStudentUsage() {
 
 // Call on page load
 showStudentUsage();
-
 
 </script>
 
