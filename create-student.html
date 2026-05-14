@@ -311,51 +311,56 @@ function goBack() {
 
 
 // SHOW STUDENT USAGE AND DISABLE BUTTON IF LIMIT REACHED
+
 async function showStudentUsage() {
   const counter = document.getElementById("studentCounter");
   const submitBtn = document.querySelector(".btn-submit");
 
   try {
-
-    // ✅ FIXED API ROUTE
-    const res = await fetch(
-      "https://api.gradely.info/api/students/subscription/usage",
-      {
-        credentials: "include"
-      }
-    );
-
-    // ✅ Prevent HTML errors from crashing JSON parsing
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
+    const res = await fetch(`/api/students/subscription/usage`, {
+      credentials: "include"
+    });
 
     const data = await res.json();
 
-    console.log("✅ Student usage:", data);
+    // ✅ Support both response formats
+    const plan = (data.plan || "").toLowerCase();
+    const used = data.used ?? data.current_students ?? 0;
+    const limit = data.limit;
 
-    // ✅ Your backend returns:
-    // { plan, current_students, limit }
+    counter.style.display = "block";
 
-    if (data.plan === "basic") {
-      counter.style.display = "block";
+    // =========================
+    // BASIC PLAN
+    // =========================
+    if (plan === "basic") {
 
       counter.textContent =
-        `🧑 Students registered: ${data.current_students} / ${data.limit}`;
+        `🧑 Students registered: ${used} / ${limit}`;
 
-      // ✅ Disable button if limit reached
-      if (data.current_students >= data.limit) {
+      // Disable button if limit reached
+      if (used >= limit) {
         submitBtn.disabled = true;
         submitBtn.style.background = "#bdc3c7";
         submitBtn.textContent = "Limit reached – Upgrade to Pro";
 
         counter.textContent +=
           " ⚠️ You have reached the maximum students for Basic plan!";
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.style.background = "#3498db";
+        submitBtn.textContent = "Create Account";
       }
+    }
 
-    } else {
-      // ✅ Pro plan = unlimited
-      counter.style.display = "none";
+    // =========================
+    // PRO PLAN
+    // =========================
+    else if (plan === "pro") {
+
+      // ✅ Show total students ONLY
+      counter.textContent =
+        `🧑 Students registered: ${used}`;
 
       submitBtn.disabled = false;
       submitBtn.style.background = "#3498db";
