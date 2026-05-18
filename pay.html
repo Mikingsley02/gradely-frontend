@@ -280,8 +280,6 @@
   </div>
 
   <!-- ✅ FIXED: Clean script src (no trailing spaces) -->
-  <script src="https://js.paystack.co/v1/inline.js"></script>
-
   
   <script>
 console.log("=== PAY.HTML INIT ===");
@@ -383,11 +381,6 @@ async function loadPaystackKey() {
   }
 }
 
-function generateUniqueReference(schoolId, plan) {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 10);
-  return `GRD-${schoolId}-${plan}-${timestamp}-${random}`;
-}
 
 let isProcessingPayment = false;
 
@@ -443,114 +436,27 @@ document.getElementById("paystackBtn").onclick = async () => {
       throw new Error(result.message || 'Payment initialization failed');
     }
 
-    const reference = generateUniqueReference(school_id, plan);
-
-    const handler = PaystackPop.setup({
-      key: paystackKey,
-      email: customerEmail,
-      amount: result.amount_in_kobo || (plan === 'pro' ? 8970000 : 8390000),
-      currency: "NGN",
-      ref: reference,
-      
-      // ✅ CRITICAL FIX #4: CORRECTED SYNTAX (metadata: { ... } not meta { ... })
-      metadata: {
-        school_id: school_id,
-        admin_id: admin_id,
-        plan: plan,
-        custom_fields: [
-          { display_name: "School ID", variable_name: "school_id", value: school_id },
-          { display_name: "Plan", variable_name: "plan", value: plan }
-        ]
-      },
-      
-      // ✅ FIXED: Paystack-compatible callback (regular function wrapping async IIFE)
-      callback: function(response) {
-  (async () => {
-    console.log("✅ Paystack payment SUCCESS:", {
-      reference: response.reference,
-      status: response.status
-    });
     
-    // Save session data
+
+        // ✅ Backend already initialized Paystack correctly
+    if (!result.authorization_url) {
+      throw new Error('Missing Paystack authorization URL');
+    }
+
+    console.log("🚀 Redirecting to Paystack:", result.authorization_url);
+
+    // Save session data before redirect
     localStorage.setItem('school_id', school_id);
     localStorage.setItem('plan', plan);
-    localStorage.setItem('email', customerEmail);
-    
-    // Show UI feedback
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying payment...';
-    btn.disabled = true;
-    
-    try {
-      // 🔹 STEP 1: Verify payment with backend (this returns authorization_code)
-      console.log("📡 Calling /upgrade/complete...");
-      const verifyRes = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          payment_reference: response.reference,
-          school_id: school_id,
-          plan: plan
-        })
-      });
-      
-      const verifyData = await verifyRes.json();
-      console.log("🔍 /upgrade/complete response:", verifyData);
-      
-      if (!verifyData.success) {
-        throw new Error(verifyData.message || 'Payment verification failed');
-      }
-      
-      // 🔹 STEP 2: Extract authorization_code from backend response (NOT Paystack callback)
-      const authorizationCode = verifyData.authorization_code;
-      console.log("🔑 authorization_code from backend:", authorizationCode);
-      
-      if (!authorizationCode) {
-        console.warn("⚠️ No authorization_code returned. Account activated, but auto-renewal skipped.");
-        setTimeout(() => {
-          window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
-        }, 1500);
-        return;
-      }
-      
-      // 🔹 STEP 3: Enable auto-renewal using the code from backend
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enabling auto-renewal...';
-      
-      const setupRes = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          authorization_code: authorizationCode,
-          plan: plan,
-          school_id: school_id
-        })
-      });
-      
-      const setupData = await setupRes.json();
-      console.log("🔄 Auto-renewal setup result:", setupData);
-      
-    } catch (err) {
-      console.error("❌ Payment flow error:", err);
-      // Still redirect - account may be active via webhook
+
+    if (customerEmail) {
+      localStorage.setItem('email', customerEmail);
     }
-    
-    // 🔹 STEP 4: Redirect after all steps complete
-    setTimeout(() => {
-      window.location.href = `/dashboard.html?payment=success&plan=${plan}&ref=${response.reference}`;
-    }, 1000);
-  })();
-},
-      
-      onClose: function() {
-        btn.innerHTML = '<i class="fas fa-credit-card"></i> Proceed to Payment';
-        btn.disabled = false;
-        isProcessingPayment = false;
-        console.log("ℹ️ Payment window closed by user");
-      }
-    });
-    
-    handler.openIframe();
+
+    // ✅ Redirect directly to Paystack hosted checkout
+    window.location.href = result.authorization_url;
+
+
 
   } catch (error) {
     console.error("❌ Payment error:", error);

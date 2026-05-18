@@ -495,7 +495,12 @@
                // ✅ CRITICAL: Include referral_code in redirect URL for payment flow
         setTimeout(() => {
           const referralParam = referralCode ? `&referral_code=${encodeURIComponent(referralCode)}` : '';
-          window.location.href = `pay.html?school_id=${encodeURIComponent(schoolId)}&admin_id=${encodeURIComponent(adminId)}&plan=${encodeURIComponent(subscriptionPlan)}&email=${encodeURIComponent(email)}${referralParam}&new=true&pending=true`;
+          window.location.href =
+  `pay.html?school_id=${encodeURIComponent(schoolId)}` +
+  `&plan=${encodeURIComponent(subscriptionPlan)}` +
+  `&email=${encodeURIComponent(email)}` +
+  `${referralParam}` +
+  `&new=true`;
         }, 1000);
         
       } else {
