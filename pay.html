@@ -466,6 +466,69 @@ document.getElementById("paystackBtn").onclick = async () => {
     alert(`Payment error: ${error.message}`);
   }
 };
+
+
+
+// ✅ Handle Paystack callback after payment
+document.addEventListener('DOMContentLoaded', async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const reference = urlParams.get('reference');
+  
+  if (reference) {
+    console.log('🔍 Paystack callback detected:', { reference });
+    
+    // Show loading state
+    const btn = document.getElementById('paystackBtn');
+    if (btn) {
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying payment...';
+      btn.disabled = true;
+    }
+    
+    try {
+      // ✅ Call backend to complete payment
+      const res = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+       body: JSON.stringify({ payment_reference: reference })
+    });
+      
+      const result = await res.json();
+      
+      if (result.success) {
+        // ✅ Payment verified — redirect to dashboard
+        const schoolId = localStorage.getItem('school_id');
+        const plan = localStorage.getItem('plan');
+        
+        // Clean up
+        localStorage.removeItem('payment_pending');
+        
+        // Redirect to dashboard with success message
+        window.location.href = `dashboard.html?welcome=true&plan=${plan}&school_id=${schoolId}`;
+      } else {
+        // ❌ Payment failed
+        console.error('Payment verification failed:', result);
+        alert(`Payment issue: ${result.message || 'Please contact support'}`);
+        
+        // Allow retry
+        if (btn) {
+          btn.innerHTML = '<i class="fas fa-credit-card"></i> Try Payment Again';
+          btn.disabled = false;
+        }
+      }
+    } catch (err) {
+      console.error('Callback error:', err);
+      alert('Network error verifying payment. Please contact support.');
+      
+      if (btn) {
+        btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Retry Verification';
+        btn.disabled = false;
+      }
+    }
+  }
+});
+
+
 </script>
 
   <script src="js/kaima-chatbot.js"></script>
