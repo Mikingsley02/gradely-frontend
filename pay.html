@@ -287,18 +287,29 @@ console.log("=== PAY.HTML INIT ===");
 const API_BASE = "https://api.gradely.info";
 const params = new URLSearchParams(window.location.search);
 
-let plan = params.get("to_plan")    
-        || params.get("plan")       
-        || localStorage.getItem("selected_plan");
+const isPaystackCallback = params.get("reference");
+
+let plan =
+  params.get("to_plan") ||
+  params.get("plan") ||
+  localStorage.getItem("selected_plan") ||
+  localStorage.getItem("plan");
 
 if (plan) {
   plan = plan.toLowerCase().trim();
 }
 
-if (!plan || !['basic', 'pro'].includes(plan)) {
+// ✅ ONLY validate plan BEFORE payment
+if (
+  !isPaystackCallback &&
+  (!plan || !["basic", "pro"].includes(plan))
+) {
   console.warn("⚠️ Invalid/missing plan:", { plan });
+
   alert("Invalid or missing plan selection.");
+
   window.location.href = "plan-comparison.html";
+
   throw new Error("No valid plan selected");
 }
 
@@ -485,8 +496,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     try {
-      // ✅ Call backend to complete payment
-      const res = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
+
+  console.log("🚀 CALLING BACKEND VERIFY:", {
+    reference,
+    endpoint: `${API_BASE}/api/subscription/upgrade/complete`
+  });
+
+  // ✅ Call backend to complete payment
+  const res = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
