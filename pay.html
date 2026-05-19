@@ -479,8 +479,7 @@ document.getElementById("paystackBtn").onclick = async () => {
 };
 
 
-
-// ✅ Handle Paystack callback after payment
+// ✅ Handle Paystack callback after payment (SINGLE HANDLER)
 document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const reference = urlParams.get('reference');
@@ -496,19 +495,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     try {
+      console.log("🚀 CALLING BACKEND VERIFY:", {
+        reference,
+        endpoint: `${API_BASE}/api/subscription/upgrade/complete`
+      });
 
-  console.log("🚀 CALLING BACKEND VERIFY:", {
-    reference,
-    endpoint: `${API_BASE}/api/subscription/upgrade/complete`
-  });
-
-  // ✅ Call backend to complete payment
-  const res = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-       body: JSON.stringify({ payment_reference: reference })
-    });
+      // ✅ Call backend to complete payment
+      const res = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ payment_reference: reference })
+      });
       
       const result = await res.json();
       
@@ -522,10 +520,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Redirect to dashboard with success message
         if (result.token) {
-  localStorage.setItem("gradely_token", result.token);
-}
+          localStorage.setItem("gradely_token", result.token);
+        }
 
-window.location.href = result.redirect_url;
+        // Use backend redirect_url if provided, otherwise fallback
+        const redirectUrl = result.redirect_url || `dashboard.html?welcome=true&plan=${plan}&school_id=${schoolId}`;
+        window.location.href = redirectUrl;
 
       } else {
         // ❌ Payment failed
@@ -549,6 +549,7 @@ window.location.href = result.redirect_url;
     }
   }
 });
+
 
 
 </script>
