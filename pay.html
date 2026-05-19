@@ -480,12 +480,13 @@ document.getElementById("paystackBtn").onclick = async () => {
 
 
 // ✅ Handle Paystack callback after payment (SINGLE HANDLER)
+
 document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const reference = urlParams.get('reference');
   
   if (reference) {
-    console.log('🔍 Paystack callback detected:', { reference });
+    console.log('🔍 Paystack callback detected:', { reference });  // ✅ Add this
     
     // Show loading state
     const btn = document.getElementById('paystackBtn');
@@ -495,20 +496,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     try {
-      console.log("🚀 CALLING BACKEND VERIFY:", {
+      console.log("🚀 CALLING BACKEND VERIFY:", {  // ✅ Add this
         reference,
         endpoint: `${API_BASE}/api/subscription/upgrade/complete`
       });
 
-      // ✅ Call backend to complete payment
       const res = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        credentials: 'include',  // ✅ Critical for session/auth
         body: JSON.stringify({ payment_reference: reference })
       });
       
+      console.log("📥 BACKEND RESPONSE STATUS:", res.status);  // ✅ Add this
       const result = await res.json();
+      console.log("📥 BACKEND RESPONSE BODY:", result);  // ✅ Add this
       
       if (result.success) {
         // ✅ Payment verified — redirect to dashboard
@@ -518,7 +520,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Clean up
         localStorage.removeItem('payment_pending');
         
-        // Redirect to dashboard with success message
+        // Save token if provided
         if (result.token) {
           localStorage.setItem("gradely_token", result.token);
         }
@@ -539,7 +541,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     } catch (err) {
-      console.error('Callback error:', err);
+      console.error('❌ Callback error:', err);  // ✅ Already there, but ensure it logs
       alert('Network error verifying payment. Please contact support.');
       
       if (btn) {
@@ -549,7 +551,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 });
-
 
 
 </script>
