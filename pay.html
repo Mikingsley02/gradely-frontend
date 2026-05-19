@@ -284,6 +284,15 @@
   <script>
 console.log("=== PAY.HTML INIT ===");
 
+// ✅ NUCLEAR DEBUG: Confirm script is executing
+console.log("💣 PAY.HTML SCRIPT LOADED AT:", new Date().toISOString());
+console.log("💣 URL:", window.location.href);
+console.log("💣 URLSearchParams:", Object.fromEntries(new URLSearchParams(window.location.search)));
+
+
+
+
+
 const API_BASE = "https://api.gradely.info";
 const params = new URLSearchParams(window.location.search);
 
