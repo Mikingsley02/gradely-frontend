@@ -504,7 +504,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         localStorage.removeItem('payment_pending');
         
         // Redirect to dashboard with success message
-        window.location.href = `dashboard.html?welcome=true&plan=${plan}&school_id=${schoolId}`;
+        if (result.token) {
+  localStorage.setItem("gradely_token", result.token);
+}
+
+window.location.href = result.redirect_url;
+
       } else {
         // ❌ Payment failed
         console.error('Payment verification failed:', result);
