@@ -312,40 +312,43 @@ function goBack() {
 
 // SHOW STUDENT USAGE AND DISABLE BUTTON IF LIMIT REACHED
 
+// SHOW STUDENT USAGE AND DISABLE BUTTON IF LIMIT REACHED
+
 async function showStudentUsage() {
   const counter = document.getElementById("studentCounter");
   const submitBtn = document.querySelector(".btn-submit");
 
   try {
-    const res = await fetch(`/api/students/subscription/usage`, {
+    const res = await fetch(`${API_BASE}/api/students/subscription/usage`, {
       credentials: "include"
     });
 
     const data = await res.json();
 
-    // ✅ Support both response formats
-    const plan = (data.plan || "").toLowerCase();
-    const used = data.used ?? data.current_students ?? 0;
-    const limit = data.limit;
+    if (!data.success) {
+      throw new Error(data.message || "Failed to fetch usage");
+    }
+
+    // ✅ Get values from response
+    const plan = (data.data?.plan || "").toLowerCase();
+    const used = data.data?.current ?? 0;
+    const limit = data.data?.limit ?? 200;  // Default to 200 if not provided
 
     counter.style.display = "block";
 
     // =========================
-    // BASIC PLAN
+    // BASIC PLAN (limit = 200)
     // =========================
-    if (plan === "basic") {
-
-      counter.textContent =
-        `🧑 Students registered: ${used} / ${limit}`;
+    if (plan === "basic" || limit === 200) {
+      counter.textContent = `🧑 Students registered: ${used} / ${limit}`;
+      counter.style.color = "#e74c3c";
 
       // Disable button if limit reached
       if (used >= limit) {
         submitBtn.disabled = true;
         submitBtn.style.background = "#bdc3c7";
         submitBtn.textContent = "Limit reached – Upgrade to Pro";
-
-        counter.textContent +=
-          " ⚠️ You have reached the maximum students for Basic plan!";
+        counter.textContent += " ⚠️ Maximum reached!";
       } else {
         submitBtn.disabled = false;
         submitBtn.style.background = "#3498db";
@@ -354,13 +357,12 @@ async function showStudentUsage() {
     }
 
     // =========================
-    // PRO PLAN
+    // PRO PLAN (limit = -1 means UNLIMITED)
     // =========================
-    else if (plan === "pro") {
-
-      // ✅ Show total students ONLY
-      counter.textContent =
-        `🧑 Students registered: ${used}`;
+    else if (plan === "pro" || limit === -1) {
+      // ✅ Show total students ONLY with "Unlimited" badge
+      counter.textContent = `🎉 Students registered: ${used} (Unlimited)`;
+      counter.style.color = "#27ae60";
 
       submitBtn.disabled = false;
       submitBtn.style.background = "#3498db";
@@ -369,6 +371,13 @@ async function showStudentUsage() {
 
   } catch (err) {
     console.error("❌ Could not fetch student usage:", err);
+    // ✅ Fallback: Show generic message
+    const counter = document.getElementById("studentCounter");
+    if (counter) {
+      counter.style.display = "block";
+      counter.textContent = "🧑 Students registered: 0";
+      counter.style.color = "#27ae60";
+    }
   }
 }
 
