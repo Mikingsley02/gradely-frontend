@@ -16,12 +16,12 @@
   --secondary:#7c4dff;
   --gold:#ffcc33;
   --dark:#0f172a;
-  --text:#334155;
+  --text:#475569;
   --light:#f8fafc;
   --white:#ffffff;
   --border:#e2e8f0;
   --shadow:0 10px 30px rgba(15,23,42,.08);
-  --radius:22px;
+  --radius:24px;
 }
 
 *{
@@ -43,7 +43,7 @@ body{
 }
 
 /* =========================
-   TOP NAV
+   NAVBAR
 ========================= */
 
 .navbar{
@@ -51,8 +51,8 @@ body{
   top:0;
   z-index:999;
   backdrop-filter:blur(18px);
-  background:rgba(255,255,255,.88);
-  border-bottom:1px solid rgba(255,255,255,.3);
+  background:rgba(255,255,255,.92);
+  border-bottom:1px solid rgba(255,255,255,.4);
 }
 
 .nav-inner{
@@ -62,6 +62,7 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  position:relative;
 }
 
 .logo{
@@ -72,25 +73,28 @@ body{
   font-size:1.5rem;
   font-weight:800;
   color:var(--dark);
+  z-index:1001;
 }
 
 .logo .info{
   color:var(--gold);
 }
 
+/* DESKTOP NAV */
+
 .nav-links{
   display:flex;
+  align-items:center;
   gap:1rem;
-  flex-wrap:wrap;
 }
 
 .nav-links a{
   text-decoration:none;
   color:var(--dark);
   font-weight:600;
-  padding:.7rem 1rem;
-  border-radius:12px;
-  transition:.3s;
+  padding:.8rem 1rem;
+  border-radius:14px;
+  transition:.3s ease;
 }
 
 .nav-links a:hover{
@@ -98,8 +102,24 @@ body{
   color:var(--primary);
 }
 
+/* MOBILE BUTTON */
+
 .mobile-btn{
   display:none;
+  width:48px;
+  height:48px;
+  border:none;
+  border-radius:14px;
+  background:#eef2ff;
+  color:var(--primary-dark);
+  font-size:1.4rem;
+  cursor:pointer;
+  transition:.3s;
+  z-index:1001;
+}
+
+.mobile-btn:hover{
+  background:#dbe7ff;
 }
 
 /* =========================
@@ -109,26 +129,36 @@ body{
 .hero{
   position:relative;
   overflow:hidden;
-  padding:100px 20px 80px;
+  padding:110px 20px 90px;
   background:
     radial-gradient(circle at top right,#7c4dff22,transparent 30%),
     linear-gradient(135deg,#12053a 0%,#3c1f94 55%,#6c3cff 100%);
   color:white;
 }
 
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at bottom left,rgba(255,255,255,.08),transparent 25%);
+}
+
 .hero-inner{
+  position:relative;
   max-width:1200px;
   margin:auto;
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:50px;
+  gap:60px;
   align-items:center;
 }
 
 .hero h1{
   font-size:4rem;
   line-height:1.05;
-  margin-bottom:1.2rem;
+  margin-bottom:1.3rem;
+  font-weight:800;
 }
 
 .hero p{
@@ -145,27 +175,29 @@ body{
 }
 
 .btn{
-  padding:15px 28px;
+  padding:15px 30px;
   border-radius:60px;
   font-weight:700;
   text-decoration:none;
   transition:.3s;
   display:inline-flex;
   align-items:center;
+  justify-content:center;
   gap:10px;
 }
 
 .btn-primary{
   background:white;
   color:var(--primary-dark);
+  box-shadow:0 10px 25px rgba(0,0,0,.12);
 }
 
 .btn-primary:hover{
-  transform:translateY(-3px);
+  transform:translateY(-4px);
 }
 
 .btn-outline{
-  border:1px solid rgba(255,255,255,.3);
+  border:1px solid rgba(255,255,255,.35);
   color:white;
 }
 
@@ -177,14 +209,14 @@ body{
   background:rgba(255,255,255,.12);
   backdrop-filter:blur(18px);
   border:1px solid rgba(255,255,255,.15);
-  padding:30px;
-  border-radius:30px;
+  padding:32px;
+  border-radius:32px;
   box-shadow:var(--shadow);
 }
 
 .hero-card h3{
   font-size:1.5rem;
-  margin-bottom:20px;
+  margin-bottom:24px;
 }
 
 .hero-stats{
@@ -195,8 +227,8 @@ body{
 
 .hero-stat{
   background:rgba(255,255,255,.12);
-  padding:20px;
-  border-radius:20px;
+  padding:22px;
+  border-radius:22px;
   text-align:center;
 }
 
@@ -206,13 +238,13 @@ body{
 }
 
 /* =========================
-   GENERAL SECTION
+   GENERAL SECTIONS
 ========================= */
 
 .container{
   max-width:1200px;
   margin:auto;
-  padding:80px 20px;
+  padding:85px 20px;
 }
 
 .section-title{
@@ -229,14 +261,14 @@ body{
 }
 
 .section-title h2{
-  font-size:2.7rem;
+  font-size:2.8rem;
   color:var(--dark);
-  margin-top:10px;
+  margin-top:12px;
 }
 
 .section-title p{
-  max-width:700px;
-  margin:15px auto 0;
+  max-width:720px;
+  margin:16px auto 0;
   font-size:1.05rem;
 }
 
@@ -256,26 +288,26 @@ body{
 .card{
   background:white;
   border-radius:var(--radius);
-  padding:30px;
+  padding:32px;
   box-shadow:var(--shadow);
   transition:.35s;
   border:1px solid #eef2ff;
 }
 
 .card:hover{
-  transform:translateY(-6px);
+  transform:translateY(-8px);
 }
 
 .icon{
-  width:70px;
-  height:70px;
-  border-radius:20px;
+  width:72px;
+  height:72px;
+  border-radius:22px;
   background:linear-gradient(135deg,#6c3cff,#7c4dff);
   display:flex;
   align-items:center;
   justify-content:center;
   color:white;
-  font-size:1.8rem;
+  font-size:1.9rem;
   margin-bottom:20px;
 }
 
@@ -291,11 +323,11 @@ body{
 
 .ceo{
   background:white;
-  border-radius:35px;
+  border-radius:36px;
   padding:50px;
   display:grid;
   grid-template-columns:280px 1fr;
-  gap:40px;
+  gap:45px;
   align-items:center;
   box-shadow:var(--shadow);
 }
@@ -326,7 +358,7 @@ body{
 .ceo-role{
   color:var(--primary);
   font-weight:700;
-  margin-bottom:20px;
+  margin:12px 0 20px;
 }
 
 /* =========================
@@ -342,7 +374,7 @@ body{
 .stat-card{
   background:linear-gradient(135deg,#fff,#f4f7ff);
   border-radius:28px;
-  padding:35px;
+  padding:38px;
   text-align:center;
   box-shadow:var(--shadow);
 }
@@ -358,20 +390,30 @@ body{
 
 .cta{
   background:linear-gradient(135deg,#1e0c5c,#6c3cff);
-  border-radius:35px;
+  border-radius:38px;
   color:white;
   text-align:center;
-  padding:70px 30px;
-  overflow:hidden;
+  padding:80px 30px;
   position:relative;
+  overflow:hidden;
+}
+
+.cta::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at top left,rgba(255,255,255,.12),transparent 30%);
 }
 
 .cta h2{
+  position:relative;
   font-size:3rem;
   margin-bottom:20px;
 }
 
 .cta p{
+  position:relative;
   max-width:700px;
   margin:auto auto 35px;
   opacity:.92;
@@ -385,7 +427,7 @@ body{
 footer{
   background:#0b1120;
   color:#cbd5e1;
-  padding:70px 20px 30px;
+  padding:75px 20px 35px;
 }
 
 .footer-inner{
@@ -403,6 +445,7 @@ footer{
   font-size:2rem;
   font-weight:800;
   margin-bottom:20px;
+  color:white;
 }
 
 .footer-logo .info{
@@ -435,7 +478,7 @@ footer{
 }
 
 /* =========================
-   MOBILE
+   MOBILE RESPONSIVE
 ========================= */
 
 @media(max-width:900px){
@@ -450,7 +493,7 @@ footer{
 
   .ceo{
     grid-template-columns:1fr;
-    padding:30px;
+    padding:32px;
   }
 
   .footer-grid{
@@ -460,25 +503,48 @@ footer{
 
 @media(max-width:768px){
 
-  .nav-links{
-    display:none;
+  .mobile-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
 
-  .mobile-btn{
-    display:block;
-    background:#eef2ff;
-    border:none;
-    padding:10px 14px;
-    border-radius:12px;
-    font-size:1.2rem;
+  .nav-links{
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    background:white;
+    flex-direction:column;
+    align-items:flex-start;
+    padding:1rem;
+    gap:.4rem;
+    box-shadow:0 20px 40px rgba(0,0,0,.08);
+
+    opacity:0;
+    visibility:hidden;
+    transform:translateY(-10px);
+    transition:.3s ease;
+  }
+
+  .nav-links.active{
+    opacity:1;
+    visibility:visible;
+    transform:translateY(0);
+  }
+
+  .nav-links a{
+    width:100%;
+    padding:1rem;
+    border-radius:14px;
   }
 
   .hero{
-    padding-top:70px;
+    padding-top:75px;
   }
 
   .hero h1{
-    font-size:2.4rem;
+    font-size:2.5rem;
   }
 
   .section-title h2{
@@ -490,7 +556,7 @@ footer{
   }
 
   .hero-card{
-    padding:22px;
+    padding:24px;
   }
 
   .hero-stats{
@@ -499,14 +565,29 @@ footer{
 
   .btn{
     width:100%;
-    justify-content:center;
   }
 }
 
 @media(max-width:480px){
 
+  .nav-inner{
+    padding:1rem;
+  }
+
+  .logo{
+    font-size:1.3rem;
+  }
+
+  .hero{
+    padding:65px 18px 70px;
+  }
+
   .hero h1{
     font-size:2rem;
+  }
+
+  .hero p{
+    font-size:1rem;
   }
 
   .section-title h2{
@@ -514,15 +595,33 @@ footer{
   }
 
   .cta h2{
-    font-size:1.8rem;
+    font-size:1.9rem;
   }
 
   .card{
-    padding:24px;
+    padding:26px;
   }
 
   .stat-card h2{
-    font-size:2.2rem;
+    font-size:2.3rem;
+  }
+
+  .container{
+    padding:70px 16px;
+  }
+
+  .ceo{
+    padding:24px;
+    border-radius:28px;
+  }
+
+  .hero-card{
+    border-radius:24px;
+  }
+
+  .cta{
+    padding:65px 20px;
+    border-radius:28px;
   }
 }
 </style>
@@ -534,12 +633,12 @@ footer{
 <nav class="navbar">
   <div class="nav-inner">
 
-    <a href="#" class="logo">
+    <a href="index.html" class="logo">
       🎓
       <span>gradely<span class="info">.info</span></span>
     </a>
 
-    <div class="nav-links">
+    <div class="nav-links" id="mobileMenu">
       <a href="index.html">Home</a>
       <a href="about.html">About</a>
       <a href="plan-comparison.html">Plans</a>
@@ -547,7 +646,9 @@ footer{
       <a href="admin-login.html">Login</a>
     </div>
 
-    <button class="mobile-btn">☰</button>
+    <button class="mobile-btn" id="menuBtn">
+      ☰
+    </button>
 
   </div>
 </nav>
@@ -558,6 +659,7 @@ footer{
   <div class="hero-inner">
 
     <div>
+
       <h1>
         Transforming Nigerian Schools Through Technology
       </h1>
@@ -569,6 +671,7 @@ footer{
       </p>
 
       <div class="hero-buttons">
+
         <a href="register-school.html" class="btn btn-primary">
           🚀 Get Started
         </a>
@@ -576,7 +679,9 @@ footer{
         <a href="plan-comparison.html" class="btn btn-outline">
           💳 View Plans
         </a>
+
       </div>
+
     </div>
 
     <div class="hero-card">
@@ -618,7 +723,9 @@ footer{
 
   <div class="section-title">
     <span>OUR STORY</span>
+
     <h2>Built for Nigerian Schools</h2>
+
     <p>
       We created gradely.info to help schools move away from outdated
       paper systems and embrace modern digital education management.
@@ -629,7 +736,9 @@ footer{
 
     <div class="card">
       <div class="icon">📚</div>
+
       <h3>Academic Management</h3>
+
       <p>
         Manage student records, report cards,
         grading systems and academic history seamlessly.
@@ -638,7 +747,9 @@ footer{
 
     <div class="card">
       <div class="icon">📱</div>
+
       <h3>Parent Communication</h3>
+
       <p>
         Send SMS alerts, notifications,
         and important updates instantly to parents.
@@ -647,7 +758,9 @@ footer{
 
     <div class="card">
       <div class="icon">⚡</div>
+
       <h3>Automation</h3>
+
       <p>
         Automate results, attendance,
         fee management, and administrative workflows.
@@ -724,7 +837,9 @@ footer{
 
     <div class="card">
       <div class="icon">📊</div>
+
       <h3>Student Management</h3>
+
       <p>
         Centralized student database and records system.
       </p>
@@ -732,7 +847,9 @@ footer{
 
     <div class="card">
       <div class="icon">📈</div>
+
       <h3>Results Processing</h3>
+
       <p>
         Automatic result uploads and report generation.
       </p>
@@ -740,7 +857,9 @@ footer{
 
     <div class="card">
       <div class="icon">🏫</div>
+
       <h3>Class Management</h3>
+
       <p>
         Organize classes, sections and timetables easily.
       </p>
@@ -812,6 +931,7 @@ footer{
     <div class="footer-grid">
 
       <div>
+
         <div class="footer-logo">
           🎓 gradely<span class="info">.info</span>
         </div>
@@ -820,21 +940,28 @@ footer{
           Modern school management software designed
           for Nigerian educational institutions.
         </p>
+
       </div>
 
       <div class="footer-links">
+
         <h4>Quick Links</h4>
+
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
         <a href="admin-login.html">Login</a>
+
       </div>
 
       <div class="footer-links">
+
         <h4>Legal</h4>
+
         <a href="terms.html">Terms</a>
         <a href="privacy.html">Privacy</a>
         <a href="refund-policy.html">Refund Policy</a>
+
       </div>
 
     </div>
@@ -846,6 +973,39 @@ footer{
   </div>
 
 </footer>
+
+<script>
+const menuBtn = document.getElementById("menuBtn");
+const mobileMenu = document.getElementById("mobileMenu");
+
+menuBtn.addEventListener("click", () => {
+  mobileMenu.classList.toggle("active");
+
+  if (mobileMenu.classList.contains("active")) {
+    menuBtn.innerHTML = "✕";
+  } else {
+    menuBtn.innerHTML = "☰";
+  }
+});
+
+// Close menu when link clicked
+document.querySelectorAll(".nav-links a").forEach(link => {
+  link.addEventListener("click", () => {
+    mobileMenu.classList.remove("active");
+    menuBtn.innerHTML = "☰";
+  });
+});
+
+// Close when clicking outside
+document.addEventListener("click", (e) => {
+  const isInsideNav = e.target.closest(".nav-inner");
+
+  if (!isInsideNav) {
+    mobileMenu.classList.remove("active");
+    menuBtn.innerHTML = "☰";
+  }
+});
+</script>
 
 </body>
 </html>
