@@ -311,9 +311,7 @@ function goBack() {
 
 
 // SHOW STUDENT USAGE AND DISABLE BUTTON IF LIMIT REACHED
-
-// SHOW STUDENT USAGE AND DISABLE BUTTON IF LIMIT REACHED
-
+// ✅ In create-student.html, around line ~320 in showStudentUsage():
 async function showStudentUsage() {
   const counter = document.getElementById("studentCounter");
   const submitBtn = document.querySelector(".btn-submit");
@@ -329,8 +327,8 @@ async function showStudentUsage() {
       throw new Error(data.message || "Failed to fetch usage");
     }
 
-    // ✅ Get values from response
-    const plan = (data.data?.plan || "").toLowerCase();
+    // ✅ Get values from response (backend is source of truth)
+    const plan = data.data?.plan?.toLowerCase() || 'basic';
     const used = data.data?.current ?? 0;
     const limit = data.data?.limit ?? 200;  // Default to 200 if not provided
 
@@ -361,7 +359,7 @@ async function showStudentUsage() {
     // =========================
     else if (plan === "pro" || limit === -1) {
       // ✅ Show total students ONLY with "Unlimited" badge
-      counter.textContent = `🎉 Students registered: ${used} (Unlimited)`;
+      counter.textContent = `🧑 Students registered: ${used} (Unlimited)`;
       counter.style.color = "#27ae60";
 
       submitBtn.disabled = false;
@@ -380,6 +378,7 @@ async function showStudentUsage() {
     }
   }
 }
+
 
 // Call on page load
 showStudentUsage();
