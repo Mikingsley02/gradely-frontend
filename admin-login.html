@@ -177,6 +177,18 @@
   <script>
     const API_BASE = window.location.hostname.includes("localhost") ? "http://localhost:5000" : "https://api.gradely.info";
 
+    // ✅ NEW: Helper function to build auth headers with JWT
+    function getAuthHeaders() {
+      const token = sessionStorage.getItem("gradely_token");
+      const headers = { "Content-Type": "application/json" };
+      
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      
+      return headers;
+    }
+
     document.getElementById('togglePassword').addEventListener('click', function() {
       const passwordField = document.getElementById('adminPassword');
       const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -191,11 +203,12 @@
         console.log('🔍 [Login SMS] School ID:', schoolId);
         console.log('🔍 [Login SMS] API Base:', API_BASE);
         
+        // ✅ 2FA routes still use session cookies (backward compatible)
         const res = await fetch(`${API_BASE}/api/auth/2fa/resend-sms`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ school_id: schoolId }),
-          credentials: 'include'
+          credentials: 'include'  // Keep for 2FA session state
         });
         
         console.log('🔍 [Login SMS] Response status:', res.status);
@@ -224,22 +237,30 @@
       messageEl.textContent = '⏳ Verifying...'; messageEl.className = 'message';
       
       try {
-        const schoolId = localStorage.getItem('pending_2fa_school_id') || localStorage.getItem('school_id') || '';
-        const method = localStorage.getItem('pending_2fa_method') || 'app';
+        const schoolId = sessionStorage.getItem('pending_2fa_school_id') || sessionStorage.getItem('school_id') || '';
+        const method = sessionStorage.getItem('pending_2fa_method') || 'app';
         if (!schoolId) throw new Error('School ID not found. Please log in again.');
         
+        // ✅ 2FA verification still uses session cookies (backward compatible)
         const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ school_id: schoolId, code, method }), credentials: 'include'
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ school_id: schoolId, code, method }), 
+          credentials: 'include'  // Keep for 2FA session state
         });
         const result = await res.json();
         if (result.success) {
+          // ✅ Store auth data in sessionStorage (tab-scoped)
           sessionStorage.setItem('school_id', schoolId);
           sessionStorage.setItem('adminId', schoolId);
-        if (result.admin) {
-         sessionStorage.setItem('subscription_plan', result.admin.subscription_plan || 'basic');
-         sessionStorage.setItem('current_plan', result.admin.current_plan || 'basic');
-      }
+          if (result.admin) {
+            sessionStorage.setItem('subscription_plan', result.admin.subscription_plan || 'basic');
+            sessionStorage.setItem('current_plan', result.admin.current_plan || 'basic');
+          }
+          // ✅ Store JWT if provided (for subsequent API calls)
+          if (result.token) {
+            sessionStorage.setItem('gradely_token', result.token);
+          }
           sessionStorage.removeItem('pending_2fa_school_id');
           sessionStorage.removeItem('pending_2fa_method');
           window.location.href = 'dashboard.html';
@@ -260,9 +281,12 @@
         console.log('🔍 [Frontend] === LOGIN ATTEMPT ===');
         console.log('🔍 [Frontend] Admin ID:', admin_id);
         
+        // ✅ Main login uses JWT header (new auth flow)
         const res = await fetch(`${API_BASE}/api/auth/login`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          credentials: "include", body: JSON.stringify({ admin_id, password })
+          method: "POST", 
+          headers: getAuthHeaders(),  // ✅ Sends JWT if available
+          body: JSON.stringify({ admin_id, password })
+          // ❌ Remove credentials: "include" for JWT-based auth
         });
         const data = await res.json();
         console.log('🔍 [Frontend] Login response:', data);
@@ -275,7 +299,7 @@
           document.getElementById('mainBackToHome').style.display = 'none';
           document.getElementById('2faPrompt').style.display = 'block';
           
-          
+          // ✅ Store pending 2FA data in sessionStorage (tab-scoped)
           sessionStorage.setItem('pending_2fa_school_id', admin_id);
           sessionStorage.setItem('pending_2fa_method', data.method);
           btn.classList.remove("loading"); text.style.opacity = "1"; spinner.style.display = "none";
@@ -320,15 +344,22 @@
 
         if (data.success && data.admin) {
           const email = data.admin.email || admin_id + "@gradely.info";
+          
+          // ✅ Store ALL auth data in sessionStorage (tab-scoped)
           sessionStorage.setItem("email", email);
           sessionStorage.setItem("adminId", data.admin.admin_id);
           sessionStorage.setItem("school_id", data.admin.school_id || data.admin.admin_id);
           sessionStorage.setItem("school_name", data.admin.school_name || "");
           sessionStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
           sessionStorage.setItem("admin_email", email);
-        if (data.token) sessionStorage.setItem('gradely_token', data.token);
+          
+          // ✅ CRITICAL: Store JWT token for subsequent API calls
+          if (data.token) {
+            sessionStorage.setItem('gradely_token', data.token);
+            console.log('✅ JWT token stored in sessionStorage');
+          }
 
-
+          // ✅ Redirect to dashboard
           window.location.href = "dashboard.html";
         } else { alert("❌ " + (data.message || "Login failed.")); }
       } catch (err) {
@@ -353,8 +384,22 @@
       else methodHint.textContent = '❌ Failed to send code. Please try again.';
     });
 
-  </script>
+    // ✅ NEW: Logout function to clear JWT and auth data
+    function logout() {
+      sessionStorage.removeItem("gradely_token");
+      sessionStorage.removeItem("school_id");
+      sessionStorage.removeItem("adminId");
+      sessionStorage.removeItem("plan");
+      sessionStorage.removeItem("email");
+      sessionStorage.removeItem("school_name");
+      sessionStorage.removeItem("admin_email");
+      sessionStorage.removeItem("pending_2fa_school_id");
+      sessionStorage.removeItem("pending_2fa_method");
+      
+      window.location.href = "index.html";
+    }
 
+  </script>
 
   <script src="js/kaima-chatbot.js"></script>
 </body>
