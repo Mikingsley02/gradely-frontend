@@ -128,7 +128,8 @@
     .export-btn,
     .manage-classes-btn,
     .attendance-btn,
-    .back-btn {
+    .back-btn,
+    .save-btn {
       width: 100%;
       max-width: 300px;
       padding: 12px;
@@ -148,6 +149,12 @@
       color: white;
     }
     .export-btn:hover { background: #5a3ecf; }
+
+    .save-btn {
+      background: #27ae60;  /* Green for save */
+      color: white;
+    }
+    .save-btn:hover { background: #219653; }
 
     .manage-classes-btn {
       background: #9b59b6;  /* Purple for management */
@@ -182,6 +189,7 @@
       }
 
       .export-btn,
+      .save-btn,
       .manage-classes-btn,
       .attendance-btn,
       .back-btn {
@@ -242,8 +250,9 @@
       <div class="timetable" id="timetableGrid"></div>
     </div>
 
-    <!-- ✅ Updated Action Buttons: Export → Manage Classes → Attendance → Back -->
+    <!-- ✅ Updated Action Buttons: Save → Export → Manage Classes → Attendance → Back -->
     <div class="action-buttons">
+      <button class="save-btn" onclick="manualSaveTimetable()">💾 Save Timetable</button>
       <button class="export-btn" onclick="exportPDF()">📄 Export as PDF</button>
       <a href="classes.html" class="manage-classes-btn">🏫 Manage Classes</a>
       <a href="attendance.html" class="attendance-btn">📋 Attendance</a>
@@ -262,13 +271,128 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
+    const API_BASE = "https://api.gradely.info";
+
+    // ✅ NEW: Helper function to build auth headers with JWT
+    function getAuthHeaders() {
+      const token = sessionStorage.getItem("gradely_token");
+      const headers = { "Content-Type": "application/json" };
+      
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      
+      return headers;
+    }
+
+    // ✅ NEW: Show brief success toast
+    function showToast(message) {
+      const toast = document.createElement("div");
+      toast.textContent = message;
+      Object.assign(toast.style, {
+        position: "fixed",
+        bottom: "20px",
+        right: "20px",
+        background: "#27ae60",
+        color: "#fff",
+        padding: "12px 24px",
+        borderRadius: "8px",
+        fontSize: "0.95rem",
+        fontWeight: "600",
+        zIndex: "9999",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+        opacity: "0",
+        transition: "opacity 0.3s ease"
+      });
+      document.body.appendChild(toast);
+      requestAnimationFrame(() => toast.style.opacity = "1");
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+      }, 2000);
+    }
+
+    // ✅ NEW: Save timetable to backend with JWT auth
+    async function saveTimetable(className, groupName) {
       const schoolId = sessionStorage.getItem("school_id");
       if (!schoolId) {
         alert("⚠️ Session expired. Please log in again.");
         window.location.href = "admin-login.html";
         return;
       }
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/classes/timetable`, {
+          method: "POST",
+          headers: getAuthHeaders(),  // ✅ Sends JWT in Authorization header
+          body: JSON.stringify({
+            school_id: schoolId,
+            class_name: className,
+            group_name: groupName,
+            timetable: timetableData[className][groupName]
+          })
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+          console.log("✅ Timetable saved successfully");
+          showToast("✅ Timetable saved!");
+        } else {
+          console.error("❌ Failed to save timetable:", result.message);
+          alert("⚠️ Failed to save timetable: " + result.message);
+        }
+      } catch (err) {
+        console.error("❌ Network error saving timetable:", err);
+        alert("⚠️ Network error. Please check your connection and try again.");
+      }
+    }
+
+    // ✅ NEW: Manual save trigger
+    function manualSaveTimetable() {
+      const className = document.getElementById("className").value;
+      const groupName = document.getElementById("groupName").value;
+      saveTimetable(className, groupName);
+    }
+
+    // ✅ NEW: Load timetable from backend on page load
+    async function loadTimetable(className, groupName) {
+      const schoolId = sessionStorage.getItem("school_id");
+      if (!schoolId) return;
+      
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/classes/timetable?school_id=${encodeURIComponent(schoolId)}&class_name=${encodeURIComponent(className)}&group_name=${encodeURIComponent(groupName)}`,
+          { headers: getAuthHeaders() }
+        );
+        
+        const result = await res.json();
+        
+        if (result.success && result.data) {
+          // ✅ Merge loaded data with in-memory structure
+          if (!timetableData[className]) timetableData[className] = {};
+          timetableData[className][groupName] = result.data;
+          console.log("✅ Timetable loaded from backend");
+        }
+      } catch (err) {
+        console.warn("⚠️ Could not load timetable from backend:", err.message);
+        // ✅ Continue with in-memory defaults if load fails
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const schoolId = sessionStorage.getItem("school_id");
+      if (!schoolId) {
+        alert("⚠️ Session expired. Please log in again.");
+        window.location.href = "admin-login.html";
+        return;
+      }
+      
+      // ✅ Load saved timetable on initial render
+      const className = document.getElementById("className").value;
+      const groupName = document.getElementById("groupName").value;
+      await loadTimetable(className, groupName);
+      renderTimetable();
     });
 
     const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
@@ -331,9 +455,21 @@
           cell.addEventListener("dblclick", () => {
             const newSub = prompt("Enter subject:", gridData[day][rowIndex].subject) || "-";
             const newTeach = prompt("Enter teacher:", gridData[day][rowIndex].teacher) || "-";
+            
+            // ✅ Update in-memory data
             gridData[day][rowIndex].subject = newSub;
             gridData[day][rowIndex].teacher = newTeach;
+            
+            // ✅ Re-render UI immediately
             renderTimetable();
+            
+            // ✅ NEW: Auto-save to backend with 500ms debounce
+            if (window.saveTimetableTimeout) {
+              clearTimeout(window.saveTimetableTimeout);
+            }
+            window.saveTimetableTimeout = setTimeout(() => {
+              saveTimetable(className, groupName);
+            }, 500);
           });
 
           timetableGrid.appendChild(cell);
@@ -341,10 +477,22 @@
       });
     }
 
-    document.getElementById("className").addEventListener("change", renderTimetable);
-    document.getElementById("groupName").addEventListener("change", renderTimetable);
+    document.getElementById("className").addEventListener("change", async (e) => {
+      const className = e.target.value;
+      const groupName = document.getElementById("groupName").value;
+      await loadTimetable(className, groupName);
+      renderTimetable();
+    });
+    
+    document.getElementById("groupName").addEventListener("change", async (e) => {
+      const className = document.getElementById("className").value;
+      const groupName = e.target.value;
+      await loadTimetable(className, groupName);
+      renderTimetable();
+    });
 
-    renderTimetable();
+    // Initial render (loadTimetable called in DOMContentLoaded)
+    // renderTimetable(); // Called after loadTimetable in DOMContentLoaded
 
     function exportPDF() {
       const { jsPDF } = window.jspdf;
