@@ -500,17 +500,13 @@ let isAccountSuspended = false;
 let subscriptionStatus = 'active';
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+  const schoolId = sessionStorage.getItem("school_id");
   console.log("🔍 school_id from storage:", schoolId);
   
   if (!schoolId) {
     alert("⚠️ Session expired. Please log in again.");
     window.location.href = "admin-login.html";
     return;
-  }
-
-  if (!sessionStorage.getItem("school_id")) {
-    sessionStorage.setItem("school_id", schoolId);
   }
 
   // ✅ Fetch subscription status FIRST, then update UI
@@ -524,7 +520,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // ✅ NEW: Dedicated function to fetch + apply subscription logic
 async function checkAndApplySubscription() {
-  const schoolId = localStorage.getItem("school_id");
+  const schoolId = sessionStorage.getItem("school_id");
   const timestamp = Date.now();
   const apiUrl = `/api/subscription/status?school_id=${encodeURIComponent(schoolId)}&t=${timestamp}`;
   console.log("📡 Fetching subscription status from:", apiUrl);
@@ -562,7 +558,9 @@ async function checkAndApplySubscription() {
       // ✅ Validate plan value
       if (!rawPlan || !['basic', 'pro'].includes(rawPlan)) {
         // Try cached fallback
-        const cachedPlan = localStorage.getItem('last_known_plan');
+        const cachedPlan = sessionStorage.getItem('last_known_plan');
+        sessionStorage.setItem('last_known_plan', currentPlan);
+
         if (cachedPlan && ['basic', 'pro'].includes(cachedPlan.toLowerCase())) {
           console.warn("⚠️ API returned invalid plan, using cached fallback:", cachedPlan);
           currentPlan = cachedPlan.toLowerCase();
@@ -575,8 +573,8 @@ async function checkAndApplySubscription() {
       }
       
       // ✅ Cache for next time
-      localStorage.setItem('last_known_plan', currentPlan);
-      
+      sessionStorage.setItem('last_known_plan', currentPlan);
+
       // ✅ Extract expiry and status with fallbacks
       subscriptionExpiryDate = (
         data.expiryDate || 
@@ -634,8 +632,9 @@ async function checkAndApplySubscription() {
     console.error('❌ Failed to fetch account status:', err);
     
     // ✅ CRITICAL: Do NOT default to 'basic' - use cached plan or show error
-    const cachedPlan = localStorage.getItem('last_known_plan');  // ✅ Use correct key
-    
+      const cachedPlan = sessionStorage.getItem('last_known_plan');
+
+
     if (cachedPlan && ['basic', 'pro'].includes(cachedPlan.toLowerCase())) {
       console.log('🔍 [Dashboard] Using cached plan:', cachedPlan);
       currentPlan = cachedPlan.toLowerCase();  // ✅ Set currentPlan
@@ -784,15 +783,17 @@ function showAccountSuspended() {
 
 function contactAdmin() {
   const email = 'support@gradely.info';
-  const subject = encodeURIComponent('Account Suspended - ' + localStorage.getItem('school_id'));
-  window.location.href = `mailto:${email}?subject=${subject}&body=School ID: ${localStorage.getItem('school_id')}\n\nMy account has been suspended. Please assist.`;
+  const schoolId = sessionStorage.getItem('school_id');
+const subject = encodeURIComponent('Account Suspended - ' + schoolId);
+window.location.href = `mailto:${email}?subject=${subject}&body=School ID: ${schoolId}\n\nMy account has been suspended. Please assist.`;
 }
 
 function contactSupport() {
   const email = 'support@gradely.info';
-  const subject = encodeURIComponent('Account Plan Configuration Error - ' + localStorage.getItem('school_id'));
-  window.location.href = `mailto:${email}?subject=${subject}&body=School ID: ${localStorage.getItem('school_id')}\n\nI'm unable to access my dashboard due to a plan configuration error. Please restore my account access.`;
-}
+  const schoolId = sessionStorage.getItem('school_id');
+const subject = encodeURIComponent('Account Plan Configuration Error - ' + schoolId);
+window.location.href = `mailto:${email}?subject=${subject}&body=School ID: ${schoolId}\n\nI'm unable to access my dashboard due to a plan configuration error. Please restore my account access.`;
+  }
 
 function showPlanConfigurationError() {
   console.log("❌ Plan configuration error - blocking dashboard access");
@@ -844,8 +845,8 @@ function showPlanConfigurationError() {
 }
 
 function showPlanRecoveryWarning(recoveredPlan) {
-  console.log("⚠️ Recovered plan from localStorage:", recoveredPlan);
-  
+console.log("⚠️ Recovered plan from sessionStorage:", recoveredPlan);
+
   const badge = document.getElementById('planBadge');
   if (badge) {
     badge.textContent = `${recoveredPlan.toUpperCase()} (RECOVERED)`;
@@ -962,8 +963,15 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
   if (confirm("Are you sure you want to logout?")) {
     sessionStorage.removeItem('proFeatureAlertShown');
     localStorage.removeItem('last_known_plan');
-    localStorage.clear();
-    sessionStorage.clear();
+
+sessionStorage.removeItem('school_id');
+sessionStorage.removeItem('adminId');
+sessionStorage.removeItem('plan');
+sessionStorage.removeItem('gradely_token');
+sessionStorage.removeItem('proFeatureAlertShown');
+sessionStorage.removeItem('last_known_plan');
+
+
     window.location.href = "index.html";
   }
 });
