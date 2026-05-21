@@ -334,31 +334,76 @@
 
 <script>
 // ✅ FIXED: Clean API_BASE (NO trailing spaces)
+// ✅ FIXED: Clean API_BASE
 const API_BASE = window.location.hostname.includes("localhost")
   ? "http://localhost:5000"
   : "https://api.gradely.info";
 
-// ✅ NEW: Helper function to build auth headers with JWT
+// ✅ NEW: Get JWT token safely
+function getToken() {
+  return (
+    sessionStorage.getItem("gradely_token") ||
+    localStorage.getItem("gradely_token")
+  );
+}
+
+// ✅ FIXED: Build auth headers correctly
 function getAuthHeaders() {
-  const token = sessionStorage.getItem("gradely_token");
-  const headers = { "Content-Type": "application/json" };
-  
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+  const token = getToken();
+
+  const headers = {
+    "Content-Type": "application/json"
+  };
+
+  if (token && token !== "undefined" && token !== "null") {
+    headers.Authorization = `Bearer ${token}`;
   }
-  
+
   return headers;
 }
 
-// ✅ Check if user is logged in (via sessionStorage)
+// ✅ FIXED: Proper login validation
 function isLoggedIn() {
-  return !!sessionStorage.getItem("school_id");
+  const token = getToken();
+
+  return !!(
+    token &&
+    token !== "undefined" &&
+    token !== "null" &&
+    token.trim() !== ""
+  );
 }
 
-// ✅ Early redirect if not logged in
+// ✅ FIXED: Early auth check
 if (!isLoggedIn()) {
-  alert("⚠️ You are not logged in!");
+  console.warn("❌ No valid JWT token found");
+
+  alert("⚠️ Your session has expired. Please log in again.");
+
+  sessionStorage.removeItem("gradely_token");
+  sessionStorage.removeItem("school_id");
+  localStorage.removeItem("gradely_token");
+
   window.location.href = "admin-login.html";
+}
+
+// ✅ Helper for handling expired auth globally
+async function handleAuthResponse(res) {
+  if (res.status === 401) {
+    console.warn("❌ Unauthorized - token expired or invalid");
+
+    sessionStorage.removeItem("gradely_token");
+    sessionStorage.removeItem("school_id");
+    localStorage.removeItem("gradely_token");
+
+    alert("⚠️ Session expired. Please log in again.");
+
+    window.location.href = "admin-login.html";
+
+    return null;
+  }
+
+  return res;
 }
 
 document.addEventListener("DOMContentLoaded", loadSchoolData);
@@ -375,19 +420,19 @@ async function loadSchoolData() {
       headers: getAuthHeaders()  // ✅ Sends JWT in Authorization header
     });
 
-    if (res.status === 401) {
-      alert("⚠️ Session expired. Please log in again.");
-      window.location.href = "admin-login.html";
-      return;
-    }
+    const checkedRes = await handleAuthResponse(res);
 
-    if (!res.ok) {
+if (!checkedRes) return;
+
+if (!checkedRes.ok) {
+
+
       const errorText = await res.text();
       console.error("❌ Failed to load settings:", res.status, errorText.substring(0, 200));
       throw new Error(`HTTP ${res.status}`);
     }
 
-    const data = await res.json();
+    const data = await checkedRes.json();
 
     document.getElementById("school_name").value = data.school?.school_name || "";
     document.getElementById("email").value = data.school?.email || "";
@@ -458,11 +503,18 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
       return;
     }
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("❌ Failed to update settings:", res.status, errorText.substring(0, 200));
-      throw new Error(`HTTP ${res.status}`);
-    }
+    if (!checkedRes.ok) {
+  const errorText = await checkedRes.text();
+
+  console.error(
+    "❌ Failed to load settings:",
+    checkedRes.status,
+    errorText.substring(0, 300)
+  );
+
+  throw new Error(`HTTP ${checkedRes.status}`);
+}
+
 
     const data = await res.json();
 

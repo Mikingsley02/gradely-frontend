@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("token", data.token);
         sessionStorage.setItem("adminId", admin_id);
         sessionStorage.setItem("school_id", data.admin.school_id);
+        sessionStorage.setItem("gradely_token", data.token);
         window.location.href = "dashboard.html";
       } else {
         alert(`❌ ${data.message || "Login failed"}`);
