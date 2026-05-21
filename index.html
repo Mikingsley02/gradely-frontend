@@ -213,8 +213,8 @@
       function gtag(){ dataLayer.push(arguments); }
       gtag('js', new Date());
       gtag('config', 'G-8G4E0GYWT1', {
-        user_type: localStorage.getItem("adminId") ? 'admin' : 
-                   localStorage.getItem("school_id") ? 'school' : 'visitor'
+      user_type: sessionStorage.getItem("adminId") ? 'admin' : 
+             sessionStorage.getItem("school_id") ? 'school' : 'visitor'
       });
       
       console.log("✅ Google Analytics loaded (G-8G4E0GYWT1)");
@@ -225,14 +225,14 @@
   }
 
   // ✅ NEW: Generate anonymous visitor ID
-  function getVisitorId() {
-    let id = localStorage.getItem('gradely_visitor_id');
-    if (!id) {
-      id = 'v-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      localStorage.setItem('gradely_visitor_id', id);
-    }
-    return id;
+function getVisitorId() {
+  let id = sessionStorage.getItem('gradely_visitor_id');
+  if (!id) {
+    id = 'v-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem('gradely_visitor_id', id);
   }
+  return id;
+}
 
   // ✅ NEW: Accept with backend logging
   async function acceptCookies() {

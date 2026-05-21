@@ -263,7 +263,7 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
+      const schoolId = sessionStorage.getItem("school_id");
       if (!schoolId) {
         alert("⚠️ Session expired. Please log in again.");
         window.location.href = "admin-login.html";

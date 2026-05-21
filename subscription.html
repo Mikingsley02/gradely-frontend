@@ -262,8 +262,8 @@ let schoolEmail = null;
 let hasSubscription = false; // Tracks if paystack_subscription_code exists
 
 document.addEventListener("DOMContentLoaded", async () => {
-  schoolId = localStorage.getItem("school_id") || sessionStorage.getItem("school_id");
-  adminId = localStorage.getItem("admin_id") || sessionStorage.getItem("admin_id");
+  schoolId = sessionStorage.getItem("school_id");
+  adminId = sessionStorage.getItem("admin_id");
 
   if (!schoolId) {
     alert("Session expired. Please log in again.");
@@ -340,7 +340,7 @@ async function fetchSubscriptionStatus() {
     if (!data.success) throw new Error(data.message || "Failed to load subscription");
 
     // ✅ Store verified email from backend
-    schoolEmail = data.data?.email || localStorage.getItem('email');
+    schoolEmail = data.data?.email || sessionStorage.getItem('email');
     
     currentPlan = data.plan || data.current_plan || data.data?.current_plan || 'basic';
     document.getElementById("plan").textContent =

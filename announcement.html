@@ -618,7 +618,7 @@ const list = document.getElementById("announcementsList");
 let templates = [];
 
 function isLoggedIn() {
-  return !!(localStorage.getItem("school_id") || sessionStorage.getItem("school_id"));
+  return !!(sessionStorage.getItem("school_id"));
 }
 
 window.addEventListener("DOMContentLoaded", () => {
