@@ -234,14 +234,14 @@
         });
         const result = await res.json();
         if (result.success) {
-          localStorage.setItem('school_id', schoolId);
-          localStorage.setItem('adminId', schoolId);
-          if (result.admin) {
-            localStorage.setItem('subscription_plan', result.admin.subscription_plan || 'basic');
-            localStorage.setItem('current_plan', result.admin.current_plan || 'basic');
-          }
-          localStorage.removeItem('pending_2fa_school_id');
-          localStorage.removeItem('pending_2fa_method');
+          sessionStorage.setItem('school_id', schoolId);
+          sessionStorage.setItem('adminId', schoolId);
+        if (result.admin) {
+         sessionStorage.setItem('subscription_plan', result.admin.subscription_plan || 'basic');
+         sessionStorage.setItem('current_plan', result.admin.current_plan || 'basic');
+      }
+          sessionStorage.removeItem('pending_2fa_school_id');
+          sessionStorage.removeItem('pending_2fa_method');
           window.location.href = 'dashboard.html';
         } else { throw new Error(result.message); }
       } catch (err) { messageEl.textContent = `❌ ${err.message}`; }
@@ -275,8 +275,9 @@
           document.getElementById('mainBackToHome').style.display = 'none';
           document.getElementById('2faPrompt').style.display = 'block';
           
-          localStorage.setItem('pending_2fa_school_id', admin_id);
-          localStorage.setItem('pending_2fa_method', data.method);
+          
+          sessionStorage.setItem('pending_2fa_school_id', admin_id);
+          sessionStorage.setItem('pending_2fa_method', data.method);
           btn.classList.remove("loading"); text.style.opacity = "1"; spinner.style.display = "none";
           
           const methodHint = document.getElementById('2faMethodHint');
@@ -298,6 +299,7 @@
               } else {
                 methodHint.innerHTML = '❌ Failed to send SMS code. Click "Resend SMS Code" to try again.';
                 resendBtn.style.display = 'block';
+
                 // ✅ Fallback: Try one more time after 2 seconds
                 setTimeout(async () => {
                   console.log('🔍 [Frontend] Retrying SMS send...');
@@ -318,13 +320,15 @@
 
         if (data.success && data.admin) {
           const email = data.admin.email || admin_id + "@gradely.info";
-          localStorage.setItem("email", email);
-          localStorage.setItem("adminId", data.admin.admin_id);
-          localStorage.setItem("school_id", data.admin.school_id || data.admin.admin_id);
-          localStorage.setItem("school_name", data.admin.school_name || "");
-          localStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
-          localStorage.setItem("admin_email", email);
-          if (data.token) localStorage.setItem('gradely_token', data.token);
+          sessionStorage.setItem("email", email);
+          sessionStorage.setItem("adminId", data.admin.admin_id);
+          sessionStorage.setItem("school_id", data.admin.school_id || data.admin.admin_id);
+          sessionStorage.setItem("school_name", data.admin.school_name || "");
+          sessionStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
+          sessionStorage.setItem("admin_email", email);
+        if (data.token) sessionStorage.setItem('gradely_token', data.token);
+
+
           window.location.href = "dashboard.html";
         } else { alert("❌ " + (data.message || "Login failed.")); }
       } catch (err) {
@@ -340,7 +344,7 @@
 
     // Handle Resend Button Click
     document.getElementById('resendSmsBtn')?.addEventListener('click', async () => {
-      const schoolId = localStorage.getItem('pending_2fa_school_id');
+      const schoolId = sessionStorage.getItem('pending_2fa_school_id');
       const methodHint = document.getElementById('2faMethodHint');
       if (!schoolId) { methodHint.textContent = '❌ Session expired. Please log in again.'; return; }
       methodHint.textContent = '⏳ Sending new code...';
@@ -348,7 +352,10 @@
       if (sent) methodHint.innerHTML = '✅ New code sent! Check your phone.<br><small style="color:#7f8c8d;">Code valid for 5 minutes</small>';
       else methodHint.textContent = '❌ Failed to send code. Please try again.';
     });
+
   </script>
+
+
   <script src="js/kaima-chatbot.js"></script>
 </body>
 </html>
