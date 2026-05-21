@@ -178,34 +178,27 @@
 
         <button type="submit">💾 Save Changes</button>
 
-
-
-
-        
         <!-- NDPR Data Export Section -->
-<div class="settings-section" style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
-  <h3 style="margin-bottom: 15px; color: #0f172a;">📥 NDPR Data Export</h3>
-  <p style="color: #64748b; margin-bottom: 15px; font-size: 0.9rem;">
-    Export school data for compliance, audits, or data subject requests. All exports are logged for NDPR accountability.
-  </p>
-  
-  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-    <select id="exportType" style="padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; min-width: 200px;">
-      <option value="students">Students</option>
-      <option value="parents">Parent Contacts</option>
-      <option value="announcements">Announcements</option>
-      <option value="full">Full School Data (All)</option>
-    </select>
-    <input type="text" id="exportPurpose" placeholder="Purpose (e.g., NDPR request, audit)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; min-width: 200px;" />
-    <button onclick="triggerExport()" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-      📤 Export Data
-    </button>
-  </div>
-  <p id="exportStatus" style="font-size: 0.85rem; color: #64748b; margin-top: 10px;"></p>
-</div>
-
-
-
+        <div class="settings-section" style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+          <h3 style="margin-bottom: 15px; color: #0f172a;">📥 NDPR Data Export</h3>
+          <p style="color: #64748b; margin-bottom: 15px; font-size: 0.9rem;">
+            Export school data for compliance, audits, or data subject requests. All exports are logged for NDPR accountability.
+          </p>
+          
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+            <select id="exportType" style="padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; min-width: 200px;">
+              <option value="students">Students</option>
+              <option value="parents">Parent Contacts</option>
+              <option value="announcements">Announcements</option>
+              <option value="full">Full School Data (All)</option>
+            </select>
+            <input type="text" id="exportPurpose" placeholder="Purpose (e.g., NDPR request, audit)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; min-width: 200px;" />
+            <button onclick="triggerExport()" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+              📤 Export Data
+            </button>
+          </div>
+          <p id="exportStatus" style="font-size: 0.85rem; color: #64748b; margin-top: 10px;"></p>
+        </div>
 
         <div id="message" class="message"></div>
       </form>
@@ -267,17 +260,15 @@
           <p id="2faMessage" style="margin-top:15px;font-size:0.9rem;text-align:center;"></p>
         </div>
 
-
         <!-- ✅ Security Warning Banner (shown when user clicks Disable) -->
-<div id="disableWarning" style="display:none;margin:15px 0;padding:12px;background:#fff3f3;border-left:4px solid #ef4444;border-radius:6px;">
-  <p style="margin:0;color:#991b1b;font-weight:600;font-size:0.95rem;">
-    ⚠️ Disabling two-factor authentication reduces your account security.
-  </p>
-  <p style="margin:5px 0 0;color:#991b1b;font-size:0.9rem;">
-    Only proceed if you understand the risks. You will need to enter your login password to confirm.
-  </p>
-</div>
-
+        <div id="disableWarning" style="display:none;margin:15px 0;padding:12px;background:#fff3f3;border-left:4px solid #ef4444;border-radius:6px;">
+          <p style="margin:0;color:#991b1b;font-weight:600;font-size:0.95rem;">
+            ⚠️ Disabling two-factor authentication reduces your account security.
+          </p>
+          <p style="margin:5px 0 0;color:#991b1b;font-size:0.9rem;">
+            Only proceed if you understand the risks. You will need to enter your login password to confirm.
+          </p>
+        </div>
 
         <!-- Disable Button (shown when enabled) -->
         <button type="button" id="disable2faBtn" onclick="disable2FA()" style="display:none;background:#e74c3c;color:#fff;padding:12px;border:none;border-radius:6px;font-weight:600;cursor:pointer;width:100%;margin-top:15px;">
@@ -347,7 +338,19 @@ const API_BASE = window.location.hostname.includes("localhost")
   ? "http://localhost:5000"
   : "https://api.gradely.info";
 
-// ✅ Check if user is logged in (via session, not token)
+// ✅ NEW: Helper function to build auth headers with JWT
+function getAuthHeaders() {
+  const token = sessionStorage.getItem("gradely_token");
+  const headers = { "Content-Type": "application/json" };
+  
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
+
+// ✅ Check if user is logged in (via sessionStorage)
 function isLoggedIn() {
   return !!sessionStorage.getItem("school_id");
 }
@@ -366,9 +369,10 @@ async function loadSchoolData() {
   msgEl.className = "message";
   
   try {
+    // ✅ UPDATED: Use JWT headers instead of credentials: "include"
     const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
       method: "GET",
-      credentials: "include"
+      headers: getAuthHeaders()  // ✅ Sends JWT in Authorization header
     });
 
     if (res.status === 401) {
@@ -438,10 +442,13 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   }
 
   try {
+    // ✅ UPDATED: Use JWT headers instead of credentials: "include"
     const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
       method: "PUT",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        ...getAuthHeaders(),  // ✅ Sends JWT in Authorization header
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(payload)
     });
 
@@ -496,9 +503,6 @@ function togglePasswordVisibility(inputId) {
   }
 }
 
-
-
-
 async function triggerExport() {
   const type = document.getElementById('exportType').value;
   const purpose = document.getElementById('exportPurpose').value.trim() || 'NDPR compliance';
@@ -508,11 +512,11 @@ async function triggerExport() {
   statusEl.style.color = '#64748b';
   
   try {
+    // ✅ UPDATED: Use JWT headers instead of credentials: "include"
     const res = await fetch('https://api.gradely.info/api/export/data', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ export_type: type, purpose }),
-      credentials: 'include'  // ✅ Sends session cookie
+      headers: getAuthHeaders(),  // ✅ Sends JWT in Authorization header
+      body: JSON.stringify({ export_type: type, purpose })
     });
     
     if (!res.ok) {
@@ -548,13 +552,6 @@ async function triggerExport() {
     statusEl.style.color = '#dc2626';
   }
 }
-
-
-
-
-
-
-
 
 // ✅ 2FA Functions
 document.addEventListener('DOMContentLoaded', async () => {
@@ -605,10 +602,13 @@ async function sendSmsCode() {
   sendBtn.disabled = true;
   
   try {
+    // ✅ UPDATED: Use JWT headers (2FA routes accept either JWT or session)
     const res = await fetch(`${API_BASE}/api/auth/2fa/setup`, {
       method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        ...getAuthHeaders(),  // ✅ Sends JWT in Authorization header
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ method: 'sms', phone })
     });
     
@@ -634,8 +634,9 @@ async function sendSmsCode() {
 
 async function load2FAStatus() {
   try {
+    // ✅ UPDATED: Use JWT headers instead of credentials: "include"
     const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
-      credentials: 'include'
+      headers: getAuthHeaders()  // ✅ Sends JWT in Authorization header
     });
     
     if (res.ok) {
@@ -677,10 +678,13 @@ async function load2FAStatus() {
 
 async function fetchQRCode() {
   try {
+    // ✅ UPDATED: Use JWT headers (2FA routes accept either JWT or session)
     const res = await fetch(`${API_BASE}/api/auth/2fa/setup`, {
       method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        ...getAuthHeaders(),  // ✅ Sends JWT in Authorization header
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ method: 'app' })
     });
     
@@ -732,10 +736,13 @@ async function enable2FA() {
     
     console.log('🔍 [Frontend] Sending /verify request:', payload);
     
+    // ✅ UPDATED: Use JWT headers (2FA routes accept either JWT or session)
     const res = await fetch(`${API_BASE}/api/auth/2fa/verify`, {
       method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        ...getAuthHeaders(),  // ✅ Sends JWT in Authorization header
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(payload)
     });
     
@@ -817,10 +824,13 @@ async function confirmDisable2FA() {
   messageEl.className = 'message';
   
   try {
+    // ✅ UPDATED: Use JWT headers (2FA routes accept either JWT or session)
     const res = await fetch(`${API_BASE}/api/auth/2fa/disable`, {
       method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        ...getAuthHeaders(),  // ✅ Sends JWT in Authorization header
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ 
         password, 
         confirm_disable: true
@@ -851,8 +861,8 @@ async function confirmDisable2FA() {
       document.getElementById('2faMessage').className = 'message success';
       
       // ✅ Clear any pending 2FA data
-      localStorage.removeItem('pending_2fa_school_id');
-      localStorage.removeItem('pending_2fa_method');
+      sessionStorage.removeItem('pending_2fa_school_id');
+      sessionStorage.removeItem('pending_2fa_method');
       
       // ✅ Reload page after 2 seconds to refresh state
       setTimeout(() => {
