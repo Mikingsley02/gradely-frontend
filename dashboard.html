@@ -493,6 +493,20 @@
   </footer>
 
   <script>
+
+
+  function getAuthHeaders() {
+  const token = sessionStorage.getItem("gradely_token");
+  const headers = { "Content-Type": "application/json" };
+  
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
+
+
 let currentPlan = null;
 let isSubscriptionActive = true;
 let subscriptionExpiryDate = null;
@@ -527,9 +541,9 @@ async function checkAndApplySubscription() {
 
   try {
     const res = await fetch(apiUrl, {
-      credentials: 'include',
       cache: 'no-store',
       headers: {
+    ...getAuthHeaders(),
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache'
       }
