@@ -201,6 +201,7 @@ function togglePassword(id, icon) {
   icon.textContent = input.type === "password" ? "👁️" : "🙈";
 }
 
+
 // CREATE STUDENT
 document.getElementById("createForm").onsubmit = async (e) => {
   e.preventDefault();
@@ -220,6 +221,16 @@ document.getElementById("createForm").onsubmit = async (e) => {
 
   msg.textContent = "⏳ Creating student...";
   msg.className = "message";
+
+
+
+  
+// ✅ Add this right before the fetch in single student creation:
+console.log('🔍 [CREATE] school_id being sent:', sessionStorage.getItem("school_id"));
+console.log('🔍 [CREATE] localStorage school_id:', localStorage.getItem("school_id"));
+
+
+
 
   const res = await fetch(`/api/students/register`, {
     method: "POST",
@@ -264,6 +275,13 @@ async function uploadBulkStudents() {
   password: s.password,
   school_id: sessionStorage.getItem("school_id")
 }));
+
+
+
+
+// ✅ Add this right before the fetch in bulk upload:
+console.log('🔍 [BULK] school_id in payload:', sessionStorage.getItem("school_id"));
+
 
 
   const res = await fetch(`/api/students/bulk-upload`, {
