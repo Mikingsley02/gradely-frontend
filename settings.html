@@ -389,22 +389,10 @@ if (!isLoggedIn()) {
 
 // ✅ Helper for handling expired auth globally
 async function handleAuthResponse(res) {
-  if (res.status === 401) {
-    console.warn("❌ Unauthorized - token expired or invalid");
-
-    sessionStorage.removeItem("gradely_token");
-    sessionStorage.removeItem("school_id");
-    localStorage.removeItem("gradely_token");
-
-    alert("⚠️ Session expired. Please log in again.");
-
-    window.location.href = "admin-login.html";
-
-    return null;
-  }
-
   return res;
 }
+
+
 
 document.addEventListener("DOMContentLoaded", loadSchoolData);
 
@@ -415,24 +403,45 @@ async function loadSchoolData() {
   
   try {
     // ✅ UPDATED: Use JWT headers instead of credentials: "include"
-    const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
-      method: "GET",
-      headers: getAuthHeaders()  // ✅ Sends JWT in Authorization header
-    });
+    const token = getToken();
 
-    const checkedRes = await handleAuthResponse(res);
+console.log("🔍 JWT Token:", token);
 
-if (!checkedRes) return;
+const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
+  method: "GET",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+  }
+});
 
-if (!checkedRes.ok) {
+console.log("🔍 Response status:", res.status);
 
+if (res.status === 401) {
+  console.error("❌ Backend rejected JWT");
 
-      const errorText = await res.text();
-      console.error("❌ Failed to load settings:", res.status, errorText.substring(0, 200));
-      throw new Error(`HTTP ${res.status}`);
-    }
+  // ✅ DO NOT logout immediately
+  document.getElementById("message").textContent =
+    "⚠️ Authentication failed. Backend did not accept the token.";
 
-    const data = await checkedRes.json();
+  return;
+}
+
+if (!res.ok) {
+  const errorText = await res.text();
+
+  console.error(
+    "❌ Failed to load settings:",
+    res.status,
+    errorText
+  );
+
+  throw new Error(`HTTP ${res.status}`);
+}
+
+const data = await res.json();
+
+console.log("✅ school-info success:", data);
 
     document.getElementById("school_name").value = data.school?.school_name || "";
     document.getElementById("email").value = data.school?.email || "";
