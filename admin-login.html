@@ -179,15 +179,22 @@
 
     // ✅ NEW: Helper function to build auth headers with JWT
     function getAuthHeaders() {
-      const token = sessionStorage.getItem("gradely_token");
-      const headers = { "Content-Type": "application/json" };
-      
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-      
-      return headers;
-    }
+  const token = sessionStorage.getItem("gradely_token");
+
+  console.log("🔍 Auth token exists:", !!token);
+
+  const headers = {
+    "Content-Type": "application/json"
+  };
+
+  if (token && token !== "undefined" && token !== "null") {
+    headers["Authorization"] = `Bearer ${token}`;
+  } else {
+    console.error("❌ Unauthorized - token expired or invalid");
+  }
+
+  return headers;
+}
 
     document.getElementById('togglePassword').addEventListener('click', function() {
       const passwordField = document.getElementById('adminPassword');
@@ -343,24 +350,45 @@
         }
 
         if (data.success && data.admin) {
-          const email = data.admin.email || admin_id + "@gradely.info";
-          
-          // ✅ Store ALL auth data in sessionStorage (tab-scoped)
-          sessionStorage.setItem("email", email);
-          sessionStorage.setItem("adminId", data.admin.admin_id);
-          sessionStorage.setItem("school_id", data.admin.school_id || data.admin.admin_id);
-          sessionStorage.setItem("school_name", data.admin.school_name || "");
-          sessionStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
-          sessionStorage.setItem("admin_email", email);
-          
-          // ✅ CRITICAL: Store JWT token for subsequent API calls
-          if (data.token) {
-            sessionStorage.setItem('gradely_token', data.token);
-            console.log('✅ JWT token stored in sessionStorage');
-          }
+  const email = data.admin.email || admin_id + "@gradely.info";
 
-          // ✅ Redirect to dashboard
-          window.location.href = "dashboard.html";
+  // ✅ CLEAR OLD SESSION FIRST
+  sessionStorage.clear();
+
+  // ✅ SAVE JWT TOKEN FIRST
+  if (data.token) {
+    sessionStorage.setItem("gradely_token", data.token);
+    console.log("✅ JWT token stored:", data.token.substring(0, 25) + "...");
+  } else {
+    console.error("❌ No JWT token received from backend");
+    alert("Login failed: No authentication token received.");
+    return;
+  }
+
+  // ✅ SAVE USER DATA
+  sessionStorage.setItem("email", email);
+  sessionStorage.setItem("adminId", data.admin.admin_id);
+  sessionStorage.setItem("school_id", data.admin.school_id || data.admin.admin_id);
+  sessionStorage.setItem("school_name", data.admin.school_name || "");
+  sessionStorage.setItem("subscription_plan", data.admin.subscription_plan || "basic");
+  sessionStorage.setItem("current_plan", data.admin.current_plan || "basic");
+  sessionStorage.setItem("admin_email", email);
+
+  // ✅ VERIFY TOKEN SAVED
+  const savedToken = sessionStorage.getItem("gradely_token");
+
+  if (!savedToken) {
+    console.error("❌ Token failed to save");
+    alert("Authentication storage failed.");
+    return;
+  }
+
+  console.log("✅ Token verified in sessionStorage");
+
+  // ✅ REDIRECT
+  window.location.href = "dashboard.html";
+
+
         } else { alert("❌ " + (data.message || "Login failed.")); }
       } catch (err) {
         console.error("❌ [Frontend] Login error:", err);
