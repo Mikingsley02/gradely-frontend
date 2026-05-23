@@ -520,16 +520,16 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
       return;
     }
 
-    if (!checkedRes.ok) {
-  const errorText = await checkedRes.text();
+    if (!res.ok) {
+  const errorText = await res.text();
 
   console.error(
-    "❌ Failed to load settings:",
-    checkedRes.status,
+    "❌ Failed to update settings:",
+    res.status,
     errorText.substring(0, 300)
   );
 
-  throw new Error(`HTTP ${checkedRes.status}`);
+  throw new Error(`HTTP ${res.status}`);
 }
 
 
