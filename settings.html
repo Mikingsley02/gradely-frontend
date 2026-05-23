@@ -402,20 +402,28 @@ async function loadSchoolData() {
   msgEl.className = "message";
   
   try {
-    // ✅ UPDATED: Use JWT headers instead of credentials: "include"
-    const token = getToken();
 
-console.log("🔍 JWT Token:", token);
+
+
+
+
+//  debug log before fetch in loadSchoolData()
+const token = sessionStorage.getItem("gradely_token");
+console.log("🔍 [Frontend] Preparing request:", {
+  url: `${API_BASE}/api/admin/settings/school-info`,
+  hasToken: !!token,
+  tokenStarts: token?.substring(0, 20) + "...",
+  tokenLength: token?.length,
+  authHeader: token ? `Bearer ${token.substring(0, 20)}...` : "none"
+});
 
 const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
   method: "GET",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`
-  }
+  headers: getAuthHeaders()
 });
 
-console.log("🔍 Response status:", res.status);
+
+
 
 if (res.status === 401) {
   console.error("❌ Backend rejected JWT");
