@@ -333,66 +333,157 @@
   </div>
 
 <script>
-// ✅ FIXED: Clean API_BASE (NO trailing spaces)
-// ✅ FIXED: Clean API_BASE
+// ======================================================
+// ✅ API BASE
+// ======================================================
+
 const API_BASE = window.location.hostname.includes("localhost")
   ? "http://localhost:5000"
   : "https://api.gradely.info";
 
-// ✅ NEW: Get JWT token safely
+// ======================================================
+// ✅ TOKEN HELPERS
+// ======================================================
+
 function getToken() {
-  return (
-    sessionStorage.getItem("gradely_token") ||
-    localStorage.getItem("gradely_token")
-  );
+  const sessionToken = sessionStorage.getItem("gradely_token");
+  const localToken = localStorage.getItem("gradely_token");
+
+  const token = sessionToken || localToken;
+
+  if (
+    !token ||
+    token === "undefined" ||
+    token === "null" ||
+    token.trim() === ""
+  ) {
+    return null;
+  }
+
+  return token;
 }
 
-// ✅ FIXED: Build auth headers correctly
-function getAuthHeaders() {
+function clearAuth() {
+  sessionStorage.removeItem("gradely_token");
+  sessionStorage.removeItem("school_id");
+  sessionStorage.removeItem("admin_id");
+
+  localStorage.removeItem("gradely_token");
+  localStorage.removeItem("school_id");
+  localStorage.removeItem("admin_id");
+}
+
+function redirectToLogin(message = "Session expired. Please login again.") {
+  alert(`⚠️ ${message}`);
+
+  clearAuth();
+
+  window.location.href = "admin-login.html";
+}
+
+// ======================================================
+// ✅ JWT EXPIRY CHECK
+// ======================================================
+
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+
+    if (!payload.exp) return true;
+
+    return Date.now() >= payload.exp * 1000;
+  } catch (err) {
+    console.error("❌ Invalid JWT:", err);
+    return true;
+  }
+}
+
+function isLoggedIn() {
+  const token = getToken();
+
+  if (!token) return false;
+
+  if (isTokenExpired(token)) {
+    console.warn("⚠️ JWT expired");
+
+    clearAuth();
+
+    return false;
+  }
+
+  return true;
+}
+
+// ======================================================
+// ✅ AUTH HEADERS
+// ======================================================
+
+function getAuthHeaders(extraHeaders = {}) {
   const token = getToken();
 
   const headers = {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    ...extraHeaders
   };
 
-  if (token && token !== "undefined" && token !== "null") {
+  if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
 
   return headers;
 }
 
-// ✅ FIXED: Proper login validation
-function isLoggedIn() {
+// ======================================================
+// ✅ UNIVERSAL AUTH FETCH
+// ======================================================
+
+async function authFetch(url, options = {}) {
   const token = getToken();
 
-  return !!(
-    token &&
-    token !== "undefined" &&
-    token !== "null" &&
-    token.trim() !== ""
-  );
+  if (!token) {
+    redirectToLogin("No authentication token found.");
+    return null;
+  }
+
+  if (isTokenExpired(token)) {
+    redirectToLogin("Your login session expired.");
+    return null;
+  }
+
+  const finalOptions = {
+    ...options,
+    headers: getAuthHeaders(options.headers || {})
+  };
+
+  try {
+    const res = await fetch(url, finalOptions);
+
+    // ✅ Auto logout on unauthorized
+    if (res.status === 401) {
+      console.warn("⚠️ Unauthorized request");
+
+      redirectToLogin("Authentication failed.");
+      return null;
+    }
+
+    return res;
+  } catch (err) {
+    console.error("❌ Network/Auth fetch error:", err);
+    throw err;
+  }
 }
 
-// ✅ FIXED: Early auth check
+// ======================================================
+// ✅ EARLY AUTH CHECK
+// ======================================================
+
 if (!isLoggedIn()) {
-  console.warn("❌ No valid JWT token found");
-
-  alert("⚠️ Your session has expired. Please log in again.");
-
-  sessionStorage.removeItem("gradely_token");
-  sessionStorage.removeItem("school_id");
-  localStorage.removeItem("gradely_token");
-
-  window.location.href = "admin-login.html";
+  redirectToLogin();
 }
 
-// ✅ Helper for handling expired auth globally
-async function handleAuthResponse(res) {
-  return res;
-}
-
-
+// ======================================================
+// ✅ PAGE LOGIC (Updated to use authFetch)
+// ======================================================
 
 document.addEventListener("DOMContentLoaded", loadSchoolData);
 
@@ -402,54 +493,21 @@ async function loadSchoolData() {
   msgEl.className = "message";
   
   try {
+    // ✅ UPDATED: Use authFetch, no school_id query param
+    const res = await authFetch(`${API_BASE}/api/admin/settings/school-info`, {
+      method: "GET"
+    });
 
+    if (!res) return; // authFetch handled redirect/logout
 
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("❌ Failed to load settings:", res.status, errorText);
+      throw new Error(`HTTP ${res.status}`);
+    }
 
-
-
-//  debug log before fetch in loadSchoolData()
-const token = sessionStorage.getItem("gradely_token");
-console.log("🔍 [Frontend] Preparing request:", {
-  url: `${API_BASE}/api/admin/settings/school-info`,
-  hasToken: !!token,
-  tokenStarts: token?.substring(0, 20) + "...",
-  tokenLength: token?.length,
-  authHeader: token ? `Bearer ${token.substring(0, 20)}...` : "none"
-});
-
-const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
-  method: "GET",
-  headers: getAuthHeaders()
-});
-
-
-
-
-if (res.status === 401) {
-  console.error("❌ Backend rejected JWT");
-
-  // ✅ DO NOT logout immediately
-  document.getElementById("message").textContent =
-    "⚠️ Authentication failed. Backend did not accept the token.";
-
-  return;
-}
-
-if (!res.ok) {
-  const errorText = await res.text();
-
-  console.error(
-    "❌ Failed to load settings:",
-    res.status,
-    errorText
-  );
-
-  throw new Error(`HTTP ${res.status}`);
-}
-
-const data = await res.json();
-
-console.log("✅ school-info success:", data);
+    const data = await res.json();
+    console.log("✅ school-info success:", data);
 
     document.getElementById("school_name").value = data.school?.school_name || "";
     document.getElementById("email").value = data.school?.email || "";
@@ -504,34 +562,19 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
   }
 
   try {
-    // ✅ UPDATED: Use JWT headers instead of credentials: "include"
-    const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
+    // ✅ UPDATED: Use authFetch, no school_id query param
+    const res = await authFetch(`${API_BASE}/api/admin/settings/school-info`, {
       method: "PUT",
-      headers: {
-        ...getAuthHeaders(),  // ✅ Sends JWT in Authorization header
-        "Content-Type": "application/json"
-      },
       body: JSON.stringify(payload)
     });
 
-    if (res.status === 401) {
-      alert("⚠️ Session expired. Please log in again.");
-      window.location.href = "admin-login.html";
-      return;
-    }
+    if (!res) return; // authFetch handled redirect/logout
 
     if (!res.ok) {
-  const errorText = await res.text();
-
-  console.error(
-    "❌ Failed to update settings:",
-    res.status,
-    errorText.substring(0, 300)
-  );
-
-  throw new Error(`HTTP ${res.status}`);
-}
-
+      const errorText = await res.text();
+      console.error("❌ Failed to update settings:", res.status, errorText.substring(0, 300));
+      throw new Error(`HTTP ${res.status}`);
+    }
 
     const data = await res.json();
 
@@ -581,12 +624,13 @@ async function triggerExport() {
   statusEl.style.color = '#64748b';
   
   try {
-    // ✅ UPDATED: Use JWT headers instead of credentials: "include"
-    const res = await fetch('https://api.gradely.info/api/export/data', {
+    // ✅ UPDATED: Use authFetch, no school_id query param
+    const res = await authFetch(`${API_BASE}/api/export/data`, {
       method: 'POST',
-      headers: getAuthHeaders(),  // ✅ Sends JWT in Authorization header
       body: JSON.stringify({ export_type: type, purpose })
     });
+    
+    if (!res) return; // authFetch handled redirect/logout
     
     if (!res.ok) {
       const err = await res.json();
@@ -671,15 +715,13 @@ async function sendSmsCode() {
   sendBtn.disabled = true;
   
   try {
-    // ✅ UPDATED: Use JWT headers (2FA routes accept either JWT or session)
-    const res = await fetch(`${API_BASE}/api/auth/2fa/setup`, {
+    // ✅ UPDATED: Use authFetch, no school_id query param
+    const res = await authFetch(`${API_BASE}/api/auth/2fa/setup`, {
       method: 'POST',
-      headers: {
-        ...getAuthHeaders(),  // ✅ Sends JWT in Authorization header
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({ method: 'sms', phone })
     });
+    
+    if (!res) return; // authFetch handled redirect/logout
     
     const result = await res.json();
     
@@ -703,10 +745,12 @@ async function sendSmsCode() {
 
 async function load2FAStatus() {
   try {
-    // ✅ UPDATED: Use JWT headers instead of credentials: "include"
-    const res = await fetch(`${API_BASE}/api/admin/settings/school-info`, {
-      headers: getAuthHeaders()  // ✅ Sends JWT in Authorization header
+    // ✅ UPDATED: Use authFetch, no school_id query param
+    const res = await authFetch(`${API_BASE}/api/admin/settings/school-info`, {
+      method: "GET"
     });
+    
+    if (!res) return; // authFetch handled redirect/logout
     
     if (res.ok) {
       const data = await res.json();
@@ -747,15 +791,13 @@ async function load2FAStatus() {
 
 async function fetchQRCode() {
   try {
-    // ✅ UPDATED: Use JWT headers (2FA routes accept either JWT or session)
-    const res = await fetch(`${API_BASE}/api/auth/2fa/setup`, {
+    // ✅ UPDATED: Use authFetch, no school_id query param
+    const res = await authFetch(`${API_BASE}/api/auth/2fa/setup`, {
       method: 'POST',
-      headers: {
-        ...getAuthHeaders(),  // ✅ Sends JWT in Authorization header
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({ method: 'app' })
     });
+    
+    if (!res) return; // authFetch handled redirect/logout
     
     const result = await res.json();
     if (result.success) {
@@ -805,15 +847,13 @@ async function enable2FA() {
     
     console.log('🔍 [Frontend] Sending /verify request:', payload);
     
-    // ✅ UPDATED: Use JWT headers (2FA routes accept either JWT or session)
-    const res = await fetch(`${API_BASE}/api/auth/2fa/verify`, {
+    // ✅ UPDATED: Use authFetch, no school_id query param
+    const res = await authFetch(`${API_BASE}/api/auth/2fa/verify`, {
       method: 'POST',
-      headers: {
-        ...getAuthHeaders(),  // ✅ Sends JWT in Authorization header
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify(payload)
     });
+    
+    if (!res) return; // authFetch handled redirect/logout
     
     console.log('🔍 [Frontend] Response status:', res.status);
     const result = await res.json();
@@ -893,18 +933,16 @@ async function confirmDisable2FA() {
   messageEl.className = 'message';
   
   try {
-    // ✅ UPDATED: Use JWT headers (2FA routes accept either JWT or session)
-    const res = await fetch(`${API_BASE}/api/auth/2fa/disable`, {
+    // ✅ UPDATED: Use authFetch, no school_id query param
+    const res = await authFetch(`${API_BASE}/api/auth/2fa/disable`, {
       method: 'POST',
-      headers: {
-        ...getAuthHeaders(),  // ✅ Sends JWT in Authorization header
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({ 
         password, 
         confirm_disable: true
       })
     });
+    
+    if (!res) return; // authFetch handled redirect/logout
     
     // ✅ Handle non-JSON responses (e.g., 404 HTML page)
     const contentType = res.headers.get('content-type');
