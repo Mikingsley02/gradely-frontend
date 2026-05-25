@@ -279,23 +279,166 @@
     </div>
   </div>
 
-  <!-- ✅ FIXED: Clean script src (no trailing spaces) -->
   
-  <script>
-console.log("=== PAY.HTML INIT ===");
+ <script>
+// ======================================================
+// ✅ API BASE
+// ======================================================
 
-// ✅ NUCLEAR DEBUG: Confirm script is executing
+const API_BASE = window.location.hostname.includes("localhost")
+  ? "http://localhost:5000"
+  : "https://api.gradely.info";
+
+// ======================================================
+// ✅ TOKEN HELPERS
+// ======================================================
+
+function getToken() {
+  const sessionToken = sessionStorage.getItem("gradely_token");
+  const localToken = localStorage.getItem("gradely_token");
+
+  const token = sessionToken || localToken;
+
+  if (
+    !token ||
+    token === "undefined" ||
+    token === "null" ||
+    token.trim() === ""
+  ) {
+    return null;
+  }
+
+  return token;
+}
+
+function clearAuth() {
+  sessionStorage.removeItem("gradely_token");
+  sessionStorage.removeItem("school_id");
+  sessionStorage.removeItem("admin_id");
+
+  localStorage.removeItem("gradely_token");
+  localStorage.removeItem("school_id");
+  localStorage.removeItem("admin_id");
+}
+
+function redirectToLogin(message = "Session expired. Please login again.") {
+  alert(`⚠️ ${message}`);
+
+  clearAuth();
+
+  window.location.href = "admin-login.html";
+}
+
+// ======================================================
+// ✅ JWT EXPIRY CHECK
+// ======================================================
+
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+
+    if (!payload.exp) return true;
+
+    return Date.now() >= payload.exp * 1000;
+  } catch (err) {
+    console.error("❌ Invalid JWT:", err);
+    return true;
+  }
+}
+
+function isLoggedIn() {
+  const token = getToken();
+
+  if (!token) return false;
+
+  if (isTokenExpired(token)) {
+    console.warn("⚠️ JWT expired");
+
+    clearAuth();
+
+    return false;
+  }
+
+  return true;
+}
+
+// ======================================================
+// ✅ AUTH HEADERS
+// ======================================================
+
+function getAuthHeaders(extraHeaders = {}) {
+  const token = getToken();
+
+  const headers = {
+    "Content-Type": "application/json",
+    ...extraHeaders
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return headers;
+}
+
+// ======================================================
+// ✅ UNIVERSAL AUTH FETCH
+// ======================================================
+
+async function authFetch(url, options = {}) {
+  const token = getToken();
+
+  if (!token) {
+    redirectToLogin("No authentication token found.");
+    return null;
+  }
+
+  if (isTokenExpired(token)) {
+    redirectToLogin("Your login session expired.");
+    return null;
+  }
+
+  const finalOptions = {
+    ...options,
+    headers: getAuthHeaders(options.headers || {})
+  };
+
+  try {
+    const res = await fetch(url, finalOptions);
+
+    // ✅ Auto logout on unauthorized
+    if (res.status === 401) {
+      console.warn("⚠️ Unauthorized request");
+
+      redirectToLogin("Authentication failed.");
+      return null;
+    }
+
+    return res;
+  } catch (err) {
+    console.error("❌ Network/Auth fetch error:", err);
+    throw err;
+  }
+}
+
+// ======================================================
+// ✅ EARLY AUTH CHECK
+// ======================================================
+
+if (!isLoggedIn()) {
+  redirectToLogin();
+}
+
+// ======================================================
+// ✅ PAYMENT PAGE LOGIC (Updated to use authFetch)
+// ======================================================
+
+console.log("=== PAY.HTML INIT ===");
 console.log("💣 PAY.HTML SCRIPT LOADED AT:", new Date().toISOString());
 console.log("💣 URL:", window.location.href);
 console.log("💣 URLSearchParams:", Object.fromEntries(new URLSearchParams(window.location.search)));
 
-
-
-
-
-const API_BASE = "https://api.gradely.info";
 const params = new URLSearchParams(window.location.search);
-
 const isPaystackCallback = params.get("reference");
 
 let plan =
@@ -314,19 +457,34 @@ if (
   (!plan || !["basic", "pro"].includes(plan))
 ) {
   console.warn("⚠️ Invalid/missing plan:", { plan });
-
   alert("Invalid or missing plan selection.");
-
   window.location.href = "plan-comparison.html";
-
   throw new Error("No valid plan selected");
 }
 
 console.log("📤 Plan ready:", { plan });
 
-const school_id = params.get("school_id") 
-  || localStorage.getItem("school_id") 
-  || sessionStorage.getItem("school_id");
+// ✅ Get school_id from JWT payload (preferred) or fallback to storage
+const token = getToken();
+let school_id = null;
+
+if (token) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    school_id = payload.school_id;
+    console.log("✅ school_id from JWT:", school_id);
+  } catch (err) {
+    console.warn("⚠️ Could not parse JWT for school_id:", err);
+  }
+}
+
+// Fallback to storage if JWT didn't have school_id
+if (!school_id) {
+  school_id = params.get("school_id") 
+    || localStorage.getItem("school_id") 
+    || sessionStorage.getItem("school_id");
+  console.log("✅ school_id from fallback:", school_id);
+}
 
 const admin_id = params.get("admin_id") 
   || localStorage.getItem("admin_id") 
@@ -356,11 +514,11 @@ document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
 async function recoverEmail(schoolId) {
   console.log("🔍 Recovering email for school:", schoolId);
   
-  // Fallback 1: Try /api/auth/me (session-based)
+  // Fallback 1: Try /api/auth/me (JWT-based now)
   try {
-    const res = await fetch(`${API_BASE}/api/auth/me`, {
-      credentials: 'include'
-    });
+    const res = await authFetch(`${API_BASE}/api/auth/me`);
+    if (!res) return null; // authFetch handled redirect/logout
+    
     const data = await res.json();
     if (data?.email && data.email.includes('@')) {
       console.log("✅ Email recovered from /api/auth/me:", data.email);
@@ -386,7 +544,10 @@ async function recoverEmail(schoolId) {
 
 async function loadPaystackKey() {
   try {
-    const res = await fetch(`${API_BASE}/api/config/paystack-key`);
+    // ✅ UPDATED: Use authFetch, no school_id query param
+    const res = await authFetch(`${API_BASE}/api/config/paystack-key`);
+    if (!res) return null; // authFetch handled redirect/logout
+    
     const data = await res.json();
     
     if (data.success && data.data?.paystackPublicKey) {
@@ -400,7 +561,6 @@ async function loadPaystackKey() {
     throw new Error("Payment configuration not available.");
   }
 }
-
 
 let isProcessingPayment = false;
 
@@ -432,20 +592,15 @@ document.getElementById("paystackBtn").onclick = async () => {
 
   try {
     const paystackKey = await loadPaystackKey();
+    if (!paystackKey) throw new Error("Paystack key not loaded");
 
-  const token = localStorage.getItem('gradely_token');
-  const headers = { 'Content-Type': 'application/json' };
-
-  if (token) {
-  headers['Authorization'] = `Bearer ${token}`;
-  }
-    
-    const response = await fetch(`${API_BASE}/api/subscription/upgrade`, {
+    // ✅ UPDATED: Use authFetch, no school_id in body (backend gets from JWT)
+    const response = await authFetch(`${API_BASE}/api/subscription/upgrade`, {
       method: 'POST',
-      headers: headers,
-      credentials: 'include',
-      body: JSON.stringify({ plan: plan, school_id: school_id })
+      body: JSON.stringify({ plan: plan }) // ✅ school_id from JWT, not body
     });
+
+    if (!response) return; // authFetch handled redirect/logout
 
     if (!response.ok) {
       throw new Error(`Payment init failed: ${response.status}`);
@@ -456,9 +611,7 @@ document.getElementById("paystackBtn").onclick = async () => {
       throw new Error(result.message || 'Payment initialization failed');
     }
 
-    
-
-        // ✅ Backend already initialized Paystack correctly
+    // ✅ Backend already initialized Paystack correctly
     if (!result.authorization_url) {
       throw new Error('Missing Paystack authorization URL');
     }
@@ -476,8 +629,6 @@ document.getElementById("paystackBtn").onclick = async () => {
     // ✅ Redirect directly to Paystack hosted checkout
     window.location.href = result.authorization_url;
 
-
-
   } catch (error) {
     console.error("❌ Payment error:", error);
     btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Try Again';
@@ -487,15 +638,13 @@ document.getElementById("paystackBtn").onclick = async () => {
   }
 };
 
-
 // ✅ Handle Paystack callback after payment (SINGLE HANDLER)
-
 document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const reference = urlParams.get('reference');
   
   if (reference) {
-    console.log('🔍 Paystack callback detected:', { reference });  // ✅ Add this
+    console.log('🔍 Paystack callback detected:', { reference });
     
     // Show loading state
     const btn = document.getElementById('paystackBtn');
@@ -505,21 +654,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     try {
-      console.log("🚀 CALLING BACKEND VERIFY:", {  // ✅ Add this
+      console.log("🚀 CALLING BACKEND VERIFY:", {
         reference,
         endpoint: `${API_BASE}/api/subscription/upgrade/complete`
       });
 
-      const res = await fetch(`${API_BASE}/api/subscription/upgrade/complete`, {
+      // ✅ UPDATED: Use authFetch, no school_id in body (backend gets from JWT)
+      const res = await authFetch(`${API_BASE}/api/subscription/upgrade/complete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',  // ✅ Critical for session/auth
-        body: JSON.stringify({ payment_reference: reference })
+        body: JSON.stringify({ payment_reference: reference }) // ✅ school_id from JWT
       });
       
-      console.log("📥 BACKEND RESPONSE STATUS:", res.status);  // ✅ Add this
+      if (!res) return; // authFetch handled redirect/logout
+      
+      console.log("📥 BACKEND RESPONSE STATUS:", res.status);
       const result = await res.json();
-      console.log("📥 BACKEND RESPONSE BODY:", result);  // ✅ Add this
+      console.log("📥 BACKEND RESPONSE BODY:", result);
       
       if (result.success) {
         // ✅ Payment verified — redirect to dashboard
@@ -550,7 +700,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     } catch (err) {
-      console.error('❌ Callback error:', err);  // ✅ Already there, but ensure it logs
+      console.error('❌ Callback error:', err);
       alert('Network error verifying payment. Please contact support.');
       
       if (btn) {
@@ -560,8 +710,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 });
-
-
 </script>
 
   <script src="js/kaima-chatbot.js"></script>
