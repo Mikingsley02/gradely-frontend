@@ -511,6 +511,16 @@ function getToken() {
 
   const token = sessionToken || localToken;
 
+  console.log("🔍 [getToken] Retrieved token:", {
+    from_session: !!sessionToken,
+    from_local: !!localToken,
+    token_preview: token?.substring(0, 30) + "...",
+    token_length: token?.length,
+    is_undefined: token === "undefined",
+    is_null: token === "null",
+    is_empty: token?.trim() === ""
+  });
+
   if (
     !token ||
     token === "undefined" ||
@@ -522,6 +532,8 @@ function getToken() {
 
   return token;
 }
+
+
 
 function clearAuth() {
   sessionStorage.removeItem("gradely_token");
@@ -547,13 +559,37 @@ function redirectToLogin(message = "Session expired. Please login again.") {
 
 function isTokenExpired(token) {
   try {
+    console.log("🔍 [isTokenExpired] Checking token:", {
+      token_preview: token?.substring(0, 30) + "...",
+      token_parts: token?.split(".").length
+    });
+
+    if (!token || token.split(".").length !== 3) {
+      console.warn("⚠️ [isTokenExpired] Invalid JWT format");
+      return true;
+    }
+
     const payload = JSON.parse(atob(token.split(".")[1]));
+    console.log("🔍 [isTokenExpired] Decoded payload:", {
+      exp: payload.exp,
+      exp_date: payload.exp ? new Date(payload.exp * 1000).toISOString() : null,
+      now: new Date().toISOString(),
+      now_timestamp: Date.now()
+    });
 
-    if (!payload.exp) return true;
+    if (!payload.exp) {
+      console.warn("⚠️ [isTokenExpired] No exp claim in token");
+      return true;
+    }
 
-    return Date.now() >= payload.exp * 1000;
+    const isExpired = Date.now() >= payload.exp * 1000;
+    console.log("✅ [isTokenExpired] Token expired:", isExpired);
+
+    return isExpired;
   } catch (err) {
-    console.error("❌ Invalid JWT:", err);
+    console.error("❌ [isTokenExpired] Error parsing JWT:", err.message, {
+      token_preview: token?.substring(0, 30) + "..."
+    });
     return true;
   }
 }
@@ -600,12 +636,21 @@ function getAuthHeaders(extraHeaders = {}) {
 async function authFetch(url, options = {}) {
   const token = getToken();
 
+  console.log("🔍 [authFetch] Request:", {
+    url,
+    method: options.method || "GET",
+    has_token: !!token,
+    token_expired: token ? isTokenExpired(token) : null
+  });
+
   if (!token) {
+    console.warn("⚠️ [authFetch] No token found");
     redirectToLogin("No authentication token found.");
     return null;
   }
 
   if (isTokenExpired(token)) {
+    console.warn("⚠️ [authFetch] Token expired");
     redirectToLogin("Your login session expired.");
     return null;
   }
@@ -615,23 +660,34 @@ async function authFetch(url, options = {}) {
     headers: getAuthHeaders(options.headers || {})
   };
 
+  console.log("🔍 [authFetch] Sending request with headers:", {
+    Authorization: finalOptions.headers.Authorization?.substring(0, 30) + "..."
+  });
+
   try {
     const res = await fetch(url, finalOptions);
 
+    console.log("🔍 [authFetch] Response:", {
+      status: res.status,
+      statusText: res.statusText,
+      url: res.url
+    });
+
     // ✅ Auto logout on unauthorized
     if (res.status === 401) {
-      console.warn("⚠️ Unauthorized request");
-
+      console.warn("⚠️ [authFetch] Unauthorized request");
       redirectToLogin("Authentication failed.");
       return null;
     }
 
     return res;
   } catch (err) {
-    console.error("❌ Network/Auth fetch error:", err);
+    console.error("❌ [authFetch] Network/Auth fetch error:", err);
     throw err;
   }
 }
+
+
 
 // ======================================================
 // ✅ EARLY AUTH CHECK
