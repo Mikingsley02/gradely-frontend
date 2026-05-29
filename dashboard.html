@@ -539,11 +539,16 @@ function clearAuth() {
   sessionStorage.removeItem("gradely_token");
   sessionStorage.removeItem("school_id");
   sessionStorage.removeItem("admin_id");
+  sessionStorage.removeItem("adminId");
+  sessionStorage.removeItem("school_name");
+  sessionStorage.removeItem("last_known_plan");
 
   localStorage.removeItem("gradely_token");
   localStorage.removeItem("school_id");
   localStorage.removeItem("admin_id");
+  localStorage.removeItem("adminId");
 }
+
 
 function redirectToLogin(message = "Session expired. Please login again.") {
   alert(`⚠️ ${message}`);
@@ -615,6 +620,11 @@ function isLoggedIn() {
 // ======================================================
 function getAuthHeaders(extraHeaders = {}) {
   const token = getToken();
+
+  if (!token) {
+    redirectToLogin("No authentication token found.");
+    return {};
+  }
 
   return {
     "Content-Type": "application/json",
@@ -751,7 +761,6 @@ async function checkAndApplySubscription() {
       if (!rawPlan || !['basic', 'pro'].includes(rawPlan)) {
         // Try cached fallback
         const cachedPlan = sessionStorage.getItem('last_known_plan');
-        sessionStorage.setItem('last_known_plan', currentPlan);
 
         if (cachedPlan && ['basic', 'pro'].includes(cachedPlan.toLowerCase())) {
           console.warn("⚠️ API returned invalid plan, using cached fallback:", cachedPlan);
@@ -1158,6 +1167,6 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
 </script>
 
   <script src="js/kaima-chatbot.js"></script>
-  <script src="js/session-timeout.js"></script>
+  <!-- <script src="js/session-timeout.js"></script> -->
 </body>
 </html>
