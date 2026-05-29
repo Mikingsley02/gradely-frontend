@@ -33,11 +33,12 @@ body{
   display:flex;
   flex-direction:column;
   color:#fff;
-  position:relative;
   overflow-x:hidden;
+
   background:
-    linear-gradient(135deg,rgba(2,6,23,.86),rgba(21,128,61,.58)),
+    linear-gradient(135deg,rgba(2,6,23,.84),rgba(21,128,61,.6)),
     url("https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=1600");
+
   background-size:cover;
   background-position:center;
   background-attachment:fixed;
@@ -66,21 +67,29 @@ body::before{
 }
 
 .top-nav a{
-  color:#dcfce7;
+  color:#ffffff;
   text-decoration:none;
   font-size:.9rem;
   font-weight:800;
   padding:10px 15px;
+
   border-radius:999px;
-  background:rgba(255,255,255,.1);
-  border:1px solid rgba(255,255,255,.18);
+
+  background:rgba(255,255,255,.12);
+
+  border:1px solid rgba(255,255,255,.25);
+
   backdrop-filter:blur(16px);
+
+  box-shadow:
+    0 8px 25px rgba(0,0,0,.18);
+
   transition:.25s ease;
 }
 
 .top-nav a:hover{
   color:#00d2ff;
-  background:rgba(255,255,255,.18);
+  background:rgba(255,255,255,.22);
   transform:translateY(-2px);
 }
 
@@ -364,14 +373,20 @@ footer img{
 
 /* MOBILE */
 @media(max-width:600px){
+
   .top-nav{
-    gap:8px;
+    justify-content:center;
+    gap:10px;
+    padding:16px 10px 0;
   }
 
   .top-nav a{
-    font-size:.8rem;
-    padding:8px 10px;
+    font-size:.85rem;
+    padding:10px 14px;
+    min-width:110px;
+    text-align:center;
   }
+
 
   main{
     justify-content:flex-start;
