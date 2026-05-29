@@ -261,6 +261,17 @@ let isCancelled = false;
 let schoolEmail = null;
 let hasSubscription = false; // Tracks if paystack_subscription_code exists
 
+
+function getAuthHeaders() {
+  const token = sessionStorage.getItem("token");
+
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+  };
+}
+
+
 document.addEventListener("DOMContentLoaded", async () => {
   schoolId = sessionStorage.getItem("school_id");
   adminId = sessionStorage.getItem("admin_id");
@@ -332,9 +343,10 @@ function unlockProFeatures() {
 async function fetchSubscriptionStatus() {
   try {
     const res = await fetch(`${API_BASE}/api/subscription/status`, {
-      method: "GET",
-      credentials: "include"
-    });
+  method: "GET",
+  headers: getAuthHeaders(),
+  credentials: "include"
+});
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -492,9 +504,10 @@ async function cancelSubscription() {
 
   try {
     const res = await fetch(`${API_BASE}/api/subscription/cancel`, {
-      method: "POST",
-      credentials: "include"
-    });
+  method: "POST",
+  headers: getAuthHeaders(),
+  credentials: "include"
+});
     
     const contentType = res.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
@@ -538,8 +551,12 @@ async function renewSubscription() {
     
     // ✅ Try to get code from backend status
     const statusRes = await fetch(`${API_BASE}/api/subscription/status`, {
-      credentials: 'include'
-    });
+  headers: getAuthHeaders(),
+  credentials: 'include'
+});
+
+
+
     const statusData = await statusRes.json();
     
     if (statusData.success && statusData.authorization_code) {
@@ -581,8 +598,11 @@ async function enableAutoRenewal() {
     
     // ✅ Try backend code
     const statusRes = await fetch(`${API_BASE}/api/subscription/status`, {
-      credentials: 'include'
-    });
+  headers: getAuthHeaders(),
+  credentials: 'include'
+});
+
+
     const statusData = await statusRes.json();
     
     if (statusData.success && statusData.authorization_code) {
@@ -609,16 +629,22 @@ async function enableAutoRenewal() {
 // SETUP AUTO-RENEWAL (Email Consistency Fix)
 // =====================
 async function setupAutoRenewal(authorizationCode, planToUse) {
-  document.getElementById('autorenewStep1').style.display = 'none';
+
+const step1 = document.getElementById('autorenewStep1');
+if (step1) {
+  step1.style.display = 'none';
+}
+
   document.getElementById('autorenewProcessing').style.display = 'block';
   
   try {
     // ✅ CRITICAL: Fetch the exact email Paystack tied to the authorization_code
     // This prevents "Authorization does not belong to customer" errors
     const statusRes = await fetch(`${API_BASE}/api/subscription/status`, {
-      credentials: 'include',
-      cache: 'no-store'
-    });
+  headers: getAuthHeaders(),
+  credentials: 'include',
+  cache: 'no-store'
+});
     
     if (!statusRes.ok) {
       throw new Error(`Failed to fetch subscription status: ${statusRes.status}`);
@@ -638,7 +664,7 @@ async function setupAutoRenewal(authorizationCode, planToUse) {
 
     const res = await fetch(`${API_BASE}/api/subscription/setup-subscription`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify({
         authorization_code: authorizationCode,
@@ -723,7 +749,7 @@ async function downgradeToBasic() {
     const res = await fetch(`${API_BASE}/api/subscription/downgrade`, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ school_id: schoolId, to_plan: "basic" })
     });
 
