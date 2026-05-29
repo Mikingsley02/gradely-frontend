@@ -264,6 +264,7 @@ let hasSubscription = false; // Tracks if paystack_subscription_code exists
 document.addEventListener("DOMContentLoaded", async () => {
   schoolId = sessionStorage.getItem("school_id");
   adminId = sessionStorage.getItem("admin_id");
+  const token = sessionStorage.getItem("token");
 
   if (!schoolId) {
     alert("Session expired. Please log in again.");
@@ -736,6 +737,7 @@ async function downgradeToBasic() {
     document.getElementById("message").innerHTML = `<span class="error">❌ ${err.message}</span>`;
   }
 }
+
 
 // =====================
 // SHOW PLAN SELECTION (EXPIRED)
