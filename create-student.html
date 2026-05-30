@@ -194,18 +194,113 @@
 <script>
 const API_BASE = "https://api.gradely.info";
 
+// ===============================
+// JWT AUTH HELPERS
+// ===============================
+function getToken() {
+  const token =
+    sessionStorage.getItem("gradely_token") ||
+    localStorage.getItem("gradely_token");
+
+  if (!token || token === "null" || token === "undefined" || token.trim() === "") {
+    return null;
+  }
+
+  return token;
+}
+
+function getSchoolId() {
+  return (
+    sessionStorage.getItem("school_id") ||
+    localStorage.getItem("school_id") ||
+    sessionStorage.getItem("admin_id") ||
+    sessionStorage.getItem("adminId") ||
+    localStorage.getItem("admin_id") ||
+    localStorage.getItem("adminId")
+  );
+}
+
+function clearAuth() {
+  sessionStorage.removeItem("gradely_token");
+  sessionStorage.removeItem("school_id");
+  sessionStorage.removeItem("adminId");
+  sessionStorage.removeItem("admin_id");
+
+  localStorage.removeItem("gradely_token");
+  localStorage.removeItem("school_id");
+  localStorage.removeItem("adminId");
+  localStorage.removeItem("admin_id");
+}
+
+function redirectToLogin() {
+  clearAuth();
+  window.location.href = "admin-login.html";
+}
+
+function getAuthHeaders(extraHeaders = {}) {
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+    ...extraHeaders
+  };
+}
+
+async function authFetch(url, options = {}) {
+  if (!getToken()) {
+    redirectToLogin();
+    return null;
+  }
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...(options.headers || {})
+    }
+  });
+
+  if (res.status === 401) {
+    redirectToLogin();
+    return null;
+  }
+
+  if (!res.ok) {
+    let message = `HTTP ${res.status}`;
+
+    try {
+      const errorData = await res.json();
+      message = errorData.message || message;
+    } catch (e) {}
+
+    throw new Error(message);
+  }
+
+  return res;
+}
+
+// ===============================
 // TOGGLE PASSWORD
+// ===============================
 function togglePassword(id, icon) {
   const input = document.getElementById(id);
   input.type = input.type === "password" ? "text" : "password";
   icon.textContent = input.type === "password" ? "👁️" : "🙈";
 }
 
-
-// CREATE STUDENT
+// ===============================
+// CREATE SINGLE STUDENT
+// ===============================
 document.getElementById("createForm").onsubmit = async (e) => {
   e.preventDefault();
+
   const msg = document.getElementById("message");
+  const schoolId = getSchoolId();
+
+  if (!schoolId) {
+    msg.className = "message error";
+    msg.textContent = "❌ School ID not found. Please log in again.";
+    return;
+  }
 
   const password = document.getElementById("password").value;
   const confirm = document.getElementById("confirm_password").value;
@@ -217,33 +312,53 @@ document.getElementById("createForm").onsubmit = async (e) => {
   }
 
   const data = Object.fromEntries(new FormData(e.target));
-  data.school_id = sessionStorage.getItem("school_id");
+
+  data.school_id = schoolId;
+  data.parent_email = data.parent_email
+    ? data.parent_email.trim().toLowerCase()
+    : null;
 
   msg.textContent = "⏳ Creating student...";
   msg.className = "message";
 
+  try {
+    const res = await authFetch(`${API_BASE}/api/students/register`, {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
 
-  const res = await fetch(`/api/students/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(data)
-  });
+    if (!res) return;
 
-  const result = await res.json();
+    const result = await res.json();
 
-  msg.className = result.success ? "message success" : "message error";
-  msg.textContent = result.message || "Completed.";
+    msg.className = result.success ? "message success" : "message error";
+    msg.textContent = result.message || "Completed.";
 
-  if (result.success) {
-    setTimeout(() => window.location.href = "manage-students.html", 1500);
+    if (result.success) {
+      setTimeout(() => {
+        window.location.href = "manage-students.html";
+      }, 1500);
+    }
+  } catch (err) {
+    console.error("Create student error:", err);
+    msg.className = "message error";
+    msg.textContent = "❌ Failed to create student: " + err.message;
   }
 };
 
-// BULK UPLOAD
+// ===============================
+// BULK UPLOAD STUDENTS
+// ===============================
 async function uploadBulkStudents() {
   const file = document.getElementById("bulkFile").files[0];
   const msg = document.getElementById("bulkMessage");
+  const schoolId = getSchoolId();
+
+  if (!schoolId) {
+    msg.className = "message error";
+    msg.textContent = "❌ School ID not found. Please log in again.";
+    return;
+  }
 
   if (!file) {
     msg.className = "message error";
@@ -252,76 +367,116 @@ async function uploadBulkStudents() {
   }
 
   const reader = new FileReader();
+
   reader.onload = async (e) => {
-  const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
-  const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), {
+        type: "array"
+      });
 
-  const normalized = sheet.map(s => ({
-  student_id: s.student_id,
-  first_name: s.first_name,
-  middle_name: s.middle_name || null,
-  last_name: s.last_name,
-  phone: s.phone || s.phone_number,   // ✅ handles both
-  parent_email: s.parent_email || null,
-  password: s.password,
-  school_id: sessionStorage.getItem("school_id")
-}));
+      const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
+      if (!sheet.length) {
+        msg.className = "message error";
+        msg.textContent = "⚠️ The selected file is empty.";
+        return;
+      }
 
+      const normalized = sheet.map(s => ({
+        student_id: s.student_id,
+        first_name: s.first_name,
+        middle_name: s.middle_name || null,
+        last_name: s.last_name,
+        phone: s.phone || s.phone_number,
+        parent_email: s.parent_email
+          ? String(s.parent_email).trim().toLowerCase()
+          : null,
+        password: s.password,
+        school_id: schoolId
+      }));
 
-  const res = await fetch(`/api/students/bulk-upload`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({
-      school_id: sessionStorage.getItem("school_id"),
-      students: normalized
-    })
-  });
+      msg.className = "message";
+      msg.textContent = "⏳ Uploading students...";
 
-  const result = await res.json();
+      const res = await authFetch(`${API_BASE}/api/students/bulk-upload`, {
+        method: "POST",
+        body: JSON.stringify({
+          school_id: schoolId,
+          students: normalized
+        })
+      });
 
-  msg.className = result.success ? "message success" : "message error";
-  msg.textContent = result.success
-    ? "✅ Upload successful"
-    : result.message || "❌ Upload failed";
+      if (!res) return;
 
-  if (result.success) {
-    setTimeout(() => {
-      window.location.href = "manage-students.html";
-    }, 1500);
-  }
-};
+      const result = await res.json();
+
+      msg.className = result.success ? "message success" : "message error";
+      msg.textContent = result.success
+        ? "✅ Upload successful"
+        : result.message || "❌ Upload failed";
+
+      if (result.success) {
+        setTimeout(() => {
+          window.location.href = "manage-students.html";
+        }, 1500);
+      }
+    } catch (err) {
+      console.error("Bulk upload error:", err);
+      msg.className = "message error";
+      msg.textContent = "❌ Upload failed: " + err.message;
+    }
+  };
 
   reader.readAsArrayBuffer(file);
 }
 
-// TEMPLATE (NO CLASS / SECTION)
+// ===============================
+// DOWNLOAD TEMPLATE
+// ===============================
 function downloadStudentTemplate() {
   const ws = XLSX.utils.aoa_to_sheet([
-  ["student_id","first_name","middle_name","last_name","phone","parent_email","password"],
-  ["STU001","Kaima","","Ifeanyi","08012345678","parent@mail.com","12345678"]
-]);
+    [
+      "student_id",
+      "first_name",
+      "middle_name",
+      "last_name",
+      "phone",
+      "parent_email",
+      "password"
+    ],
+    [
+      "STU001",
+      "Kaima",
+      "",
+      "Ifeanyi",
+      "08012345678",
+      "parent@mail.com",
+      "12345678"
+    ]
+  ]);
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Students");
   XLSX.writeFile(wb, "Student_Bulk_Template.xlsx");
 }
 
 function goBack() {
-  window.location.href = "dashboard.html";
+  window.location.href = "manage-students.html";
 }
 
-
-// SHOW STUDENT USAGE AND DISABLE BUTTON IF LIMIT REACHED
-// ✅ In create-student.html, around line ~320 in showStudentUsage():
+// ===============================
+// STUDENT USAGE COUNTER
+// ===============================
 async function showStudentUsage() {
   const counter = document.getElementById("studentCounter");
   const submitBtn = document.querySelector(".btn-submit");
 
   try {
-    const res = await fetch(`${API_BASE}/api/students/subscription/usage`, {
-      credentials: "include"
+    const res = await authFetch(`${API_BASE}/api/students/subscription/usage`, {
+      method: "GET"
     });
+
+    if (!res) return;
 
     const data = await res.json();
 
@@ -329,21 +484,16 @@ async function showStudentUsage() {
       throw new Error(data.message || "Failed to fetch usage");
     }
 
-    // ✅ Get values from response (backend is source of truth)
-    const plan = data.data?.plan?.toLowerCase() || 'basic';
+    const plan = data.data?.plan?.toLowerCase() || "basic";
     const used = data.data?.current ?? 0;
-    const limit = data.data?.limit ?? 200;  // Default to 200 if not provided
+    const limit = data.data?.limit ?? 200;
 
     counter.style.display = "block";
 
-    // =========================
-    // BASIC PLAN (limit = 200)
-    // =========================
     if (plan === "basic" || limit === 200) {
       counter.textContent = `🧑 Students registered: ${used} / ${limit}`;
       counter.style.color = "#e74c3c";
 
-      // Disable button if limit reached
       if (used >= limit) {
         submitBtn.disabled = true;
         submitBtn.style.background = "#bdc3c7";
@@ -354,13 +504,7 @@ async function showStudentUsage() {
         submitBtn.style.background = "#3498db";
         submitBtn.textContent = "Create Account";
       }
-    }
-
-    // =========================
-    // PRO PLAN (limit = -1 means UNLIMITED)
-    // =========================
-    else if (plan === "pro" || limit === -1) {
-      // ✅ Show total students ONLY with "Unlimited" badge
+    } else if (plan === "pro" || limit === -1) {
       counter.textContent = `🧑 Students registered: ${used} (Unlimited)`;
       counter.style.color = "#27ae60";
 
@@ -368,11 +512,9 @@ async function showStudentUsage() {
       submitBtn.style.background = "#3498db";
       submitBtn.textContent = "Create Account";
     }
-
   } catch (err) {
     console.error("❌ Could not fetch student usage:", err);
-    // ✅ Fallback: Show generic message
-    const counter = document.getElementById("studentCounter");
+
     if (counter) {
       counter.style.display = "block";
       counter.textContent = "🧑 Students registered: 0";
@@ -381,16 +523,22 @@ async function showStudentUsage() {
   }
 }
 
+// ===============================
+// PAGE LOAD
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  if (!getToken()) {
+    redirectToLogin();
+    return;
+  }
 
-// Call on page load
-showStudentUsage();
-
+  showStudentUsage();
+});
 </script>
 
 
 <script src="js/kaima-chatbot.js"></script> 
-<script src="js/session-timeout.js"></script>
-
+<!-- <script src="js/session-timeout.js"></script> -->
 
 </body>
 </html>
