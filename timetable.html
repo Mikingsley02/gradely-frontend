@@ -566,15 +566,10 @@ async function checkTimetableExists(className, groupName) {
         or click <strong>Save</strong> to overwrite it.
       `;
     } else {
-      statusBox.style.display = "block";
-        statusBox.className = "success";
-
-      statusBox.innerHTML = `
-        ✅ No timetable exists yet for
-        <strong>${className}</strong> Group
-        <strong>${groupName}</strong>.
-      `;
-    }
+  statusBox.style.display = "none";
+  statusBox.className = "";
+  statusBox.innerHTML = "";
+}
   } catch (err) {
     console.warn("Could not check timetable:", err);
   }
@@ -799,10 +794,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const groupName =
     document.getElementById("groupName").value;
 
-  await checkTimetableExists(className, groupName);
-  await loadTimetable(className, groupName);
+ await checkTimetableExists(className, groupName);
 
-  renderTimetable();
+timetableData[className] = timetableData[className] || {};
+timetableData[className][groupName] = getBlankTimetable();
+
+renderTimetable();
 });
 
 document
