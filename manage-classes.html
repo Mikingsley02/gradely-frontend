@@ -271,271 +271,342 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
   <script>
-    const API_BASE = "https://api.gradely.info";
+const API_BASE = "https://api.gradely.info";
 
-    // ✅ NEW: Helper function to build auth headers with JWT
-    function getAuthHeaders() {
-      const token = sessionStorage.getItem("gradely_token");
-      const headers = { "Content-Type": "application/json" };
-      
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-      
-      return headers;
+function getToken() {
+  const token =
+    sessionStorage.getItem("gradely_token") ||
+    localStorage.getItem("gradely_token");
+
+  if (!token || token === "null" || token === "undefined" || token.trim() === "") {
+    return null;
+  }
+
+  return token;
+}
+
+function clearAuth() {
+  sessionStorage.removeItem("gradely_token");
+  sessionStorage.removeItem("school_id");
+  sessionStorage.removeItem("adminId");
+  sessionStorage.removeItem("admin_id");
+
+  localStorage.removeItem("gradely_token");
+  localStorage.removeItem("school_id");
+  localStorage.removeItem("adminId");
+  localStorage.removeItem("admin_id");
+}
+
+function redirectToLogin() {
+  clearAuth();
+  window.location.href = "admin-login.html";
+}
+
+function getAuthHeaders(extraHeaders = {}) {
+  const token = getToken();
+
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+    ...extraHeaders
+  };
+}
+
+async function authFetch(url, options = {}) {
+  const token = getToken();
+
+  if (!token) {
+    redirectToLogin();
+    return null;
+  }
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...(options.headers || {})
     }
+  });
 
-    // ✅ NEW: Show brief success toast
-    function showToast(message) {
-      const toast = document.createElement("div");
-      toast.textContent = message;
-      Object.assign(toast.style, {
-        position: "fixed",
-        bottom: "20px",
-        right: "20px",
-        background: "#27ae60",
-        color: "#fff",
-        padding: "12px 24px",
-        borderRadius: "8px",
-        fontSize: "0.95rem",
-        fontWeight: "600",
-        zIndex: "9999",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-        opacity: "0",
-        transition: "opacity 0.3s ease"
-      });
-      document.body.appendChild(toast);
-      requestAnimationFrame(() => toast.style.opacity = "1");
-      setTimeout(() => {
-        toast.style.opacity = "0";
-        setTimeout(() => toast.remove(), 300);
-      }, 2000);
-    }
+  if (res.status === 401) {
+    redirectToLogin();
+    return null;
+  }
 
-    // ✅ NEW: Save timetable to backend with JWT auth
-    async function saveTimetable(className, groupName) {
-      const schoolId = sessionStorage.getItem("school_id");
-      if (!schoolId) {
-        alert("⚠️ Session expired. Please log in again.");
-        window.location.href = "admin-login.html";
-        return;
-      }
-      
-      try {
-        const res = await fetch(`${API_BASE}/api/classes/timetable`, {
-          method: "POST",
-          headers: getAuthHeaders(),  // ✅ Sends JWT in Authorization header
-          body: JSON.stringify({
-            school_id: schoolId,
-            class_name: className,
-            group_name: groupName,
-            timetable: timetableData[className][groupName]
-          })
-        });
-        
-        const result = await res.json();
-        
-        if (result.success) {
-          console.log("✅ Timetable saved successfully");
-          showToast("✅ Timetable saved!");
-        } else {
-          console.error("❌ Failed to save timetable:", result.message);
-          alert("⚠️ Failed to save timetable: " + result.message);
-        }
-      } catch (err) {
-        console.error("❌ Network error saving timetable:", err);
-        alert("⚠️ Network error. Please check your connection and try again.");
-      }
-    }
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
 
-    // ✅ NEW: Manual save trigger
-    function manualSaveTimetable() {
-      const className = document.getElementById("className").value;
-      const groupName = document.getElementById("groupName").value;
-      saveTimetable(className, groupName);
-    }
+  return res;
+}
 
-    // ✅ NEW: Load timetable from backend on page load
-    async function loadTimetable(className, groupName) {
-      const schoolId = sessionStorage.getItem("school_id");
-      if (!schoolId) return;
-      
-      try {
-        const res = await fetch(
-          `${API_BASE}/api/classes/timetable?school_id=${encodeURIComponent(schoolId)}&class_name=${encodeURIComponent(className)}&group_name=${encodeURIComponent(groupName)}`,
-          { headers: getAuthHeaders() }
-        );
-        
-        const result = await res.json();
-        
-        if (result.success && result.data) {
-          // ✅ Merge loaded data with in-memory structure
-          if (!timetableData[className]) timetableData[className] = {};
-          timetableData[className][groupName] = result.data;
-          console.log("✅ Timetable loaded from backend");
-        }
-      } catch (err) {
-        console.warn("⚠️ Could not load timetable from backend:", err.message);
-        // ✅ Continue with in-memory defaults if load fails
-      }
-    }
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.textContent = message;
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      const schoolId = sessionStorage.getItem("school_id");
-      if (!schoolId) {
-        alert("⚠️ Session expired. Please log in again.");
-        window.location.href = "admin-login.html";
-        return;
-      }
-      
-      // ✅ Load saved timetable on initial render
-      const className = document.getElementById("className").value;
-      const groupName = document.getElementById("groupName").value;
-      await loadTimetable(className, groupName);
-      renderTimetable();
+  Object.assign(toast.style, {
+    position: "fixed",
+    bottom: "20px",
+    right: "20px",
+    background: "#27ae60",
+    color: "#fff",
+    padding: "12px 24px",
+    borderRadius: "8px",
+    fontSize: "0.95rem",
+    fontWeight: "600",
+    zIndex: "9999",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+    opacity: "0",
+    transition: "opacity 0.3s ease"
+  });
+
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.style.opacity = "1");
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
+}
+
+const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+let times = [
+  "08:00 - 09:00",
+  "09:00 - 10:00",
+  "10:00 - 11:00",
+  "11:00 - 12:00",
+  "12:00 - 13:00",
+  "13:00 - 14:00"
+];
+
+let timetableData = {};
+const timetableGrid = document.getElementById("timetableGrid");
+
+function initTimetableData(className, groupName) {
+  if (!timetableData[className]) timetableData[className] = {};
+
+  if (!timetableData[className][groupName]) {
+    timetableData[className][groupName] = {};
+
+    days.forEach(day => {
+      timetableData[className][groupName][day] = times.map(() => ({
+        subject: "-",
+        teacher: "-"
+      }));
+    });
+  }
+}
+
+async function saveTimetable(className, groupName) {
+  try {
+    const res = await authFetch(`${API_BASE}/api/classes/timetable`, {
+      method: "POST",
+      body: JSON.stringify({
+        class_name: className,
+        group_name: groupName,
+        timetable: timetableData[className][groupName]
+      })
     });
 
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-    let times = ["08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00"];
-    let timetableData = {};
+    if (!res) return;
 
-    function initTimetableData(className, groupName) {
+    const result = await res.json();
+
+    if (result.success) {
+      console.log("✅ Timetable saved successfully");
+      showToast("✅ Timetable saved!");
+    } else {
+      console.error("❌ Failed to save timetable:", result.message);
+      alert("⚠️ Failed to save timetable: " + result.message);
+    }
+  } catch (err) {
+    console.error("❌ Network error saving timetable:", err);
+    alert("⚠️ Network error. Please check your connection and try again.");
+  }
+}
+
+function manualSaveTimetable() {
+  const className = document.getElementById("className").value;
+  const groupName = document.getElementById("groupName").value;
+
+  saveTimetable(className, groupName);
+}
+
+async function loadTimetable(className, groupName) {
+  try {
+    const res = await authFetch(
+      `${API_BASE}/api/classes/timetable?class_name=${encodeURIComponent(className)}&group_name=${encodeURIComponent(groupName)}`,
+      { method: "GET" }
+    );
+
+    if (!res) return;
+
+    const result = await res.json();
+
+    if (result.success && result.data) {
       if (!timetableData[className]) timetableData[className] = {};
-      if (!timetableData[className][groupName]) {
-        timetableData[className][groupName] = {};
-        days.forEach(day => {
-          timetableData[className][groupName][day] = times.map(() => ({ subject: "-", teacher: "-" }));
-        });
-      }
+      timetableData[className][groupName] = result.data;
+      console.log("✅ Timetable loaded from backend");
     }
+  } catch (err) {
+    console.warn("⚠️ Could not load timetable from backend:", err.message);
+  }
+}
 
-    const timetableGrid = document.getElementById("timetableGrid");
+document.addEventListener("DOMContentLoaded", async () => {
+  if (!getToken()) {
+    alert("⚠️ Session expired. Please log in again.");
+    redirectToLogin();
+    return;
+  }
 
-    function renderTimetable() {
-      const className = document.getElementById("className").value;
-      const groupName = document.getElementById("groupName").value;
+  const className = document.getElementById("className").value;
+  const groupName = document.getElementById("groupName").value;
 
-      initTimetableData(className, groupName);
-      const gridData = timetableData[className][groupName];
+  await loadTimetable(className, groupName);
+  renderTimetable();
+});
 
-      timetableGrid.innerHTML = "";
+function renderTimetable() {
+  const className = document.getElementById("className").value;
+  const groupName = document.getElementById("groupName").value;
 
-      const headerCell = document.createElement("div");
-      headerCell.classList.add("header");
-      headerCell.textContent = "Time / Day";
-      timetableGrid.appendChild(headerCell);
+  initTimetableData(className, groupName);
 
-      days.forEach(day => {
-        const header = document.createElement("div");
-        header.classList.add("header");
-        header.textContent = day;
-        timetableGrid.appendChild(header);
-      });
+  const gridData = timetableData[className][groupName];
 
-      times.forEach((time, rowIndex) => {
-        const timeDiv = document.createElement("div");
-        timeDiv.classList.add("time-slot");
-        timeDiv.textContent = time;
-        timeDiv.addEventListener("dblclick", () => {
-          const newTime = prompt("Edit time slot:", times[rowIndex]) || times[rowIndex];
-          times[rowIndex] = newTime;
-          renderTimetable();
-        });
-        timetableGrid.appendChild(timeDiv);
+  timetableGrid.innerHTML = "";
 
-        days.forEach(day => {
-          const cell = document.createElement("div");
-          cell.classList.add("editable");
+  const headerCell = document.createElement("div");
+  headerCell.classList.add("header");
+  headerCell.textContent = "Time / Day";
+  timetableGrid.appendChild(headerCell);
 
-          const sub = gridData[day][rowIndex].subject;
-          const teach = gridData[day][rowIndex].teacher;
+  days.forEach(day => {
+    const header = document.createElement("div");
+    header.classList.add("header");
+    header.textContent = day;
+    timetableGrid.appendChild(header);
+  });
 
-          cell.innerHTML = `<strong>${sub}</strong><br><em>${teach}</em>`;
+  times.forEach((time, rowIndex) => {
+    const timeDiv = document.createElement("div");
+    timeDiv.classList.add("time-slot");
+    timeDiv.textContent = time;
 
-          cell.addEventListener("dblclick", () => {
-            const newSub = prompt("Enter subject:", gridData[day][rowIndex].subject) || "-";
-            const newTeach = prompt("Enter teacher:", gridData[day][rowIndex].teacher) || "-";
-            
-            // ✅ Update in-memory data
-            gridData[day][rowIndex].subject = newSub;
-            gridData[day][rowIndex].teacher = newTeach;
-            
-            // ✅ Re-render UI immediately
-            renderTimetable();
-            
-            // ✅ NEW: Auto-save to backend with 500ms debounce
-            if (window.saveTimetableTimeout) {
-              clearTimeout(window.saveTimetableTimeout);
-            }
-            window.saveTimetableTimeout = setTimeout(() => {
-              saveTimetable(className, groupName);
-            }, 500);
-          });
-
-          timetableGrid.appendChild(cell);
-        });
-      });
-    }
-
-    document.getElementById("className").addEventListener("change", async (e) => {
-      const className = e.target.value;
-      const groupName = document.getElementById("groupName").value;
-      await loadTimetable(className, groupName);
-      renderTimetable();
-    });
-    
-    document.getElementById("groupName").addEventListener("change", async (e) => {
-      const className = document.getElementById("className").value;
-      const groupName = e.target.value;
-      await loadTimetable(className, groupName);
+    timeDiv.addEventListener("dblclick", () => {
+      const newTime = prompt("Edit time slot:", times[rowIndex]) || times[rowIndex];
+      times[rowIndex] = newTime;
       renderTimetable();
     });
 
-    // Initial render (loadTimetable called in DOMContentLoaded)
-    // renderTimetable(); // Called after loadTimetable in DOMContentLoaded
+    timetableGrid.appendChild(timeDiv);
 
-    function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF("p", "mm", "a4");
-      let y = 20;
-      const className = document.getElementById("className").value;
-      const groupName = document.getElementById("groupName").value;
+    days.forEach(day => {
+      const cell = document.createElement("div");
+      cell.classList.add("editable");
 
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.text(`Timetable — ${className} ${groupName}`, 105, y, null, null, "center");
-      y += 10;
+      const sub = gridData[day][rowIndex].subject;
+      const teach = gridData[day][rowIndex].teacher;
 
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
+      cell.innerHTML = `<strong>${sub}</strong><br><em>${teach}</em>`;
 
-      const gridData = timetableData[className][groupName];
+      cell.addEventListener("dblclick", () => {
+        const newSub = prompt("Enter subject:", gridData[day][rowIndex].subject) || "-";
+        const newTeach = prompt("Enter teacher:", gridData[day][rowIndex].teacher) || "-";
 
-      const table = [["Time/Day", ...days]];
-      times.forEach((time, i) => {
-        const row = [time];
-        days.forEach(day => {
-          const cell = gridData[day][i];
-          row.push(`${cell.subject}\n(${cell.teacher})`);
-        });
-        table.push(row);
+        gridData[day][rowIndex].subject = newSub;
+        gridData[day][rowIndex].teacher = newTeach;
+
+        renderTimetable();
+
+        if (window.saveTimetableTimeout) {
+          clearTimeout(window.saveTimetableTimeout);
+        }
+
+        window.saveTimetableTimeout = setTimeout(() => {
+          saveTimetable(className, groupName);
+        }, 500);
       });
 
-      doc.autoTable({
-        startY: y,
-        head: [table[0]],
-        body: table.slice(1),
-        theme: 'grid',
-        styles: { fontSize: 9, halign: 'center', valign: 'middle' },
-        headStyles: { fillColor: [108, 92, 231], textColor: 255 }
-      });
+      timetableGrid.appendChild(cell);
+    });
+  });
+}
 
-      doc.save(`Timetable_${className}_${groupName}.pdf`);
+document.getElementById("className").addEventListener("change", async (e) => {
+  const className = e.target.value;
+  const groupName = document.getElementById("groupName").value;
+
+  await loadTimetable(className, groupName);
+  renderTimetable();
+});
+
+document.getElementById("groupName").addEventListener("change", async (e) => {
+  const className = document.getElementById("className").value;
+  const groupName = e.target.value;
+
+  await loadTimetable(className, groupName);
+  renderTimetable();
+});
+
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p", "mm", "a4");
+
+  let y = 20;
+
+  const className = document.getElementById("className").value;
+  const groupName = document.getElementById("groupName").value;
+
+  initTimetableData(className, groupName);
+
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Timetable — ${className} ${groupName}`, 105, y, null, null, "center");
+
+  y += 10;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+
+  const gridData = timetableData[className][groupName];
+
+  const table = [["Time/Day", ...days]];
+
+  times.forEach((time, i) => {
+    const row = [time];
+
+    days.forEach(day => {
+      const cell = gridData[day][i];
+      row.push(`${cell.subject}\n(${cell.teacher})`);
+    });
+
+    table.push(row);
+  });
+
+  doc.autoTable({
+    startY: y,
+    head: [table[0]],
+    body: table.slice(1),
+    theme: "grid",
+    styles: {
+      fontSize: 9,
+      halign: "center",
+      valign: "middle"
+    },
+    headStyles: {
+      fillColor: [108, 92, 231],
+      textColor: 255
     }
-  </script>
+  });
+
+  doc.save(`Timetable_${className}_${groupName}.pdf`);
+}
+</script>
 
 <script src="js/kaima-chatbot.js"></script>
-<script src="js/session-timeout.js"></script>
-
+<!-- <script src="js/session-timeout.js"></script> -->
 </body>
 </html>
