@@ -610,12 +610,58 @@ async function loadSelectedTimetable() {
 
   editMode = false;
 
-  await loadTimetable(className, groupName);
+  try {
+    const schoolId = getSchoolId();
 
-  renderTimetable();
+    const res = await authFetch(
+      `${API_BASE}/api/classes/timetable?school_id=${encodeURIComponent(
+        schoolId
+      )}&class_name=${encodeURIComponent(
+        className
+      )}&group_name=${encodeURIComponent(groupName)}`
+    );
 
-  showToast(`📂 Loaded ${className} Group ${groupName}`);
+    if (!res) return;
+
+    const result = await res.json();
+
+    const hasRealData =
+      result.success &&
+      result.data &&
+      JSON.stringify(result.data).includes('"subject":"-"') === false;
+
+    if (!hasRealData) {
+      showToast(
+        `ℹ️ No saved timetable found for ${className} Group ${groupName}`,
+        "#f39c12"
+      );
+      return;
+    }
+
+    if (!timetableData[className]) {
+      timetableData[className] = {};
+    }
+
+    timetableData[className][groupName] = result.data;
+
+    renderTimetable();
+
+    showToast(
+      `📂 Loaded ${className} Group ${groupName}`,
+      "#3498db"
+    );
+
+  } catch (err) {
+    console.error(err);
+
+    showToast(
+      "⚠️ Failed to load timetable",
+      "#e74c3c"
+    );
+  }
 }
+
+
 
 function enableEditMode() {
   editMode = true;
