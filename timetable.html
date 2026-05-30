@@ -549,11 +549,12 @@ async function checkTimetableExists(className, groupName) {
 
     const statusBox = document.getElementById("timetableStatus");
 
-    if (
-      result.success &&
-      result.data &&
-      Object.keys(result.data).length > 0
-    ) {
+    const hasRealData =
+  result.success &&
+  result.data &&
+  JSON.stringify(result.data).includes('"subject":"-"') === false;
+
+if (hasRealData) {
       statusBox.style.display = "block";
         statusBox.className = "warning";
 
@@ -625,8 +626,8 @@ function enableEditMode() {
   );
 }
 
-async function saveTimetable(className, groupName) {
-  try {
+async function saveTimetable(className, groupName, silent = false) {
+    try {
     const schoolId = getSchoolId();
 
     const res = await authFetch(
@@ -651,7 +652,9 @@ async function saveTimetable(className, groupName) {
 
       await checkTimetableExists(className, groupName);
 
-      showToast("✅ Timetable saved successfully");
+if (!silent) {
+  showToast("✅ Timetable saved successfully");
+}
     } else {
       alert(result.message || "Failed to save timetable");
     }
@@ -683,7 +686,7 @@ async function clearCurrentTimetable() {
 
   renderTimetable();
 
-  await saveTimetable(className, groupName);
+await saveTimetable(className, groupName, true);
 
   showToast("🗑️ Timetable cleared", "#e74c3c");
 }
@@ -794,11 +797,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const groupName =
     document.getElementById("groupName").value;
 
- await checkTimetableExists(className, groupName);
-
-timetableData[className] = timetableData[className] || {};
-timetableData[className][groupName] = getBlankTimetable();
-
+await checkTimetableExists(className, groupName);
+await loadTimetable(className, groupName);
 renderTimetable();
 });
 
