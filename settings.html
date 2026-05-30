@@ -6,126 +6,236 @@
   <title>⚙️ Settings | Gradely Info</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <style>
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #6a11cb, #2575fc);
-      margin: 0;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      padding: 30px 15px;
-    }
-    .settings-card {
-      background: #fff;
-      width: 100%;
-      max-width: 500px;
-      border-radius: 12px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-      overflow: hidden;
-    }
-    .settings-header {
-      background: #0c2461;
-      color: white;
-      text-align: center;
-      padding: 25px;
-    }
-    .settings-header h2 {
-      margin: 0;
-      font-size: 1.6rem;
-      font-weight: 600;
-    }
-    .settings-body {
-      padding: 25px;
-    }
-    .form-group {
-      margin-bottom: 18px;
-      position: relative;
-    }
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #2c3e50;
-    }
-    input {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 6px;
-      border: 1px solid #bdc3c7;
-      font-size: 1rem;
-      box-sizing: border-box;
-    }
-    input:focus {
-      border-color: #3498db;
-      outline: none;
-    }
-    ::placeholder {
-      color: #999;
-      opacity: 1;
-    }
-    .toggle-password {
-      position: absolute;
-      right: 12px;
-      top: 38px;
-      cursor: pointer;
-      user-select: none;
-      color: #888;
-      font-size: 1.1rem;
-    }
-    button {
-      background: #3498db;
-      color: #fff;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #2980b9;
-    }
-    .back-link {
-      display: block;
-      text-align: center;
-      margin-top: 18px;
-      font-weight: 600;
-      color: #299aca;
-      text-decoration: none;
-      font-size: 1rem;
-      transition: color 0.3s;
-    }
-    .back-link:hover {
-      color: #c0392b;
-      text-decoration: underline;
-    }
-    .message {
-      margin-top: 15px;
-      text-align: center;
-      font-size: 0.95rem;
-      min-height: 20px;
-    }
-    .error { color: #e74c3c; }
-    .success { color: #27ae60; }
-    .footer {
-      text-align: center;
-      color: #eee;
-      font-size: 0.8rem;
-      margin-top: 30px;
-    }
-    .footer a {
-      color: #00d2ff;
-      text-decoration: none;
-      margin: 0 8px;
-    }
-    .footer a:hover {
-      text-decoration: underline;
-    }
-  </style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --blue:#2563eb;
+  --cyan:#00d2ff;
+  --purple:#7c3aed;
+  --dark:#020617;
+  --white:#fff;
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+  min-height:100vh;
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:30px 15px;
+  background:
+    radial-gradient(circle at top left,rgba(56,189,248,.35),transparent 35%),
+    radial-gradient(circle at bottom right,rgba(124,58,237,.36),transparent 35%),
+    linear-gradient(135deg,#020617,#0f172a,#1e1b4b);
+  color:#0f172a;
+  overflow-x:hidden;
+}
+
+.settings-card{
+  width:100%;
+  max-width:720px;
+  border-radius:34px;
+  overflow:hidden;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(255,255,255,.25);
+  backdrop-filter:blur(26px);
+  box-shadow:0 35px 90px rgba(0,0,0,.45);
+}
+
+.settings-header{
+  text-align:center;
+  padding:34px 28px;
+  color:#fff;
+  background:linear-gradient(135deg,rgba(37,99,235,.94),rgba(124,58,237,.92));
+}
+
+.settings-header h2{
+  margin:0 0 8px;
+  font-size:2rem;
+  font-weight:900;
+  letter-spacing:-.8px;
+}
+
+.settings-header p{
+  color:#dbeafe;
+  margin:0;
+}
+
+.settings-body{
+  padding:32px;
+}
+
+.form-group{
+  position:relative;
+  margin-bottom:18px;
+}
+
+label{
+  display:block;
+  font-weight:800;
+  color:#1e293b;
+  margin-bottom:8px;
+}
+
+input,
+select{
+  width:100%;
+  min-height:54px;
+  border:1px solid #dbe3ef;
+  border-radius:18px;
+  padding:0 16px;
+  background:#fff;
+  color:#0f172a;
+  font-size:1rem;
+  outline:none;
+  box-sizing:border-box;
+  transition:.25s ease;
+}
+
+input:focus,
+select:focus{
+  border-color:#60a5fa;
+  box-shadow:0 0 0 5px rgba(96,165,250,.18);
+}
+
+.toggle-password{
+  position:absolute;
+  right:14px;
+  top:41px;
+  cursor:pointer;
+  font-size:1.1rem;
+}
+
+button{
+  width:100%;
+  min-height:54px;
+  border:none;
+  border-radius:18px;
+  color:#fff;
+  background:linear-gradient(135deg,#60a5fa,#2563eb);
+  font-size:1rem;
+  font-weight:900;
+  cursor:pointer;
+  transition:.25s ease;
+}
+
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 18px 35px rgba(37,99,235,.28);
+}
+
+.settings-section{
+  background:#f8fafc!important;
+  border-radius:24px!important;
+}
+
+.back-link{
+  display:block;
+  margin-top:22px;
+  text-align:center;
+  font-weight:900;
+  color:#2563eb;
+  text-decoration:none;
+}
+
+.back-link:hover{
+  color:#7c3aed;
+  text-decoration:underline;
+}
+
+.message{
+  margin-top:15px;
+  text-align:center;
+  min-height:20px;
+}
+
+.error{color:#dc2626}
+.success{color:#16a34a}
+
+.footer{
+  margin-top:26px;
+  text-align:center;
+  color:#dbeafe;
+  font-size:.82rem;
+  line-height:1.7;
+}
+
+.footer a{
+  color:#00d2ff;
+  text-decoration:none;
+  margin:0 6px;
+  font-weight:800;
+}
+
+.footer a:hover{
+  color:#fff;
+  text-decoration:underline;
+}
+
+#backupCodesModal,
+#passwordModal{
+  padding:14px;
+}
+
+#backupCodesModal > div,
+#passwordModal > div{
+  width:92%!important;
+  max-width:460px!important;
+}
+
+@media(max-width:768px){
+  body{padding:18px 10px}
+
+  .settings-card{
+    border-radius:26px;
+  }
+
+  .settings-header{
+    padding:26px 18px;
+  }
+
+  .settings-header h2{
+    font-size:1.65rem;
+  }
+
+  .settings-body{
+    padding:22px 16px;
+  }
+
+  input,
+  select,
+  button{
+    min-height:50px;
+    border-radius:14px;
+    font-size:16px;
+  }
+
+  .settings-section div{
+    flex-direction:column!important;
+  }
+
+  .settings-section input,
+  .settings-section select,
+  .settings-section button{
+    width:100%!important;
+    min-width:0!important;
+  }
+
+  .footer a{
+    display:inline-block;
+    margin:2px 4px;
+  }
+}
+
+@media(max-width:380px){
+  .settings-header h2{font-size:1.45rem}
+  .settings-body{padding:18px 12px}
+  .footer{font-size:.74rem}
+}
+</style>
 </head>
 <body>
 
