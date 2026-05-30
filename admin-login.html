@@ -1023,9 +1023,15 @@ input:focus{
 
       console.log("✅ Login response:", data);
 
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-      }
+      if (!response.ok || data.success === false) {
+  if (response.status === 401) {
+    showMessage("Invalid Admin ID or password. Please check your details and try again.");
+    return;
+  }
+
+  showMessage(data.message || "Login failed. Please try again.");
+  return;
+}
 
       if (data.requires_2fa) {
         sessionStorage.setItem("pending_2fa_school_id", admin_id);
@@ -1049,11 +1055,11 @@ await completeLogin(data);
 
 
     } catch (error) {
-      console.error("❌ Login error:", error);
-      showMessage(error.message || "Network or server error.");
-    } finally {
-      setLoading(false);
-    }
+  console.error("❌ Login error:", error);
+  showMessage("Unable to connect. Please check your internet connection and try again.");
+} finally {
+  setLoading(false);
+}
   });
 
   async function completeLogin(data) {
