@@ -11,7 +11,7 @@
         width: 65px;
         height: 65px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        background: linear-gradient(135deg, #6a11cb, #0a2e6c);
         color: #fff;
         border: none;
         font-size: 28px;
@@ -126,6 +126,60 @@
         box-shadow: 0 0 6px rgba(37,117,252,0.3);
       }
 
+
+
+      /* Mobile Fix */
+@media (max-width: 600px) {
+  #chatbotToggle {
+    width: 54px;
+    height: 54px;
+    font-size: 24px;
+    right: 16px;
+    bottom: 18px;
+  }
+
+  #chatbotPanel {
+    width: calc(100vw - 24px);
+    height: 68vh;
+    max-height: 560px;
+    right: 12px;
+    left: 12px;
+    bottom: 84px;
+    border-radius: 18px;
+  }
+
+  .chat-header {
+    padding: 12px;
+    font-size: .88rem;
+  }
+
+  #chatbotMessages {
+    font-size: .86rem;
+  }
+
+  .quick-replies {
+    max-height: 82px;
+  }
+
+  .chat-input {
+    gap: 6px;
+  }
+
+  #chatbotSend {
+    width: auto;
+    min-width: 64px;
+    padding: 10px 12px;
+    font-size: .85rem;
+  }
+
+  #chatbotInput {
+    font-size: 16px;
+  }
+}
+
+
+
+
       /* ===== MATCHING SEND BUTTON FROM HELP-SUPPORT PAGE ===== */
       #chatbotSend {
         background: linear-gradient(135deg, #0c2461, #2575fc);
@@ -174,19 +228,7 @@
         50% {box-shadow: 0 0 0 15px rgba(12,36,97,0);}
       }
 
-      @media (max-width: 600px) {
-        #chatbotPanel {
-          width: 90%;
-          height: 65vh;
-          right: 5%;
-          bottom: 90px;
-        }
-        #chatbotSend {
-          width: 100%;
-          padding: 10px 16px;
-          font-size: 1rem;
-        }
-      }
+      
     `;
     document.head.appendChild(style);
 
