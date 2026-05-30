@@ -449,7 +449,8 @@ h1{
   display:flex;
   justify-content:center;
   gap:10px;
-  margin-top:18px;
+  margin-top:40px;
+  margin-bottom:20px;
   flex-wrap:wrap;
 }
 
@@ -1022,9 +1023,11 @@ async function markExcused() {
     .map(({ i }) => i);
 
   if (absentIndices.length === 0) {
-    alert("No absent students to excuse.");
-    return;
-  }
+  alert(
+    "No absent students selected. Mark students absent first before using Excused."
+  );
+  return;
+}
 
   if (!confirm(`Mark ${absentIndices.length} absent student(s) as EXCUSED?\nReason: "${reason}"`)) return;
 
@@ -1043,9 +1046,29 @@ async function markExcused() {
 }
 
 async function markAll(status) {
-  if (!isPro || !currentSession) return;
 
-  if (!confirm(`Mark ALL ${currentStudents.length} students as ${status}?`)) return;
+  if (!isPro) return;
+
+  if (!currentSession) {
+    alert(
+      "Please load or create an attendance session before marking attendance."
+    );
+    return;
+  }
+
+  if (!currentStudents || currentStudents.length === 0) {
+    alert(
+      "No students found. Please select a class that contains students."
+    );
+    return;
+  }
+
+  if (!confirm(
+    `Mark ALL ${currentStudents.length} students as ${status.toUpperCase()}?`
+  )) {
+    return;
+  }
+
 
   document.getElementById("studentList").innerHTML =
     '<div class="loading-state"><div class="spinner"></div>Updating...</div>';
@@ -1223,7 +1246,22 @@ window.onclick = function(e) {
 };
 
 function exportAttendance() {
-  if (!isPro || !currentSession) return alert("No session loaded");
+
+  if (!isPro) return;
+
+  if (!currentSession) {
+    alert(
+      "Please load or create an attendance session before exporting."
+    );
+    return;
+  }
+
+  if (!currentStudents || currentStudents.length === 0) {
+    alert(
+      "No students available to export."
+    );
+    return;
+  }
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("p", "mm", "a4");
@@ -1310,6 +1348,6 @@ function exportAttendance() {
 
 <script src="js/kaima-chatbot.js"></script>
 <!-- <script src="js/session-timeout.js"></script> -->
- 
+
 </body>
 </html>
