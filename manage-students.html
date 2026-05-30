@@ -118,50 +118,186 @@
 
 <script>
 const API_BASE = "https://api.gradely.info";
+
 const tableBody = document.getElementById("studentsTableBody");
 const searchInput = document.getElementById("searchInput");
 const searchBtn = document.getElementById("searchBtn");
 const modal = new bootstrap.Modal(document.getElementById("editStudentModal"));
 
-const schoolId = sessionStorage.getItem("school_id");
 let allStudents = [];
 
-if (!schoolId) {
-  tableBody.innerHTML = `<tr><td colspan="5" class="text-danger text-center">❌ School not found</td></tr>`;
+function getToken() {
+  const token =
+    sessionStorage.getItem("gradely_token") ||
+    localStorage.getItem("gradely_token");
+
+  if (!token || token === "null" || token === "undefined" || token.trim() === "") {
+    return null;
+  }
+
+  return token;
+}
+
+function getSchoolId() {
+  return (
+    sessionStorage.getItem("school_id") ||
+    localStorage.getItem("school_id") ||
+    sessionStorage.getItem("admin_id") ||
+    sessionStorage.getItem("adminId") ||
+    localStorage.getItem("admin_id") ||
+    localStorage.getItem("adminId")
+  );
+}
+
+function clearAuth() {
+  sessionStorage.removeItem("gradely_token");
+  sessionStorage.removeItem("school_id");
+  sessionStorage.removeItem("adminId");
+  sessionStorage.removeItem("admin_id");
+
+  localStorage.removeItem("gradely_token");
+  localStorage.removeItem("school_id");
+  localStorage.removeItem("adminId");
+  localStorage.removeItem("admin_id");
+}
+
+function redirectToLogin() {
+  clearAuth();
+  window.location.href = "admin-login.html";
+}
+
+function getAuthHeaders(extraHeaders = {}) {
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+    ...extraHeaders
+  };
+}
+
+async function authFetch(url, options = {}) {
+  if (!getToken()) {
+    redirectToLogin();
+    return null;
+  }
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...(options.headers || {})
+    }
+  });
+
+  if (res.status === 401) {
+    redirectToLogin();
+    return null;
+  }
+
+  if (!res.ok) {
+    let message = `HTTP ${res.status}`;
+
+    try {
+      const errorData = await res.json();
+      message = errorData.message || message;
+    } catch (e) {}
+
+    throw new Error(message);
+  }
+
+  return res;
+}
+
+function getSafeSchoolId() {
+  const schoolId = getSchoolId();
+
+  if (!schoolId) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-danger text-center">
+          ❌ School ID not found. Please log in again.
+        </td>
+      </tr>
+    `;
+    return null;
+  }
+
+  return schoolId;
 }
 
 /* LOAD STUDENTS */
 async function loadStudents() {
+  const schoolId = getSafeSchoolId();
+  if (!schoolId) return;
+
+  tableBody.innerHTML = `
+    <tr>
+      <td colspan="5" class="text-center">Loading...</td>
+    </tr>
+  `;
+
   try {
-    const res = await fetch(`${API_BASE}/api/manage-students/${encodeURIComponent(schoolId)}`, {
-  credentials: "include"
-});
+    const res = await authFetch(
+      `${API_BASE}/api/manage-students/${encodeURIComponent(schoolId)}`,
+      { method: "GET" }
+    );
+
+    if (!res) return;
+
     const data = await res.json();
 
-    if (!data.success || !data.students.length) {
-      tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-warning">⚠️ No students found.</td></tr>`;
+    if (!data.success || !data.students || !data.students.length) {
+      allStudents = [];
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center text-warning">
+            ⚠️ No students found.
+          </td>
+        </tr>
+      `;
       return;
     }
 
     allStudents = data.students;
     renderTable(allStudents);
   } catch (err) {
-    console.error(err);
-    tableBody.innerHTML = `<tr><td colspan="5" class="text-danger text-center">❌ Failed to load students</td></tr>`;
+    console.error("Load students error:", err);
+
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-danger text-center">
+          ❌ Failed to load students: ${err.message}
+        </td>
+      </tr>
+    `;
   }
 }
 
 /* RENDER TABLE */
 function renderTable(list) {
+  if (!list || list.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-warning">
+          ⚠️ No students found.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
   tableBody.innerHTML = list.map(s => `
     <tr>
-      <td>${s.student_id}</td>
-      <td>${s.first_name} ${s.middle_name || ""} ${s.last_name}</td>
+      <td>${s.student_id || "-"}</td>
+      <td>${s.first_name || ""} ${s.middle_name || ""} ${s.last_name || ""}</td>
       <td>${s.phone || "-"}</td>
       <td>${s.parent_email || "-"}</td>
       <td>
-        <button class="btn btn-sm btn-primary" onclick="editStudent('${s.student_id}')">Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteStudent('${s.student_id}')">Delete</button>
+        <button class="btn btn-sm btn-primary" onclick="editStudent('${s.student_id}')">
+          Edit
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="deleteStudent('${s.student_id}')">
+          Delete
+        </button>
       </td>
     </tr>
   `).join("");
@@ -169,6 +305,9 @@ function renderTable(list) {
 
 /* SEARCH */
 async function handleSearch() {
+  const schoolId = getSafeSchoolId();
+  if (!schoolId) return;
+
   const query = searchInput.value.trim();
 
   if (!query) {
@@ -176,103 +315,148 @@ async function handleSearch() {
     return;
   }
 
-  try {
-    const res = await fetch(
-  `${API_BASE}/api/manage-students/${encodeURIComponent(schoolId)}/search/${encodeURIComponent(query)}`,
-  { credentials: "include" }
-    );
-    const data = await res.json();
-    
+  tableBody.innerHTML = `
+    <tr>
+      <td colspan="5" class="text-center">Searching...</td>
+    </tr>
+  `;
 
-    if (!data.success || !data.students.length) {
-      tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-warning">⚠️ No student found.</td></tr>`;
+  try {
+    const res = await authFetch(
+      `${API_BASE}/api/manage-students/${encodeURIComponent(schoolId)}/search/${encodeURIComponent(query)}`,
+      { method: "GET" }
+    );
+
+    if (!res) return;
+
+    const data = await res.json();
+
+    if (!data.success || !data.students || !data.students.length) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center text-warning">
+            ⚠️ No student found.
+          </td>
+        </tr>
+      `;
       return;
     }
 
     allStudents = data.students;
     renderTable(allStudents);
   } catch (err) {
-    console.error(err);
+    console.error("Search students error:", err);
+
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-danger text-center">
+          ❌ Search failed: ${err.message}
+        </td>
+      </tr>
+    `;
   }
 }
 
 searchBtn.onclick = handleSearch;
-searchInput.onkeydown = e => { if (e.key === "Enter") handleSearch(); };
+
+searchInput.onkeydown = e => {
+  if (e.key === "Enter") handleSearch();
+};
 
 /* EDIT */
 function editStudent(id) {
   const s = allStudents.find(x => x.student_id === id);
-  if (!s) return;
 
-  editStudentId.value = s.student_id;
-  editFirstName.value = s.first_name;
-  editMiddleName.value = s.middle_name || "";
-  editLastName.value = s.last_name;
-  editPhone.value = s.phone || "";
-  editParentEmail.value = s.parent_email || "";
+  if (!s) {
+    alert("Student record not found. Please refresh and try again.");
+    return;
+  }
+
+  document.getElementById("editStudentId").value = s.student_id;
+  document.getElementById("editFirstName").value = s.first_name || "";
+  document.getElementById("editMiddleName").value = s.middle_name || "";
+  document.getElementById("editLastName").value = s.last_name || "";
+  document.getElementById("editPhone").value = s.phone || "";
+  document.getElementById("editParentEmail").value = s.parent_email || "";
 
   modal.show();
 }
 
 /* SAVE EDIT */
-saveEditBtn.onclick = async () => {
+document.getElementById("saveEditBtn").onclick = async () => {
+  const schoolId = getSafeSchoolId();
+  if (!schoolId) return;
+
+  const studentId = document.getElementById("editStudentId").value;
+
   const payload = {
-  first_name: editFirstName.value,
-  middle_name: editMiddleName.value,
-  last_name: editLastName.value,
-  phone: editPhone.value,
-  parent_email: editParentEmail.value.trim().toLowerCase(),
-  school_id: schoolId
-};
+    first_name: document.getElementById("editFirstName").value.trim(),
+    middle_name: document.getElementById("editMiddleName").value.trim(),
+    last_name: document.getElementById("editLastName").value.trim(),
+    phone: document.getElementById("editPhone").value.trim(),
+    parent_email: document.getElementById("editParentEmail").value.trim().toLowerCase(),
+    school_id: schoolId
+  };
 
+  if (!payload.first_name || !payload.last_name) {
+    alert("First name and last name are required.");
+    return;
+  }
 
+  try {
+    const res = await authFetch(`${API_BASE}/api/students/${encodeURIComponent(studentId)}`, {
+      method: "PUT",
+      body: JSON.stringify(payload)
+    });
 
-  const res = await fetch(`${API_BASE}/api/students/${editStudentId.value}`, {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  credentials: "include",
-  body: JSON.stringify(payload)
-});
+    if (!res) return;
 
-
-  if (res.ok) {
     modal.hide();
-    loadStudents();
-  } else {
-    alert("❌ Failed to update student");
+    await loadStudents();
+    alert("✅ Student updated successfully.");
+  } catch (err) {
+    console.error("Update student error:", err);
+    alert("❌ Failed to update student: " + err.message);
   }
 };
 
-/* DELETE WITH CONFIRMATION */
+/* DELETE */
 async function deleteStudent(id) {
+  const schoolId = getSafeSchoolId();
+  if (!schoolId) return;
+
   if (!confirm("⚠️ Are you sure you want to delete this student? This action cannot be undone.")) {
     return;
   }
 
   try {
-  const res = await fetch(
-  `${API_BASE}/api/students/${id}?school_id=${encodeURIComponent(schoolId)}`,
-  { method: "DELETE",
-  credentials: "include"
-  }
-);
+    const res = await authFetch(
+      `${API_BASE}/api/students/${encodeURIComponent(id)}?school_id=${encodeURIComponent(schoolId)}`,
+      { method: "DELETE" }
+    );
 
+    if (!res) return;
 
-
-
-    if (!res.ok) throw new Error("Delete failed");
-
-    loadStudents();
+    await loadStudents();
+    alert("✅ Student deleted successfully.");
   } catch (err) {
-    alert("❌ Failed to delete student");
+    console.error("Delete student error:", err);
+    alert("❌ Failed to delete student: " + err.message);
   }
 }
 
-loadStudents();
+document.addEventListener("DOMContentLoaded", () => {
+  if (!getToken()) {
+    redirectToLogin();
+    return;
+  }
+
+  loadStudents();
+});
 </script>
 
 <script src="js/kaima-chatbot.js"></script>
-<script src="js/session-timeout.js"></script>
-
+<!-- <script src="js/session-timeout.js"></script> -->
+ 
 </body>
 </html>
