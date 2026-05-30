@@ -5,192 +5,189 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>🏫 Register Your School | Gradely Info</title>
   <style>
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #6a11cb, #2575fc);
-      min-height: 100vh;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: #fff;
-      padding: 20px;
-    }
-    .container {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 35px 25px;
-      border-radius: 20px;
-      width: 90%;
-      max-width: 480px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-      text-align: center;
-       margin-bottom: 40px;
-    }
-    h2 { margin-bottom: 10px; font-size: 1.8rem; color: #fff; }
-    p { font-size: 0.95rem; margin-bottom: 20px; opacity: 0.9; }
-    form { display: flex; flex-direction: column; gap: 18px; text-align: left; }
-    label { font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; color: #e8e8e8; }
-    input, select, button {
-      width: 100%; height: 42px; border-radius: 10px; border: none; outline: none;
-      font-size: 1rem; padding: 0 14px; box-sizing: border-box; transition: all 0.3s ease;
-    }
-    input, select { background: rgba(255, 255, 255, 0.9); color: #333; }
-    input::placeholder { color: #777; }
-    input:focus, select:focus {
-      border: 2px solid #00d2ff; background: white; box-shadow: 0 0 6px rgba(0,210,255,0.3);
-    }
-    select {
-      appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23333'><path d='M7 10l5 5 5-5z'/></svg>");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      background-size: 16px;
-      cursor: pointer;
-    }
-    button {
-      background: #00d2ff; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
-    }
-    button:hover { background: #0a84ff; transform: scale(1.03); }
-    button:active { transform: scale(0.98); }
+*{box-sizing:border-box;margin:0;padding:0}
 
-    /* Test Mode Button */
-    #skipPaymentBtn {
-      background: #999;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 6px;
-      border: none;
-    }
-    #skipPaymentBtn.loading {
-      background: #777;
-      color: #ccc;
-      pointer-events: none;
-    }
-
-    .back-link {
-      display: block; margin-top: 20px; font-size: 0.9rem; color: #fff; text-decoration: none; opacity: 0.9; text-align: center;
-    }
-    .back-link:hover { text-decoration: underline; }
-
-    /* Footer */
-    footer {
-      text-align: center;
-      padding: 20px;
-      font-size: 0.9rem;
-      color: #eee;
-      background: rgba(0, 0, 0, 0.1);
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
-      width: 100%;
-      margin-top: auto;
-    }
-
-    footer a {
-      color: #00d2ff;
-      text-decoration: none;
-      margin: 0 6px;
-    }
-
-    /* === Password Visibility Toggle === */
-    .password-wrapper {
-      position: relative;
-      width: 100%;
-    }
-    .toggle-password {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      cursor: pointer;
-      font-size: 1.2em;
-      color: #666;
-      user-select: none;
-    }
-    .toggle-password:hover {
-      color: #0077b6;
-    }
-
-    /* Plan selection status - ONLY appears after selection */
-    .plan-status {
-      text-align: center;
-      margin-top: -8px;
-      margin-bottom: 8px;
-      min-height: 22px;
-      font-size: 0.9rem;
-      color: #00e676;
-      font-weight: 600;
-      display: none; /* Hidden by default */
-    }
-    
-    /* Terms acceptance checkbox styling */
-    .terms-checkbox {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      margin: 10px 0;
-      font-size: 0.9rem;
-      color: #e8e8e8;
-    }
-    .terms-checkbox input {
-      width: auto;
-      height: auto;
-      margin-top: 3px;
-      min-width: 18px;
-      min-height: 18px;
-      cursor: pointer;
-      accent-color: #22c55e; /* ✅ Green when checked */
-      transition: all 0.2s ease;
-    }
-    .terms-checkbox input:checked {
-      accent-color: #22c55e; /* ✅ Green when checked */
-      transform: scale(1.1);
-    }
-    .terms-checkbox a {
-      color: #00d2ff;
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .terms-checkbox a:hover {
-      text-decoration: underline;
-    }
-    
-    /* ✅ Redirect status message styling */
-    .redirect-status {
-      margin-top: 15px;
-      padding: 12px;
-      background: rgba(0, 230, 118, 0.2);
-      border-radius: 8px;
-      color: #00e676;
-      font-weight: 600;
-      font-size: 0.95rem;
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-
-    
-@media (max-width: 600px) {
-  .container {
-    margin-bottom: 30px;
-    padding: 30px 20px;
-  }
-  
-  footer {
-    padding: 15px 10px;
-    font-size: 0.85rem;
-  }
+body{
+  font-family:"Segoe UI",system-ui,sans-serif;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top left,rgba(34,197,94,.22),transparent 35%),
+    radial-gradient(circle at bottom right,rgba(0,210,255,.24),transparent 35%),
+    linear-gradient(135deg,#020617,#0f172a);
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:34px 14px 0;
 }
 
+.container{
+  width:100%;
+  max-width:570px;
+  background:rgba(255,255,255,.1);
+  backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:30px;
+  padding:36px 30px;
+  box-shadow:0 30px 90px rgba(0,0,0,.4);
+  margin:30px auto;
+}
 
+h2{
+  text-align:center;
+  font-size:1.85rem;
+  font-weight:900;
+  margin-bottom:8px;
+}
 
-  </style>
+.container > p{
+  text-align:center;
+  color:#dbeafe;
+  margin-bottom:26px;
+  line-height:1.6;
+}
+
+form{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+label{
+  font-weight:800;
+  color:#e0f2fe;
+  font-size:.92rem;
+}
+
+input{
+  width:100%;
+  min-height:52px;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:16px;
+  padding:0 14px;
+  font-size:1rem;
+  outline:none;
+  background:rgba(255,255,255,.14);
+  color:#fff;
+}
+
+input::placeholder{
+  color:#cbd5e1;
+}
+
+input:focus{
+  border-color:#22c55e;
+  box-shadow:0 0 0 5px rgba(34,197,94,.16);
+}
+
+.password-wrapper{
+  position:relative;
+}
+
+.password-wrapper input{
+  padding-right:48px;
+}
+
+.toggle-password{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+}
+
+.plan-status,
+.redirect-status{
+  display:none;
+  text-align:center;
+  font-weight:900;
+}
+
+button{
+  width:100%;
+  min-height:52px;
+  border:none;
+  border-radius:16px;
+  background:linear-gradient(135deg,#22c55e,#2563eb);
+  color:#fff;
+  font-size:1rem;
+  font-weight:900;
+  cursor:pointer;
+}
+
+#selectPlanBtn{
+  background:linear-gradient(135deg,#00d2ff,#2563eb);
+}
+
+.terms-checkbox{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:16px;
+  padding:13px;
+  font-size:.88rem;
+  line-height:1.5;
+}
+
+.terms-checkbox input{
+  width:auto;
+  min-height:auto;
+  margin-top:4px;
+}
+
+.terms-checkbox a{
+  color:#00d2ff;
+  font-weight:900;
+}
+
+.back-link{
+  display:block;
+  margin-top:24px;
+  text-align:center;
+  color:#00d2ff;
+  text-decoration:none;
+  font-weight:900;
+}
+
+footer{
+  margin-top:auto;
+  width:100%;
+  text-align:center;
+  padding:22px 10px;
+  background:rgba(0,0,0,.22);
+  border-top:1px solid rgba(255,255,255,.15);
+  color:#e2e8f0;
+  font-size:.82rem;
+}
+
+footer a{
+  color:#00d2ff;
+  text-decoration:none;
+  margin:0 6px;
+  font-weight:900;
+}
+
+@media(max-width:600px){
+  body{padding:18px 10px 0}
+
+  .container{
+    padding:28px 16px;
+    border-radius:24px;
+    margin:18px auto 28px;
+  }
+
+  h2{font-size:1.45rem}
+
+  input,
+  button{
+    font-size:16px;
+  }
+
+  footer{font-size:.74rem}
+}
+</style>
 </head>
 <body>
   <div class="container">
