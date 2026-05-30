@@ -260,8 +260,7 @@
 <body>
   <div class="container">
     <h1>📅 Weekly Timetable</h1>
-    <p class="hint">Double-click any subject, teacher, or time slot to edit. Then click Save Timetable.</p>
-
+    <p class="hint">Select class and group to load an existing timetable. Click Edit before making changes.</p>
     <div class="class-selects">
       <div>
         <label for="className">Select Class:</label>
@@ -295,13 +294,14 @@
       <div class="timetable" id="timetableGrid"></div>
     </div>
 
-    <div class="action-buttons">
-      <button class="save-btn" onclick="manualSaveTimetable()">💾 Save</button>
-      <button class="export-btn" onclick="exportPDF()">📄 Export as PDF</button>
-      <button class="delete-btn" onclick="clearCurrentTimetable()">🗑️ Clear</button>
-      <a href="manage-classes.html" class="back-btn">← Back</a>
-    </div>
-  </div>
+   <div class="action-buttons">
+  <button class="export-btn" onclick="loadSelectedTimetable()">📂 Load Saved</button>
+  <button class="manage-classes-btn" onclick="enableEditMode()">✏️ Edit</button>
+  <button class="save-btn" onclick="manualSaveTimetable()">💾 Save</button>
+  <button class="export-btn" onclick="exportPDF()">📄 Export as PDF</button>
+  <button class="delete-btn" onclick="clearCurrentTimetable()">🗑️ Clear</button>
+  <a href="manage-classes.html" class="back-btn">← Back</a>
+</div>
 
   <footer>
     © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br />
@@ -315,6 +315,8 @@
 
 <script>
 const API_BASE = "https://api.gradely.info";
+
+let editMode = false;
 
 function getToken() {
   const token =
@@ -476,7 +478,9 @@ async function saveTimetable(className, groupName) {
     const result = await res.json();
 
     if (result.success) {
-      showToast("✅ Timetable saved!");
+  editMode = false;
+  showToast("✅ Timetable saved!");
+
     } else {
       alert("⚠️ Failed to save timetable: " + (result.message || "Unknown error"));
     }
@@ -524,11 +528,33 @@ async function clearCurrentTimetable() {
   initTimetableData(className, groupName);
   timetableData[className][groupName] = getBlankTimetable();
 
+
   renderTimetable();
   await saveTimetable(className, groupName);
 
   showToast("🗑️ Timetable cleared", "#e74c3c");
 }
+
+
+
+async function loadSelectedTimetable() {
+  const className = document.getElementById("className").value;
+  const groupName = document.getElementById("groupName").value;
+
+  editMode = false;
+
+  await loadTimetable(className, groupName);
+  renderTimetable();
+
+  showToast(`📂 Loaded ${className} Group ${groupName}`);
+}
+
+function enableEditMode() {
+  editMode = true;
+  showToast("✏️ Edit mode enabled. Double-click cells to edit.", "#9b59b6");
+}
+
+
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (!getToken()) {
@@ -572,6 +598,10 @@ function renderTimetable() {
     timeDiv.textContent = time;
 
     timeDiv.addEventListener("dblclick", () => {
+  if (!editMode) {
+    showToast("Click Edit before changing timetable.", "#e74c3c");
+    return;
+  }
       const newTime = prompt("Edit time slot:", times[rowIndex]) || times[rowIndex];
       times[rowIndex] = newTime;
       renderTimetable();
@@ -588,7 +618,12 @@ function renderTimetable() {
 
       cell.innerHTML = `<strong>${sub}</strong><br><em>${teach}</em>`;
 
-      cell.addEventListener("dblclick", () => {
+    cell.addEventListener("dblclick", () => {
+    if (!editMode) {
+    showToast("Click Edit before changing timetable.", "#e74c3c");
+    return;
+    }
+        
         const newSub = prompt("Enter subject:", sub) || "-";
         const newTeach = prompt("Enter teacher:", teach) || "-";
 
