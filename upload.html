@@ -257,8 +257,47 @@
   </div>
 
   <script>
-    // ✅ FIXED: No trailing space
 const backendUrl = "https://api.gradely.info";
+
+function getToken() {
+  const token =
+    sessionStorage.getItem("gradely_token") ||
+    localStorage.getItem("gradely_token");
+
+  if (!token || token === "null" || token === "undefined" || token.trim() === "") {
+    return null;
+  }
+
+  return token;
+}
+
+function getSchoolId() {
+  return (
+    sessionStorage.getItem("school_id") ||
+    localStorage.getItem("school_id") ||
+    sessionStorage.getItem("admin_id") ||
+    sessionStorage.getItem("adminId") ||
+    localStorage.getItem("admin_id") ||
+    localStorage.getItem("adminId")
+  );
+}
+
+function clearAuth() {
+  sessionStorage.removeItem("gradely_token");
+  sessionStorage.removeItem("school_id");
+  sessionStorage.removeItem("adminId");
+  sessionStorage.removeItem("admin_id");
+
+  localStorage.removeItem("gradely_token");
+  localStorage.removeItem("school_id");
+  localStorage.removeItem("adminId");
+  localStorage.removeItem("admin_id");
+}
+
+function redirectToLogin() {
+  clearAuth();
+  window.location.href = "admin-login.html";
+}
 
 function showLoader(show) {
   document.getElementById("loaderOverlay").style.display = show ? "flex" : "none";
@@ -266,15 +305,38 @@ function showLoader(show) {
 
 function downloadTemplate() {
   const wb = XLSX.utils.book_new();
-  // ✅ EXACT HEADER NAMES — lowercase, no spaces
+
   const headers = ["student_id", "class", "section", "subject", "score", "grade", "remarks"];
   const example = ["STU001", "JSS 1", "A", "Mathematics", 85, "A", "Excellent"];
-  
+
   const ws = XLSX.utils.aoa_to_sheet([headers, example]);
   XLSX.utils.book_append_sheet(wb, ws, "Result Template");
   XLSX.writeFile(wb, "Gradely_Result_Template.xlsx");
 }
 
+async function authFetch(url, options = {}) {
+  const token = getToken();
+
+  if (!token) {
+    redirectToLogin();
+    return null;
+  }
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(options.headers || {})
+    }
+  });
+
+  if (res.status === 401) {
+    redirectToLogin();
+    return null;
+  }
+
+  return res;
+}
 
 document.getElementById("resultForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -282,11 +344,11 @@ document.getElementById("resultForm").addEventListener("submit", async (e) => {
   const term = document.getElementById("term").value.trim();
   const academic_year = document.getElementById("academicYear").value.trim();
   const file = document.getElementById("file").files[0];
-  const school_id = sessionStorage.getItem("school_id");
+  const school_id = getSchoolId();
 
   if (!school_id) {
     alert("⚠️ School not found. Please log in again.");
-    window.location.href = "admin-login.html";
+    redirectToLogin();
     return;
   }
 
@@ -299,50 +361,68 @@ document.getElementById("resultForm").addEventListener("submit", async (e) => {
     showLoader(true);
 
     const reader = new FileReader();
+
     reader.onload = async (event) => {
-      const data = new Uint8Array(event.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      let results = XLSX.utils.sheet_to_json(sheet);
+      try {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-      // ✅ CORRECTED: Parse class and section from Excel
-      results = results.map(r => ({
-        student_id: (r.student_id ?? '').toString().trim().toUpperCase(),
-        class: (r.class ?? '').toString().trim(),          // ← critical
-        section: (r.section ?? '').toString().trim(),      // ← critical
-        subject: (r.subject ?? '').toString().trim(),
-        score: Number(r.score),
-        grade: r.grade || null,
-        remarks: (r.remarks ?? '').toString().trim() || ""
-      })).filter(r => 
-        r.student_id && 
-        r.class && r.section &&        // ← must have class & section
-        r.subject && 
-        !isNaN(r.score) && 
-        r.score >= 0
-      );
+        let results = XLSX.utils.sheet_to_json(sheet);
 
-      if (results.length === 0) {
+        results = results.map(r => ({
+          student_id: (r.student_id ?? "").toString().trim().toUpperCase(),
+          class: (r.class ?? "").toString().trim(),
+          section: (r.section ?? "").toString().trim(),
+          subject: (r.subject ?? "").toString().trim(),
+          score: Number(r.score),
+          grade: r.grade || null,
+          remarks: (r.remarks ?? "").toString().trim() || ""
+        })).filter(r =>
+          r.student_id &&
+          r.class &&
+          r.section &&
+          r.subject &&
+          !isNaN(r.score) &&
+          r.score >= 0
+        );
+
+        if (results.length === 0) {
+          showLoader(false);
+          alert("⚠️ No valid rows found. Ensure columns are: student_id, class, section, subject, score.");
+          return;
+        }
+
+        const response = await authFetch(`${backendUrl}/api/result/upload-results`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            term,
+            academic_year,
+            results,
+            school_id
+          })
+        });
+
+        if (!response) return;
+
+        const resData = await response.json().catch(() => ({
+          success: false,
+          message: "Invalid server response"
+        }));
+
         showLoader(false);
-        alert("⚠️ No valid rows found. Ensure columns are: student_id, class, section, subject, score");
-        return;
-      }
 
-      // ✅ Send to /api/result (singular — matches server.js)
-      const response = await fetch(`${backendUrl}/api/result/upload-results`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ term, academic_year, results, school_id }),
-      });
-
-      const resData = await response.json().catch(() => ({ success: false, message: "Invalid JSON" }));
-      showLoader(false);
-
-      if (resData.success) {
-        alert("✅ " + (resData.message || "Upload complete!"));
-        document.getElementById("resultForm").reset();
-      } else {
-        alert("⚠️ " + (resData.message || "Upload failed."));
+        if (resData.success) {
+          alert("✅ " + (resData.message || "Upload complete!"));
+          document.getElementById("resultForm").reset();
+        } else {
+          alert("⚠️ " + (resData.message || "Upload failed."));
+        }
+      } catch (err) {
+        showLoader(false);
+        console.error("Upload processing error:", err);
+        alert("⚠️ Upload failed. Check console for details.");
       }
     };
 
@@ -354,9 +434,13 @@ document.getElementById("resultForm").addEventListener("submit", async (e) => {
   }
 });
 
-  </script>
+document.addEventListener("DOMContentLoaded", () => {
+  if (!getToken()) {
+    redirectToLogin();
+  }
+});
+</script>
 
   <script src="js/kaima-chatbot.js"></script>
-  <script src="js/session-timeout.js"></script>
-</body>
+<!-- <script src="js/session-timeout.js"></script> --></body>
 </html>
