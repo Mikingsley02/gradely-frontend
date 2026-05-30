@@ -3,113 +3,177 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Refund & Cancellation Policy | gradely.info</title>
+  <title>💳 Refund & Cancellation Policy | gradely.info</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
     }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #6a11cb, #2575fc);
-      color: #fff;
-      min-height: 100vh;  /* ✅ Ensures body fills viewport */
+      background: #f4f6f9;
+      color: #333;
+      line-height: 1.7;
       padding: 20px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;  /* ✅ Stack content + footer */
     }
     .container {
       max-width: 900px;
-      margin: 40px auto;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 40px 30px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-      text-align: left;
-      /* overflow: hidden; ← REMOVED: was causing footer cutoff */
-      flex: 1;  /* ✅ Allows container to grow, pushing footer down */
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
     }
-    h1, h2, h3 {
-      color: #fff;
-      margin-bottom: 16px;
-    }
-    h1 {
-      font-size: 2rem;
+    header {
+      background: #091d50;
+      color: white;
       text-align: center;
+      padding: 40px;
+    }
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    .content {
+      padding: 40px;
     }
     h2 {
-      font-size: 1.5rem;
-      margin-top: 25px;
-      border-bottom: 2px solid #0c2461;
+      color: #2c3e50;
+      margin: 25px 0 15px;
       padding-bottom: 8px;
+      border-bottom: 2px solid #eee;
+    }
+    h3 {
+      color: #34495e;
+      margin: 20px 0 12px;
+      font-size: 1.2rem;
     }
     p, ul, ol {
-      margin-bottom: 16px;
-      line-height: 1.7;
-      font-size: 1rem;
+      margin-bottom: 15px;
     }
     ul, ol {
+      padding-left: 25px;
+    }
+    ul ul, ol ol {
+      margin: 8px 0;
       padding-left: 20px;
     }
-    strong {
-      color: #ffd166;
+    li {
+      margin-bottom: 8px;
     }
-    .contact-info {
-      background: rgba(255, 255, 255, 0.15);
-      padding: 15px;
-      border-radius: 12px;
-      margin: 20px 0;
+    a {
+      color: #3498db;
+      text-decoration: none;
     }
-    
-    /* ✅ Footer styles - now outside container */
+    a:hover {
+      text-decoration: underline;
+    }
     footer {
-      margin-top: 40px;
       text-align: center;
-      font-size: 0.9rem;
-      color: #eee;
       padding: 20px;
-      margin-top: auto;  /* ✅ Pushes footer to bottom */
+      background: #f8f9fa;
+      border-top: 1px solid #eee;
+      font-size: 0.9rem;
+      color: #666;
     }
     footer img {
-      height: 28px;
+      height: 30px;
       vertical-align: middle;
       margin-right: 8px;
     }
-    
-    /* Back to Login Button */
-    .back-btn {
+    .btn {
       display: inline-block;
-      margin-top: 20px;
-      padding: 12px 25px;
-      background: #0a84ff;
+      margin: 20px auto;
+      padding: 10px 20px;
+      background: #3498db;
       color: white;
       text-decoration: none;
-      border-radius: 8px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    .back-link {
+      display: inline-block;
+      margin: 20px 0;
+      color: #230baf;
+      text-decoration: none;
       font-weight: 600;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 10px rgba(10, 132, 255, 0.3);
+      cursor: pointer;
     }
-    .back-btn:hover {
-      background: #006edc;
-      transform: scale(1.05);
+    .back-link:hover {
+      text-decoration: underline;
     }
-    
-    /* ✅ Loading state */
+    .compliance-note {
+      margin-top: 30px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-left: 4px solid #3498db;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .compliance-note a {
+      color: #3498db;
+    }
+    /* ✅ DPA Highlight Box */
+    .dpa-notice {
+      background: rgba(52, 152, 219, 0.08);
+      border: 1px solid #3498db;
+      border-radius: 8px;
+      padding: 15px 20px;
+      margin: 20px 0;
+      font-size: 0.95rem;
+    }
+    .dpa-notice strong {
+      color: #2980b9;
+    }
+    /* ✅ Version info */
+    .version-info {
+      margin-top: 10px;
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+    /* ✅ Contact info box */
+    .contact-info {
+      background: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 25px 0;
+    }
+    .contact-info h3 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+    .contact-info a {
+      color: #3498db;
+      font-weight: 600;
+    }
+    /* ✅ Tip/notice box */
+    .tip-box {
+      background: rgba(255, 209, 102, 0.15);
+      border-left: 4px solid #ffd166;
+      border-radius: 0 8px 8px 0;
+      padding: 15px 20px;
+      margin: 20px 0;
+      font-size: 0.95rem;
+    }
+    .tip-box strong {
+      color: #b7791f;
+    }
+    /* ✅ Loading & error states */
     .policy-loading {
       text-align: center;
       padding: 40px;
-      color: rgba(255,255,255,0.8);
+      color: #666;
     }
     .policy-loading::after {
       content: "";
       display: inline-block;
       width: 24px;
       height: 24px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
+      border: 3px solid rgba(52, 152, 219, 0.3);
+      border-top-color: #0f115c;
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-left: 10px;
@@ -118,308 +182,281 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    
-    /* ✅ Error state */
     .policy-error {
-      background: rgba(248, 113, 113, 0.15);
-      border: 1px solid #f87171;
-      border-radius: 12px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
       padding: 20px;
-      color: #fecaca;
+      color: #991b1b;
       margin: 20px 0;
-    }
-    
-    @media (max-width: 600px) {
-      .container {
-        padding: 25px 20px;
-      }
-      h1 {
-        font-size: 1.6rem;
-      }
-      h2 {
-        font-size: 1.3rem;
-      }
-      p, ul, ol {
-        font-size: 0.95rem;
-      }
     }
   </style>
 </head>
 <body>
-  <!-- ✅ Main content container -->
   <div class="container">
-    <h1>💳 Refund & Cancellation Policy</h1>
-    
-    <!-- ✅ Dynamic version info (populated by API) -->
-    <p id="policyMeta" style="margin-bottom: 20px; font-size: 0.95rem; opacity: 0.9;">
-      <span id="lastUpdated">Loading...</span>
-      <span id="policyVersion" style="margin-left: 15px;"></span>
-    </p>
+    <header>
+      <h1>💳 Refund & Cancellation Policy</h1>
+      <!-- ✅ Dynamic version info (populated by API if available) -->
+      <p id="policyMeta" class="version-info">
+        <span id="lastUpdated">Last Updated: October 20, 2025</span>
+        <span id="policyVersion" style="margin-left: 15px;"></span>
+      </p>
+    </header>
 
-    <!-- ✅ Dynamic content container -->
-    <div id="policyContent">
-      <p class="policy-loading">Loading policy content</p>
+    <div class="content">
+      <!-- ✅ Dynamic content container (API-enhanced) -->
+      <div id="policyContent">
+        <!-- Content loads here from API, or fallback shows below -->
+      </div>
+
+      <!-- ✅ PRIMARY CONTENT: Always visible (fallback + default) -->
+      <div id="fallbackContent">
+        <p>This Refund and Cancellation Policy applies to all schools using the <strong>Gradely Info Portal</strong> (gradely.info). By registering your school, you agree to these terms.</p>
+
+        <h2>1. Subscription Plans</h2>
+        <p>We offer two monthly subscription plans:</p>
+        <ul>
+          <li><strong>Basic Plan:</strong> ₦83,900 per month</li>
+          <li><strong>Pro Plan:</strong> ₦89,700 per month</li>
+        </ul>
+        <p>All payments are processed securely via <strong>Paystack</strong>. Subscriptions renew automatically each month unless canceled.</p>
+
+        <h2>2. Plan Changes: Upgrades & Downgrades</h2>
+         
+        <h3>Upgrading from Basic to Pro</h3>
+        <p>When you upgrade from the Basic Plan to the Pro Plan:</p>
+        <ul>
+          <li>You will be charged the <strong>price difference</strong> for the remainder of your current billing cycle</li>
+          <li>Example: If you upgrade halfway through your month, you'll pay ₦2,900 (half of ₦5,800 difference)</li>
+          <li>Your Pro features activate immediately upon successful payment</li>
+          <li>Your next full monthly billing date remains unchanged</li>
+        </ul>
+
+        <h3>Downgrading from Pro to Basic</h3>
+        <p>When you downgrade from the Pro Plan to the Basic Plan:</p>
+        <ul>
+          <li><strong>No refunds</strong> are issued for the unused portion of your Pro subscription</li>
+          <li>Your Pro features remain active until the end of your current billing cycle</li>
+          <li>After your cycle ends, your account switches to Basic Plan features</li>
+          <li>Your next billing date remains unchanged, but you'll be charged the Basic Plan rate (₦83,900)</li>
+        </ul>
+
+        <div class="tip-box">
+          <p style="margin: 0; font-size: 0.95rem;">
+            <strong>💡 Pro Tip:</strong> Plan changes take effect immediately for upgrades, but downgrades wait until your billing cycle ends to ensure you get full value from your current payment.
+          </p>
+        </div>
+
+        <h2>3. Refund Policy</h2>
+        <p>We offer a <strong>7-day money-back guarantee</strong> from the date of your first payment if:</p>
+        <ul>
+          <li>You are unable to set up your school account successfully</li>
+          <li>Core features (result upload, parent login, PDF generation) do not work</li>
+          <li>You were charged incorrectly</li>
+        </ul>
+
+        <h3>How to Request a Refund</h3>
+        <p>Email us at: <strong>support@gradely.info</strong> with:</p>
+        <ol>
+          <li>School name</li>
+          <li>Email used during registration</li>
+          <li>Proof of payment (screenshot or transaction ID)</li>
+          <li>Reason for refund</li>
+        </ol>
+        <p>Refunds will be processed within <strong>5–7 business days</strong> and returned to the original payment method.</p>
+
+        <h3>When Refunds Are Not Allowed</h3>
+        <p>No refunds will be issued after <strong>2 days</strong> of successful onboarding, including if:</p>
+        <ul>
+          <li>You simply changed your mind</li>
+          <li>Your staff failed to complete setup</li>
+          <li>You uploaded data and used the system beyond testing</li>
+          <li><strong>You downgraded from Pro to Basic</strong> (no refunds for plan downgrades)</li>
+        </ul>
+        <p><strong>Tip:</strong> Test thoroughly in the first 2 days!</p>
+
+        <h2>4. Cancellation Policy</h2>
+        <p>You can cancel your subscription at any time.</p>
+
+        <h3>How to Cancel</h3>
+        <ol>
+          <li>Send an email to <strong>support@gradely.info</strong> titled: "Cancel Subscription"</li>
+          <li>Include your <strong>School Name</strong> and <strong>Admin ID</strong></li>
+          <li>We'll confirm and deactivate auto-renewal</li>
+        </ol>
+        <p>Alternatively, request cancellation through the <strong>Kaima chatbot</strong> on our website.</p>
+
+        <h3>What Happens After Cancellation?</h3>
+        <ul>
+          <li>Your subscription remains <strong>active until the end of the current billing cycle</strong></li>
+          <li>You can continue using Gradely during this period</li>
+          <li>After the cycle ends, your access will be suspended</li>
+          <li>Data is retained for <strong>30 days</strong> before permanent deletion</li>
+        </ul>
+        <p><strong>Note:</strong> Your data is never sold or shared.</p>
+
+        <h2>5. Service Suspension for Non-Payment</h2>
+        <p>If your payment fails and is not resolved within <strong>7 days</strong>, your subscription will be suspended. You will:</p>
+        <ul>
+          <li>Lose access to the admin dashboard</li>
+          <li>See "Results Unavailable" on the parent portal</li>
+          <li>Be notified by email and SMS</li>
+        </ul>
+        <p>You can reactivate by updating payment details and completing the next payment.</p>
+
+        <h2>6. No Partial Refunds</h2>
+        <p>We do not offer partial refunds for unused portions of a billing period. For example:</p>
+        <ul>
+          <li>If you cancel halfway through the month → no refund</li>
+          <li>If you use only one week → full charge applies</li>
+          <li><strong>If you downgrade from Pro to Basic → no refund for unused Pro time</strong></li>
+        </ul>
+        <p>Subscriptions are billed monthly in advance.</p>
+
+        <h2>7. Technical Issues & Downtime</h2>
+        <p>While we strive for 99.9% uptime:</p>
+        <ul>
+          <li>No refunds are given for temporary downtime (< 24 hours)</li>
+          <li>Extended outages (> 72 hours) may qualify for service credit or partial refund at management discretion</li>
+        </ul>
+
+        <div class="contact-info">
+          <h3>📞 Contact Us</h3>
+          <p><strong>Email:</strong> <a href="mailto:support@gradely.info">support@gradely.info</a></p>
+          <p><strong>Phone:</strong> +234 806 428 7477</p>
+          <p><strong>Chat:</strong> Use the Kaima chatbot on <a href="https://gradely.info">gradely.info</a></p>
+          <p>We respond within <strong>24 business hours</strong>.</p>
+        </div>
+
+        <h2>8. Policy Changes</h2>
+        <p>We may update this policy periodically. Changes will be posted on this page with a new "Last Updated" date. Continued use of our service constitutes acceptance of the revised terms.</p>
+
+        <!-- ✅ UPDATED: Legal Compliance Footer -->
+        <div class="compliance-note">
+          <strong>Legal Compliance:</strong> This policy complies with Nigeria's 
+          <a href="https://nitda.gov.ng/ngdata-protection-regulation/" target="_blank">NDPR 2019</a>, 
+          <a href="https://nigcybercrime.gov.ng/" target="_blank">Cybercrimes Act 2015</a>, 
+          and applicable consumer protection laws.
+        </div>
+
+        <!-- ✅ UPDATED: Smart back button that returns to referring page -->
+        <a id="backLink" class="back-link">← Go Back</a>
+      </div>
     </div>
 
-    <!-- ✅ Fallback static content (ALWAYS visible if API fails) -->
-    <div id="fallbackContent">
-      <p>This Refund and Cancellation Policy applies to all schools using the <strong>Gradely Info Portal</strong> (gradely.info). By registering your school, you agree to these terms.</p>
-
-      <h2>1. Subscription Plans</h2>
-      <p>We offer two monthly subscription plans:</p>
-      <ul>
-        <li><strong>Basic Plan:</strong> ₦83,900 per month</li>
-        <li><strong>Pro Plan:</strong> ₦89,700 per month</li>
-      </ul>
-      <p>All payments are processed securely via <strong>Paystack</strong>. Subscriptions renew automatically each month unless canceled.</p>
-
-      <h2>2. Plan Changes: Upgrades & Downgrades</h2>
-       
-      <h3>Upgrading from Basic to Pro</h3>
-      <p>When you upgrade from the Basic Plan to the Pro Plan:</p>
-      <ul>
-        <li>You will be charged the <strong>price difference</strong> for the remainder of your current billing cycle</li>
-        <li>Example: If you upgrade halfway through your month, you'll pay ₦2,900 (half of ₦5,800 difference)</li>
-        <li>Your Pro features activate immediately upon successful payment</li>
-        <li>Your next full monthly billing date remains unchanged</li>
-      </ul>
-
-      <h3>Downgrading from Pro to Basic</h3>
-      <p>When you downgrade from the Pro Plan to the Basic Plan:</p>
-      <ul>
-        <li><strong>No refunds</strong> are issued for the unused portion of your Pro subscription</li>
-        <li>Your Pro features remain active until the end of your current billing cycle</li>
-        <li>After your cycle ends, your account switches to Basic Plan features</li>
-        <li>Your next billing date remains unchanged, but you'll be charged the Basic Plan rate (₦83,900)</li>
-      </ul>
-
-      <div style="background: rgba(255, 209, 102, 0.15); border-left: 4px solid #ffd166; padding: 15px; border-radius: 0 8px 8px 0; margin: 20px 0;">
-        <p style="margin: 0; font-size: 0.95rem;">
-          <strong>💡 Pro Tip:</strong> Plan changes take effect immediately for upgrades, but downgrades wait until your billing cycle ends to ensure you get full value from your current payment.
-        </p>
-      </div>
-
-      <h2>3. Refund Policy</h2>
-      <p>We offer a <strong>7-day money-back guarantee</strong> from the date of your first payment if:</p>
-      <ul>
-        <li>You are unable to set up your school account successfully</li>
-        <li>Core features (result upload, parent login, PDF generation) do not work</li>
-        <li>You were charged incorrectly</li>
-      </ul>
-
-      <h3>How to Request a Refund</h3>
-      <p>Email us at: <strong>support@gradely.info</strong> with:</p>
-      <ol>
-        <li>School name</li>
-        <li>Email used during registration</li>
-        <li>Proof of payment (screenshot or transaction ID)</li>
-        <li>Reason for refund</li>
-      </ol>
-      <p>Refunds will be processed within <strong>5–7 business days</strong> and returned to the original payment method.</p>
-
-      <h3>When Refunds Are Not Allowed</h3>
-      <p>No refunds will be issued after <strong>2 days</strong> of successful onboarding, including if:</p>
-      <ul>
-        <li>You simply changed your mind</li>
-        <li>Your staff failed to complete setup</li>
-        <li>You uploaded data and used the system beyond testing</li>
-        <li><strong>You downgraded from Pro to Basic</strong> (no refunds for plan downgrades)</li>
-      </ul>
-      <p><strong>Tip:</strong> Test thoroughly in the first 2 days!</p>
-
-      <h2>4. Cancellation Policy</h2>
-      <p>You can cancel your subscription at any time.</p>
-
-      <h3>How to Cancel</h3>
-      <ol>
-        <li>Send an email to <strong>support@gradely.info</strong> titled: "Cancel Subscription"</li>
-        <li>Include your <strong>School Name</strong> and <strong>Admin ID</strong></li>
-        <li>We'll confirm and deactivate auto-renewal</li>
-      </ol>
-      <p>Alternatively, request cancellation through the <strong>Kaima chatbot</strong> on our website.</p>
-
-      <h3>What Happens After Cancellation?</h3>
-      <ul>
-        <li>Your subscription remains <strong>active until the end of the current billing cycle</strong></li>
-        <li>You can continue using Gradely during this period</li>
-        <li>After the cycle ends, your access will be suspended</li>
-        <li>Data is retained for <strong>30 days</strong> before permanent deletion</li>
-      </ul>
-      <p><strong>Note:</strong> Your data is never sold or shared.</p>
-
-      <h2>5. Service Suspension for Non-Payment</h2>
-      <p>If your payment fails and is not resolved within <strong>7 days</strong>, your subscription will be suspended. You will:</p>
-      <ul>
-        <li>Lose access to the admin dashboard</li>
-        <li>See "Results Unavailable" on the parent portal</li>
-        <li>Be notified by email and SMS</li>
-      </ul>
-      <p>You can reactivate by updating payment details and completing the next payment.</p>
-
-      <h2>6. No Partial Refunds</h2>
-      <p>We do not offer partial refunds for unused portions of a billing period. For example:</p>
-      <ul>
-        <li>If you cancel halfway through the month → no refund</li>
-        <li>If you use only one week → full charge applies</li>
-        <li><strong>If you downgrade from Pro to Basic → no refund for unused Pro time</strong></li>
-      </ul>
-      <p>Subscriptions are billed monthly in advance.</p>
-
-      <h2>7. Technical Issues & Downtime</h2>
-      <p>While we strive for 99.9% uptime:</p>
-      <ul>
-        <li>No refunds are given for temporary downtime (< 24 hours)</li>
-        <li>Extended outages (> 72 hours) may qualify for service credit or partial refund at management discretion</li>
-      </ul>
-
-      <div class="contact-info">
-        <h3>📞 Contact Us</h3>
-        <p><strong>Email:</strong> <a href="mailto:support@gradely.info" style="color:#00d2ff;">support@gradely.info</a></p>
-        <p><strong>Phone:</strong> +234 806 428 7477</p>
-        <p><strong>Chat:</strong> Use the Kaima chatbot on <a href="https://gradely.info" style="color:#00d2ff;">gradely.info</a></p>
-        <p>We respond within <strong>24 business hours</strong>.</p>
-      </div>
-
-      <h2>8. Policy Changes</h2>
-      <p>We may update this policy periodically. Changes will be posted on this page with a new "Last Updated" date. Continued use of our service constitutes acceptance of the revised terms.</p>
-
-      <!-- ✅ Smart back button (ID for JS control) -->
-      <div style="text-align: center; margin-top: 30px;">
-        <a id="backLink" class="back-link" style="color: #00d2ff; text-decoration: none; font-weight: 600;">← Go Back</a>
-      </div>
-    </div>
+    <footer>
+      <img 
+        src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" 
+        alt="RIS Logo" 
+      />
+      © 2026 <strong>gradely.info.</strong> All rights reserved. | Powered by RIS
+    </footer>
   </div>
 
-  <!-- ✅ Footer MOVED OUTSIDE container (fixes positioning) -->
-  <footer>
-    <img src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" alt="RIS Logo" />
-    <strong>© 2026 gradely.info. All rights reserved. | Powered by RIS</strong><br>
-    <a href="terms.html">Terms</a> • 
-    <a href="privacy.html">Privacy</a> • 
-    <a href="refund-policy.html">Refund Policy</a>
-  </footer>
+<script src="js/kaima-chatbot.js"></script>
 
-  <script src="js/kaima-chatbot.js"></script>
+<!-- ✅ DYNAMIC POLICY LOADER SCRIPT (Public Endpoint - FIXED) -->
+<script>
+  (function() {
+    // ✅ Use PUBLIC endpoint (no auth required) - FIXED URL
+    const API_BASE = "https://api.gradely.info/api/public/legal";
+    const POLICY_TYPE = "refund";
+    
+    const policyContent = document.getElementById("policyContent");
+    const policyMeta = document.getElementById("policyMeta");
+    const lastUpdatedEl = document.getElementById("lastUpdated");
+    const policyVersionEl = document.getElementById("policyVersion");
 
-  <!-- ✅ DYNAMIC POLICY LOADER SCRIPT (Public Endpoint - FIXED) -->
-  <script>
-    (function() {
-      // ✅ Use PUBLIC endpoint (no auth required) - FIXED URL
-      const API_BASE = "https://api.gradely.info/api/public/legal";
-      const POLICY_TYPE = "refund";
-      
-      const policyContent = document.getElementById("policyContent");
-      const fallbackContent = document.getElementById("fallbackContent");
-      const policyMeta = document.getElementById("policyMeta");
-      const lastUpdatedEl = document.getElementById("lastUpdated");
-      const policyVersionEl = document.getElementById("policyVersion");
-
-      // ✅ Load policy content from API (enhancement only, fallback ALWAYS visible)
-      async function loadPolicy() {
-        try {
-          const url = `${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`;
-          const res = await fetch(url);
-          
-          if (!res.ok) {
-            // ✅ 404 means no active policy yet - just use fallback silently
-            if (res.status === 404) {
-              console.log("ℹ️ No active refund policy published yet - showing fallback content");
-              return;
-            }
-            throw new Error(`HTTP ${res.status}`);
-          }
-          
-          const data = await res.json();
-          
-          if (!data.success || !data.data?.content) {
-            throw new Error("Invalid response");
-          }
-          
-          // ✅ Inject dynamic content
-          policyContent.innerHTML = data.data.content;
-          
-          // ✅ Update version info
-          if (data.data.version) {
-            policyVersionEl.textContent = `Version: ${data.data.version}`;
-          }
-          
-          if (data.data.updated_at) {
-            const date = new Date(data.data.updated_at);
-            lastUpdatedEl.textContent = `Last Updated: ${date.toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}`;
-          }
-          
-          // ✅ Hide fallback, show dynamic content
-          fallbackContent.style.display = "none";
-          policyContent.style.display = "block";
-          
-          console.log("✅ Refund policy loaded:", data.data.version);
-          
-        } catch (err) {
-          // ✅ Silently use fallback - no error message to avoid confusing users
-          console.log("ℹ️ Using default refund policy content (API unavailable)");
-          // Ensure fallback is visible
-          if (policyContent) policyContent.style.display = "none";
-          if (fallbackContent) fallbackContent.style.display = "block";
+    // ✅ Load policy content from API (enhancement only, fallback always works)
+    async function loadPolicy() {
+      try {
+        const url = `${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`;
+        const res = await fetch(url);
+        
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        
+        const data = await res.json();
+        
+        if (!data.success || !data.data?.content) {
+          throw new Error("Invalid response");
         }
-      }
-
-      // ✅ Load when DOM is ready
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", loadPolicy);
-      } else {
-        loadPolicy();
-      }
-    })();
-  </script>
-
-  <!-- ✅ SMART BACK BUTTON: Returns to referring page (same origin) or fallback to index.html -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const backLink = document.getElementById('backLink');
-      if (!backLink) return;
-      
-      const referrer = document.referrer;
-      const currentOrigin = window.location.origin;
-      
-      // Determine back URL: use referrer only if from same origin
-      let backUrl = 'index.html'; // Default fallback
-      
-      if (referrer) {
-        try {
-          const referrerUrl = new URL(referrer);
-          // Only use referrer if it's from our domain (security)
-          if (referrerUrl.origin === currentOrigin) {
-            backUrl = referrer;
-          }
-        } catch (e) {
-          // If URL parsing fails, fallback to index.html
-          backUrl = 'index.html';
+        
+        // ✅ Only update version info from API (content stays as fallback)
+        if (data.data.version) {
+          policyVersionEl.textContent = `Version: ${data.data.version}`;
         }
-      }
-      
-      // Set the link and click handler
-      backLink.href = backUrl;
-      backLink.onclick = (e) => {
-        e.preventDefault();
-        window.location.href = backUrl;
-      };
-      
-      // Optional: Update link text to show where it goes
-      if (backUrl !== 'index.html') {
-        try {
-          const backPage = new URL(backUrl).pathname.split('/').pop().replace('.html', '');
-          if (backPage && backPage !== 'index') {
-            backLink.textContent = `← Back to ${backPage.charAt(0).toUpperCase() + backPage.slice(1)}`;
-          }
-        } catch (e) {
-          // Keep default text if parsing fails
+        
+        if (data.data.updated_at) {
+          const date = new Date(data.data.updated_at);
+          lastUpdatedEl.textContent = `Last Updated: ${date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}`;
         }
+        
+        console.log("✅ Refund policy version loaded:", data.data.version);
+        
+      } catch (err) {
+        // ✅ Silently fail - fallback content is already visible
+        console.log("ℹ️ Using default refund policy content");
       }
-    });
-  </script>
+    }
+
+    // ✅ Load when DOM is ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", loadPolicy);
+    } else {
+      loadPolicy();
+    }
+  })();
+</script>
+
+<!-- ✅ SMART BACK BUTTON: Returns to referring page (same origin) or fallback to index.html -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const backLink = document.getElementById('backLink');
+    if (!backLink) return;
+    
+    const referrer = document.referrer;
+    const currentOrigin = window.location.origin;
+    
+    // Determine back URL: use referrer only if from same origin
+    let backUrl = 'index.html'; // Default fallback
+    
+    if (referrer) {
+      try {
+        const referrerUrl = new URL(referrer);
+        // Only use referrer if it's from our domain (security)
+        if (referrerUrl.origin === currentOrigin) {
+          backUrl = referrer;
+        }
+      } catch (e) {
+        // If URL parsing fails, fallback to index.html
+        backUrl = 'index.html';
+      }
+    }
+    
+    // Set the link and click handler
+    backLink.href = backUrl;
+    backLink.onclick = (e) => {
+      e.preventDefault();
+      window.location.href = backUrl;
+    };
+    
+    // Optional: Update link text to show where it goes
+    if (backUrl !== 'index.html') {
+      try {
+        const backPage = new URL(backUrl).pathname.split('/').pop().replace('.html', '');
+        if (backPage && backPage !== 'index') {
+          backLink.textContent = `← Back to ${backPage.charAt(0).toUpperCase() + backPage.slice(1)}`;
+        }
+      } catch (e) {
+        // Keep default text if parsing fails
+      }
+    }
+  });
+</script>
+
 </body>
 </html>
