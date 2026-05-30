@@ -723,307 +723,439 @@ const API = "https://api.gradely.info/api/attendance";
 let currentSession = null;
 let currentStudents = [];
 let dirtyMap = new Map();
-let isPro = true; // ✅ Default to true; will check via API in production
+let isPro = true;
 
-// Auth wrapper
+function getToken() {
+  const token =
+    sessionStorage.getItem("gradely_token") ||
+    localStorage.getItem("gradely_token");
+
+  if (!token || token === "null" || token === "undefined" || token.trim() === "") {
+    return null;
+  }
+
+  return token;
+}
+
+function clearAuth() {
+  sessionStorage.removeItem("gradely_token");
+  sessionStorage.removeItem("school_id");
+  sessionStorage.removeItem("adminId");
+  sessionStorage.removeItem("admin_id");
+
+  localStorage.removeItem("gradely_token");
+  localStorage.removeItem("school_id");
+  localStorage.removeItem("adminId");
+  localStorage.removeItem("admin_id");
+}
+
+function redirectToLogin() {
+  clearAuth();
+  window.location.href = "admin-login.html";
+}
+
 async function authFetch(url, opts = {}) {
+  const token = getToken();
+
+  if (!token) {
+    redirectToLogin();
+    return null;
+  }
+
   const res = await fetch(url, {
     ...opts,
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) }
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(opts.headers || {})
+    }
   });
-  if (res.status === 401) { window.location.href = 'admin-login.html'; return null; }
-  if (res.status === 403) {
-    // Pro feature gate
-    document.getElementById('proBanner').classList.add('upgrade');
-    document.getElementById('proBanner').style.display = 'flex';
-    throw new Error('Pro feature required');
+
+  if (res.status === 401) {
+    redirectToLogin();
+    return null;
   }
+
+  if (res.status === 403) {
+    document.getElementById("proBanner").classList.add("upgrade");
+    document.getElementById("proBanner").style.display = "flex";
+    throw new Error("Pro feature required");
+  }
+
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
   return res.json();
 }
 
-// ✅ Check if school is Pro (simplified - replace with real API call in production)
 async function checkProFeature() {
   try {
-    // In production, call: await authFetch('https://api.gradely.info/api/subscription/usage')
-    // For demo, we'll simulate:
-    const schoolPlan = localStorage.getItem('school_plan') || 'pro';
-    isPro = schoolPlan === 'pro';
-    
+    const schoolPlan =
+      sessionStorage.getItem("last_known_plan") ||
+      sessionStorage.getItem("school_plan") ||
+      localStorage.getItem("school_plan") ||
+      "pro";
+
+    isPro = schoolPlan === "pro";
+
     if (!isPro) {
-      document.getElementById('proBanner').style.display = 'flex';
-      // Disable interactive elements for Basic plan
-      document.querySelectorAll('.btn, select, input').forEach(el => {
-        if (!el.closest('#proBanner')) el.disabled = true;
+      document.getElementById("proBanner").style.display = "flex";
+
+      document.querySelectorAll(".btn, select, input").forEach(el => {
+        if (!el.closest("#proBanner")) el.disabled = true;
       });
-      document.getElementById('studentList').innerHTML = 
-        '<div class="empty-state">🔒 Attendance tracking is a Pro feature. <a href="upgrade.html" style="color:var(--primary);font-weight:600;">Upgrade now</a> to unlock.</div>';
+
+      document.getElementById("studentList").innerHTML =
+        '<div class="empty-state">🔒 Attendance tracking is a Pro feature. <a href="subscription.html" style="color:var(--primary);font-weight:600;">Upgrade now</a> to unlock.</div>';
     }
-  } catch(e) {
-    console.warn('Pro check failed, defaulting to Pro mode');
+  } catch (e) {
+    console.warn("Pro check failed, defaulting to Pro mode");
   }
 }
 
-// Init
-document.addEventListener('DOMContentLoaded', () => {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('sessionDate').value = today;
-  document.getElementById('newSessionDate').value = today;
-  
+document.addEventListener("DOMContentLoaded", () => {
+  if (!getToken()) {
+    redirectToLogin();
+    return;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("sessionDate").value = today;
+  document.getElementById("newSessionDate").value = today;
+
   syncClassGroupSelectors();
-  checkProFeature(); // ✅ Check Pro status on load
+  checkProFeature();
 });
 
 function syncClassGroupSelectors() {
-  const classSelect = document.getElementById('className');
-  const groupSelect = document.getElementById('groupName');
-  const modalClass = document.getElementById('newSessionClass');
-  const modalGroup = document.getElementById('newSessionGroup');
-  
+  const classSelect = document.getElementById("className");
+  const groupSelect = document.getElementById("groupName");
+  const modalClass = document.getElementById("newSessionClass");
+  const modalGroup = document.getElementById("newSessionGroup");
+
   modalClass.value = classSelect.value;
-  classSelect.addEventListener('change', () => { modalClass.value = classSelect.value; });
-  modalClass.addEventListener('change', () => { classSelect.value = modalClass.value; });
-  
+
+  classSelect.addEventListener("change", () => {
+    modalClass.value = classSelect.value;
+  });
+
+  modalClass.addEventListener("change", () => {
+    classSelect.value = modalClass.value;
+  });
+
   modalGroup.value = groupSelect.value;
-  groupSelect.addEventListener('change', () => { modalGroup.value = groupSelect.value; });
-  modalGroup.addEventListener('change', () => { groupSelect.value = modalGroup.value; });
+
+  groupSelect.addEventListener("change", () => {
+    modalGroup.value = groupSelect.value;
+  });
+
+  modalGroup.addEventListener("change", () => {
+    groupSelect.value = modalGroup.value;
+  });
 }
 
 function onClassOrGroupChange() {
   currentSession = null;
   currentStudents = [];
   dirtyMap.clear();
-  document.getElementById('studentList').innerHTML = '<div class="empty-state">Select a date, then tap Load/Create to begin.</div>';
-  document.getElementById('sessionTitle').textContent = 'No session selected';
-  document.getElementById('sessionBadge').style.display = 'none';
-  document.getElementById('excusedBtn').disabled = true;
-  document.getElementById('saveBtn').disabled = true;
+
+  document.getElementById("studentList").innerHTML =
+    '<div class="empty-state">Select a date, then tap Load/Create to begin.</div>';
+
+  document.getElementById("sessionTitle").textContent = "No session selected";
+  document.getElementById("sessionBadge").style.display = "none";
+  document.getElementById("excusedBtn").disabled = true;
+  document.getElementById("saveBtn").disabled = true;
+
   updateSummary();
 }
 
 async function loadOrCreateSession() {
   if (!isPro) {
-    alert('Attendance tracking is a Pro feature. Please upgrade to continue.');
+    alert("Attendance tracking is a Pro feature. Please upgrade to continue.");
     return;
   }
-  
-  const classId = document.getElementById('className').value;
-  const group = document.getElementById('groupName').value;
-  const date = document.getElementById('sessionDate').value;
-  if (!date) return alert('Please select a date');
 
-  document.getElementById('studentList').innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading...</div>';
-  
+  const classId = document.getElementById("className").value;
+  const group = document.getElementById("groupName").value;
+  const date = document.getElementById("sessionDate").value;
+
+  if (!date) return alert("Please select a date");
+
+  document.getElementById("studentList").innerHTML =
+    '<div class="loading-state"><div class="spinner"></div>Loading...</div>';
+
   try {
-    const sessionsRes = await authFetch(`${API}/sessions?start_date=${date}&end_date=${date}&class_id=${classId}${group ? '&group='+group : ''}`);
+    const sessionsRes = await authFetch(
+      `${API}/sessions?start_date=${date}&end_date=${date}&class_id=${classId}${group ? "&group=" + group : ""}`
+    );
+
+    if (!sessionsRes) return;
+
     if (sessionsRes?.data?.length > 0) {
       currentSession = sessionsRes.data[0];
     } else {
-      document.getElementById('newSessionClass').value = classId;
-      document.getElementById('newSessionGroup').value = group || '';
-      document.getElementById('newSessionDate').value = date;
-      document.getElementById('newSessionName').value = `${classId} ${group ? group + ' ' : ''}Register`;
-      openModal('createModal');
+      document.getElementById("newSessionClass").value = classId;
+      document.getElementById("newSessionGroup").value = group || "";
+      document.getElementById("newSessionDate").value = date;
+      document.getElementById("newSessionName").value =
+        `${classId} ${group ? group + " " : ""}Register`;
+
+      openModal("createModal");
       return;
     }
+
     await loadSession(currentSession.id);
-  } catch(err) {
+  } catch (err) {
     console.error(err);
-    if (err.message.includes('Pro')) return;
-    document.getElementById('studentList').innerHTML = `<div class="empty-state" style="color:var(--danger)">Error: ${err.message}<br><small>Tip: Ensure backend routes are mounted and database tables exist</small></div>`;
+
+    if (err.message.includes("Pro")) return;
+
+    document.getElementById("studentList").innerHTML =
+      `<div class="empty-state" style="color:var(--danger)">Error: ${err.message}<br><small>Tip: Ensure backend routes are mounted and database tables exist</small></div>`;
   }
 }
 
 async function loadSession(sessionId) {
   if (!isPro) return;
-  document.getElementById('studentList').innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading...</div>';
+
+  document.getElementById("studentList").innerHTML =
+    '<div class="loading-state"><div class="spinner"></div>Loading...</div>';
+
   try {
     const res = await authFetch(`${API}/sessions/${sessionId}/students`);
+    if (!res) return;
+
     currentSession = res.data.session;
     currentStudents = res.data.students;
     dirtyMap.clear();
-    
+
     renderSheet();
-    closeModal('createModal');
-  } catch(err) {
+    closeModal("createModal");
+  } catch (err) {
     console.error(err);
-    if (err.message.includes('Pro')) return;
-    document.getElementById('studentList').innerHTML = `<div class="empty-state" style="color:var(--danger)">Failed to load session</div>`;
+
+    if (err.message.includes("Pro")) return;
+
+    document.getElementById("studentList").innerHTML =
+      `<div class="empty-state" style="color:var(--danger)">Failed to load session</div>`;
   }
 }
 
 function renderSheet() {
-  const group = document.getElementById('groupName').value;
-  const groupLabel = group ? ` • Group ${group}` : '';
-  document.getElementById('sessionTitle').textContent = `${currentSession.session_name} (${currentSession.session_date})${groupLabel}`;
-  
-  const badge = document.getElementById('sessionBadge');
-  badge.style.display = 'inline-block';
-  badge.textContent = 'Active';
-  badge.className = 'badge';
-  
-  document.getElementById('excusedBtn').disabled = false;
-  
-  const list = document.getElementById('studentList');
+  const group = document.getElementById("groupName").value;
+  const groupLabel = group ? ` • Group ${group}` : "";
+
+  document.getElementById("sessionTitle").textContent =
+    `${currentSession.session_name} (${currentSession.session_date})${groupLabel}`;
+
+  const badge = document.getElementById("sessionBadge");
+  badge.style.display = "inline-block";
+  badge.textContent = "Active";
+  badge.className = "badge";
+
+  document.getElementById("excusedBtn").disabled = false;
+
+  const list = document.getElementById("studentList");
+
   if (!currentStudents.length) {
     list.innerHTML = '<div class="empty-state">No students found for this class/group.</div>';
     updateSummary();
     return;
   }
-  
+
   list.innerHTML = currentStudents.map((s, i) => {
-    const status = s.attendance?.status || 'present';
-    const reasons = ['present','absent','late','excused'];
+    const status = s.attendance?.status || "present";
+    const reasons = ["present", "absent", "late", "excused"];
+
     return `
       <div class="student-row">
         <div class="student-info" onclick="viewStudentReport('${s.student_id}')">
           <div class="student-name">${s.first_name} ${s.last_name}</div>
-          <div class="student-id">${s.student_id} ${s.class_id ? '• ' + s.class_id : ''}</div>
+          <div class="student-id">${s.student_id} ${s.class_id ? "• " + s.class_id : ""}</div>
         </div>
         <div class="status-toggles">
           ${reasons.map(r => `
-            <div class="status-btn ${r} ${status === r ? '' : 'dim'}" 
-                 onclick="toggleStatus(${i}, '${r}')" 
-                 title="${r === 'excused' ? 'Parent-excused absence' : ''}">
-              ${r === 'present' ? '✔' : r === 'absent' ? '✖' : r === 'late' ? '⏰' : '📝'}
+            <div class="status-btn ${r} ${status === r ? "" : "dim"}"
+                 onclick="toggleStatus(${i}, '${r}')">
+              ${r === "present" ? "✔" : r === "absent" ? "✖" : r === "late" ? "⏰" : "📝"}
             </div>
-          `).join('')}
+          `).join("")}
         </div>
-      </div>`;
-  }).join('');
-  
+      </div>
+    `;
+  }).join("");
+
   updateSummary();
 }
 
 function toggleStatus(index, status) {
   if (!isPro) return;
+
   const student = currentStudents[index];
-  const oldStatus = student.attendance?.status || 'present';
+  const oldStatus = student.attendance?.status || "present";
+
   if (oldStatus === status) return;
-  
-  // If marking as excused, optionally add reason
+
   let reason = null;
-  if (status === 'excused' && !student.attendance?.reason) {
-    reason = prompt('Enter excuse reason (optional):') || 'Parent request';
+
+  if (status === "excused" && !student.attendance?.reason) {
+    reason = prompt("Enter excuse reason (optional):") || "Parent request";
   }
-  
+
   student.attendance = { ...student.attendance, status, reason };
   dirtyMap.set(student.student_id, { status, oldStatus, reason });
-  document.getElementById('saveBtn').disabled = false;
+
+  document.getElementById("saveBtn").disabled = false;
+
   renderSheet();
 }
 
-// ✅ NEW: Mark selected students as Excused (with reason)
 async function markExcused() {
   if (!isPro) return;
-  const reason = prompt('Enter excuse reason for absent students:') || 'Parent request';
+
+  const reason = prompt("Enter excuse reason for absent students:") || "Parent request";
   if (!reason) return;
-  
-  // Find all absent students and mark them excused
+
   const absentIndices = currentStudents
     .map((s, i) => ({ s, i }))
-    .filter(({ s }) => s.attendance?.status === 'absent')
+    .filter(({ s }) => s.attendance?.status === "absent")
     .map(({ i }) => i);
-  
+
   if (absentIndices.length === 0) {
-    alert('No absent students to excuse.');
+    alert("No absent students to excuse.");
     return;
   }
-  
+
   if (!confirm(`Mark ${absentIndices.length} absent student(s) as EXCUSED?\nReason: "${reason}"`)) return;
-  
+
   absentIndices.forEach(i => {
     const student = currentStudents[i];
-    student.attendance = { ...student.attendance, status: 'excused', reason };
-    dirtyMap.set(student.student_id, { status: 'excused', oldStatus: 'absent', reason });
+    student.attendance = { ...student.attendance, status: "excused", reason };
+    dirtyMap.set(student.student_id, {
+      status: "excused",
+      oldStatus: "absent",
+      reason
+    });
   });
-  
-  document.getElementById('saveBtn').disabled = false;
+
+  document.getElementById("saveBtn").disabled = false;
   renderSheet();
 }
 
 async function markAll(status) {
   if (!isPro || !currentSession) return;
+
   if (!confirm(`Mark ALL ${currentStudents.length} students as ${status}?`)) return;
-  
-  document.getElementById('studentList').innerHTML = '<div class="loading-state"><div class="spinner"></div>Updating...</div>';
+
+  document.getElementById("studentList").innerHTML =
+    '<div class="loading-state"><div class="spinner"></div>Updating...</div>';
+
   try {
-    await authFetch(`${API}/sessions/${currentSession.id}/mark-all`, { 
-      method: 'POST', 
-      body: JSON.stringify({ status }) 
+    await authFetch(`${API}/sessions/${currentSession.id}/mark-all`, {
+      method: "POST",
+      body: JSON.stringify({ status })
     });
+
     await loadSession(currentSession.id);
-  } catch(err) {
-    if (err.message.includes('Pro')) return;
-    alert('Failed to update: ' + err.message);
+  } catch (err) {
+    if (err.message.includes("Pro")) return;
+
+    alert("Failed to update: " + err.message);
     renderSheet();
   }
 }
 
 async function saveChanges() {
   if (!isPro || dirtyMap.size === 0) return;
-  document.getElementById('saveBtn').disabled = true;
-  document.getElementById('saveBtn').textContent = '⏳ Saving...';
-  
+
+  const saveBtn = document.getElementById("saveBtn");
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "⏳ Saving...";
+
   const promises = [];
+
   dirtyMap.forEach((data, studentId) => {
-    promises.push(authFetch(`${API}/sessions/${currentSession.id}/students/${studentId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ status: data.status, reason: data.reason })
-    }));
+    promises.push(
+      authFetch(`${API}/sessions/${currentSession.id}/students/${studentId}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          status: data.status,
+          reason: data.reason
+        })
+      })
+    );
   });
-  
+
   try {
     await Promise.all(promises);
+
     dirtyMap.clear();
-    document.getElementById('saveBtn').textContent = '💾 Saved!';
-    setTimeout(() => { document.getElementById('saveBtn').textContent = '💾 Save'; }, 2000);
+
+    saveBtn.textContent = "💾 Saved!";
+
+    setTimeout(() => {
+      saveBtn.textContent = "💾 Save";
+    }, 2000);
+
     await loadSession(currentSession.id);
-  } catch(err) {
-    if (err.message.includes('Pro')) return;
-    alert('Save failed: ' + err.message);
-    document.getElementById('saveBtn').disabled = false;
-    document.getElementById('saveBtn').textContent = '💾 Save';
+  } catch (err) {
+    if (err.message.includes("Pro")) return;
+
+    alert("Save failed: " + err.message);
+    saveBtn.disabled = false;
+    saveBtn.textContent = "💾 Save";
   }
 }
 
 async function createSession() {
   if (!isPro) return;
-  const name = document.getElementById('newSessionName').value.trim() || 'Daily Register';
-  const classId = document.getElementById('newSessionClass').value;
-  const group = document.getElementById('newSessionGroup').value || null;
-  const date = document.getElementById('newSessionDate').value;
-  
-  if (!date) return alert('Date is required');
-  
+
+  const name = document.getElementById("newSessionName").value.trim() || "Daily Register";
+  const classId = document.getElementById("newSessionClass").value;
+  const group = document.getElementById("newSessionGroup").value || null;
+  const date = document.getElementById("newSessionDate").value;
+
+  if (!date) return alert("Date is required");
+
   try {
     const res = await authFetch(`${API}/sessions`, {
-      method: 'POST',
-      body: JSON.stringify({ 
-        session_name: name, 
+      method: "POST",
+      body: JSON.stringify({
+        session_name: name,
         class_id: classId,
-        group: group,
-        session_date: date 
+        group,
+        session_date: date
       })
     });
+
+    if (!res) return;
+
     currentSession = res.data;
     await loadSession(currentSession.id);
-  } catch(err) {
-    if (err.message.includes('Pro')) return;
-    console.error('Create session error:', err);
-    alert(`Failed to create: ${err.message}\n\nTip: Ensure backend routes are mounted and database tables exist.`);
+  } catch (err) {
+    if (err.message.includes("Pro")) return;
+
+    console.error("Create session error:", err);
+    alert(`Failed to create: ${err.message}`);
   }
 }
 
 async function viewStudentReport(studentId) {
   if (!isPro) return;
-  openModal('reportModal');
-  document.getElementById('reportContent').innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading report...</div>';
+
+  openModal("reportModal");
+
+  document.getElementById("reportContent").innerHTML =
+    '<div class="loading-state"><div class="spinner"></div>Loading report...</div>';
+
   try {
     const res = await authFetch(`${API}/reports/${studentId}?limit=20`);
+    if (!res) return;
+
     const d = res.data;
-    document.getElementById('reportContent').innerHTML = `
+
+    document.getElementById("reportContent").innerHTML = `
       <h4 style="margin-bottom:8px;">${d.student.first_name} ${d.student.last_name}</h4>
       <div class="report-card">
         <div class="report-stat"><span>Attendance Rate</span><strong>${d.summary.attendance_rate}%</strong></div>
@@ -1034,83 +1166,150 @@ async function viewStudentReport(studentId) {
         <div class="report-stat"><span>Total Sessions</span><strong>${d.summary.total_sessions}</strong></div>
       </div>
       <h5 style="margin:12px 0 8px;">Recent History</h5>
-      ${d.recent.map(r => `
-        <div class="report-log">
-          <strong>${r.session_name}</strong> (${r.session_date}) • 
-          <span style="color:${r.status==='present'?'var(--success)':r.status==='absent'?'var(--danger)':r.status==='excused'?'#9b59b6':'var(--warning)'}">${r.status.toUpperCase()}</span>
-          ${r.reason ? `<br><small style="color:#666;">${r.reason}</small>` : ''}
-        </div>
-      `).join('') || '<p style="color:#666;">No recent records.</p>'}
+      ${
+        d.recent.map(r => `
+          <div class="report-log">
+            <strong>${r.session_name}</strong> (${r.session_date}) •
+            <span style="color:${
+              r.status === "present"
+                ? "var(--success)"
+                : r.status === "absent"
+                  ? "var(--danger)"
+                  : r.status === "excused"
+                    ? "#9b59b6"
+                    : "var(--warning)"
+            }">${r.status.toUpperCase()}</span>
+            ${r.reason ? `<br><small style="color:#666;">${r.reason}</small>` : ""}
+          </div>
+        `).join("") || '<p style="color:#666;">No recent records.</p>'
+      }
     `;
-  } catch(err) {
-    if (err.message.includes('Pro')) return;
-    document.getElementById('reportContent').innerHTML = `<div class="empty-state" style="color:var(--danger)">Error: ${err.message}</div>`;
+  } catch (err) {
+    if (err.message.includes("Pro")) return;
+
+    document.getElementById("reportContent").innerHTML =
+      `<div class="empty-state" style="color:var(--danger)">Error: ${err.message}</div>`;
   }
 }
 
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function openModal(id) {
+  document.getElementById(id).classList.add("active");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("active");
+}
+
 function updateSummary() {
-  const counts = { present:0, absent:0, late:0, excused:0 };
-  currentStudents.forEach(s => counts[s.attendance?.status || 'present']++);
-  document.getElementById('summaryText').textContent = `${currentStudents.length} students • P:${counts.present} A:${counts.absent} L:${counts.late} E:${counts.excused}`;
-}
+  const counts = {
+    present: 0,
+    absent: 0,
+    late: 0,
+    excused: 0
+  };
 
-// Close modals on outside click
-window.onclick = function(e) {
-  if (e.target.classList.contains('modal')) e.target.classList.remove('active');
-}
-
-// ✅ PDF Export
-function exportAttendance() {
-  if (!isPro || !currentSession) return alert('No session loaded');
-  
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('p', 'mm', 'a4');
-  const className = document.getElementById('className').value;
-  const groupName = document.getElementById('groupName').value;
-  const groupLabel = groupName ? ` • Group ${groupName}` : '';
-  
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Attendance — ${currentSession.session_name}${groupLabel}`, 105, 20, null, null, 'center');
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Date: ${currentSession.session_date} | Class: ${className}`, 105, 28, null, null, 'center');
-  
-  const table = [['Student', 'ID', 'Status', 'Reason']];
   currentStudents.forEach(s => {
-    const status = s.attendance?.status || 'present';
-    const reason = s.attendance?.reason || '-';
-    table.push([`${s.first_name} ${s.last_name}`, s.student_id, status.toUpperCase(), reason]);
+    counts[s.attendance?.status || "present"]++;
   });
-  
+
+  document.getElementById("summaryText").textContent =
+    `${currentStudents.length} students • P:${counts.present} A:${counts.absent} L:${counts.late} E:${counts.excused}`;
+}
+
+window.onclick = function(e) {
+  if (e.target.classList.contains("modal")) {
+    e.target.classList.remove("active");
+  }
+};
+
+function exportAttendance() {
+  if (!isPro || !currentSession) return alert("No session loaded");
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p", "mm", "a4");
+
+  const className = document.getElementById("className").value;
+  const groupName = document.getElementById("groupName").value;
+  const groupLabel = groupName ? ` • Group ${groupName}` : "";
+
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text(
+    `Attendance — ${currentSession.session_name}${groupLabel}`,
+    105,
+    20,
+    null,
+    null,
+    "center"
+  );
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(
+    `Date: ${currentSession.session_date} | Class: ${className}`,
+    105,
+    28,
+    null,
+    null,
+    "center"
+  );
+
+  const table = [["Student", "ID", "Status", "Reason"]];
+
+  currentStudents.forEach(s => {
+    const status = s.attendance?.status || "present";
+    const reason = s.attendance?.reason || "-";
+
+    table.push([
+      `${s.first_name} ${s.last_name}`,
+      s.student_id,
+      status.toUpperCase(),
+      reason
+    ]);
+  });
+
   doc.autoTable({
     startY: 35,
     head: [table[0]],
     body: table.slice(1),
-    theme: 'grid',
-    styles: { fontSize: 9, halign: 'left', valign: 'middle' },
+    theme: "grid",
+    styles: { fontSize: 9, halign: "left", valign: "middle" },
     headStyles: { fillColor: [52, 152, 219], textColor: 255 },
     columnStyles: {
       0: { cellWidth: 50 },
       1: { cellWidth: 30 },
-      2: { cellWidth: 25, halign: 'center' },
+      2: { cellWidth: 25, halign: "center" },
       3: { cellWidth: 40 }
     }
   });
-  
-  const counts = { present:0, absent:0, late:0, excused:0 };
-  currentStudents.forEach(s => counts[s.attendance?.status || 'present']++);
+
+  const counts = {
+    present: 0,
+    absent: 0,
+    late: 0,
+    excused: 0
+  };
+
+  currentStudents.forEach(s => {
+    counts[s.attendance?.status || "present"]++;
+  });
+
   const finalY = doc.lastAutoTable.finalY + 10;
-  doc.text(`Summary: P=${counts.present} | A=${counts.absent} | L=${counts.late} | E=${counts.excused}`, 14, finalY);
-  
-  doc.save(`Attendance_${className}${groupName ? '_'+groupName : ''}_${currentSession.session_date}.pdf`);
+
+  doc.text(
+    `Summary: P=${counts.present} | A=${counts.absent} | L=${counts.late} | E=${counts.excused}`,
+    14,
+    finalY
+  );
+
+  doc.save(
+    `Attendance_${className}${groupName ? "_" + groupName : ""}_${currentSession.session_date}.pdf`
+  );
 }
 </script>
 
 <script src="js/kaima-chatbot.js"></script>
-<script src="js/session-timeout.js"></script>
-
+<!-- <script src="js/session-timeout.js"></script> -->
+ 
 </body>
 </html>
