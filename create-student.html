@@ -9,85 +9,201 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 30px 10px;
-      color: #333;
-      min-height: 100vh;
-    }
-    .form-card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      max-width: 480px;
-      width: 100%;
-      margin-bottom: 40px;
-      overflow: hidden;
-    }
-    .form-header {
-      background: #0c2461;
-      color: white;
-      padding: 25px;
-      text-align: center;
-    }
-    .form-header h2 { font-size: 1.5rem; font-weight: 600; }
-    .form-body { padding: 25px; }
-    .form-group { margin-bottom: 18px; position: relative; }
-    label { display: block; font-weight: 600; margin-bottom: 6px; }
-    input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #bdc3c7;
-      border-radius: 6px;
-      font-size: 1rem;
-    }
-    .toggle-password {
-      position: absolute;
-      right: 12px;
-      top: 38px;
-      cursor: pointer;
-      user-select: none;
-      color: #777;
-    }
-    .form-actions { display: flex; gap: 10px; margin-top: 10px; }
-    button {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-submit { background: #3498db; color: #fff; }
-    .btn-submit:hover { background: #2980b9; }
-    .btn-cancel { background: #95a5a6; color: #fff; }
-    .btn-cancel:hover { background: #7f8c8d; }
-    .message { margin-top: 15px; text-align: center; min-height: 20px; }
-    .error { color: #e74c3c; }
-    .success { color: #27ae60; }
+*{margin:0;padding:0;box-sizing:border-box}
 
-    .bulk-upload {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      max-width: 480px;
-      width: 100%;
-      padding: 25px;
-    }
+body{
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:36px 14px;
+  color:#0f172a;
+  background:
+    radial-gradient(circle at top left,rgba(34,197,94,.25),transparent 35%),
+    radial-gradient(circle at bottom right,rgba(0,210,255,.25),transparent 35%),
+    linear-gradient(135deg,#020617,#0f172a);
+}
 
-    .footer {
-      text-align: center;
-      padding: 15px;
-      font-size: 0.8rem;
-      color: #eee;
-    }
-  </style>
+.form-card,
+.bulk-upload{
+  max-width:550px;
+  width:100%;
+  border-radius:28px;
+  overflow:hidden;
+  background:rgba(255,255,255,.9);
+  border:1px solid rgba(255,255,255,.25);
+  backdrop-filter:blur(22px);
+  box-shadow:0 30px 80px rgba(0,0,0,.35);
+  margin-bottom:28px;
+}
+
+.form-header{
+  background:linear-gradient(135deg,rgba(2,6,23,.95),rgba(37,99,235,.85));
+  color:#fff;
+  padding:32px 24px;
+  text-align:center;
+}
+
+.form-header h2{
+  font-size:1.65rem;
+  font-weight:900;
+}
+
+.form-header p{
+  margin-top:6px;
+  color:#dbeafe;
+}
+
+.form-body,
+.bulk-upload{
+  padding:30px;
+}
+
+.bulk-upload h3{
+  font-weight:900;
+  margin-bottom:8px;
+}
+
+.bulk-upload p{
+  color:#475569;
+  margin-bottom:18px;
+}
+
+.form-group{
+  margin-bottom:18px;
+  position:relative;
+}
+
+label{
+  display:block;
+  font-weight:900;
+  margin-bottom:7px;
+}
+
+input{
+  width:100%;
+  min-height:52px;
+  padding:0 14px;
+  border:1px solid #cbd5e1;
+  border-radius:16px;
+  font-size:1rem;
+  outline:none;
+  background:#fff;
+}
+
+input:focus{
+  border-color:#22c55e;
+  box-shadow:0 0 0 5px rgba(34,197,94,.14);
+}
+
+.toggle-password{
+  position:absolute;
+  right:15px;
+  top:40px;
+  cursor:pointer;
+}
+
+.form-actions{
+  display:flex;
+  gap:12px;
+  margin-top:10px;
+}
+
+button,
+.bulk-upload a{
+  width:100%;
+  min-height:52px;
+  padding:12px;
+  border:none;
+  border-radius:16px;
+  font-size:1rem;
+  font-weight:900;
+  cursor:pointer;
+  text-align:center;
+  text-decoration:none;
+  transition:.2s ease;
+}
+
+button:hover,
+.bulk-upload a:hover{
+  transform:translateY(-2px);
+}
+
+.btn-submit,
+.bulk-upload button{
+  background:linear-gradient(135deg,#22c55e,#2563eb);
+  color:#fff;
+}
+
+.btn-cancel{
+  background:#64748b;
+  color:#fff;
+}
+
+.bulk-upload a{
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  background:#020617!important;
+  color:#fff!important;
+}
+
+.message{
+  margin-top:15px;
+  text-align:center;
+  min-height:22px;
+  font-weight:800;
+}
+
+.error{color:#dc2626}
+.success{color:#16a34a}
+
+.footer{
+  text-align:center;
+  padding:18px 10px;
+  font-size:.82rem;
+  color:#e2e8f0;
+}
+
+.footer a{
+  color:#00d2ff!important;
+  text-decoration:none;
+  font-weight:800;
+}
+
+@media(max-width:600px){
+  body{padding:20px 10px}
+
+  .form-card,
+  .bulk-upload{
+    border-radius:22px;
+  }
+
+  .form-header{
+    padding:25px 16px;
+  }
+
+  .form-header h2{
+    font-size:1.35rem;
+  }
+
+  .form-body,
+  .bulk-upload{
+    padding:22px 16px;
+  }
+
+  .form-actions{
+    flex-direction:column;
+  }
+
+  input,
+  button,
+  .bulk-upload a{
+    font-size:16px;
+  }
+}
+</style>
 </head>
 
 <body>
