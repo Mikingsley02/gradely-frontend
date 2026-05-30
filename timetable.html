@@ -254,6 +254,85 @@
         padding: 14px 8px;
       }
     }
+
+
+    /* =========================
+   Saved Timetable Status Box
+========================= */
+
+#timetableStatus{
+  display:none;
+  max-width:700px;
+  margin:12px auto 20px;
+  padding:14px 18px;
+  border-radius:12px;
+  text-align:center;
+  font-weight:600;
+  font-size:0.95rem;
+  line-height:1.6;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+  transition:all .3s ease;
+}
+
+#timetableStatus strong{
+  font-weight:700;
+}
+
+#timetableStatus.warning{
+  background:#fff8e1;
+  border:1px solid #ffd54f;
+  color:#8a6d00;
+}
+
+#timetableStatus.success{
+  background:#e8f5e9;
+  border:1px solid #81c784;
+  color:#1b5e20;
+}
+
+/* =========================
+   Better Action Buttons
+========================= */
+
+.action-buttons{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:12px;
+  margin-top:24px;
+}
+
+.action-buttons button,
+.action-buttons a{
+  min-width:150px;
+}
+
+/* =========================
+   Mobile Optimisation
+========================= */
+
+@media (max-width:768px){
+
+  #timetableStatus{
+    margin:10px 10px 18px;
+    padding:12px;
+    font-size:0.88rem;
+  }
+
+  .action-buttons{
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .action-buttons button,
+  .action-buttons a{
+    width:100%;
+    max-width:320px;
+  }
+}
+
+
+
   </style>
 </head>
 
@@ -261,6 +340,7 @@
   <div class="container">
     <h1>📅 Weekly Timetable</h1>
     <p class="hint">Select class and group to load an existing timetable. Click Edit before making changes.</p>
+    <div id="timetableStatus"></div> 
     <div class="class-selects">
       <div>
         <label for="className">Select Class:</label>
@@ -319,15 +399,10 @@ const API_BASE = "https://api.gradely.info";
 let editMode = false;
 
 function getToken() {
-  const token =
+  return (
     sessionStorage.getItem("gradely_token") ||
-    localStorage.getItem("gradely_token");
-
-  if (!token || token === "null" || token === "undefined" || token.trim() === "") {
-    return null;
-  }
-
-  return token;
+    localStorage.getItem("gradely_token")
+  );
 }
 
 function getSchoolId() {
@@ -335,23 +410,14 @@ function getSchoolId() {
     sessionStorage.getItem("school_id") ||
     localStorage.getItem("school_id") ||
     sessionStorage.getItem("admin_id") ||
-    sessionStorage.getItem("adminId") ||
     localStorage.getItem("admin_id") ||
-    localStorage.getItem("adminId") ||
     "adm2025"
   );
 }
 
 function clearAuth() {
-  sessionStorage.removeItem("gradely_token");
-  sessionStorage.removeItem("school_id");
-  sessionStorage.removeItem("adminId");
-  sessionStorage.removeItem("admin_id");
-
+  sessionStorage.clear();
   localStorage.removeItem("gradely_token");
-  localStorage.removeItem("school_id");
-  localStorage.removeItem("adminId");
-  localStorage.removeItem("admin_id");
 }
 
 function redirectToLogin() {
@@ -388,46 +454,47 @@ async function authFetch(url, options = {}) {
 
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
+
     try {
       const err = await res.json();
       msg = err.message || msg;
-    } catch(e) {}
+    } catch {}
+
     throw new Error(msg);
   }
 
   return res;
 }
 
-function showToast(message, bg = "#27ae60") {
+function showToast(message, color = "#27ae60") {
   const toast = document.createElement("div");
+
   toast.textContent = message;
 
   Object.assign(toast.style, {
     position: "fixed",
     bottom: "20px",
     right: "20px",
-    background: bg,
+    background: color,
     color: "#fff",
-    padding: "12px 24px",
+    padding: "12px 20px",
     borderRadius: "8px",
-    fontSize: "0.95rem",
-    fontWeight: "600",
-    zIndex: "9999",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-    opacity: "0",
-    transition: "opacity 0.3s ease"
+    zIndex: "99999",
+    fontWeight: "600"
   });
 
   document.body.appendChild(toast);
-  requestAnimationFrame(() => toast.style.opacity = "1");
 
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    setTimeout(() => toast.remove(), 300);
-  }, 2200);
+  setTimeout(() => toast.remove(), 2500);
 }
 
-const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+const days = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday"
+];
 
 let times = [
   "08:00 - 09:00",
@@ -443,58 +510,74 @@ const timetableGrid = document.getElementById("timetableGrid");
 
 function getBlankTimetable() {
   const data = {};
+
   days.forEach(day => {
     data[day] = times.map(() => ({
       subject: "-",
       teacher: "-"
     }));
   });
+
   return data;
 }
 
 function initTimetableData(className, groupName) {
-  if (!timetableData[className]) timetableData[className] = {};
+  if (!timetableData[className]) {
+    timetableData[className] = {};
+  }
+
   if (!timetableData[className][groupName]) {
     timetableData[className][groupName] = getBlankTimetable();
   }
 }
 
-async function saveTimetable(className, groupName) {
+async function checkTimetableExists(className, groupName) {
   try {
     const schoolId = getSchoolId();
 
-    const res = await authFetch(`${API_BASE}/api/classes/timetable`, {
-      method: "POST",
-      body: JSON.stringify({
-        school_id: schoolId,
-        class_name: className,
-        group_name: groupName,
-        timetable: timetableData[className][groupName]
-      })
-    });
+    const res = await authFetch(
+      `${API_BASE}/api/classes/timetable?school_id=${encodeURIComponent(
+        schoolId
+      )}&class_name=${encodeURIComponent(
+        className
+      )}&group_name=${encodeURIComponent(groupName)}`
+    );
 
     if (!res) return;
 
     const result = await res.json();
 
-    if (result.success) {
-  editMode = false;
-  showToast("✅ Timetable saved!");
+    const statusBox = document.getElementById("timetableStatus");
 
+    if (
+      result.success &&
+      result.data &&
+      Object.keys(result.data).length > 0
+    ) {
+      statusBox.style.display = "block";
+        statusBox.className = "warning";
+
+      statusBox.innerHTML = `
+        ⚠️ A timetable already exists for
+        <strong>${className}</strong> Group
+        <strong>${groupName}</strong>.
+        <br>
+        Click <strong>Load Saved</strong> to view/edit it
+        or click <strong>Save</strong> to overwrite it.
+      `;
     } else {
-      alert("⚠️ Failed to save timetable: " + (result.message || "Unknown error"));
+      statusBox.style.display = "block";
+        statusBox.className = "success";
+
+      statusBox.innerHTML = `
+        ✅ No timetable exists yet for
+        <strong>${className}</strong> Group
+        <strong>${groupName}</strong>.
+      `;
     }
   } catch (err) {
-    console.error("❌ Error saving timetable:", err);
-    alert("⚠️ Failed to save timetable: " + err.message);
+    console.warn("Could not check timetable:", err);
   }
-}
-
-function manualSaveTimetable() {
-  const className = document.getElementById("className").value;
-  const groupName = document.getElementById("groupName").value;
-  initTimetableData(className, groupName);
-  saveTimetable(className, groupName);
 }
 
 async function loadTimetable(className, groupName) {
@@ -502,8 +585,11 @@ async function loadTimetable(className, groupName) {
     const schoolId = getSchoolId();
 
     const res = await authFetch(
-      `${API_BASE}/api/classes/timetable?school_id=${encodeURIComponent(schoolId)}&class_name=${encodeURIComponent(className)}&group_name=${encodeURIComponent(groupName)}`,
-      { method: "GET" }
+      `${API_BASE}/api/classes/timetable?school_id=${encodeURIComponent(
+        schoolId
+      )}&class_name=${encodeURIComponent(
+        className
+      )}&group_name=${encodeURIComponent(groupName)}`
     );
 
     if (!res) return;
@@ -511,31 +597,16 @@ async function loadTimetable(className, groupName) {
     const result = await res.json();
 
     if (result.success && result.data) {
-      if (!timetableData[className]) timetableData[className] = {};
+      if (!timetableData[className]) {
+        timetableData[className] = {};
+      }
+
       timetableData[className][groupName] = result.data;
     }
   } catch (err) {
-    console.warn("⚠️ Could not load timetable:", err.message);
+    console.warn("Load timetable failed:", err.message);
   }
 }
-
-async function clearCurrentTimetable() {
-  const className = document.getElementById("className").value;
-  const groupName = document.getElementById("groupName").value;
-
-  if (!confirm(`Clear timetable for ${className} Group ${groupName}?`)) return;
-
-  initTimetableData(className, groupName);
-  timetableData[className][groupName] = getBlankTimetable();
-
-
-  renderTimetable();
-  await saveTimetable(className, groupName);
-
-  showToast("🗑️ Timetable cleared", "#e74c3c");
-}
-
-
 
 async function loadSelectedTimetable() {
   const className = document.getElementById("className").value;
@@ -544,6 +615,7 @@ async function loadSelectedTimetable() {
   editMode = false;
 
   await loadTimetable(className, groupName);
+
   renderTimetable();
 
   showToast(`📂 Loaded ${className} Group ${groupName}`);
@@ -551,32 +623,87 @@ async function loadSelectedTimetable() {
 
 function enableEditMode() {
   editMode = true;
-  showToast("✏️ Edit mode enabled. Double-click cells to edit.", "#9b59b6");
+
+  showToast(
+    "✏️ Edit mode enabled. Double-click cells to edit.",
+    "#9b59b6"
+  );
 }
 
+async function saveTimetable(className, groupName) {
+  try {
+    const schoolId = getSchoolId();
 
+    const res = await authFetch(
+      `${API_BASE}/api/classes/timetable`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          school_id: schoolId,
+          class_name: className,
+          group_name: groupName,
+          timetable: timetableData[className][groupName]
+        })
+      }
+    );
 
-document.addEventListener("DOMContentLoaded", async () => {
-  if (!getToken()) {
-    alert("⚠️ Session expired. Please log in again.");
-    redirectToLogin();
+    if (!res) return;
+
+    const result = await res.json();
+
+    if (result.success) {
+      editMode = false;
+
+      await checkTimetableExists(className, groupName);
+
+      showToast("✅ Timetable saved successfully");
+    } else {
+      alert(result.message || "Failed to save timetable");
+    }
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+function manualSaveTimetable() {
+  const className = document.getElementById("className").value;
+  const groupName = document.getElementById("groupName").value;
+
+  saveTimetable(className, groupName);
+}
+
+async function clearCurrentTimetable() {
+  const className = document.getElementById("className").value;
+  const groupName = document.getElementById("groupName").value;
+
+  if (
+    !confirm(
+      `Clear timetable for ${className} Group ${groupName}?`
+    )
+  ) {
     return;
   }
 
-  const className = document.getElementById("className").value;
-  const groupName = document.getElementById("groupName").value;
+  timetableData[className][groupName] = getBlankTimetable();
 
-  await loadTimetable(className, groupName);
   renderTimetable();
-});
+
+  await saveTimetable(className, groupName);
+
+  showToast("🗑️ Timetable cleared", "#e74c3c");
+}
 
 function renderTimetable() {
-  const className = document.getElementById("className").value;
-  const groupName = document.getElementById("groupName").value;
+  const className =
+    document.getElementById("className").value;
+
+  const groupName =
+    document.getElementById("groupName").value;
 
   initTimetableData(className, groupName);
 
-  const gridData = timetableData[className][groupName];
+  const gridData =
+    timetableData[className][groupName];
 
   timetableGrid.innerHTML = "";
 
@@ -594,16 +721,25 @@ function renderTimetable() {
 
   times.forEach((time, rowIndex) => {
     const timeDiv = document.createElement("div");
+
     timeDiv.classList.add("time-slot");
     timeDiv.textContent = time;
 
     timeDiv.addEventListener("dblclick", () => {
-  if (!editMode) {
-    showToast("Click Edit before changing timetable.", "#e74c3c");
-    return;
-  }
-      const newTime = prompt("Edit time slot:", times[rowIndex]) || times[rowIndex];
+      if (!editMode) {
+        showToast(
+          "Click Edit before changing timetable",
+          "#e74c3c"
+        );
+        return;
+      }
+
+      const newTime =
+        prompt("Edit time slot:", times[rowIndex]) ||
+        times[rowIndex];
+
       times[rowIndex] = newTime;
+
       renderTimetable();
     });
 
@@ -611,27 +747,37 @@ function renderTimetable() {
 
     days.forEach(day => {
       const cell = document.createElement("div");
+
       cell.classList.add("editable");
 
-      const sub = gridData[day]?.[rowIndex]?.subject || "-";
-      const teach = gridData[day]?.[rowIndex]?.teacher || "-";
+      const item = gridData[day][rowIndex];
 
-      cell.innerHTML = `<strong>${sub}</strong><br><em>${teach}</em>`;
+      cell.innerHTML =
+        `<strong>${item.subject}</strong><br><em>${item.teacher}</em>`;
 
-    cell.addEventListener("dblclick", () => {
-    if (!editMode) {
-    showToast("Click Edit before changing timetable.", "#e74c3c");
-    return;
-    }
-        
-        const newSub = prompt("Enter subject:", sub) || "-";
-        const newTeach = prompt("Enter teacher:", teach) || "-";
+      cell.addEventListener("dblclick", () => {
+        if (!editMode) {
+          showToast(
+            "Click Edit before changing timetable",
+            "#e74c3c"
+          );
+          return;
+        }
 
-        if (!gridData[day]) gridData[day] = [];
-        if (!gridData[day][rowIndex]) gridData[day][rowIndex] = { subject: "-", teacher: "-" };
+        const newSub =
+          prompt(
+            "Enter subject:",
+            item.subject
+          ) || item.subject;
 
-        gridData[day][rowIndex].subject = newSub;
-        gridData[day][rowIndex].teacher = newTeach;
+        const newTeacher =
+          prompt(
+            "Enter teacher:",
+            item.teacher
+          ) || item.teacher;
+
+        item.subject = newSub;
+        item.teacher = newTeacher;
 
         renderTimetable();
       });
@@ -641,70 +787,60 @@ function renderTimetable() {
   });
 }
 
-document.getElementById("className").addEventListener("change", async (e) => {
-  const className = e.target.value;
-  const groupName = document.getElementById("groupName").value;
+document.addEventListener("DOMContentLoaded", async () => {
+  if (!getToken()) {
+    redirectToLogin();
+    return;
+  }
 
+  const className =
+    document.getElementById("className").value;
+
+  const groupName =
+    document.getElementById("groupName").value;
+
+  await checkTimetableExists(className, groupName);
   await loadTimetable(className, groupName);
+
   renderTimetable();
 });
 
-document.getElementById("groupName").addEventListener("change", async (e) => {
-  const className = document.getElementById("className").value;
-  const groupName = e.target.value;
+document
+  .getElementById("className")
+  .addEventListener("change", async e => {
+    const className = e.target.value;
 
-  await loadTimetable(className, groupName);
-  renderTimetable();
-});
+    const groupName =
+      document.getElementById("groupName").value;
+
+    await checkTimetableExists(className, groupName);
+    await loadTimetable(className, groupName);
+
+    renderTimetable();
+  });
+
+document
+  .getElementById("groupName")
+  .addEventListener("change", async e => {
+    const className =
+      document.getElementById("className").value;
+
+    const groupName = e.target.value;
+
+    await checkTimetableExists(className, groupName);
+    await loadTimetable(className, groupName);
+
+    renderTimetable();
+  });
 
 function exportPDF() {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("p", "mm", "a4");
 
-  let y = 20;
+  const doc = new jsPDF();
 
-  const className = document.getElementById("className").value;
-  const groupName = document.getElementById("groupName").value;
+  doc.text("School Timetable", 20, 20);
 
-  initTimetableData(className, groupName);
-
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text(`Timetable — ${className} Group ${groupName}`, 105, y, null, null, "center");
-
-  y += 10;
-
-  const gridData = timetableData[className][groupName];
-  const table = [["Time/Day", ...days]];
-
-  times.forEach((time, i) => {
-    const row = [time];
-
-    days.forEach(day => {
-      const cell = gridData[day]?.[i] || { subject: "-", teacher: "-" };
-      row.push(`${cell.subject}\n(${cell.teacher})`);
-    });
-
-    table.push(row);
-  });
-
-  doc.autoTable({
-    startY: y,
-    head: [table[0]],
-    body: table.slice(1),
-    theme: "grid",
-    styles: {
-      fontSize: 9,
-      halign: "center",
-      valign: "middle"
-    },
-    headStyles: {
-      fillColor: [108, 92, 231],
-      textColor: 255
-    }
-  });
-
-  doc.save(`Timetable_${className}_${groupName}.pdf`);
+  doc.save("timetable.pdf");
 }
 </script>
 
