@@ -1,277 +1,426 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>📅 School Timetable — Editable</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="https://gradely.info/favicon.ico" />
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: #f4f7fa;
-      color: #333;
-      margin: 0;
-      padding: 0;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>🏫 Class Management | Gradely</title>
+<link rel="icon" href="https://gradely.info/favicon.ico" />
+
+<style>
+:root {
+  --primary: #3498db;
+  --success: #27ae60;
+  --danger: #e74c3c;
+  --purple:#9b59b6;
+  --bg: #f8f9fa;
+  --card: #fff;
+  --text: #0c2461;
+  --text-light: #64748b;
+  --border: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  flex: 1;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 50px 16px 30px;
+}
+
+header {
+  margin-bottom: 30px;
+}
+
+h1 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.page-subtitle{
+  color:var(--text-light);
+  font-size:.92rem;
+}
+
+.class-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 18px;
+  margin-top: 25px;
+  margin-bottom: 40px;
+}
+
+.class-tile {
+  background: var(--card);
+  padding: 32px 18px;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.2s;
+  border: 2px solid transparent;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.class-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: var(--primary);
+}
+
+.class-tile .name {
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 4px;
+}
+
+.class-tile .count {
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+
+.class-detail {
+  display: none;
+}
+
+.class-detail.active {
+  display: block;
+}
+
+.detail-header {
+  margin-bottom: 22px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-header h2 {
+  font-size: 1.25rem;
+}
+
+.search-box {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.search-box input {
+  flex: 1;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.search-box button {
+  padding: 10px 18px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 18px 0 10px;
+  color: var(--text-light);
+}
+
+.student-list {
+  background: var(--card);
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.student-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.student-row:last-child {
+  border-bottom: none;
+}
+
+.student-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.student-name {
+  font-weight: 500;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.group-badge {
+  background: #9b59b6;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  margin-left: 6px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.student-id {
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.student-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-sm {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-add {
+  background: var(--success);
+  color: white;
+}
+
+.btn-remove {
+  background: var(--danger);
+  color: white;
+}
+
+.nav-actions{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:16px;
+  flex-wrap:wrap;
+  margin:60px 0 0;
+  padding-top:30px;
+  border-top:1px solid var(--border);
+}
+
+.nav-btn{
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  width:100%;
+  max-width:220px;
+  min-height:46px;
+  padding:12px 16px;
+  border:none;
+  border-radius:10px;
+  color:#fff;
+  font-weight:700;
+  font-size:.95rem;
+  text-decoration:none;
+  cursor:pointer;
+  transition:.2s ease;
+}
+
+.nav-btn:hover{
+  transform:translateY(-2px);
+}
+
+.nav-timetable{background:var(--purple);}
+.nav-attendance{background:var(--primary);}
+.nav-back{background:var(--success);}
+
+.empty-state,
+.loading-state {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+footer {
+  margin-top: auto;
+  text-align: center;
+  padding: 18px 12px;
+  color: #666;
+  font-size: 0.75rem;
+  border-top: 1px solid #eee;
+  background: white;
+}
+
+footer a {
+  color: #6c3cff;
+  text-decoration: none;
+  margin: 0 5px;
+}
+
+
+  @media (max-width: 600px) {
+  .class-grid {
+    grid-template-columns: repeat(2, 1fr);
     }
 
-    .container {
-      max-width: 1100px;
-      margin: 20px auto;
-      padding: 15px;
-    }
+  .class-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
 
-    h1 {
-      text-align: center;
-      font-size: 1.6rem;
-      margin-bottom: 16px;
-      color: #1f2937;
-    }
+  .class-tile {
+    padding: 14px 8px;
+  }
 
-    .class-selects {
-      margin-bottom: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-    }
+  .search-box {
+    flex-direction: column;
+  }
 
-    .class-selects > div {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      width: 100%;
-      max-width: 300px;
-    }
+  .search-box button {
+    width: 100%;
+  }
 
-    .class-selects label {
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
+  .student-row{
+    align-items:flex-start;
+    gap:10px;
+  }
 
-    select {
-      width: 100%;
-      padding: 10px 12px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      background: #fff;
-      cursor: pointer;
-    }
+  .student-actions{
+    flex-shrink:0;
+  }
 
-    /* Responsive timetable container */
-    .timetable-wrapper {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      border-radius: 8px;
-      margin: 10px 0;
-    }
+  .nav-actions{
+    flex-direction:column;
+  }
 
-    .timetable {
-      display: grid;
-      grid-template-columns: 140px repeat(5, 1fr);
-      gap: 1px;
-      background: #ccc;
-      min-width: 600px;
-    }
-
-    .timetable div {
-      background: #fff;
-      padding: 10px;
-      min-height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      font-weight: 500;
-      position: relative;
-      transition: transform 0.2s, box-shadow 0.2s;
-      cursor: default;
-      font-size: 0.85rem;
-    }
-
-    .timetable div.header {
-      background: #6c5ce7;
-      color: #fff;
-      font-weight: 700;
-      font-size: 0.85rem;
-    }
-
-    .timetable div.time-slot {
-      background: #ffeaa7;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    @media (min-width: 768px) {
-      .editable:hover::after,
-      .time-slot:hover::after {
-        content: "Double click to edit";
-        font-size: 0.65rem;
-        color: #555;
-        position: absolute;
-        bottom: 2px;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-    }
-
-    .action-buttons {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    /* ✅ Unified Button Styles - All Same Size */
-    .export-btn,
-    .manage-classes-btn,
-    .attendance-btn,
-    .back-btn,
-    .save-btn {
-      width: 100%;
-      max-width: 300px;
-      padding: 12px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      text-align: center;
-      text-decoration: none;
-      font-weight: 600;
-      display: inline-block;
-      transition: background 0.2s ease;
-    }
-
-    .export-btn {
-      background: #6c5ce7;
-      color: white;
-    }
-    .export-btn:hover { background: #5a3ecf; }
-
-    .save-btn {
-      background: #27ae60;  /* Green for save */
-      color: white;
-    }
-    .save-btn:hover { background: #219653; }
-
-    .manage-classes-btn {
-      background: #9b59b6;  /* Purple for management */
-      color: white;
-    }
-    .manage-classes-btn:hover { background: #8e44ad; }
-
-    .attendance-btn {
-      background: #3498db;  /* Blue for attendance */
-      color: white;
-    }
-    .attendance-btn:hover { background: #2980b9; }
-
-    .back-btn {
-      background: #209c49;  /* Green for back */
-      color: white;
-    }
-    .back-btn:hover { background: #17855d; }
-
-    /* ✅ Tablet and up - Horizontal layout */
-    @media (min-width: 768px) {
-      .class-selects {
-        flex-direction: row;
-        justify-content: center;
-        gap: 20px;
-      }
-
-      .action-buttons {
-        flex-direction: row;
-        justify-content: center;
-        gap: 20px;
-      }
-
-      .export-btn,
-      .save-btn,
-      .manage-classes-btn,
-      .attendance-btn,
-      .back-btn {
-        width: auto;
-        min-width: 140px;
-      }
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 30px;
-      padding: 15px 0;
-      color: #666;
-      font-size: 0.8rem;
-      border-top: 1px solid #eee;
-    }
-
-    footer a {
-      color: #6c3cff;
-      text-decoration: none;
-      margin: 0 6px;
-    }
-  </style>
+  .nav-btn{
+    max-width:100%;
+  }
+}
+</style>
 </head>
+
 <body>
-  <div class="container">
-    <h1>📅 Weekly Timetable</h1>
 
-    <div class="class-selects">
-      <div>
-        <label for="className">Select Class:</label>
-        <select id="className">
-          <option value="Basic1">Basic 1</option>
-          <option value="Basic2">Basic 2</option>
-          <option value="Basic3">Basic 3</option>
-          <option value="Basic4">Basic 4</option>
-          <option value="Basic5">Basic 5</option>
-          <option value="Basic6">Basic 6</option>
-          <option value="JSS1">JSS 1</option>
-          <option value="JSS2">JSS 2</option>
-          <option value="JSS3">JSS 3</option>
-          <option value="SSS1">SSS 1</option>
-          <option value="SSS2">SSS 2</option>
-          <option value="SSS3">SSS 3</option>
-        </select>
+<div class="container">
+
+  <header>
+    <h1>🏫 Class Management</h1>
+    <p class="page-subtitle">Manage class rosters, assign students, and open timetable or attendance tools.</p>
+  </header>
+
+  <div id="gridView" class="class-grid"></div>
+
+  <div id="detailView" class="class-detail">
+
+    <div class="detail-header">
+      <h2 id="detailClassName">Basic 1</h2>
+    </div>
+
+    <div class="search-box">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Search by name or ID..."
+        onkeyup="handleSearchInput()"
+      />
+      <button onclick="searchStudents()">🔍 Search</button>
+    </div>
+
+    <div id="searchResults" class="student-list">
+      <div class="empty-state">
+        Type a student's name or ID to update or assign a class
       </div>
-      <div>
-        <label for="groupName">Select Group:</label>
-        <select id="groupName">
-          <option value="A">Group A</option>
-          <option value="B">Group B</option>
-          <option value="C">Group C</option>
-        </select>
+    </div>
+
+    <div class="section-title">📋 Assigned Students</div>
+
+    <div id="assignedList" class="student-list">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        Loading roster...
       </div>
     </div>
 
-    <div class="timetable-wrapper">
-      <div class="timetable" id="timetableGrid"></div>
-    </div>
-
-    <!-- ✅ Updated Action Buttons: Save → Export → Manage Classes → Attendance → Back -->
-    <div class="action-buttons">
-      <button class="save-btn" onclick="manualSaveTimetable()">💾 Save Timetable</button>
-      <button class="export-btn" onclick="exportPDF()">📄 Export as PDF</button>
-      <a href="classes.html" class="manage-classes-btn">🏫 Manage Classes</a>
-      <a href="attendance.html" class="attendance-btn">📋 Attendance</a>
-      <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
-    </div>
   </div>
 
-  <footer>
-    © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br />
-    <a href="terms.html">Terms</a> • 
-    <a href="privacy.html">Privacy</a> • 
-    <a href="refund-policy.html">Refund Policy</a>
-  </footer>
+  <div class="nav-actions">
+    <a href="timetable.html" class="nav-btn nav-timetable">📅 Create Timetable</a>
+    <a href="attendance.html" class="nav-btn nav-attendance">📋 Attendance</a>
+    <button type="button" class="nav-btn nav-back" id="smartBackBtn">← Back</button>
+  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</div>
 
-  <script>
-const API_BASE = "https://api.gradely.info";
+<footer>
+  © 2026 <strong>gradely.info</strong>. All rights reserved. | Powered by RIS<br />
+  <a href="terms.html">Terms</a> •
+  <a href="privacy.html">Privacy</a> •
+  <a href="refund-policy.html">Refund Policy</a>
+</footer>
+
+<script>
+const API = "https://api.gradely.info/api/classes";
+
+const CLASSES = [
+  { id: 'basic1', name: 'Basic 1' },
+  { id: 'basic2', name: 'Basic 2' },
+  { id: 'basic3', name: 'Basic 3' },
+  { id: 'basic4', name: 'Basic 4' },
+  { id: 'basic5', name: 'Basic 5' },
+  { id: 'basic6', name: 'Basic 6' },
+  { id: 'jss1', name: 'JSS 1' },
+  { id: 'jss2', name: 'JSS 2' },
+  { id: 'jss3', name: 'JSS 3' },
+  { id: 'sss1', name: 'SSS 1' },
+  { id: 'sss2', name: 'SSS 2' },
+  { id: 'sss3', name: 'SSS 3' }
+];
+
+let currentClass = null;
+let searchTimeout = null;
 
 function getToken() {
   const token =
@@ -312,7 +461,7 @@ function getAuthHeaders(extraHeaders = {}) {
   };
 }
 
-async function authFetch(url, options = {}) {
+async function authFetch(url, opts = {}) {
   const token = getToken();
 
   if (!token) {
@@ -321,10 +470,10 @@ async function authFetch(url, options = {}) {
   }
 
   const res = await fetch(url, {
-    ...options,
+    ...opts,
     headers: {
       ...getAuthHeaders(),
-      ...(options.headers || {})
+      ...(opts.headers || {})
     }
   });
 
@@ -334,279 +483,282 @@ async function authFetch(url, options = {}) {
   }
 
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
+    let errorMessage = `HTTP ${res.status}`;
+
+    try {
+      const errorData = await res.json();
+      if (errorData.message) errorMessage = errorData.message;
+    } catch(e) {}
+
+    throw new Error(errorMessage);
   }
 
-  return res;
+  return res.json();
 }
 
-function showToast(message) {
-  const toast = document.createElement("div");
-  toast.textContent = message;
-
-  Object.assign(toast.style, {
-    position: "fixed",
-    bottom: "20px",
-    right: "20px",
-    background: "#27ae60",
-    color: "#fff",
-    padding: "12px 24px",
-    borderRadius: "8px",
-    fontSize: "0.95rem",
-    fontWeight: "600",
-    zIndex: "9999",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-    opacity: "0",
-    transition: "opacity 0.3s ease"
-  });
-
-  document.body.appendChild(toast);
-  requestAnimationFrame(() => toast.style.opacity = "1");
-
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    setTimeout(() => toast.remove(), 300);
-  }, 2000);
-}
-
-const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-
-let times = [
-  "08:00 - 09:00",
-  "09:00 - 10:00",
-  "10:00 - 11:00",
-  "11:00 - 12:00",
-  "12:00 - 13:00",
-  "13:00 - 14:00"
-];
-
-let timetableData = {};
-const timetableGrid = document.getElementById("timetableGrid");
-
-function initTimetableData(className, groupName) {
-  if (!timetableData[className]) timetableData[className] = {};
-
-  if (!timetableData[className][groupName]) {
-    timetableData[className][groupName] = {};
-
-    days.forEach(day => {
-      timetableData[className][groupName][day] = times.map(() => ({
-        subject: "-",
-        teacher: "-"
-      }));
-    });
-  }
-}
-
-async function saveTimetable(className, groupName) {
-  try {
-    const res = await authFetch(`${API_BASE}/api/classes/timetable`, {
-      method: "POST",
-      body: JSON.stringify({
-        class_name: className,
-        group_name: groupName,
-        timetable: timetableData[className][groupName]
-      })
-    });
-
-    if (!res) return;
-
-    const result = await res.json();
-
-    if (result.success) {
-      console.log("✅ Timetable saved successfully");
-      showToast("✅ Timetable saved!");
-    } else {
-      console.error("❌ Failed to save timetable:", result.message);
-      alert("⚠️ Failed to save timetable: " + result.message);
-    }
-  } catch (err) {
-    console.error("❌ Network error saving timetable:", err);
-    alert("⚠️ Network error. Please check your connection and try again.");
-  }
-}
-
-function manualSaveTimetable() {
-  const className = document.getElementById("className").value;
-  const groupName = document.getElementById("groupName").value;
-
-  saveTimetable(className, groupName);
-}
-
-async function loadTimetable(className, groupName) {
-  try {
-    const res = await authFetch(
-      `${API_BASE}/api/classes/timetable?class_name=${encodeURIComponent(className)}&group_name=${encodeURIComponent(groupName)}`,
-      { method: "GET" }
-    );
-
-    if (!res) return;
-
-    const result = await res.json();
-
-    if (result.success && result.data) {
-      if (!timetableData[className]) timetableData[className] = {};
-      timetableData[className][groupName] = result.data;
-      console.log("✅ Timetable loaded from backend");
-    }
-  } catch (err) {
-    console.warn("⚠️ Could not load timetable from backend:", err.message);
-  }
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener('DOMContentLoaded', () => {
   if (!getToken()) {
-    alert("⚠️ Session expired. Please log in again.");
     redirectToLogin();
     return;
   }
 
-  const className = document.getElementById("className").value;
-  const groupName = document.getElementById("groupName").value;
+  renderGrid();
 
-  await loadTimetable(className, groupName);
-  renderTimetable();
+  document.getElementById('smartBackBtn').addEventListener('click', () => {
+    if (currentClass) {
+      showGrid();
+    } else {
+      window.location.href = 'dashboard.html';
+    }
+  });
 });
 
-function renderTimetable() {
-  const className = document.getElementById("className").value;
-  const groupName = document.getElementById("groupName").value;
+function renderGrid() {
+  const grid = document.getElementById('gridView');
 
-  initTimetableData(className, groupName);
+  grid.innerHTML = CLASSES.map(c => `
+    <div class="class-tile" onclick="openClass('${c.id}', '${c.name}')">
+      <div class="name">${c.name}</div>
+      <div class="count" id="count-${c.id}">Loading...</div>
+    </div>
+  `).join('');
 
-  const gridData = timetableData[className][groupName];
+  loadAllCounts();
+}
 
-  timetableGrid.innerHTML = "";
-
-  const headerCell = document.createElement("div");
-  headerCell.classList.add("header");
-  headerCell.textContent = "Time / Day";
-  timetableGrid.appendChild(headerCell);
-
-  days.forEach(day => {
-    const header = document.createElement("div");
-    header.classList.add("header");
-    header.textContent = day;
-    timetableGrid.appendChild(header);
-  });
-
-  times.forEach((time, rowIndex) => {
-    const timeDiv = document.createElement("div");
-    timeDiv.classList.add("time-slot");
-    timeDiv.textContent = time;
-
-    timeDiv.addEventListener("dblclick", () => {
-      const newTime = prompt("Edit time slot:", times[rowIndex]) || times[rowIndex];
-      times[rowIndex] = newTime;
-      renderTimetable();
-    });
-
-    timetableGrid.appendChild(timeDiv);
-
-    days.forEach(day => {
-      const cell = document.createElement("div");
-      cell.classList.add("editable");
-
-      const sub = gridData[day][rowIndex].subject;
-      const teach = gridData[day][rowIndex].teacher;
-
-      cell.innerHTML = `<strong>${sub}</strong><br><em>${teach}</em>`;
-
-      cell.addEventListener("dblclick", () => {
-        const newSub = prompt("Enter subject:", gridData[day][rowIndex].subject) || "-";
-        const newTeach = prompt("Enter teacher:", gridData[day][rowIndex].teacher) || "-";
-
-        gridData[day][rowIndex].subject = newSub;
-        gridData[day][rowIndex].teacher = newTeach;
-
-        renderTimetable();
-
-        if (window.saveTimetableTimeout) {
-          clearTimeout(window.saveTimetableTimeout);
-        }
-
-        window.saveTimetableTimeout = setTimeout(() => {
-          saveTimetable(className, groupName);
-        }, 500);
-      });
-
-      timetableGrid.appendChild(cell);
-    });
+async function loadAllCounts() {
+  CLASSES.forEach(c => {
+    loadClassCount(c.id);
   });
 }
 
-document.getElementById("className").addEventListener("change", async (e) => {
-  const className = e.target.value;
-  const groupName = document.getElementById("groupName").value;
+async function loadClassCount(classId) {
+  try {
+    const res = await authFetch(`${API}/${classId}/students`);
+    if (!res) return;
 
-  await loadTimetable(className, groupName);
-  renderTimetable();
-});
+    const count = Array.isArray(res.data) ? res.data.length : 0;
+    const el = document.getElementById(`count-${classId}`);
 
-document.getElementById("groupName").addEventListener("change", async (e) => {
-  const className = document.getElementById("className").value;
-  const groupName = e.target.value;
+    if (el) {
+      el.textContent = `${count} student${count !== 1 ? 's' : ''}`;
+    }
+  } catch (err) {
+    const el = document.getElementById(`count-${classId}`);
+    if (el) el.textContent = '0 students';
+  }
+}
 
-  await loadTimetable(className, groupName);
-  renderTimetable();
-});
+function openClass(classId, className) {
+  currentClass = {
+    id: classId,
+    name: className
+  };
 
-function exportPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("p", "mm", "a4");
+  document.getElementById('gridView').style.display = 'none';
+  document.getElementById('detailView').classList.add('active');
+  document.getElementById('detailClassName').textContent = className;
+  document.getElementById('searchInput').value = '';
 
-  let y = 20;
+  document.getElementById('searchResults').innerHTML = `
+    <div class="empty-state">
+      Type a student's name or ID to update or assign a class
+    </div>
+  `;
 
-  const className = document.getElementById("className").value;
-  const groupName = document.getElementById("groupName").value;
+  loadAssignedStudents(classId);
 
-  initTimetableData(className, groupName);
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
 
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text(`Timetable — ${className} ${groupName}`, 105, y, null, null, "center");
+function showGrid() {
+  currentClass = null;
+  document.getElementById('detailView').classList.remove('active');
+  document.getElementById('gridView').style.display = 'grid';
 
-  y += 10;
+  loadAllCounts();
 
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
 
-  const gridData = timetableData[className][groupName];
+async function loadAssignedStudents(classId) {
+  const list = document.getElementById('assignedList');
 
-  const table = [["Time/Day", ...days]];
+  list.innerHTML = `
+    <div class="loading-state">
+      <div class="spinner"></div>
+      Loading roster...
+    </div>
+  `;
 
-  times.forEach((time, i) => {
-    const row = [time];
+  try {
+    const res = await authFetch(`${API}/${classId}/students`);
+    if (!res) return;
 
-    days.forEach(day => {
-      const cell = gridData[day][i];
-      row.push(`${cell.subject}\n(${cell.teacher})`);
+    const students = Array.isArray(res.data) ? res.data : [];
+
+    if (students.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state">
+          No students assigned yet
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = students.map(s => `
+      <div class="student-row">
+        <div class="student-info">
+          <div class="student-name">
+            ${s.first_name || ''} ${s.last_name || ''}
+            ${s.student_group ? `<span class="group-badge">Group ${s.student_group}</span>` : ''}
+          </div>
+          <div class="student-id">${s.student_id || ''}</div>
+        </div>
+        <div class="student-actions">
+          <button class="btn-sm btn-remove" onclick="removeStudent('${s.student_id}')">
+            Remove
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (err) {
+    list.innerHTML = `
+      <div class="empty-state" style="color:var(--danger)">
+        Failed to load students.<br>
+        <small>${err.message}</small>
+      </div>
+    `;
+  }
+}
+
+function handleSearchInput() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    searchStudents();
+  }, 300);
+}
+
+async function searchStudents() {
+  if (!currentClass) return;
+
+  const query = document.getElementById('searchInput').value.trim();
+
+  if (query.length < 2) {
+    document.getElementById('searchResults').innerHTML = `
+      <div class="empty-state">
+        Type at least 2 characters
+      </div>
+    `;
+    return;
+  }
+
+  const resultsDiv = document.getElementById('searchResults');
+
+  resultsDiv.innerHTML = `
+    <div class="loading-state">
+      <div class="spinner"></div>
+      Searching...
+    </div>
+  `;
+
+  try {
+    const res = await authFetch(`${API}/students/search?q=${encodeURIComponent(query)}`);
+    if (!res) return;
+
+    const students = Array.isArray(res.data) ? res.data : [];
+
+    if (students.length === 0) {
+      resultsDiv.innerHTML = `
+        <div class="empty-state">
+          No students found
+        </div>
+      `;
+      return;
+    }
+
+    resultsDiv.innerHTML = students.map(s => `
+      <div class="student-row">
+        <div class="student-info">
+          <div class="student-name">${s.first_name || ''} ${s.last_name || ''}</div>
+          <div class="student-id">${s.student_id || ''}</div>
+        </div>
+        <div class="student-actions">
+          <button class="btn-sm btn-add" onclick="assignStudent('${s.student_id}')">
+            Assign Class
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (err) {
+    resultsDiv.innerHTML = `
+      <div class="empty-state" style="color:var(--danger)">
+        Search failed.<br>
+        <small>${err.message}</small>
+      </div>
+    `;
+  }
+}
+
+async function assignStudent(studentId) {
+  if (!currentClass) return;
+
+  const group = prompt('Assign to Group (A/B/C) or leave blank for none:', '').trim().toUpperCase();
+
+  if (group && !['A', 'B', 'C'].includes(group)) {
+    alert('Invalid group. Please enter A, B, C, or leave blank.');
+    return;
+  }
+
+  try {
+    await authFetch(`${API}/${currentClass.id}/students/${studentId}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        student_group: group || null
+      })
     });
 
-    table.push(row);
-  });
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchResults').innerHTML = `
+      <div class="empty-state">
+        Type a student's name or ID to update or assign a class
+      </div>
+    `;
 
-  doc.autoTable({
-    startY: y,
-    head: [table[0]],
-    body: table.slice(1),
-    theme: "grid",
-    styles: {
-      fontSize: 9,
-      halign: "center",
-      valign: "middle"
-    },
-    headStyles: {
-      fillColor: [108, 92, 231],
-      textColor: 255
-    }
-  });
+    loadAssignedStudents(currentClass.id);
+  } catch (err) {
+    console.error('Assign error:', err);
+    alert('Failed to assign: ' + (err.message || 'Unknown error'));
+  }
+}
 
-  doc.save(`Timetable_${className}_${groupName}.pdf`);
+async function removeStudent(studentId) {
+  if (!currentClass) return;
+
+  if (!confirm(`Remove ${studentId} from ${currentClass.name}?`)) return;
+
+  try {
+    await authFetch(`${API}/${currentClass.id}/students/${studentId}`, {
+      method: 'DELETE'
+    });
+
+    loadAssignedStudents(currentClass.id);
+  } catch (err) {
+    alert('Failed to remove: ' + err.message);
+  }
 }
 </script>
 
 <script src="js/kaima-chatbot.js"></script>
 <!-- <script src="js/session-timeout.js"></script> -->
+
 </body>
 </html>
