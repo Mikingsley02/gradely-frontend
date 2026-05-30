@@ -6,281 +6,181 @@
   <title>📦 Subscription | Gradely Info</title>
 
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+*{margin:0;padding:0;box-sizing:border-box}
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #6a11cb, #2575fc);
-      color: #fff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+body{
+  font-family:'Segoe UI',system-ui,sans-serif;
+  background:
+    radial-gradient(circle at top left,rgba(34,197,94,.22),transparent 35%),
+    radial-gradient(circle at bottom right,rgba(0,210,255,.25),transparent 35%),
+    linear-gradient(135deg,#020617,#0f172a);
+  color:#fff;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
 
-    header {
-      background: #2d046e;
-      width: 100%;
-      padding: 20px 25px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+header{
+  width:100%;
+  background:rgba(255,255,255,.1);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(255,255,255,.18);
+  padding:24px 30px;
+}
 
-    .brand {
-      font-weight: 600;
-      font-size: 1.1rem;
-    }
+.brand{
+  font-weight:900;
+  font-size:1.15rem;
+}
 
-    .container {
-      background: #fff;
-      color: #333;
-      border-radius: 16px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-      width: 90%;
-      max-width: 480px;
-      margin-top: 80px;
-      margin-bottom: 40px;
-      padding: 30px 25px;
-      text-align: center;
-    }
+.container{
+  background:rgba(255,255,255,.12);
+  backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,.22);
+  color:#fff;
+  border-radius:30px;
+  box-shadow:0 30px 90px rgba(0,0,0,.4);
+  width:92%;
+  max-width:570px;
+  margin:55px auto 40px;
+  padding:36px 30px;
+  text-align:center;
+}
 
-    h2 {
-      margin-bottom: 10px;
-      color: #2d046e;
-    }
+h2{
+  margin-bottom:10px;
+  color:#fff;
+  font-weight:900;
+}
 
-    p {
-      font-size: 0.9rem;
-      color: #555;
-      margin-bottom: 20px;
-    }
+p{
+  font-size:.92rem;
+  color:#dbeafe;
+  margin-bottom:20px;
+}
 
-    .details {
-      background: #f1f3f5;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 20px;
-      text-align: left;
-      line-height: 1.6;
-    }
+.details{
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:20px;
+  padding:18px;
+  margin-bottom:22px;
+  text-align:left;
+  line-height:1.7;
+}
 
-    .details strong {
-      color: #000;
-    }
+.details strong{color:#fff}
 
-    .btn-group {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 15px;
-    }
+.btn-group{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:15px;
+}
 
-    .btn {
-      flex: 1;
-      min-width: 120px;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.3s ease, transform 0.3s ease;
-    }
+.btn{
+  flex:1;
+  min-width:140px;
+  padding:13px 14px;
+  border:none;
+  border-radius:16px;
+  font-size:.95rem;
+  font-weight:900;
+  cursor:pointer;
+}
 
-    .btn-renew {
-      background: #00c851;
-      color: white;
-    }
+.btn-renew{background:linear-gradient(135deg,#00d2ff,#2563eb);color:white}
+.btn-cancel{background:#64748b;color:white}
+.btn-upgrade{background:linear-gradient(135deg,#22c55e,#00d2ff);color:white}
+.btn-downgrade{background:linear-gradient(135deg,#f59e0b,#ef4444);color:white}
 
-    .btn-renew:hover {
-      background: #009c3b;
-    }
+.message{
+  margin-top:15px;
+  font-size:.95rem;
+  min-height:22px;
+  font-weight:800;
+}
 
-    .btn-renew:focus,
-    .btn-renew:active {
-      outline: none !important;
-      box-shadow: none !important;
-      border-color: transparent !important;
-    }
+.error{color:#fca5a5}
+.success{color:#86efac}
 
-    .btn-cancel {
-      background: #6c757d;
-      color: white;
-    }
+.back-btn{
+  display:inline-block;
+  background:#00d2ff;
+  color:#020617;
+  padding:13px 22px;
+  border-radius:16px;
+  text-decoration:none;
+  font-weight:900;
+  margin-top:24px;
+}
 
-    .btn-cancel:hover {
-      background: #5a6268;
-    }
+footer{
+  text-align:center;
+  padding:22px 10px;
+  font-size:.82rem;
+  color:#e2e8f0;
+  background:rgba(0,0,0,.22);
+  border-top:1px solid rgba(255,255,255,.14);
+  width:100%;
+  margin-top:auto;
+}
 
-    .btn-upgrade {
-      background: #00e676;
-      color: #000;
-    }
+footer a{
+  color:#00d2ff;
+  text-decoration:none;
+  margin:0 6px;
+  font-weight:900;
+}
 
-    .btn-upgrade:hover {
-      background: #00c853;
-    }
+.upgrade-success-toast{
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:#22c55e;
+  color:white;
+  padding:15px 25px;
+  border-radius:14px;
+  box-shadow:0 12px 35px rgba(0,0,0,.28);
+  z-index:9999;
+  font-weight:800;
+}
 
-    .btn-downgrade {
-      background: #ff9800;
-      color: white;
-    }
+#autorenewSection{
+  margin-top:28px;
+  padding:24px;
+  background:rgba(34,197,94,.12);
+  border:1px solid rgba(34,197,94,.45);
+  border-radius:22px;
+  text-align:center;
+}
 
-    .btn-downgrade:hover {
-      background: #f57c00;
-    }
+#autorenewSection h3{color:#fff!important}
+.autorenew-icon{font-size:2.4rem;margin-bottom:10px}
+.autorenew-note{font-size:.85rem;color:#dbeafe;margin-top:12px;line-height:1.5}
+.autorenew-note strong{color:#00d2ff}
 
-    .message {
-      margin-top: 15px;
-      font-size: 0.95rem;
-      text-align: center;
-      min-height: 22px;
-    }
+.spinner{
+  width:32px;height:32px;
+  border:3px solid rgba(255,255,255,.22);
+  border-top:3px solid #00d2ff;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:15px auto;
+}
 
-    .error {
-      color: #e74c3c;
-    }
+@keyframes spin{to{transform:rotate(360deg)}}
 
-    .success {
-      color: #27ae60;
-    }
-
-    .back-btn {
-      display: inline-block;
-      background: #0c2461;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 600;
-      margin-top: 20px;
-      transition: all 0.3s ease;
-    }
-
-    .back-btn:hover {
-      background: #1e3799;
-      transform: scale(1.05);
-    }
-
-    footer {
-      text-align: center;
-      padding: 25px;
-      font-size: 0.9rem;
-      color: #eee;
-      background: rgba(0, 0, 0, 0.1);
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
-      width: 100%;
-      margin-top: auto;
-    }
-
-    footer a {
-      color: #00d2ff;
-      text-decoration: none;
-      margin: 0 6px;
-    }
-
-    .upgrade-success-toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #22c55e;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      z-index: 9999;
-      font-weight: 500;
-      animation: slideIn 0.3s ease;
-    }
-
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-
-    @keyframes slideOut {
-      from { transform: translateX(0); opacity: 1; }
-      to { transform: translateX(100%); opacity: 0; }
-    }
-
-    #autorenewSection {
-      margin-top: 30px;
-      padding: 25px;
-      background: rgba(0, 230, 118, 0.08);
-      border: 2px solid #00e676;
-      border-radius: 12px;
-      text-align: center;
-      animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .autorenew-icon {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-      color: #4361ee;
-    }
-
-    .autorenew-note {
-      font-size: 0.85rem;
-      color: #64748b;
-      margin-top: 12px;
-      line-height: 1.5;
-    }
-
-    .autorenew-note strong {
-      color: #4361ee;
-    }
-
-    .spinner {
-      width: 30px;
-      height: 30px;
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid #4361ee;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 15px auto;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @media (max-width: 600px) {
-      .container {
-        width: 94%;
-        margin-top: 40px;
-        padding: 25px 18px;
-      }
-
-      .btn-group {
-        flex-direction: column;
-      }
-
-      .btn {
-        width: 100%;
-      }
-
-      header {
-        padding: 18px;
-      }
-
-      .brand {
-        font-size: 1rem;
-      }
-
-      footer {
-        font-size: 0.82rem;
-        padding: 18px 10px;
-      }
-    }
-  </style>
+@media(max-width:650px){
+  header{text-align:center;padding:18px 12px}
+  .container{width:94%;margin-top:32px;padding:28px 16px;border-radius:24px}
+  .btn-group{flex-direction:column}
+  .btn{width:100%;font-size:16px}
+  .back-btn{width:100%}
+  footer{font-size:.74rem}
+}
+</style>
 </head>
 
 <body>
@@ -328,9 +228,16 @@
       </div>
 
       <div id="autorenewInactive" style="display:none;">
-        <p style="color:#555; font-size:0.95rem; margin-bottom:15px;">
-          Auto-renewal is not enabled. Set it up to avoid service interruptions.
-        </p>
+  <p style="
+    color:#e6d9d9;
+    font-size:1rem;
+    font-weight:600;
+    margin-bottom:15px;
+    line-height:1.6;
+  ">
+    Auto-renewal is not enabled. Set it up to avoid service interruptions.
+  </p>
+  
         <button class="btn btn-upgrade" onclick="enableAutoRenewal()" style="width:100%; margin-bottom:10px;">
           ✨ Enable Auto-Renewal
         </button>
