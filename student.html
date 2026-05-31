@@ -234,11 +234,60 @@
   
   <script>
     const backendUrl = "https://api.gradely.info";
-    let chartInstance = null;
-    let currentData = null;
+let chartInstance = null;
+let currentData = null;
+
+function getStudentToken() {
+  const token =
+    localStorage.getItem("student_token") ||
+    sessionStorage.getItem("student_token") ||
+    localStorage.getItem("gradely_token") ||
+    sessionStorage.getItem("gradely_token");
+
+  if (!token || token === "null" || token === "undefined" || token.trim() === "") {
+    return null;
+  }
+
+  return token;
+}
+
+function getStudentId() {
+  return (
+    localStorage.getItem("studentId") ||
+    sessionStorage.getItem("studentId") ||
+    localStorage.getItem("student_id") ||
+    sessionStorage.getItem("student_id")
+  );
+}
+
+function getStudentAuthHeaders() {
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getStudentToken()}`
+  };
+}
+
+function logout() {
+  localStorage.removeItem("student_token");
+  sessionStorage.removeItem("student_token");
+  localStorage.removeItem("studentId");
+  sessionStorage.removeItem("studentId");
+  localStorage.removeItem("student_id");
+  sessionStorage.removeItem("student_id");
+
+  window.location.href = "index.html";
+}
 
     document.addEventListener("DOMContentLoaded", async () => {
-      const studentId = localStorage.getItem("studentId");
+
+      const studentId = getStudentId();
+const token = getStudentToken();
+
+if (!token) {
+  alert("❌ Your session has expired. Please log in again.");
+  logout();
+  return;
+}
 
       if (!studentId) {
         alert("❌ You are not logged in. Please log in first.");
@@ -247,7 +296,10 @@
       }
 
       try {
-        const response = await fetch(`${backendUrl}/api/result/student/${studentId}`);
+const response = await fetch(`${backendUrl}/api/result/student/${studentId}`, {
+  method: "GET",
+  headers: getStudentAuthHeaders()
+});
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
@@ -402,10 +454,7 @@
       });
     }
 
-    function logout() {
-      localStorage.clear();
-      window.location.href = "index.html";
-    }
+    
 
     async function downloadPDF() {
       if (!currentData) {
@@ -531,11 +580,10 @@
 
   try {
     const res = await fetch(`${backendUrl}/api/auth/change-password`, {
-      method: "POST",
-      credentials: "include", 
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ studentId, currentPassword, newPassword }),
-    });
+  method: "POST",
+  headers: getStudentAuthHeaders(),
+  body: JSON.stringify({ studentId, currentPassword, newPassword }),
+});
 
     const text = await res.text();
     console.log("SERVER RESPONSE:", text);
@@ -617,8 +665,9 @@ async function loadStudentAttendance() {
   
   try {
     const res = await fetch(`${backendUrl}/api/attendance/student/${studentId}`, {
-      credentials: 'include'
-    });
+  method: "GET",
+  headers: getStudentAuthHeaders()
+});
     
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     
@@ -807,8 +856,7 @@ function checkAndCelebrate(results) {
 
 
 <script src="js/kaima-chatbot.js"></script>
-<script src="js/session-timeout.js"></script>
-
+<!-- <script src="js/session-timeout.js"></script> -->
 
 <script>
   document.querySelectorAll(".currentYear").forEach(el => {
