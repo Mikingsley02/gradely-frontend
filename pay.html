@@ -281,90 +281,62 @@
 
   
  <script>
-// ======================================================
-// ✅ API BASE
-// ======================================================
-
 const API_BASE = window.location.hostname.includes("localhost")
   ? "http://localhost:5000"
   : "https://api.gradely.info";
 
-// ======================================================
-// ✅ TOKEN HELPERS
-// ======================================================
+const params = new URLSearchParams(window.location.search);
+const reference = params.get("reference");
+const isNewRegistration = params.get("new") === "true";
+const isRenewal = params.get("renew") === "true" || params.get("is_renewal") === "true";
+const isReactivate = params.get("reactivate") === "true";
 
 function getToken() {
-  const sessionToken = sessionStorage.getItem("gradely_token");
-  const localToken = localStorage.getItem("gradely_token");
+  const token =
+    sessionStorage.getItem("gradely_token") ||
+    localStorage.getItem("gradely_token");
 
-  const token = sessionToken || localToken;
-
-  if (
-    !token ||
-    token === "undefined" ||
-    token === "null" ||
-    token.trim() === ""
-  ) {
+  if (!token || token === "null" || token === "undefined" || token.trim() === "") {
     return null;
   }
 
   return token;
 }
 
+function getJwtPayload() {
+  const token = getToken();
+  if (!token) return null;
+
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch {
+    return null;
+  }
+}
+
+function isTokenExpired() {
+  const payload = getJwtPayload();
+  if (!payload || !payload.exp) return true;
+  return Date.now() >= payload.exp * 1000;
+}
+
 function clearAuth() {
   sessionStorage.removeItem("gradely_token");
   sessionStorage.removeItem("school_id");
   sessionStorage.removeItem("admin_id");
+  sessionStorage.removeItem("adminId");
 
   localStorage.removeItem("gradely_token");
   localStorage.removeItem("school_id");
   localStorage.removeItem("admin_id");
+  localStorage.removeItem("adminId");
 }
 
 function redirectToLogin(message = "Session expired. Please login again.") {
   alert(`⚠️ ${message}`);
-
   clearAuth();
-
   window.location.href = "admin-login.html";
 }
-
-// ======================================================
-// ✅ JWT EXPIRY CHECK
-// ======================================================
-
-function isTokenExpired(token) {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-
-    if (!payload.exp) return true;
-
-    return Date.now() >= payload.exp * 1000;
-  } catch (err) {
-    console.error("❌ Invalid JWT:", err);
-    return true;
-  }
-}
-
-function isLoggedIn() {
-  const token = getToken();
-
-  if (!token) return false;
-
-  if (isTokenExpired(token)) {
-    console.warn("⚠️ JWT expired");
-
-    clearAuth();
-
-    return false;
-  }
-
-  return true;
-}
-
-// ======================================================
-// ✅ AUTH HEADERS
-// ======================================================
 
 function getAuthHeaders(extraHeaders = {}) {
   const token = getToken();
@@ -381,65 +353,31 @@ function getAuthHeaders(extraHeaders = {}) {
   return headers;
 }
 
-// ======================================================
-// ✅ UNIVERSAL AUTH FETCH
-// ======================================================
-
-async function authFetch(url, options = {}) {
+async function smartFetch(url, options = {}, requireAuth = true) {
   const token = getToken();
 
-  if (!token) {
-    redirectToLogin("No authentication token found.");
-    return null;
-  }
-
-  if (isTokenExpired(token)) {
-    redirectToLogin("Your login session expired.");
-    return null;
-  }
-
-  const finalOptions = {
-    ...options,
-    headers: getAuthHeaders(options.headers || {})
-  };
-
-  try {
-    const res = await fetch(url, finalOptions);
-
-    // ✅ Auto logout on unauthorized
-    if (res.status === 401) {
-      console.warn("⚠️ Unauthorized request");
-
-      redirectToLogin("Authentication failed.");
+  if (requireAuth) {
+    if (!token || isTokenExpired()) {
+      redirectToLogin();
       return null;
     }
-
-    return res;
-  } catch (err) {
-    console.error("❌ Network/Auth fetch error:", err);
-    throw err;
   }
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...(options.headers || {})
+    }
+  });
+
+  if (res.status === 401 && requireAuth) {
+    redirectToLogin("Authentication failed.");
+    return null;
+  }
+
+  return res;
 }
-
-// ======================================================
-// ✅ EARLY AUTH CHECK
-// ======================================================
-
-if (!isLoggedIn()) {
-  redirectToLogin();
-}
-
-// ======================================================
-// ✅ PAYMENT PAGE LOGIC (Updated to use authFetch)
-// ======================================================
-
-console.log("=== PAY.HTML INIT ===");
-console.log("💣 PAY.HTML SCRIPT LOADED AT:", new Date().toISOString());
-console.log("💣 URL:", window.location.href);
-console.log("💣 URLSearchParams:", Object.fromEntries(new URLSearchParams(window.location.search)));
-
-const params = new URLSearchParams(window.location.search);
-const isPaystackCallback = params.get("reference");
 
 let plan =
   params.get("to_plan") ||
@@ -447,274 +385,252 @@ let plan =
   localStorage.getItem("selected_plan") ||
   localStorage.getItem("plan");
 
-if (plan) {
-  plan = plan.toLowerCase().trim();
-}
+if (plan) plan = plan.toLowerCase().trim();
 
-// ✅ ONLY validate plan BEFORE payment
-if (
-  !isPaystackCallback &&
-  (!plan || !["basic", "pro"].includes(plan))
-) {
-  console.warn("⚠️ Invalid/missing plan:", { plan });
+if (!reference && (!plan || !["basic", "pro"].includes(plan))) {
   alert("Invalid or missing plan selection.");
   window.location.href = "plan-comparison.html";
   throw new Error("No valid plan selected");
 }
 
-console.log("📤 Plan ready:", { plan });
+const payload = getJwtPayload();
 
-// ✅ Get school_id from JWT payload (preferred) or fallback to storage
-const token = getToken();
-let school_id = null;
+let school_id =
+  payload?.school_id ||
+  params.get("school_id") ||
+  localStorage.getItem("school_id") ||
+  sessionStorage.getItem("school_id");
 
-if (token) {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    school_id = payload.school_id;
-    console.log("✅ school_id from JWT:", school_id);
-  } catch (err) {
-    console.warn("⚠️ Could not parse JWT for school_id:", err);
-  }
-}
+let admin_id =
+  payload?.admin_id ||
+  params.get("admin_id") ||
+  localStorage.getItem("admin_id") ||
+  sessionStorage.getItem("admin_id") ||
+  sessionStorage.getItem("adminId");
 
-// Fallback to storage if JWT didn't have school_id
-if (!school_id) {
-  school_id = params.get("school_id") 
-    || localStorage.getItem("school_id") 
-    || sessionStorage.getItem("school_id");
-  console.log("✅ school_id from fallback:", school_id);
-}
+let customerEmail =
+  params.get("email") ||
+  localStorage.getItem("email") ||
+  sessionStorage.getItem("email") ||
+  localStorage.getItem("school_email") ||
+  sessionStorage.getItem("school_email") ||
+  "";
 
-const admin_id = params.get("admin_id") 
-  || localStorage.getItem("admin_id") 
-  || sessionStorage.getItem("admin_id");
-
-// ✅ CRITICAL FIX #1: Prioritize URL email parameter (from registration flow)
-let customerEmail = params.get("email")                    // URL param (MOST RELIABLE)
-                || localStorage.getItem("email")           // localStorage
-                || sessionStorage.getItem("email")         // sessionStorage
-                || localStorage.getItem("school_email")    // Fallback
-                || sessionStorage.getItem("school_email")  // Fallback
-                || '';
-
-if (!school_id) {
-  alert("Session expired. Please return to subscription page.");
-  window.location.href = "admin-login.html";
+if (!school_id && !reference) {
+  alert("School information missing. Please return to registration or subscription page.");
+  window.location.href = isNewRegistration ? "register-school.html" : "subscription.html";
   throw new Error("No school_id found");
 }
 
-const PLAN_NAMES = { basic: 'Basic Plan', pro: 'Professional Plan' };
-const PLAN_PRICES = { basic: '₦83,900', pro: '₦89,700' };
+if (school_id) {
+  localStorage.setItem("school_id", school_id);
+}
 
-document.getElementById('planName').textContent = PLAN_NAMES[plan];
-document.getElementById('planPrice').textContent = PLAN_PRICES[plan];
+if (admin_id) {
+  localStorage.setItem("admin_id", admin_id);
+}
 
-// ✅ CRITICAL FIX #2: Email recovery with multiple fallbacks
+if (plan) {
+  localStorage.setItem("plan", plan);
+}
+
+if (customerEmail) {
+  localStorage.setItem("email", customerEmail);
+}
+
+const PLAN_NAMES = {
+  basic: "Basic Plan",
+  pro: "Professional Plan"
+};
+
+const PLAN_PRICES = {
+  basic: "₦83,900",
+  pro: "₦89,700"
+};
+
+if (plan && document.getElementById("planName")) {
+  document.getElementById("planName").textContent = PLAN_NAMES[plan];
+  document.getElementById("planPrice").textContent = PLAN_PRICES[plan];
+}
+
 async function recoverEmail(schoolId) {
-  console.log("🔍 Recovering email for school:", schoolId);
-  
-  // Fallback 1: Try /api/auth/me (JWT-based now)
-  try {
-    const res = await authFetch(`${API_BASE}/api/auth/me`);
-    if (!res) return null; // authFetch handled redirect/logout
-    
-    const data = await res.json();
-    if (data?.email && data.email.includes('@')) {
-      console.log("✅ Email recovered from /api/auth/me:", data.email);
-      return data.email;
-    }
-  } catch (err) {
-    console.warn("⚠️ /api/auth/me failed:", err.message);
+  if (customerEmail && customerEmail.includes("@")) return customerEmail;
+
+  if (getToken()) {
+    try {
+      const res = await smartFetch(`${API_BASE}/api/auth/me`, {}, true);
+      if (res && res.ok) {
+        const data = await res.json();
+        if (data?.email && data.email.includes("@")) return data.email;
+      }
+    } catch {}
   }
-  
-  // Fallback 2: Registration flow storage
-  const regEmail = localStorage.getItem("registration_email") 
-                || sessionStorage.getItem("registration_email");
-  if (regEmail && regEmail.includes('@')) {
-    console.log("✅ Email recovered from registration storage:", regEmail);
-    return regEmail;
-  }
-  
-  // Fallback 3: Generate valid placeholder email (Paystack accepts any valid format)
-  const placeholderEmail = `${schoolId.toLowerCase().replace(/[^a-z0-9]/gi, '')}@gradely.info`;
-  console.warn("⚠️ Using placeholder email:", placeholderEmail);
-  return placeholderEmail;
+
+  const storedEmail =
+    localStorage.getItem("registration_email") ||
+    sessionStorage.getItem("registration_email") ||
+    localStorage.getItem("email") ||
+    sessionStorage.getItem("email");
+
+  if (storedEmail && storedEmail.includes("@")) return storedEmail;
+
+  return `${String(schoolId).toLowerCase().replace(/[^a-z0-9]/g, "")}@gradely.info`;
 }
 
 async function loadPaystackKey() {
-  try {
-    // ✅ UPDATED: Use authFetch, no school_id query param
-    const res = await authFetch(`${API_BASE}/api/config/paystack-key`);
-    if (!res) return null; // authFetch handled redirect/logout
-    
-    const data = await res.json();
-    
-    if (data.success && data.data?.paystackPublicKey) {
-      console.log("✅ Paystack public key loaded");
-      return data.data.paystackPublicKey;
-    } else {
-      throw new Error(data.message || "Invalid config response");
-    }
-  } catch (err) {
-    console.error("❌ Failed to load Paystack key:", err);
+  const res = await smartFetch(`${API_BASE}/api/config/paystack-key`, {}, !!getToken());
+
+  if (!res || !res.ok) {
     throw new Error("Payment configuration not available.");
   }
+
+  const data = await res.json();
+
+  if (data.success && data.data?.paystackPublicKey) {
+    return data.data.paystackPublicKey;
+  }
+
+  throw new Error(data.message || "Invalid payment configuration.");
 }
 
 let isProcessingPayment = false;
 
 document.getElementById("paystackBtn").onclick = async () => {
-  if (isProcessingPayment) {
-    console.log("⚠️ Payment already in progress");
-    return;
-  }
+  if (isProcessingPayment) return;
+
   isProcessingPayment = true;
-  
-  const btn = document.getElementById('paystackBtn');
-  
-  // ✅ CRITICAL FIX #3: Ensure valid email BEFORE payment
-  if (!customerEmail || !customerEmail.includes('@')) {
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying account...';
-    btn.disabled = true;
-    
-    console.log("🔍 Email missing - recovering for school:", school_id);
-    customerEmail = await recoverEmail(school_id);
-    
-    // Save recovered email
-    localStorage.setItem("email", customerEmail);
-    sessionStorage.setItem("email", customerEmail);
-    console.log("✅ Using email:", customerEmail);
-  }
-  
+
+  const btn = document.getElementById("paystackBtn");
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading payment...';
   btn.disabled = true;
 
   try {
-    const paystackKey = await loadPaystackKey();
-    if (!paystackKey) throw new Error("Paystack key not loaded");
+    customerEmail = await recoverEmail(school_id);
 
-    // ✅ UPDATED: Use authFetch, no school_id in body (backend gets from JWT)
-    const response = await authFetch(`${API_BASE}/api/subscription/upgrade`, {
-      method: 'POST',
-      body: JSON.stringify({ plan: plan }) // ✅ school_id from JWT, not body
-    });
+    localStorage.setItem("email", customerEmail);
+    sessionStorage.setItem("email", customerEmail);
 
-    if (!response) return; // authFetch handled redirect/logout
+    await loadPaystackKey();
 
-    if (!response.ok) {
-      throw new Error(`Payment init failed: ${response.status}`);
+    const endpoint = getToken()
+      ? `${API_BASE}/api/subscription/upgrade`
+      : `${API_BASE}/api/subscription/initialize`;
+
+    const body = getToken()
+      ? { plan }
+      : {
+          school_id,
+          admin_id,
+          email: customerEmail,
+          plan,
+          is_new_registration: isNewRegistration
+        };
+
+    const res = await smartFetch(endpoint, {
+      method: "POST",
+      body: JSON.stringify(body)
+    }, !!getToken());
+
+    if (!res) return;
+
+    const result = await res.json();
+
+    if (!res.ok || !result.success) {
+      throw new Error(result.message || "Payment initialization failed.");
     }
 
-    const result = await response.json();
-    if (!result.success) {
-      throw new Error(result.message || 'Payment initialization failed');
-    }
-
-    // ✅ Backend already initialized Paystack correctly
     if (!result.authorization_url) {
-      throw new Error('Missing Paystack authorization URL');
+      throw new Error("Missing Paystack authorization URL.");
     }
 
-    console.log("🚀 Redirecting to Paystack:", result.authorization_url);
+    localStorage.setItem("payment_pending", "true");
+    localStorage.setItem("school_id", school_id);
+    localStorage.setItem("admin_id", admin_id || "");
+    localStorage.setItem("plan", plan);
+    localStorage.setItem("email", customerEmail);
 
-    // Save session data before redirect
-    localStorage.setItem('school_id', school_id);
-    localStorage.setItem('plan', plan);
-
-    if (customerEmail) {
-      localStorage.setItem('email', customerEmail);
-    }
-
-    // ✅ Redirect directly to Paystack hosted checkout
     window.location.href = result.authorization_url;
 
   } catch (error) {
     console.error("❌ Payment error:", error);
+    alert(`Payment error: ${error.message}`);
     btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Try Again';
     btn.disabled = false;
     isProcessingPayment = false;
-    alert(`Payment error: ${error.message}`);
   }
 };
 
-// ✅ Handle Paystack callback after payment (SINGLE HANDLER)
-document.addEventListener('DOMContentLoaded', async () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const reference = urlParams.get('reference');
-  
-  if (reference) {
-    console.log('🔍 Paystack callback detected:', { reference });
-    
-    // Show loading state
-    const btn = document.getElementById('paystackBtn');
-    if (btn) {
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying payment...';
-      btn.disabled = true;
-    }
-    
-    try {
-      console.log("🚀 CALLING BACKEND VERIFY:", {
+document.addEventListener("DOMContentLoaded", async () => {
+  document.querySelectorAll(".currentYear").forEach(el => {
+    el.textContent = new Date().getFullYear();
+  });
+
+  if (!reference) return;
+
+  const btn = document.getElementById("paystackBtn");
+
+  if (btn) {
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying payment...';
+    btn.disabled = true;
+  }
+
+  try {
+    const verifyEndpoint = getToken()
+      ? `${API_BASE}/api/subscription/upgrade/complete`
+      : `${API_BASE}/api/subscription/verify-public`;
+
+    const res = await smartFetch(verifyEndpoint, {
+      method: "POST",
+      body: JSON.stringify({
+        payment_reference: reference,
         reference,
-        endpoint: `${API_BASE}/api/subscription/upgrade/complete`
-      });
+        school_id: localStorage.getItem("school_id") || school_id,
+        admin_id: localStorage.getItem("admin_id") || admin_id,
+        plan: localStorage.getItem("plan") || plan,
+        email: localStorage.getItem("email") || customerEmail
+      })
+    }, !!getToken());
 
-      // ✅ UPDATED: Use authFetch, no school_id in body (backend gets from JWT)
-      const res = await authFetch(`${API_BASE}/api/subscription/upgrade/complete`, {
-        method: 'POST',
-        body: JSON.stringify({ payment_reference: reference }) // ✅ school_id from JWT
-      });
-      
-      if (!res) return; // authFetch handled redirect/logout
-      
-      console.log("📥 BACKEND RESPONSE STATUS:", res.status);
-      const result = await res.json();
-      console.log("📥 BACKEND RESPONSE BODY:", result);
-      
-      if (result.success) {
-        // ✅ Payment verified — redirect to dashboard
-        const schoolId = localStorage.getItem('school_id');
-        const plan = localStorage.getItem('plan');
-        
-        // Clean up
-        localStorage.removeItem('payment_pending');
-        
-        // Save token if provided
-        if (result.token) {
-          localStorage.setItem("gradely_token", result.token);
-        }
+    if (!res) return;
 
-        // Use backend redirect_url if provided, otherwise fallback
-        const redirectUrl = result.redirect_url || `dashboard.html?welcome=true&plan=${plan}&school_id=${schoolId}`;
-        window.location.href = redirectUrl;
+    const result = await res.json();
 
-      } else {
-        // ❌ Payment failed
-        console.error('Payment verification failed:', result);
-        alert(`Payment issue: ${result.message || 'Please contact support'}`);
-        
-        // Allow retry
-        if (btn) {
-          btn.innerHTML = '<i class="fas fa-credit-card"></i> Try Payment Again';
-          btn.disabled = false;
-        }
+    if (result.success) {
+      localStorage.removeItem("payment_pending");
+
+      if (result.token) {
+        localStorage.setItem("gradely_token", result.token);
       }
-    } catch (err) {
-      console.error('❌ Callback error:', err);
-      alert('Network error verifying payment. Please contact support.');
-      
+
+      const finalPlan = localStorage.getItem("plan") || plan || "basic";
+
+      window.location.href =
+        result.redirect_url ||
+        `payment-success.html?plan=${encodeURIComponent(finalPlan)}&school_id=${encodeURIComponent(localStorage.getItem("school_id") || school_id || "")}`;
+
+    } else {
+      alert(result.message || "Payment verification failed. Please contact support.");
+
       if (btn) {
         btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Retry Verification';
         btn.disabled = false;
       }
+    }
+
+  } catch (err) {
+    console.error("❌ Callback verification error:", err);
+    alert("Network error verifying payment. Please contact support.");
+
+    if (btn) {
+      btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Retry Verification';
+      btn.disabled = false;
     }
   }
 });
 </script>
 
   <script src="js/kaima-chatbot.js"></script>
-  <script src="js/session-timeout.js"></script>
-
+<!-- <script src="js/session-timeout.js"></script> -->
 <script>
   document.querySelectorAll(".currentYear").forEach(el => {
     el.textContent = new Date().getFullYear();
