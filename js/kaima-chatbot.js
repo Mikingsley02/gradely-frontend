@@ -178,13 +178,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     @media(max-width:600px){
-      #chatbotToggle{
-        width:54px;
-        height:54px;
-        right:16px;
-        bottom:18px;
-        font-size:24px;
-      }
+  .quick-replies{
+    grid-template-columns:1fr 1fr;
+    max-height:150px;
+    padding:9px;
+  }
+
+  .quick-reply{
+    font-size:.74rem;
+    padding:8px;
+  }
+}
 
       #chatbotPanel{
         left:12px;
@@ -216,10 +220,6 @@ document.addEventListener("DOMContentLoaded", () => {
         padding:9px 12px;
       }
 
-      .quick-replies{
-        padding:7px 9px;
-        gap:6px;
-      }
 
       .quick-reply{
         font-size:.75rem;
