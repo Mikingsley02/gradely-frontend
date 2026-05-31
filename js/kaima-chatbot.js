@@ -408,6 +408,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="quick-reply" onclick="askQuick('Contact support')">📞 Contact support</div>
         <div class="quick-reply" onclick="askQuick('Where is the result upload section?')">📤 Result upload</div>
         <div class="quick-reply" onclick="askQuick('How do I register student?')">📝 Register Student</div>
+        <div class="quick-reply" onclick="askQuick('How do I take attendance?')"> 📋 Attendance</div>
       </div>
 
       <div class="chat-input">
@@ -484,6 +485,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (lower.includes("register") && lower.includes("student")) {
       reply = "To register a student, go to Dashboard → Add New Student or use Bulk Upload.";
     }
+    else if (lower.includes("attendance")) {
+  reply = "To record attendance, go to Dashboard → Manage classes, Attendance, select a class, then load to mark students as Present, Absent, Late, or Excused.";
+}
 
     appendMessage("kaima", reply);
   }
