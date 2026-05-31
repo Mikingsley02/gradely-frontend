@@ -401,6 +401,30 @@ input:focus{
   border-radius:16px;
 }
 
+
+.message{
+  margin-top:18px;
+  padding:14px 16px;
+  border-radius:16px;
+  display:none;
+  font-weight:600;
+  text-align:center;
+}
+
+.message.error{
+  display:block;
+  background:rgba(239,68,68,.15);
+  border:1px solid rgba(239,68,68,.4);
+  color:#fecaca;
+}
+
+.message.success{
+  display:block;
+  background:rgba(34,197,94,.15);
+  border:1px solid rgba(34,197,94,.4);
+  color:#bbf7d0;
+}
+
 /* 2FA BOX */
 
 #twoFactorBox{
@@ -965,14 +989,16 @@ input:focus{
   });
 
   function showMessage(message, type = "error") {
-    messageBox.className = `message ${type}`;
-    messageBox.textContent = message;
-  }
+  messageBox.className = `message ${type}`;
+  messageBox.textContent = message;
+  messageBox.style.display = "block";
+}
 
   function clearMessage() {
-    messageBox.className = "message";
-    messageBox.textContent = "";
-  }
+  messageBox.className = "message";
+  messageBox.textContent = "";
+  messageBox.style.display = "none";
+}
 
   function setLoading(state) {
     btn.disabled = state;
@@ -1023,14 +1049,21 @@ input:focus{
 
       console.log("✅ Login response:", data);
 
-      if (!response.ok || data.success === false) {
+     if (!response.ok || data.success === false) {
+
   if (response.status === 401) {
-    showMessage("Invalid Admin ID or password. Please check your details and try again.");
+    showMessage(
+      "Admin ID does not exist or password is incorrect.",
+      "error"
+    );
     return;
   }
 
-  showMessage(data.message || "Login failed. Please try again.");
-  return;
+  showMessage(
+    data.message || "Login failed. Please try again.",
+    "error"
+  );
+    return;
 }
 
       if (data.requires_2fa) {
@@ -1056,7 +1089,12 @@ await completeLogin(data);
 
     } catch (error) {
   console.error("❌ Login error:", error);
-  showMessage("Unable to connect. Please check your internet connection and try again.");
+
+  showMessage(
+    error.message || "Network error. Please try again.",
+    "error"
+  );
+
 } finally {
   setLoading(false);
 }
