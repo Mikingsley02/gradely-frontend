@@ -967,7 +967,7 @@ footer{
     </div>
 
     <div class="footer-bottom">
-      © 2026 gradely.info • Developed by Remit Integrated Services LTD
+      © <span class="currentYear"></span> <strong>gradely.info</strong> • Developed by Remit Integrated Services LTD
     </div>
 
   </div>
@@ -1005,6 +1005,12 @@ document.addEventListener("click", (e) => {
     menuBtn.innerHTML = "☰";
   }
 });
+</script>
+
+<script>
+  document.querySelectorAll(".currentYear").forEach(el => {
+    el.textContent = new Date().getFullYear();
+  });
 </script>
 
 </body>

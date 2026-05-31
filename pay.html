@@ -272,7 +272,7 @@
     </div>
     
     <div class="footer">
-      <p>© 2026 gradely.info • Secure, Encrypted Payments</p>
+      <p>© <span class="currentYear"></span> <strong>gradely.info</strong> • Secure, Encrypted Payments</p>
       <p style="margin-top:10px; color:#64748b;">
         <i class="fas fa-info-circle"></i> You'll be redirected to Paystack's secure payment page to complete your transaction
       </p>
@@ -714,5 +714,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   <script src="js/kaima-chatbot.js"></script>
   <script src="js/session-timeout.js"></script>
+
+<script>
+  document.querySelectorAll(".currentYear").forEach(el => {
+    el.textContent = new Date().getFullYear();
+  });
+</script>
+  
 </body>
 </html>

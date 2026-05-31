@@ -172,7 +172,7 @@
       src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" 
       alt="RIS Logo" 
     />
-    <strong>© 2026 gradely.info. </strong>All rights reserved. | Powered by RIS
+    © <span class="currentYear"></span> <strong>gradely.info</strong> | Powered by RIS
   </footer>
 
 <script src="js/kaima-chatbot.js"></script>
@@ -295,6 +295,13 @@
         // Keep default text if parsing fails
       }
     }
+  });
+</script>
+
+
+<script>
+  document.querySelectorAll(".currentYear").forEach(el => {
+    el.textContent = new Date().getFullYear();
   });
 </script>
 

@@ -3,281 +3,329 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Contact Us | Gradely.info</title>
+  <title>📬 Contact Us | Gradely.info</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
     }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #6a11cb, #2575fc);
-      color: #fff;
-      min-height: 100vh;
-      padding: 20px;
+      background: #f4f6f9;
+      color: #333;
       line-height: 1.7;
-      overflow-x: hidden;
+      padding: 20px;
     }
-
     .container {
       max-width: 900px;
-      margin: 40px auto;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
       overflow: hidden;
-      padding-bottom: 40px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      width: calc(100% - 40px);
     }
-
     header {
+      background: #0c2461;
+      color: white;
       text-align: center;
-      padding: 50px 30px;
-      background: rgba(0, 0, 0, 0.1);
+      padding: 40px;
     }
-
     header h1 {
-      font-size: 2.2rem;
-      margin-bottom: 10px;
-      color: #00ffb3;
+      font-size: 1.8rem;
+      font-weight: 600;
     }
-
-    header p {
-      opacity: 0.9;
-      font-size: 1.1rem;
-    }
-
     .content {
-      padding: 40px 30px;
-      width: 100%;
+      padding: 40px;
     }
-
+    h2 {
+      color: #2c3e50;
+      margin: 25px 0 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #eee;
+    }
+    h3 {
+      color: #34495e;
+      margin: 20px 0 12px;
+      font-size: 1.2rem;
+    }
+    p, ul, ol {
+      margin-bottom: 15px;
+    }
+    ul, ol {
+      padding-left: 25px;
+    }
+    ul ul, ol ol {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #f8f9fa;
+      border-top: 1px solid #eee;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    footer img {
+      height: 30px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    .btn {
+      display: inline-block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      background: #3498db;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    .back-link {
+      display: inline-block;
+      margin: 20px 0;
+      color: #230baf;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    .compliance-note {
+      margin-top: 30px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-left: 4px solid #3498db;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .compliance-note a {
+      color: #3498db;
+    }
+    /* ✅ DPA Highlight Box */
+    .dpa-notice {
+      background: rgba(52, 152, 219, 0.08);
+      border: 1px solid #3498db;
+      border-radius: 8px;
+      padding: 15px 20px;
+      margin: 20px 0;
+      font-size: 0.95rem;
+    }
+    .dpa-notice strong {
+      color: #2980b9;
+    }
+    /* ✅ Version info */
+    .version-info {
+      margin-top: 10px;
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+    /* ✅ Contact info box */
+    .contact-info {
+      background: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 25px 0;
+    }
+    .contact-info h3 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+    .contact-info a {
+      color: #3498db;
+      font-weight: 600;
+    }
+    /* ✅ Tip/notice box */
+    .tip-box {
+      background: rgba(255, 209, 102, 0.15);
+      border-left: 4px solid #ffd166;
+      border-radius: 0 8px 8px 0;
+      padding: 15px 20px;
+      margin: 20px 0;
+      font-size: 0.95rem;
+    }
+    .tip-box strong {
+      color: #b7791f;
+    }
+    /* ✅ Contact grid layout */
     .contact-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 35px;
       width: 100%;
     }
-
-    .contact-info {
-      background: rgba(255, 255, 255, 0.1);
+    .contact-info-box {
+      background: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
       padding: 25px;
-      border-radius: 12px;
       min-height: 100%;
-      width: 100%;
     }
-
-    .contact-info h2 {
+    .contact-info-box h2 {
+      margin-top: 0;
+      color: #2c3e50;
       font-size: 1.4rem;
-      color: #00d2ff;
-      margin-bottom: 15px;
     }
-
-    .contact-info p {
+    .contact-info-box p {
       margin: 12px 0;
       font-size: 1rem;
     }
-
-    .contact-info a {
-      color: #00d2ff;
-      text-decoration: none;
+    .contact-info-box a {
+      color: #3498db;
+      font-weight: 600;
     }
-
-    .contact-info a:hover {
-      text-decoration: underline;
-    }
-
+    /* ✅ Contact form styling */
     .contact-form {
       min-height: 100%;
-      width: 100%;
     }
-
+    .contact-form h2 {
+      margin-top: 0;
+      color: #2c3e50;
+      font-size: 1.4rem;
+    }
     .contact-form input,
     .contact-form textarea {
       width: 100%;
-      max-width: 100%;
       padding: 14px 16px;
       margin: 10px 0;
-      border: none;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.2);
-      color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      color: #333;
       font-family: inherit;
       font-size: 1rem;
-      transition: all 0.3s;
+      transition: border-color 0.2s;
     }
-
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
     .contact-form textarea {
       height: 160px;
       resize: vertical;
     }
-
     .contact-form button {
-      background: #00d2ff;
+      background: #3498db;
       color: white;
       border: none;
       padding: 14px 20px;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
       width: 100%;
-      max-width: 100%;
+      font-size: 1rem;
+      transition: background 0.2s;
     }
-
     .contact-form button:hover {
-      background: #0a84ff;
+      background: #2980b9;
     }
-
-    footer {
+    /* ✅ Loading & error states */
+    .policy-loading {
       text-align: center;
-      padding: 30px 10px;
-      margin-top: 20px;
-      font-size: 0.9rem;
-      color: #eee;
-      opacity: 0.9;
+      padding: 40px;
+      color: #666;
     }
-
-    footer img {
-      height: 26px;
+    .policy-loading::after {
+      content: "";
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(52, 152, 219, 0.3);
+      border-top-color: #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
       vertical-align: middle;
-      margin-right: 6px;
     }
-
-
-      /* Mobile-only placeholder size fix */
-      @media (max-width: 768px) {
-  body {
-    padding: 10px;
-  }
-  
-  .container {
-    margin: 20px auto;
-    width: calc(100% - 20px);  /* ✅ Adjust for smaller padding */
-  }
-  
-  .content {
-    padding: 25px 20px;  /* ✅ Reduced padding */
-  }
-  
-  .contact-grid {
-    grid-template-columns: 1fr;  /* ✅ Stack on tablet */
-    gap: 25px;
-  }
-}
-
-
-
-      @media (max-width: 480px) {
-  body {
-    padding: 8px;
-  }
-  
-  .container {
-    margin: 15px auto;
-    width: calc(100% - 16px);  /* ✅ Ensure no overflow */
-    border-radius: 15px;
-  }
-  
-  header {
-    padding: 35px 20px;
-  }
-  
-  header h1 {
-    font-size: 1.8rem;
-  }
-  
-  header p {
-    font-size: 1rem;
-  }
-  
-  .content {
-    padding: 20px 15px;  /* ✅ Reduced padding for small screens */
-  }
-  
-  .contact-grid {
-    grid-template-columns: 1fr;  /* ✅ Single column on mobile */
-    gap: 20px;
-  }
-  
-  .contact-info,
-  .contact-form {
-    padding: 20px 15px;  /* ✅ Adjust internal padding */
-  }
-  
-  .contact-form input,
-  .contact-form textarea {
-    padding: 12px 14px;  /* ✅ Slightly smaller padding */
-    font-size: 16px;  /* ✅ Prevent iOS zoom */
-  }
-  
-  .contact-form button {
-    padding: 12px 18px;
-    font-size: 16px;  /* ✅ Prevent iOS zoom */
-  }
-  
-  footer {
-    padding: 20px 10px;
-    font-size: 0.85rem;
-  }
-  
-  footer img {
-    height: 22px;
-  }
-  
-  /* Mobile-only placeholder size fix */
-  input::placeholder,
-  textarea::placeholder {
-    font-size: 14px !important;
-    line-height: 1.2 !important;
-    color: rgba(255, 255, 255, 0.85) !important;
-  }
-}
-
-/* Make placeholders visible */
-::placeholder {
-  color: #d9d9d9 !important;
-  opacity: 1 !important;
-}
-
-/* For cross-browser compatibility */
-input::placeholder,
-textarea::placeholder {
-  color: #d9d9d9 !important;
-  opacity: 1 !important;
-}
-
-      /* Make placeholders visible */
-      ::placeholder {
-       color: #d9d9d9 !important;
-      opacity: 1 !important;
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .policy-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 20px;
+      color: #991b1b;
+      margin: 20px 0;
+    }
+    /* ✅ Responsive adjustments */
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px auto;
       }
-
-      /* For cross-browser compatibility */
-      input::placeholder,
-      textarea::placeholder {
-       color: #d9d9d9 !important;
-       opacity: 1 !important;
+      .content {
+        padding: 30px 25px;
       }
-
-
+      .contact-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+      }
+    }
+    @media (max-width: 480px) {
+      .container {
+        margin: 15px auto;
+        border-radius: 8px;
+      }
+      header {
+        padding: 30px 20px;
+      }
+      header h1 {
+        font-size: 1.6rem;
+      }
+      .content {
+        padding: 25px 20px;
+      }
+      .contact-info-box,
+      .contact-form {
+        padding: 20px 15px;
+      }
+      .contact-form input,
+      .contact-form textarea {
+        padding: 12px 14px;
+        font-size: 16px; /* Prevent iOS zoom */
+      }
+      .contact-form button {
+        padding: 12px 18px;
+        font-size: 16px; /* Prevent iOS zoom */
+      }
+      footer {
+        padding: 20px 10px;
+        font-size: 0.85rem;
+      }
+      footer img {
+        height: 24px;
+      }
+    }
   </style>
 </head>
-
 <body>
-
   <div class="container">
     <header>
       <h1>📬 Contact Us</h1>
-      <p>We'd love to hear from you! Reach out with any questions or feedback.</p>
+      <p style="margin-top: 10px; opacity: 0.95;">We'd love to hear from you! Reach out with any questions or feedback.</p>
     </header>
 
     <div class="content">
       <div class="contact-grid">
         
         <!-- Contact Info -->
-        <div class="contact-info">
+        <div class="contact-info-box">
           <h2>📞 Get in Touch</h2>
           <p><strong>Email:</strong> <a href="mailto:support@gradely.info">support@gradely.info</a></p>
           <p><strong>Phone:</strong> <a href="tel:+2348064287477">+234 806 428 7477</a></p>
@@ -292,7 +340,7 @@ textarea::placeholder {
 
         <!-- Contact Form -->
         <div class="contact-form">
-          <h2 style="color: #00d2ff; margin-bottom: 15px;">Send Us a Message</h2>
+          <h2>Send Us a Message</h2>
           
           <form id="contactForm" action="https://api.web3forms.com/submit" method="POST">
             <input type="hidden" name="access_key" value="ec6c6d80-4d94-4f65-8a49-66785a4042e0">
@@ -308,15 +356,19 @@ textarea::placeholder {
 
       </div>
 
-      <div style="text-align: center; margin-top: 40px;">
-        <a href="javascript:history.back()" class="back-link">← Go Back</a>
+      <!-- ✅ Compliance Note -->
+      <div class="compliance-note">
+        <strong>Need More Help?</strong> If you don't find the answer you're looking for, please contact our support team. We're here to help!
       </div>
+
+      <!-- ✅ Smart back button (ID for JS control) -->
+      <a id="backLink" class="back-link">← Go Back</a>
     </div>
   </div>
 
   <footer>
     <img src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png" alt="RIS Logo" />
-    <strong>© 2026 gradely.info</strong> | Powered by RIS
+    © <span class="currentYear"></span> <strong>gradely.info</strong> | Powered by RIS
     <div style="margin-top: 10px;">
       <a href="terms.html" style="color: #00d2ff;">Terms</a> •
       <a href="privacy.html" style="color: #00d2ff;">Privacy</a> •
@@ -350,6 +402,58 @@ textarea::placeholder {
   </script>
 
   <script src="js/kaima-chatbot.js"></script>
+
+  <!-- ✅ SMART BACK BUTTON: Returns to referring page (same origin) or fallback to index.html -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const backLink = document.getElementById('backLink');
+      if (!backLink) return;
+      
+      const referrer = document.referrer;
+      const currentOrigin = window.location.origin;
+      
+      // Determine back URL: use referrer only if from same origin
+      let backUrl = 'index.html'; // Default fallback
+      
+      if (referrer) {
+        try {
+          const referrerUrl = new URL(referrer);
+          // Only use referrer if it's from our domain (security)
+          if (referrerUrl.origin === currentOrigin) {
+            backUrl = referrer;
+          }
+        } catch (e) {
+          // If URL parsing fails, fallback to index.html
+          backUrl = 'index.html';
+        }
+      }
+      
+      // Set the link and click handler
+      backLink.href = backUrl;
+      backLink.onclick = (e) => {
+        e.preventDefault();
+        window.location.href = backUrl;
+      };
+      
+      // Optional: Update link text to show where it goes
+      if (backUrl !== 'index.html') {
+        try {
+          const backPage = new URL(backUrl).pathname.split('/').pop().replace('.html', '');
+          if (backPage && backPage !== 'index') {
+            backLink.textContent = `← Back to ${backPage.charAt(0).toUpperCase() + backPage.slice(1)}`;
+          }
+        } catch (e) {
+          // Keep default text if parsing fails
+        }
+      }
+    });
+  </script>
+
+  <script>
+  document.querySelectorAll(".currentYear").forEach(el => {
+    el.textContent = new Date().getFullYear();
+  });
+</script>
 
 </body>
 </html>

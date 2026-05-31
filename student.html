@@ -220,7 +220,7 @@
     
 
   <footer>
-    © 2026 gradely.info. All rights reserved. | Powered by RIS<br>
+    © <span class="currentYear"></span> <strong>gradely.info</strong> | Powered by RIS<br>
     <a href="terms.html">Terms</a> • 
     <a href="dpa.html" >DPA</a> • 
     <a href="privacy.html">Privacy Policy</a>    
@@ -808,6 +808,13 @@ function checkAndCelebrate(results) {
 
 <script src="js/kaima-chatbot.js"></script>
 <script src="js/session-timeout.js"></script>
+
+
+<script>
+  document.querySelectorAll(".currentYear").forEach(el => {
+    el.textContent = new Date().getFullYear();
+  });
+</script>
 
 </body>
 </html>

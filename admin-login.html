@@ -807,7 +807,7 @@ input:focus{
   </div>
 
   <div class="footer-links">
-    © 2026 gradely.info • Powered by RIS<br>
+    © <span class="currentYear"></span> <strong>gradely.info</strong> • Powered by RIS<br>
 
     <a href="terms.html">Terms</a> •
 
@@ -1217,6 +1217,12 @@ await completeLogin(data);
 </script>
 
 <script src="js/kaima-chatbot.js"></script>
+
+<script>
+  document.querySelectorAll(".currentYear").forEach(el => {
+    el.textContent = new Date().getFullYear();
+  });
+</script>
 
 </body>
 </html>

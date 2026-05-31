@@ -443,7 +443,7 @@ footer a:hover{
   <footer>
     <div>
       <img src="https://i.postimg.cc/c4M6ZLSv/ris-removebg-preview.png  " alt="RIS Logo">
-      <strong>© 2026 gradely<span class="footer-info">.info</span></strong> | Powered by RIS | All Rights Reserved
+      © <span class="currentYear"></span> <strong>gradely.info</strong> | Powered by RIS | All Rights Reserved
     </div>
     <div style="margin-top:10px;">
       <a href="terms.html" style="color:#00d2ff;">Terms</a> • 
@@ -559,6 +559,13 @@ function getVisitorId() {
   } else {
     loadNonEssentialScripts();  // ✅ GA loads on return visits if already accepted
   }
+</script>
+
+
+<script>
+  document.querySelectorAll(".currentYear").forEach(el => {
+    el.textContent = new Date().getFullYear();
+  });
 </script>
 
 </body>
