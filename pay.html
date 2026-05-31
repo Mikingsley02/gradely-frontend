@@ -596,19 +596,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     const result = await res.json();
 
     if (result.success) {
-      localStorage.removeItem("payment_pending");
+  localStorage.removeItem("payment_pending");
 
-      if (result.token) {
-        localStorage.setItem("gradely_token", result.token);
-      }
+  if (result.token) {
+    localStorage.setItem("gradely_token", result.token);
+  }
 
-      const finalPlan = localStorage.getItem("plan") || plan || "basic";
+  const finalPlan = localStorage.getItem("plan") || plan || "basic";
 
-      window.location.href =
-        result.redirect_url ||
-        `payment-success.html?plan=${encodeURIComponent(finalPlan)}&school_id=${encodeURIComponent(localStorage.getItem("school_id") || school_id || "")}`;
+  // SAVE DATA FOR SUCCESS PAGE
+  localStorage.setItem(
+    "school_name",
+    result.school_name || localStorage.getItem("school_name") || ""
+  );
 
-    } else {
+  localStorage.setItem("plan", finalPlan);
+
+  localStorage.setItem(
+    "payment_reference",
+    reference
+  );
+
+  // REDIRECT TO SUCCESS PAGE
+  window.location.href =
+    result.redirect_url ||
+    `success.html?school_id=${encodeURIComponent(localStorage.getItem("school_id") || school_id || "")}` +
+    `&plan=${encodeURIComponent(finalPlan)}` +
+    `&reference=${encodeURIComponent(reference)}` +
+    `&school_name=${encodeURIComponent(result.school_name || localStorage.getItem("school_name") || "")}`;
+}
+
+else {
       alert(result.message || "Payment verification failed. Please contact support.");
 
       if (btn) {

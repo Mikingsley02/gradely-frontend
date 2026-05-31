@@ -180,69 +180,32 @@
   </div>
 
  <script>
-  // --- Extract school_id from URL ---
-  const urlParams = new URLSearchParams(window.location.search);
-  const schoolId = urlParams.get("school_id");
-  const ref = urlParams.get("ref") || "GRAD-" + Math.floor(Math.random() * 1000000);
+const urlParams = new URLSearchParams(window.location.search);
 
-  // --- Get school name from storage or fallback ---
-  const schoolName = 
-    localStorage.getItem('school_name') || 
-    sessionStorage.getItem('school_name') || 
-    localStorage.getItem('admin_school_name') ||
-    "Your School";
+const schoolId = urlParams.get("school_id") || localStorage.getItem("school_id") || "";
+const plan = (urlParams.get("plan") || localStorage.getItem("plan") || "basic").toLowerCase();
+const reference = urlParams.get("reference") || urlParams.get("ref") || localStorage.getItem("payment_reference") || "Not available";
+const schoolName =
+  urlParams.get("school_name") ||
+  localStorage.getItem("school_name") ||
+  sessionStorage.getItem("school_name") ||
+  "Your School";
 
-  document.getElementById("schoolName").textContent = schoolName;
-  document.getElementById("refId").textContent = ref;
+document.getElementById("schoolName").textContent = schoolName;
+document.getElementById("refId").textContent = reference;
 
-  // --- Fetch actual subscription plan from backend ---
-  async function fetchSubscriptionPlan() {
-    if (!schoolId) {
-      console.warn("⚠️ School ID missing, cannot fetch plan");
-      document.getElementById("planBadge").textContent = "Basic Plan";
-      document.getElementById("planBadge").className = "plan-badge basic-badge";
-      return;
-    }
+const planBadge = document.getElementById("planBadge");
+planBadge.textContent = plan === "pro" ? "Pro Plan" : "Basic Plan";
+planBadge.className = `plan-badge ${plan === "pro" ? "pro-badge" : "basic-badge"}`;
 
-    try {
-      const res = await fetch(`https://api.gradely.info/api/subscription/status?school_id=${schoolId}`, {
-        credentials: 'include', // if using session cookies
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const data = await res.json();
+if (schoolId) localStorage.setItem("school_id", schoolId);
+if (plan) localStorage.setItem("plan", plan);
+if (reference) localStorage.setItem("payment_reference", reference);
+if (schoolName && schoolName !== "Your School") localStorage.setItem("school_name", schoolName);
 
-      const plan = (data.plan || "basic").toLowerCase();
-      const planDisplay = plan.charAt(0).toUpperCase() + plan.slice(1) + " Plan";
-      const planClass = plan === "pro" ? "pro-badge" : "basic-badge";
-
-      document.getElementById("planBadge").textContent = planDisplay;
-      document.getElementById("planBadge").className = `plan-badge ${planClass}`;
-    } catch (err) {
-      console.error("Failed to fetch subscription plan:", err);
-      // fallback
-      document.getElementById("planBadge").textContent = "Basic Plan";
-      document.getElementById("planBadge").className = "plan-badge basic-badge";
-    }
-  }
-
-  fetchSubscriptionPlan();
-
-  // --- Go to dashboard button ---
-  document.getElementById("goToDashboardBtn").addEventListener("click", () => {
-    if (schoolId) {
-      localStorage.setItem('school_id', schoolId);
-      window.location.href = "dashboard.html";
-    } else {
-      window.location.href = "dashboard.html";
-    }
-  });
-
-  // --- Optional auto-redirect after 5s ---
-  setTimeout(() => {
-    if (confirm("✅ Payment confirmed! Would you like to go to your dashboard now?")) {
-      document.getElementById("goToDashboardBtn").click();
-    }
-  }, 5000);
+document.getElementById("goToDashboardBtn").addEventListener("click", () => {
+  window.location.href = "dashboard.html";
+});
 </script>
 
 
