@@ -4,210 +4,303 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>✅ Payment Successful | Gradely Info</title>
+
   <style>
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #6a11cb, #2575fc);
-      min-height: 100vh;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      color: #fff;
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
     }
 
-    .container {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 40px 30px;
-      border-radius: 20px;
-      width: 90%;
-      max-width: 480px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-      text-align: center;
+    body{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+      background:
+        radial-gradient(circle at top left,rgba(34,197,94,.22),transparent 35%),
+        radial-gradient(circle at bottom right,rgba(0,210,255,.25),transparent 35%),
+        linear-gradient(135deg,#020617,#0f172a);
+      color:#fff;
     }
 
-    .success-icon {
-      font-size: 4rem;
-      color: #00ffb3;
-      margin-bottom: 15px;
-      animation: bounce 1s ease infinite alternate;
+    .success-card{
+      width:100%;
+      max-width:620px;
+      background:rgba(255,255,255,.12);
+      backdrop-filter:blur(24px);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:30px;
+      padding:38px;
+      text-align:center;
+      box-shadow:0 25px 80px rgba(0,0,0,.35);
     }
 
-    @keyframes bounce {
-      from { transform: translateY(0); }
-      to { transform: translateY(-10px); }
+    .success-icon{
+      width:100px;
+      height:100px;
+      border-radius:50%;
+      background:rgba(34,197,94,.15);
+      color:#22c55e;
+      margin:0 auto 22px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:52px;
     }
 
-    h2 {
-      font-size: 1.8rem;
-      margin-bottom: 10px;
-      color: #fff;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    h1{
+      font-size:2rem;
+      margin-bottom:12px;
+      font-weight:900;
     }
 
-    p {
-      font-size: 1rem;
-      opacity: 0.95;
-      margin-bottom: 25px;
-      line-height: 1.5;
+    .subtitle{
+      color:#dbeafe;
+      line-height:1.6;
+      margin-bottom:28px;
     }
 
-    .details {
-      background: rgba(255, 255, 255, 0.95);
-      color: #1e293b;
-      border-radius: 16px;
-      padding: 25px;
-      margin-bottom: 25px;
-      text-align: left;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    .info-box{
+      background:rgba(255,255,255,.09);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:22px;
+      padding:22px;
+      text-align:left;
+      margin-bottom:22px;
     }
 
-    .details p {
-      margin: 10px 0;
-      font-size: 1.05rem;
-      font-weight: 500;
+    .info-row{
+      padding:15px 0;
+      border-bottom:1px solid rgba(255,255,255,.1);
     }
 
-    .details strong {
-      color: #4361ee;
-      font-weight: 700;
+    .info-row:last-child{
+      border-bottom:none;
     }
 
-    .plan-badge {
-      display: inline-block;
-      background: linear-gradient(120deg, #4361ee, #3a0ca3);
-      color: white;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      margin-top: 5px;
-      letter-spacing: 0.5px;
+    .label{
+      display:block;
+      color:#bfdbfe;
+      font-size:.9rem;
+      margin-bottom:6px;
+      font-weight:700;
     }
 
-    .basic-badge { background: linear-gradient(120deg, #3498db, #2980b9); }
-    .pro-badge { background: linear-gradient(120deg, #00e676, #00c853); }
-
-    button {
-      background: linear-gradient(120deg, #00e676, #00c853);
-      border: none;
-      color: white;
-      font-weight: 700;
-      font-size: 1.15rem;
-      padding: 16px;
-      border-radius: 14px;
-      cursor: pointer;
-      width: 100%;
-      transition: all 0.35s ease;
-      box-shadow: 0 6px 20px rgba(0, 230, 118, 0.4);
-      margin-top: 5px;
+    .value{
+      display:block;
+      font-size:1.05rem;
+      font-weight:900;
+      color:#fff;
+      word-break:break-word;
     }
 
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0, 230, 118, 0.6);
+    .plan-badge{
+      display:inline-block;
+      padding:8px 15px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:.95rem;
     }
 
-    button:active {
-      transform: translateY(1px);
+    .basic-badge{
+      background:#2563eb;
+      color:#fff;
     }
 
-    .back-link {
-      display: block;
-      margin-top: 25px;
-      font-size: 1.05rem;
-      color: #ffd700;
-      text-decoration: none;
-      font-weight: 600;
-      opacity: 0.95;
-      transition: opacity 0.2s;
+    .pro-badge{
+      background:#22c55e;
+      color:#052e16;
     }
 
-    .back-link:hover {
-      opacity: 1;
-      text-decoration: underline;
+    .unknown-badge{
+      background:#f59e0b;
+      color:#111827;
     }
 
-    .note {
-      background: rgba(255, 255, 255, 0.15);
-      border-left: 4px solid #ffd700;
-      padding: 12px;
-      border-radius: 0 8px 8px 0;
-      margin-top: 15px;
-      font-size: 0.95rem;
-      text-align: left;
+    .note{
+      background:rgba(255,255,255,.1);
+      border-left:4px solid #00d2ff;
+      padding:14px;
+      border-radius:12px;
+      text-align:left;
+      color:#e0f2fe;
+      font-size:.92rem;
+      line-height:1.5;
+      margin-bottom:24px;
     }
 
-    @media (max-width: 600px) {
-      .container {
-        padding: 30px 20px;
+    .dashboard-btn{
+      width:100%;
+      padding:16px;
+      border:none;
+      border-radius:16px;
+      background:linear-gradient(135deg,#00d2ff,#2563eb);
+      color:white;
+      font-size:1rem;
+      font-weight:900;
+      cursor:pointer;
+      transition:.25s ease;
+    }
+
+    .dashboard-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 15px 35px rgba(0,210,255,.25);
+    }
+
+    .back-link{
+      display:inline-block;
+      margin-top:20px;
+      color:#00d2ff;
+      text-decoration:none;
+      font-weight:800;
+    }
+
+    .back-link:hover{
+      text-decoration:underline;
+    }
+
+    @media(max-width:600px){
+      body{
+        padding:14px;
+        align-items:flex-start;
       }
-      h2 {
-        font-size: 1.6rem;
+
+      .success-card{
+        padding:25px 18px;
+        border-radius:24px;
+        margin-top:20px;
       }
-      .details {
-        padding: 20px;
+
+      .success-icon{
+        width:82px;
+        height:82px;
+        font-size:42px;
       }
-      button {
-        padding: 14px;
-        font-size: 1.05rem;
+
+      h1{
+        font-size:1.55rem;
+      }
+
+      .subtitle{
+        font-size:.92rem;
+      }
+
+      .info-box{
+        padding:18px;
+      }
+
+      .value{
+        font-size:.98rem;
       }
     }
   </style>
 </head>
+
 <body>
 
-  <div class="container">
+  <div class="success-card">
     <div class="success-icon">✅</div>
-    <h2>Payment Successful!</h2>
-    <p>Thank you for subscribing to <strong>Gradely.info</strong>. Your school account is now fully activated with your subscribed features.</p>
 
-    <div class="details">
-      <p><strong>School Name:</strong><br><span id="schoolName" style="font-size:1.3rem;font-weight:700;color:#0f172a;">Loading...</span></p>
-      <p><strong>Subscription Plan:</strong><br><span id="planBadge" class="plan-badge">Loading...</span></p>
-      <p><strong>Reference ID:</strong><br><span id="refId" style="font-family:monospace;font-size:0.95rem;color:#475569;">GRAD-XXXXXX</span></p>
+    <h1>Payment Successful!</h1>
+
+    <p class="subtitle">
+      Thank you for subscribing to <strong>Gradely.info</strong>.
+      Your school account is now active with your subscribed features.
+    </p>
+
+    <div class="info-box">
+      <div class="info-row">
+        <span class="label">School Name</span>
+        <span id="schoolName" class="value">Loading...</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">Subscription Plan</span>
+        <span id="planBadge" class="plan-badge unknown-badge">Loading...</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">Reference ID</span>
+        <span id="refId" class="value">Loading...</span>
+      </div>
     </div>
 
     <div class="note">
-      <strong>💡 Note:</strong> Your subscription is now active. You can access all features immediately from your dashboard.
+      <strong>💡 Note:</strong>
+      Your subscription is now active. You can access your subscribed features immediately from your dashboard.
     </div>
 
-    <button id="goToDashboardBtn">🏫 Go to Dashboard</button>
+    <button id="goToDashboardBtn" class="dashboard-btn">
+      🏫 Go to Dashboard
+    </button>
 
     <a href="javascript:history.back()" class="back-link">← Go Back</a>
   </div>
 
- <script>
-const urlParams = new URLSearchParams(window.location.search);
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
 
-const schoolId = urlParams.get("school_id") || localStorage.getItem("school_id") || "";
-const plan = (urlParams.get("plan") || localStorage.getItem("plan") || "basic").toLowerCase();
-const reference = urlParams.get("reference") || urlParams.get("ref") || localStorage.getItem("payment_reference") || "Not available";
-const schoolName =
-  urlParams.get("school_name") ||
-  localStorage.getItem("school_name") ||
-  sessionStorage.getItem("school_name") ||
-  "Your School";
+    const schoolId =
+      urlParams.get("school_id") ||
+      localStorage.getItem("school_id") ||
+      "";
 
-document.getElementById("schoolName").textContent = schoolName;
-document.getElementById("refId").textContent = reference;
+    const urlPlan = urlParams.get("plan");
 
-const planBadge = document.getElementById("planBadge");
-planBadge.textContent = plan === "pro" ? "Pro Plan" : "Basic Plan";
-planBadge.className = `plan-badge ${plan === "pro" ? "pro-badge" : "basic-badge"}`;
+    const storedPlan = localStorage.getItem("plan");
 
-if (schoolId) localStorage.setItem("school_id", schoolId);
-if (plan) localStorage.setItem("plan", plan);
-if (reference) localStorage.setItem("payment_reference", reference);
-if (schoolName && schoolName !== "Your School") localStorage.setItem("school_name", schoolName);
+    const plan = (
+      urlPlan && urlPlan !== "undefined" && urlPlan !== "null"
+        ? urlPlan
+        : storedPlan && storedPlan !== "undefined" && storedPlan !== "null"
+        ? storedPlan
+        : "unknown"
+    ).toLowerCase();
 
-document.getElementById("goToDashboardBtn").addEventListener("click", () => {
-  window.location.href = "dashboard.html";
-});
-</script>
+    const reference =
+      urlParams.get("reference") ||
+      urlParams.get("ref") ||
+      localStorage.getItem("payment_reference") ||
+      "Not available";
 
+    const schoolName =
+      urlParams.get("school_name") ||
+      localStorage.getItem("school_name") ||
+      sessionStorage.getItem("school_name") ||
+      "Your School";
+
+    document.getElementById("schoolName").textContent = schoolName;
+    document.getElementById("refId").textContent = reference;
+
+    const planBadge = document.getElementById("planBadge");
+
+    if (plan === "pro") {
+      planBadge.textContent = "Professional Plan";
+      planBadge.className = "plan-badge pro-badge";
+    } else if (plan === "basic") {
+      planBadge.textContent = "Basic Plan";
+      planBadge.className = "plan-badge basic-badge";
+    } else {
+      planBadge.textContent = "Plan Not Found";
+      planBadge.className = "plan-badge unknown-badge";
+    }
+
+    if (schoolId) localStorage.setItem("school_id", schoolId);
+    if (plan !== "unknown") localStorage.setItem("plan", plan);
+    if (reference && reference !== "Not available") {
+      localStorage.setItem("payment_reference", reference);
+    }
+    if (schoolName && schoolName !== "Your School") {
+      localStorage.setItem("school_name", schoolName);
+    }
+
+    document.getElementById("goToDashboardBtn").addEventListener("click", () => {
+      window.location.href = "dashboard.html";
+    });
+  </script>
 
   <script src="js/kaima-chatbot.js"></script>
 </body>
