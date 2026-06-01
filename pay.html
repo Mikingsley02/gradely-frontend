@@ -287,9 +287,9 @@ const API_BASE = window.location.hostname.includes("localhost")
 
 const params = new URLSearchParams(window.location.search);
 const reference = params.get("reference");
+
 const isNewRegistration = params.get("new") === "true";
 const isRenewal = params.get("renew") === "true" || params.get("is_renewal") === "true";
-const isReactivate = params.get("reactivate") === "true";
 
 function getToken() {
   const token =
@@ -321,15 +321,10 @@ function isTokenExpired() {
 }
 
 function clearAuth() {
-  sessionStorage.removeItem("gradely_token");
-  sessionStorage.removeItem("school_id");
-  sessionStorage.removeItem("admin_id");
-  sessionStorage.removeItem("adminId");
-
-  localStorage.removeItem("gradely_token");
-  localStorage.removeItem("school_id");
-  localStorage.removeItem("admin_id");
-  localStorage.removeItem("adminId");
+  ["gradely_token", "school_id", "admin_id", "adminId"].forEach(key => {
+    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
+  });
 }
 
 function redirectToLogin(message = "Session expired. Please login again.") {
@@ -339,12 +334,12 @@ function redirectToLogin(message = "Session expired. Please login again.") {
 }
 
 function getAuthHeaders(extraHeaders = {}) {
-  const token = getToken();
-
   const headers = {
     "Content-Type": "application/json",
     ...extraHeaders
   };
+
+  const token = getToken();
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -356,11 +351,9 @@ function getAuthHeaders(extraHeaders = {}) {
 async function smartFetch(url, options = {}, requireAuth = true) {
   const token = getToken();
 
-  if (requireAuth) {
-    if (!token || isTokenExpired()) {
-      redirectToLogin();
-      return null;
-    }
+  if (requireAuth && (!token || isTokenExpired())) {
+    redirectToLogin();
+    return null;
   }
 
   const res = await fetch(url, {
@@ -379,34 +372,34 @@ async function smartFetch(url, options = {}, requireAuth = true) {
   return res;
 }
 
-let plan =
-  params.get("to_plan") ||
-  params.get("plan") ||
-  localStorage.getItem("selected_plan") ||
-  localStorage.getItem("plan");
-
-if (plan) plan = plan.toLowerCase().trim();
-
-if (!reference && (!plan || !["basic", "pro"].includes(plan))) {
-  alert("Invalid or missing plan selection.");
-  window.location.href = "plan-comparison.html";
-  throw new Error("No valid plan selected");
+function cleanPlan(value) {
+  const plan = String(value || "").trim().toLowerCase();
+  return ["basic", "pro"].includes(plan) ? plan : null;
 }
 
 const payload = getJwtPayload();
+
+let plan =
+  cleanPlan(params.get("to_plan")) ||
+  cleanPlan(params.get("plan")) ||
+  cleanPlan(localStorage.getItem("selected_plan")) ||
+  cleanPlan(localStorage.getItem("plan"));
 
 let school_id =
   payload?.school_id ||
   params.get("school_id") ||
   localStorage.getItem("school_id") ||
-  sessionStorage.getItem("school_id");
+  sessionStorage.getItem("school_id") ||
+  "";
 
 let admin_id =
   payload?.admin_id ||
   params.get("admin_id") ||
   localStorage.getItem("admin_id") ||
+  localStorage.getItem("adminId") ||
   sessionStorage.getItem("admin_id") ||
-  sessionStorage.getItem("adminId");
+  sessionStorage.getItem("adminId") ||
+  "";
 
 let customerEmail =
   params.get("email") ||
@@ -416,27 +409,22 @@ let customerEmail =
   sessionStorage.getItem("school_email") ||
   "";
 
+if (!reference && !plan) {
+  alert("Invalid or missing plan selection.");
+  window.location.href = "plan-comparison.html";
+  throw new Error("No valid plan selected");
+}
+
 if (!school_id && !reference) {
   alert("School information missing. Please return to registration or subscription page.");
   window.location.href = isNewRegistration ? "register-school.html" : "subscription.html";
   throw new Error("No school_id found");
 }
 
-if (school_id) {
-  localStorage.setItem("school_id", school_id);
-}
-
-if (admin_id) {
-  localStorage.setItem("admin_id", admin_id);
-}
-
-if (plan) {
-  localStorage.setItem("plan", plan);
-}
-
-if (customerEmail) {
-  localStorage.setItem("email", customerEmail);
-}
+if (school_id) localStorage.setItem("school_id", school_id);
+if (admin_id) localStorage.setItem("admin_id", admin_id);
+if (plan) localStorage.setItem("plan", plan);
+if (customerEmail) localStorage.setItem("email", customerEmail);
 
 const PLAN_NAMES = {
   basic: "Basic Plan",
@@ -448,23 +436,13 @@ const PLAN_PRICES = {
   pro: "₦89,700"
 };
 
-if (plan && document.getElementById("planName")) {
+if (plan) {
   document.getElementById("planName").textContent = PLAN_NAMES[plan];
   document.getElementById("planPrice").textContent = PLAN_PRICES[plan];
 }
 
 async function recoverEmail(schoolId) {
   if (customerEmail && customerEmail.includes("@")) return customerEmail;
-
-  if (getToken()) {
-    try {
-      const res = await smartFetch(`${API_BASE}/api/auth/me`, {}, true);
-      if (res && res.ok) {
-        const data = await res.json();
-        if (data?.email && data.email.includes("@")) return data.email;
-      }
-    } catch {}
-  }
 
   const storedEmail =
     localStorage.getItem("registration_email") ||
@@ -474,23 +452,7 @@ async function recoverEmail(schoolId) {
 
   if (storedEmail && storedEmail.includes("@")) return storedEmail;
 
-  return `${String(schoolId).toLowerCase().replace(/[^a-z0-9]/g, "")}@gradely.info`;
-}
-
-async function loadPaystackKey() {
-  const res = await smartFetch(`${API_BASE}/api/config/paystack-key`, {}, !!getToken());
-
-  if (!res || !res.ok) {
-    throw new Error("Payment configuration not available.");
-  }
-
-  const data = await res.json();
-
-  if (data.success && data.data?.paystackPublicKey) {
-    return data.data.paystackPublicKey;
-  }
-
-  throw new Error(data.message || "Invalid payment configuration.");
+  return `${String(schoolId || "school").toLowerCase().replace(/[^a-z0-9]/g, "")}@gradely.info`;
 }
 
 let isProcessingPayment = false;
@@ -505,31 +467,37 @@ document.getElementById("paystackBtn").onclick = async () => {
   btn.disabled = true;
 
   try {
+    if (!plan) {
+      throw new Error("Invalid or missing plan.");
+    }
+
     customerEmail = await recoverEmail(school_id);
 
     localStorage.setItem("email", customerEmail);
     sessionStorage.setItem("email", customerEmail);
+    localStorage.setItem("plan", plan);
 
-    await loadPaystackKey();
+    const hasToken = !!getToken();
 
-    const endpoint = getToken()
+    const endpoint = hasToken
       ? `${API_BASE}/api/subscription/upgrade`
       : `${API_BASE}/api/subscription/initialize`;
 
-    const body = getToken()
+    const body = hasToken
       ? { plan }
       : {
           school_id,
           admin_id,
           email: customerEmail,
           plan,
-          is_new_registration: isNewRegistration
+          is_new_registration: isNewRegistration,
+          is_renewal: isRenewal
         };
 
     const res = await smartFetch(endpoint, {
       method: "POST",
       body: JSON.stringify(body)
-    }, !!getToken());
+    }, hasToken);
 
     if (!res) return;
 
@@ -543,10 +511,14 @@ document.getElementById("paystackBtn").onclick = async () => {
       throw new Error("Missing Paystack authorization URL.");
     }
 
+    if (result.reference) {
+      localStorage.setItem("payment_reference", result.reference);
+    }
+
     localStorage.setItem("payment_pending", "true");
-    localStorage.setItem("school_id", school_id);
-    localStorage.setItem("admin_id", admin_id || "");
-    localStorage.setItem("plan", plan);
+    localStorage.setItem("school_id", school_id || result.school_id || "");
+    localStorage.setItem("admin_id", admin_id || result.admin_id || "");
+    localStorage.setItem("plan", result.plan || plan);
     localStorage.setItem("email", customerEmail);
 
     window.location.href = result.authorization_url;
@@ -575,7 +547,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   try {
-    const verifyEndpoint = getToken()
+    const hasToken = !!getToken();
+
+    const verifyEndpoint = hasToken
       ? `${API_BASE}/api/subscription/upgrade/complete`
       : `${API_BASE}/api/subscription/verify-public`;
 
@@ -586,58 +560,61 @@ document.addEventListener("DOMContentLoaded", async () => {
         reference,
         school_id: localStorage.getItem("school_id") || school_id,
         admin_id: localStorage.getItem("admin_id") || admin_id,
-        plan: localStorage.getItem("plan") || plan,
+        plan: plan || localStorage.getItem("plan"),
         email: localStorage.getItem("email") || customerEmail
       })
-    }, !!getToken());
+    }, hasToken);
 
     if (!res) return;
 
     const result = await res.json();
 
-    if (result.success) {
-  localStorage.removeItem("payment_pending");
-
-  if (result.token) {
-    localStorage.setItem("gradely_token", result.token);
-  }
-
-  const finalPlan = localStorage.getItem("plan") || plan || "basic";
-
-  // SAVE DATA FOR SUCCESS PAGE
-  localStorage.setItem(
-    "school_name",
-    result.school_name || localStorage.getItem("school_name") || ""
-  );
-
-  localStorage.setItem("plan", finalPlan);
-
-  localStorage.setItem(
-    "payment_reference",
-    reference
-  );
-
-  // REDIRECT TO SUCCESS PAGE
-  window.location.href =
-    result.redirect_url ||
-    `success.html?school_id=${encodeURIComponent(localStorage.getItem("school_id") || school_id || "")}` +
-    `&plan=${encodeURIComponent(finalPlan)}` +
-    `&reference=${encodeURIComponent(reference)}` +
-    `&school_name=${encodeURIComponent(result.school_name || localStorage.getItem("school_name") || "")}`;
-}
-
-else {
-      alert(result.message || "Payment verification failed. Please contact support.");
-
-      if (btn) {
-        btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Retry Verification';
-        btn.disabled = false;
-      }
+    if (!res.ok || !result.success) {
+      throw new Error(result.message || "Payment verification failed.");
     }
+
+    localStorage.removeItem("payment_pending");
+
+    if (result.token) {
+      localStorage.setItem("gradely_token", result.token);
+      sessionStorage.setItem("gradely_token", result.token);
+    }
+
+    const finalPlan =
+      cleanPlan(result.plan) ||
+      cleanPlan(plan) ||
+      cleanPlan(localStorage.getItem("plan")) ||
+      "unknown";
+
+    const finalSchoolId =
+      result.school_id ||
+      localStorage.getItem("school_id") ||
+      school_id ||
+      "";
+
+    const finalSchoolName =
+      result.school_name ||
+      localStorage.getItem("school_name") ||
+      "";
+
+    localStorage.setItem("school_id", finalSchoolId);
+    localStorage.setItem("plan", finalPlan);
+    localStorage.setItem("payment_reference", result.reference || reference);
+
+    if (finalSchoolName) {
+      localStorage.setItem("school_name", finalSchoolName);
+    }
+
+    window.location.href =
+      result.redirect_url ||
+      `success.html?school_id=${encodeURIComponent(finalSchoolId)}` +
+      `&plan=${encodeURIComponent(finalPlan)}` +
+      `&reference=${encodeURIComponent(result.reference || reference)}` +
+      `&school_name=${encodeURIComponent(finalSchoolName)}`;
 
   } catch (err) {
     console.error("❌ Callback verification error:", err);
-    alert("Network error verifying payment. Please contact support.");
+    alert(err.message || "Network error verifying payment. Please contact support.");
 
     if (btn) {
       btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Retry Verification';
@@ -649,11 +626,7 @@ else {
 
   <script src="js/kaima-chatbot.js"></script>
 <!-- <script src="js/session-timeout.js"></script> -->
-<script>
-  document.querySelectorAll(".currentYear").forEach(el => {
-    el.textContent = new Date().getFullYear();
-  });
-</script>
+
   
 </body>
 </html>
