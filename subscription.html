@@ -272,623 +272,325 @@ footer a{
     <a href="refund-policy.html">Refund Policy</a>
   </footer>
 
-  <script src="https://js.paystack.co/v1/inline.js"></script>
 
   <script>
-    const API_BASE = window.location.hostname.includes("localhost")
-      ? "http://localhost:5000"
-      : "https://api.gradely.info";
+const API_BASE = window.location.hostname.includes("localhost")
+  ? "http://localhost:5000"
+  : "https://api.gradely.info";
 
-    let schoolId = null;
-    let adminId = null;
-    let currentPlan = null;
-    let isCancelled = false;
-    let schoolEmail = null;
-    let hasSubscription = false;
+let currentPlan = "basic";
+let hasSubscription = false;
+let schoolId = "";
+let adminId = "";
 
-    function getToken() {
-      const token =
-        sessionStorage.getItem("gradely_token") ||
-        localStorage.getItem("gradely_token");
+function getToken() {
+  const token =
+    sessionStorage.getItem("gradely_token") ||
+    localStorage.getItem("gradely_token");
 
-      if (
-        !token ||
-        token === "null" ||
-        token === "undefined" ||
-        token.trim() === ""
-      ) {
-        return null;
-      }
+  if (!token || token === "null" || token === "undefined" || token.trim() === "") {
+    return null;
+  }
 
-      return token;
+  return token;
+}
+
+function clearAuth() {
+  ["gradely_token", "school_id", "adminId", "admin_id"].forEach(key => {
+    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
+  });
+}
+
+function redirectToLogin(message = "Session expired. Please login again.") {
+  alert(`⚠️ ${message}`);
+  clearAuth();
+  window.location.href = "admin-login.html";
+}
+
+function getAuthHeaders() {
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`
+  };
+}
+
+async function authFetch(url, options = {}) {
+  if (!getToken()) {
+    redirectToLogin();
+    return null;
+  }
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...(options.headers || {})
     }
+  });
 
-    function clearAuth() {
-      sessionStorage.removeItem("gradely_token");
-      sessionStorage.removeItem("school_id");
-      sessionStorage.removeItem("adminId");
-      sessionStorage.removeItem("admin_id");
+  if (res.status === 401) {
+    redirectToLogin("Authentication failed.");
+    return null;
+  }
 
-      localStorage.removeItem("gradely_token");
-      localStorage.removeItem("school_id");
-      localStorage.removeItem("adminId");
-      localStorage.removeItem("admin_id");
-    }
+  return res;
+}
 
-    function redirectToLogin(message = "Session expired. Please login again.") {
-      alert(`⚠️ ${message}`);
-      clearAuth();
-      window.location.href = "admin-login.html";
-    }
+document.addEventListener("DOMContentLoaded", async () => {
+  if (!getToken()) {
+    redirectToLogin("Session expired. Please log in again.");
+    return;
+  }
 
-    function getAuthHeaders(extraHeaders = {}) {
-      const token = getToken();
+  schoolId =
+    sessionStorage.getItem("school_id") ||
+    localStorage.getItem("school_id") ||
+    "";
 
-      if (!token) {
-        redirectToLogin("No authentication token found.");
-        return {};
-      }
+  adminId =
+    sessionStorage.getItem("adminId") ||
+    sessionStorage.getItem("admin_id") ||
+    localStorage.getItem("adminId") ||
+    localStorage.getItem("admin_id") ||
+    "";
 
-      return {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...extraHeaders
-      };
-    }
+  await fetchSubscriptionStatus();
+});
 
-    async function authFetch(url, options = {}) {
-      const token = getToken();
-
-      if (!token) {
-        redirectToLogin("No authentication token found.");
-        return null;
-      }
-
-      const res = await fetch(url, {
-        ...options,
-        headers: {
-          ...getAuthHeaders(),
-          ...(options.headers || {})
-        }
-      });
-
-      if (res.status === 401) {
-        redirectToLogin("Authentication failed.");
-        return null;
-      }
-
-      return res;
-    }
-
-    document.addEventListener("DOMContentLoaded", async () => {
-      const token = getToken();
-
-      if (!token) {
-        redirectToLogin("Session expired. Please log in again.");
-        return;
-      }
-
-      schoolId =
-        sessionStorage.getItem("school_id") ||
-        localStorage.getItem("school_id");
-
-      adminId =
-        sessionStorage.getItem("adminId") ||
-        sessionStorage.getItem("admin_id") ||
-        localStorage.getItem("adminId") ||
-        localStorage.getItem("admin_id");
-
-      checkUpgradeSuccess();
-      await fetchSubscriptionStatus();
+async function fetchSubscriptionStatus() {
+  try {
+    const res = await authFetch(`${API_BASE}/api/subscription/status`, {
+      method: "GET",
+      cache: "no-store"
     });
 
-    function checkUpgradeSuccess() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const upgradeStatus = urlParams.get("upgrade");
-      const upgradedPlan = urlParams.get("plan");
+    if (!res) return;
 
-      if (upgradeStatus === "success" || upgradeStatus === "completed") {
-        showUpgradeSuccess(upgradedPlan);
+    const data = await res.json();
 
-        setTimeout(fetchSubscriptionStatus, 1000);
-
-        if (upgradedPlan === "pro") {
-          setTimeout(unlockProFeatures, 1500);
-        }
-
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to load subscription");
     }
 
-    function showUpgradeSuccess(plan) {
-      const toast = document.createElement("div");
-      toast.className = "upgrade-success-toast";
-      toast.innerHTML = `
-        ✅ <strong>Upgrade Successful!</strong><br>
-        Your account is now on the <strong>${plan?.toUpperCase() || "SELECTED"}</strong> plan.
-        <br><small style="opacity:0.9">All Pro features are now unlocked.</small>
-      `;
+    currentPlan = (
+      data.current_plan ||
+      data.plan ||
+      data.subscription_plan ||
+      "basic"
+    ).toLowerCase();
 
-      document.body.appendChild(toast);
+    hasSubscription =
+      data.autoRenew ||
+      data.isPaystackManaged ||
+      data.hasSubscription ||
+      false;
 
-      setTimeout(() => {
-        toast.style.animation = "slideOut 0.3s ease";
-        setTimeout(() => toast.remove(), 300);
-      }, 5000);
-    }
+    const subscriptionStatus = (
+      data.status ||
+      data.subscription_status ||
+      "inactive"
+    ).toLowerCase();
 
-    function unlockProFeatures() {
-      document.querySelectorAll(".pro-feature").forEach(el => {
-        el.style.opacity = "1";
-        el.style.pointerEvents = "auto";
-        el.classList.remove("locked");
+    const accountStatus = (
+      data.account_status ||
+      "active"
+    ).toLowerCase();
+
+    const expiryRaw =
+      data.expiryDate ||
+      data.nextBillingDate ||
+      null;
+
+    const expiryDate = expiryRaw ? new Date(expiryRaw) : null;
+    const today = new Date();
+    const isExpired = expiryDate && expiryDate < today;
+
+    document.getElementById("plan").textContent =
+      currentPlan === "pro" ? "Professional" : "Basic";
+
+    document.getElementById("renewal").textContent = expiryDate
+      ? expiryDate.toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric"
+        })
+      : "Not set";
+
+    const statusEl = document.getElementById("status");
+    const cancelStatusEl = document.getElementById("cancelStatus");
+    const mainButtons = document.getElementById("mainButtons");
+    const renewBtn = document.getElementById("renewBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const upgradeBtn = document.getElementById("upgradeBtn");
+    const downgradeBtn = document.getElementById("downgradeBtn");
+    const nextBillingDisplay = document.getElementById("nextBillingDisplay");
+
+    if (nextBillingDisplay && expiryDate) {
+      nextBillingDisplay.textContent = expiryDate.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
       });
-
-      const planBadge = document.getElementById("currentPlanBadge");
-
-      if (planBadge) {
-        planBadge.textContent = "Pro Plan";
-        planBadge.className = "plan-badge pro";
-      }
-
-      document.querySelectorAll(".pro-only-btn").forEach(btn => {
-        btn.disabled = false;
-        btn.title = "";
-      });
     }
 
-    async function fetchSubscriptionStatus() {
-      try {
-        const res = await authFetch(`${API_BASE}/api/subscription/status`, {
-          method: "GET",
-          cache: "no-store"
-        });
+    const isCancelling =
+      subscriptionStatus === "cancelling" ||
+      subscriptionStatus === "cancelled";
 
-        if (!res) return;
+    cancelStatusEl.style.display = isCancelling ? "block" : "none";
 
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-
-        const data = await res.json();
-
-        if (!data.success) {
-          throw new Error(data.message || "Failed to load subscription");
-        }
-
-        schoolEmail = data.data?.email || sessionStorage.getItem("email");
-
-        currentPlan = (
-          data.plan ||
-          data.current_plan ||
-          data.data?.current_plan ||
-          "basic"
-        ).toLowerCase();
-
-        document.getElementById("plan").textContent =
-          currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-
-        const statusEl = document.getElementById("status");
-        const cancelBtn = document.getElementById("cancelBtn");
-        const renewBtn = document.getElementById("renewBtn");
-        const upgradeBtn = document.getElementById("upgradeBtn");
-        const downgradeBtn = document.getElementById("downgradeBtn");
-        const mainButtons = document.getElementById("mainButtons");
-        const expiryEl = document.getElementById("renewal");
-        const cancelStatusEl = document.getElementById("cancelStatus");
-
-        const rawExpiry =
-          data.expiryDate ||
-          data.data?.subscription_expiry ||
-          data.data?.expiry_date;
-
-        let expiryDate = null;
-
-        if (rawExpiry) {
-          expiryDate = new Date(rawExpiry);
-
-          expiryEl.textContent = expiryDate.toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric"
-          });
-
-          const nextBillingDisplay = document.getElementById("nextBillingDisplay");
-
-          if (nextBillingDisplay) {
-            nextBillingDisplay.textContent = expiryDate.toLocaleDateString("en-NG", {
-              day: "numeric",
-              month: "short",
-              year: "numeric"
-            });
-          }
-        } else {
-          expiryEl.textContent = "Not set";
-        }
-
-        const today = new Date();
-        const isExpired = expiryDate && expiryDate < today;
-        const isSuspended = data.isSuspended || data.data?.is_suspended || false;
-
-        const subscriptionStatus = (
-          data.subscription_status ||
-          data.status ||
-          data.data?.subscription_status ||
-          "active"
-        ).toLowerCase().trim();
-
-        const accountStatus = (
-          data.account_status ||
-          data.data?.account_status ||
-          "active"
-        ).toLowerCase().trim();
-
-        isCancelled = subscriptionStatus === "cancelled";
-        hasSubscription = data.hasSubscription || data.data?.hasSubscription || false;
-
-        cancelStatusEl.style.display = isCancelled ? "block" : "none";
-
-        if (isSuspended) {
-          statusEl.textContent = "Suspended";
-          statusEl.className = "error";
-          mainButtons.style.display = "none";
-          updateAutoRenewalSection(false, false, true);
-          return;
-        }
-
-        if (isExpired) {
-          statusEl.textContent = "Expired";
-          statusEl.className = "error";
-          mainButtons.style.display = "none";
-          updateAutoRenewalSection(false, true, false);
-          showPlanSelection();
-          return;
-        }
-
-        if (isCancelled) {
-          statusEl.textContent = "Active (Auto-Renew Off)";
-          statusEl.className = "";
-        } else if (subscriptionStatus === "active") {
-          statusEl.textContent = hasSubscription
-            ? "Active (Auto-Renew On)"
-            : "Active (Auto-Renew Off)";
-          statusEl.className = "";
-        } else {
-          statusEl.textContent =
-            accountStatus.charAt(0).toUpperCase() + accountStatus.slice(1);
-          statusEl.className = "";
-        }
-
-        mainButtons.style.display = "flex";
-        renewBtn.style.display = "block";
-        cancelBtn.style.display = hasSubscription ? "block" : "none";
-
-        if (currentPlan === "basic") {
-          upgradeBtn.style.display = "block";
-          downgradeBtn.style.display = "none";
-        } else if (currentPlan === "pro") {
-          upgradeBtn.style.display = "none";
-          downgradeBtn.style.display = "block";
-        }
-
-        updateAutoRenewalSection(hasSubscription, isExpired, isSuspended);
-
-      } catch (err) {
-        console.error("Subscription fetch error:", err);
-
-        document.getElementById("message").innerHTML =
-          `<span class="error">Unable to load subscription: ${err.message}</span>`;
-      }
+    if (isExpired) {
+      statusEl.textContent = "Expired";
+      statusEl.className = "error";
+      mainButtons.style.display = "none";
+      updateAutoRenewalSection(false, true, false);
+      showPlanSelection();
+      return;
     }
 
-    function updateAutoRenewalSection(hasSubscription, isExpired, isSuspended) {
-      const activeDiv = document.getElementById("autorenewActive");
-      const inactiveDiv = document.getElementById("autorenewInactive");
-      const processingDiv = document.getElementById("autorenewProcessing");
-      const errorDiv = document.getElementById("autorenewError");
-
-      [activeDiv, inactiveDiv, processingDiv, errorDiv].forEach(div => {
-        if (div) div.style.display = "none";
-      });
-
-      if (isExpired || isSuspended) {
-        if (errorDiv) {
-          errorDiv.style.display = "block";
-
-          document.getElementById("autorenewErrorMessage").textContent =
-            "Auto-renewal cannot be enabled while your subscription is expired or suspended.";
-        }
-      } else if (hasSubscription) {
-        if (activeDiv) activeDiv.style.display = "block";
-      } else {
-        if (inactiveDiv) inactiveDiv.style.display = "block";
-      }
+    if (accountStatus === "suspended" || subscriptionStatus === "past_due") {
+      statusEl.textContent = subscriptionStatus === "past_due" ? "Past Due" : "Suspended";
+      statusEl.className = "error";
+      mainButtons.style.display = "none";
+      updateAutoRenewalSection(false, false, true);
+      return;
     }
 
-    async function cancelSubscription() {
-      if (!confirm("⏸️ Cancel Auto-Renewal?\nAccess continues until current billing date.\nAre you sure?")) return;
-
-      try {
-        const res = await authFetch(`${API_BASE}/api/subscription/cancel`, {
-          method: "POST"
-        });
-
-        if (!res) return;
-
-        const contentType = res.headers.get("content-type");
-
-        if (!contentType || !contentType.includes("application/json")) {
-          const text = await res.text();
-          console.error("❌ Expected JSON, got:", text.substring(0, 200));
-          throw new Error("Server returned non-JSON response");
-        }
-
-        const data = await res.json();
-
-        if (!res.ok || !data.success) {
-          throw new Error(data.message || "Cancellation failed");
-        }
-
-        document.getElementById("message").innerHTML =
-          `<span class="success">✅ ${data.message}</span>`;
-
-        setTimeout(fetchSubscriptionStatus, 1500);
-
-      } catch (err) {
-        console.error("Cancel error:", err);
-
-        document.getElementById("message").innerHTML =
-          `<span class="error">❌ ${err.message}</span>`;
-      }
+    if (isCancelling) {
+      statusEl.textContent = "Active (Auto-Renew Off)";
+    } else if (subscriptionStatus === "active") {
+      statusEl.textContent = hasSubscription
+        ? "Active (Auto-Renew On)"
+        : "Active (Auto-Renew Off)";
+    } else {
+      statusEl.textContent = subscriptionStatus.charAt(0).toUpperCase() + subscriptionStatus.slice(1);
     }
 
-    async function renewSubscription() {
-      const planToUse = currentPlan || "basic";
+    statusEl.className = "";
+    mainButtons.style.display = "flex";
+    renewBtn.style.display = "block";
+    cancelBtn.style.display = hasSubscription && !isCancelling ? "block" : "none";
 
-      try {
-        const cachedAuth = localStorage.getItem("recent_authorization_code");
-
-        if (cachedAuth) {
-          await setupAutoRenewal(cachedAuth, planToUse);
-          return;
-        }
-
-        const statusRes = await authFetch(`${API_BASE}/api/subscription/status`, {
-          method: "GET",
-          cache: "no-store"
-        });
-
-        if (!statusRes) return;
-
-        const statusData = await statusRes.json();
-
-        if (statusData.success && statusData.authorization_code) {
-          await setupAutoRenewal(statusData.authorization_code, planToUse);
-          return;
-        }
-
-        window.location.href =
-          `pay.html?school_id=${encodeURIComponent(schoolId || "")}` +
-          `&admin_id=${encodeURIComponent(adminId || "")}` +
-          `&plan=${encodeURIComponent(planToUse)}` +
-          `&renew=true&is_renewal=true`;
-
-      } catch (err) {
-        console.error("❌ Renewal setup failed:", err);
-
-        document.getElementById("message").innerHTML =
-          `<span class="error">❌ ${err.message || "Renewal setup failed. Please try making a payment first."}</span>`;
-      }
+    if (currentPlan === "basic") {
+      upgradeBtn.style.display = "block";
+      downgradeBtn.style.display = "none";
+    } else {
+      upgradeBtn.style.display = "none";
+      downgradeBtn.style.display = "block";
     }
 
-    async function enableAutoRenewal() {
-      const planToUse = currentPlan || "basic";
+    updateAutoRenewalSection(hasSubscription && !isCancelling, false, false);
 
-      document.getElementById("autorenewInactive").style.display = "none";
-      document.getElementById("autorenewProcessing").style.display = "block";
+  } catch (err) {
+    console.error("Subscription fetch error:", err);
+    document.getElementById("message").innerHTML =
+      `<span class="error">Unable to load subscription: ${err.message}</span>`;
+  }
+}
 
-      try {
-        const cachedAuth = localStorage.getItem("recent_authorization_code");
+function updateAutoRenewalSection(isActive, isExpired, isSuspended) {
+  const activeDiv = document.getElementById("autorenewActive");
+  const inactiveDiv = document.getElementById("autorenewInactive");
+  const processingDiv = document.getElementById("autorenewProcessing");
+  const errorDiv = document.getElementById("autorenewError");
 
-        if (cachedAuth) {
-          await setupAutoRenewal(cachedAuth, planToUse);
-          return;
-        }
+  [activeDiv, inactiveDiv, processingDiv, errorDiv].forEach(div => {
+    if (div) div.style.display = "none";
+  });
 
-        const statusRes = await authFetch(`${API_BASE}/api/subscription/status`, {
-          method: "GET",
-          cache: "no-store"
-        });
+  if (isExpired || isSuspended) {
+    errorDiv.style.display = "block";
+    document.getElementById("autorenewErrorMessage").textContent =
+      "Auto-renewal cannot be enabled while your subscription is expired, past due, or suspended.";
+    return;
+  }
 
-        if (!statusRes) return;
+  if (isActive) {
+    activeDiv.style.display = "block";
+  } else {
+    inactiveDiv.style.display = "block";
+  }
+}
 
-        const statusData = await statusRes.json();
+function goToPayment(planToUse, extraParams = "") {
+  window.location.href =
+    `pay.html?school_id=${encodeURIComponent(schoolId || "")}` +
+    `&admin_id=${encodeURIComponent(adminId || "")}` +
+    `&plan=${encodeURIComponent(planToUse)}` +
+    extraParams;
+}
 
-        if (statusData.success && statusData.authorization_code) {
-          await setupAutoRenewal(statusData.authorization_code, planToUse);
-          return;
-        }
+function renewSubscription() {
+  goToPayment(currentPlan || "basic", "&renew=true&is_renewal=true");
+}
 
-        document.getElementById("autorenewProcessing").style.display = "none";
-        document.getElementById("autorenewError").style.display = "block";
-        document.getElementById("autorenewErrorMessage").textContent =
-          "No valid payment method found. Please complete a payment to enable auto-renewal.";
+function enableAutoRenewal() {
+  goToPayment(currentPlan || "basic", "&renew=true&enable_autorenew=true");
+}
 
-      } catch (err) {
-        console.error("❌ Enable auto-renewal failed:", err);
+function upgradeToPro() {
+  if (!confirm("✨ Upgrade to Pro Plan?\n\nThis will start a Pro subscription. Continue?")) return;
+  goToPayment("pro", `&from_plan=${encodeURIComponent(currentPlan || "basic")}&upgrade=true`);
+}
 
-        document.getElementById("autorenewProcessing").style.display = "none";
-        document.getElementById("autorenewError").style.display = "block";
-        document.getElementById("autorenewErrorMessage").textContent =
-          err.message || "Setup failed. Please try again.";
-      }
+function downgradeToBasic() {
+  if (!confirm("⬇️ Downgrade to Basic Plan?\n\nThis will switch your subscription to Basic. Continue?")) return;
+  goToPayment("basic", "&downgrade=true");
+}
+
+async function cancelSubscription() {
+  if (!confirm("⏸️ Cancel Auto-Renewal?\nAccess continues until your expiry date.\nAre you sure?")) return;
+
+  try {
+    const res = await authFetch(`${API_BASE}/api/subscription/cancel`, {
+      method: "POST",
+      body: JSON.stringify({
+        reason: "User cancelled auto-renewal"
+      })
+    });
+
+    if (!res) return;
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Cancellation failed");
     }
 
-    async function setupAutoRenewal(authorizationCode, planToUse) {
-      const step1 = document.getElementById("autorenewStep1");
+    document.getElementById("message").innerHTML =
+      `<span class="success">✅ ${data.message}</span>`;
 
-      if (step1) {
-        step1.style.display = "none";
-      }
+    setTimeout(fetchSubscriptionStatus, 1200);
 
-      document.getElementById("autorenewProcessing").style.display = "block";
+  } catch (err) {
+    console.error("Cancel error:", err);
+    document.getElementById("message").innerHTML =
+      `<span class="error">❌ ${err.message}</span>`;
+  }
+}
 
-      try {
-        const statusRes = await authFetch(`${API_BASE}/api/subscription/status`, {
-          method: "GET",
-          cache: "no-store"
-        });
+function showPlanSelection() {
+  if (document.getElementById("reactivateBox")) return;
 
-        if (!statusRes) return;
+  const container = document.querySelector(".container");
 
-        if (!statusRes.ok) {
-          throw new Error(`Failed to fetch subscription status: ${statusRes.status}`);
-        }
+  const html = `
+    <div id="reactivateBox" style="margin-top:20px; padding:20px; background:rgba(0,230,118,0.1); border-radius:12px; border:2px dashed #00e676;">
+      <h3 style="color:#fff; margin-bottom:15px;">🔄 Reactivate Subscription</h3>
+      <p style="margin-bottom:20px; color:#e0f2fe;">Your subscription has expired. Choose a plan to continue:</p>
+      <button
+        class="btn btn-upgrade"
+        onclick="window.location.href='plan-comparison.html?reactivate=true&school_id=${encodeURIComponent(schoolId || "")}&admin_id=${encodeURIComponent(adminId || "")}'"
+        style="width:100%; margin-bottom:10px;">
+        ✨ Choose Your Plan
+      </button>
+    </div>
+  `;
 
-        const statusData = await statusRes.json();
-
-        const exactEmail =
-          statusData.data?.email ||
-          statusData.paystack_customer_email ||
-          schoolEmail ||
-          localStorage.getItem("email") ||
-          sessionStorage.getItem("email") ||
-          "user@gradely.info";
-
-        const res = await authFetch(`${API_BASE}/api/subscription/setup-subscription`, {
-          method: "POST",
-          body: JSON.stringify({
-            authorization_code: authorizationCode,
-            plan: planToUse || currentPlan || "basic",
-            school_id: schoolId,
-            email: exactEmail
-          })
-        });
-
-        if (!res) return;
-
-        const data = await res.json();
-
-        if (data.success) {
-          document.getElementById("autorenewProcessing").style.display = "none";
-          document.getElementById("autorenewActive").style.display = "block";
-
-          if (data.next_billing_date) {
-            document.getElementById("nextBillingDisplay").textContent =
-              new Date(data.next_billing_date).toLocaleDateString("en-NG", {
-                year: "numeric",
-                month: "long",
-                day: "numeric"
-              });
-          }
-
-          localStorage.removeItem("recent_authorization_code");
-
-          setTimeout(fetchSubscriptionStatus, 1000);
-
-          document.getElementById("message").innerHTML =
-            `<span class="success">✅ Auto-renewal enabled successfully!</span>`;
-
-        } else {
-          if (data.message?.includes("does not belong to customer")) {
-            throw new Error("Payment method mismatch. Please complete a new payment to enable auto-renewal.");
-          }
-
-          throw new Error(data.message || "Setup failed");
-        }
-
-      } catch (err) {
-        console.error("❌ Auto-renewal setup failed:", err);
-
-        document.getElementById("autorenewProcessing").style.display = "none";
-        document.getElementById("autorenewError").style.display = "block";
-
-        let userMessage = err.message || "Failed to enable auto-renewal";
-
-        if (userMessage.includes("network") || userMessage.includes("fetch")) {
-          userMessage = "Connection error. Please check your internet and try again.";
-        } else if (userMessage.includes("mismatch") || userMessage.includes("belong to customer")) {
-          userMessage =
-            'Payment method verification failed. Please <a href="pay.html?renew=true" style="color:#00e676;text-decoration:underline">complete a payment</a> to enable auto-renewal.';
-        }
-
-        document.getElementById("autorenewErrorMessage").innerHTML = userMessage;
-      }
-    }
-
-    function upgradeToPro() {
-      if (!confirm("✨ Upgrade to Pro Plan?\n\nYou'll get:\n• Unlimited students\n• Bulk registration\n• SMS/Email alerts\n• Priority support\n\nThis will be charged immediately. Continue?")) {
-        return;
-      }
-
-      window.location.href =
-        `pay.html?school_id=${encodeURIComponent(schoolId || "")}` +
-        `&admin_id=${encodeURIComponent(adminId || "")}` +
-        `&from_plan=${encodeURIComponent(currentPlan || "basic")}` +
-        `&to_plan=pro&upgrade=true`;
-    }
-
-    async function downgradeToBasic() {
-      const confirmed = confirm(
-        "⬇️ Downgrade to Basic Plan?\n\nYou will lose:\n• Unlimited students (limited to 200)\n• Bulk registration\n• SMS/Email alerts\n• Priority support\n\nChanges take effect immediately. Continue?"
-      );
-
-      if (!confirmed) return;
-
-      try {
-        const res = await authFetch(`${API_BASE}/api/subscription/downgrade`, {
-          method: "POST",
-          body: JSON.stringify({
-            school_id: schoolId,
-            to_plan: "basic"
-          })
-        });
-
-        if (!res) return;
-
-        const data = await res.json();
-
-        if (!res.ok || !data.success) {
-          throw new Error(data.message || "Downgrade failed");
-        }
-
-        document.getElementById("message").innerHTML =
-          `<span class="success">✅ ${data.message}</span>`;
-
-        setTimeout(fetchSubscriptionStatus, 1500);
-
-      } catch (err) {
-        console.error("Downgrade error:", err);
-
-        document.getElementById("message").innerHTML =
-          `<span class="error">❌ ${err.message}</span>`;
-      }
-    }
-
-    function showPlanSelection() {
-      if (document.getElementById("reactivateBox")) return;
-
-      const container = document.querySelector(".container");
-
-      const html = `
-        <div id="reactivateBox" style="margin-top:20px; padding:20px; background:rgba(0,230,118,0.1); border-radius:12px; border:2px dashed #00e676;">
-          <h3 style="color:#2d046e; margin-bottom:15px;">🔄 Reactivate Subscription</h3>
-          <p style="margin-bottom:20px; color:#555;">Your subscription has expired. Choose a plan to continue:</p>
-          <button
-            class="btn btn-upgrade"
-            onclick="window.location.href='plan-comparison.html?reactivate=true&school_id=${encodeURIComponent(schoolId || "")}&admin_id=${encodeURIComponent(adminId || "")}'"
-            style="width:100%; margin-bottom:10px; background:linear-gradient(135deg,#6a11cb,#2575fc); color:white;">
-            ✨ Choose Your Plan
-          </button>
-          <p style="font-size:0.85rem; color:#777; margin-top:15px;">
-            <strong>Tip:</strong> You can upgrade to Pro or stay on Basic — your choice!
-          </p>
-        </div>
-      `;
-
-      container.insertAdjacentHTML("beforeend", html);
-    }
-  </script>
+  container.insertAdjacentHTML("beforeend", html);
+}
+</script>
 
   <script src="js/kaima-chatbot.js"></script>
   <!-- <script src="js/session-timeout.js"></script> -->
