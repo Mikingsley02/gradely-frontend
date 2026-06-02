@@ -399,13 +399,6 @@ input:focus{
   margin-top:18px;
   padding:14px 16px;
   border-radius:16px;
-}
-
-
-.message{
-  margin-top:18px;
-  padding:14px 16px;
-  border-radius:16px;
   display:none;
   font-weight:600;
   text-align:center;
@@ -899,8 +892,10 @@ input:focus{
             />
           </div>
 
-          <button class="login-btn" onclick="verify2FA()">
-            Verify & Continue
+          <!-- ✅ UPDATED: Added spinner and text span for loading state -->
+          <button class="login-btn" id="verify2FABtn" onclick="verify2FA()">
+            <span id="verifyBtnText">Verify & Continue</span>
+            <div class="spinner" id="verifySpinner"></div>
           </button>
 
           <button
@@ -1162,6 +1157,7 @@ await completeLogin(data);
     }
   }
 
+  // ✅ UPDATED: Added loading state management for 2FA verification
   async function verify2FA() {
     const code = document
       .getElementById("otpCode")
@@ -1172,6 +1168,15 @@ await completeLogin(data);
       showMessage("Enter valid 6-digit code.");
       return;
     }
+
+    // ✅ Set loading state for 2FA button
+    const verifyBtn = document.getElementById("verify2FABtn");
+    const verifyBtnText = document.getElementById("verifyBtnText");
+    const verifySpinner = document.getElementById("verifySpinner");
+
+    verifyBtn.disabled = true;
+    verifyBtnText.style.display = "none";
+    verifySpinner.style.display = "block";
 
     try {
       const school_id = sessionStorage.getItem("pending_2fa_school_id");
@@ -1205,6 +1210,11 @@ await completeLogin(data);
       await completeLogin(data);
 
     } catch (error) {
+      // ✅ Restore button state on error
+      verifyBtn.disabled = false;
+      verifyBtnText.style.display = "inline";
+      verifySpinner.style.display = "none";
+
       showMessage(error.message || "Verification failed.");
     }
   }
@@ -1221,9 +1231,6 @@ await completeLogin(data);
 
       await sendSmsCode(schoolId);
     });
-
-
-
 
 </script>
 
