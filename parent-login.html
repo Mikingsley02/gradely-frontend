@@ -553,7 +553,6 @@ footer img{
   
   fetch('https://api.gradely.info/api/auth/parent-login', {
     method: 'POST',
-    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ student_id: studentId, password: password })
   })
@@ -579,11 +578,29 @@ footer img{
     }
     
     // ✅ Safe storage and redirect
-    localStorage.setItem("studentId", parent.student_id);
-    localStorage.setItem("studentData", JSON.stringify(parent));
-    
-    // Show success and redirect
-    window.location.href = 'student.html';
+    const studentToken =
+  data.token ||
+  data.student_token ||
+  data.parent_token ||
+  "";
+
+if (!studentToken) {
+  console.error("❌ Student token missing from login response:", data);
+  alert("Login succeeded, but student session token is missing. Please contact admin.");
+  loginBtn.classList.remove("loading");
+  loginBtn.disabled = false;
+  return;
+}
+
+localStorage.setItem("student_token", studentToken);
+sessionStorage.setItem("student_token", studentToken);
+
+localStorage.setItem("studentId", parent.student_id);
+sessionStorage.setItem("studentId", parent.student_id);
+
+localStorage.setItem("studentData", JSON.stringify(parent));
+
+window.location.href = "student.html";
   })
   
   .catch(error => {
