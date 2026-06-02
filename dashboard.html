@@ -36,9 +36,10 @@ footer a{color:#00d2ff;text-decoration:none;font-weight:900;margin:0 6px}
 <body>
 
   <header>
-    <h1>🎓 gradely.info — School Dashboard 
-      <span id="planBadge" class="plan-badge">Loading...</span>
-    </h1>
+    <h1>
+  🎓 <span id="dashboardSchoolName">School Dashboard</span>
+  <span id="planBadge" class="plan-badge">Loading...</span>
+</h1>
     <button class="logout-btn" id="logoutBtn">Logout</button>
   </header>
 
@@ -376,6 +377,22 @@ async function checkAndApplySubscription() {
     console.log("📡 Full API Response:", data);
 
     if (data.success) {
+
+      const schoolName =
+  data.school_name ||
+  data.schoolName ||
+  data.data?.school_name ||
+  localStorage.getItem("school_name") ||
+  sessionStorage.getItem("school_name") ||
+  "School";
+
+document.getElementById("dashboardSchoolName").textContent =
+  `${schoolName} — Dashboard`;
+
+localStorage.setItem("school_name", schoolName);
+sessionStorage.setItem("school_name", schoolName);
+
+
       // ✅ ROBUST plan extraction - check ALL possible field names
       const rawPlan = (
         data.plan || 
