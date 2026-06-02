@@ -376,63 +376,56 @@
 
 <!-- ✅ DYNAMIC POLICY LOADER SCRIPT (Public Endpoint - FIXED) -->
 <script>
-  (function() {
-    // ✅ Use PUBLIC endpoint (no auth required) - FIXED URL
-    const API_BASE = "https://api.gradely.info/api/public/legal";
-    const POLICY_TYPE = "terms";
-    
-    const policyContent = document.getElementById("policyContent");
-    const policyMeta = document.getElementById("policyMeta");
-    const lastUpdatedEl = document.getElementById("lastUpdated");
-    const policyVersionEl = document.getElementById("policyVersion");
+(function() {
+  const API_BASE = "https://api.gradely.info/api/public/legal";
+  const POLICY_TYPE = "terms";
 
-    // ✅ Load policy content from API (enhancement only, fallback always works)
-    async function loadPolicy() {
-      try {
-        const url = `${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`;
-        const res = await fetch(url);
-        
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        
-        const data = await res.json();
-        
-        if (!data.success || !data.data?.content) {
-          throw new Error("Invalid response");
-        }
-        
-        // ✅ Only update version info from API (content stays as fallback)
-        if (data.data.version) {
-          policyVersionEl.textContent = `Version: ${data.data.version}`;
-        }
-        
-        if (data.data.updated_at) {
-          const date = new Date(data.data.updated_at);
-          lastUpdatedEl.textContent = `Last Updated: ${date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}`;
-        }
-        
-        console.log("✅ Terms version loaded:", data.data.version);
-        
-      } catch (err) {
-        // ✅ Silently fail - fallback content is already visible
-        console.log("ℹ️ Using default terms content");
+  const policyContent = document.getElementById("policyContent");
+  const fallbackContent = document.getElementById("fallbackContent");
+  const lastUpdatedEl = document.getElementById("lastUpdated");
+  const policyVersionEl = document.getElementById("policyVersion");
+
+  async function loadPolicy() {
+    try {
+      const res = await fetch(`${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`, {
+        cache: "no-store"
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+
+      if (!data.success || !data.data?.content) {
+        throw new Error("No live policy content");
       }
+
+      policyContent.innerHTML = data.data.content;
+      if (fallbackContent) fallbackContent.style.display = "none";
+
+      if (data.data.version) {
+        policyVersionEl.textContent = `Version: ${data.data.version}`;
+      }
+
+      if (data.data.updated_at) {
+        const date = new Date(data.data.updated_at);
+        lastUpdatedEl.textContent = `Last Updated: ${date.toLocaleDateString("en-GB", {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        })}`;
+      }
+
+      console.log("✅ Live Terms loaded:", data.data.version);
+
+    } catch (err) {
+      console.log("ℹ️ Using default terms content:", err.message);
+      if (policyContent) policyContent.innerHTML = "";
+      if (fallbackContent) fallbackContent.style.display = "block";
     }
+  }
 
-    // ✅ Load when DOM is ready
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", loadPolicy);
-    } else {
-      loadPolicy();
-    }
-  })();
-
-
-
-
+  document.addEventListener("DOMContentLoaded", loadPolicy);
+})();
 </script>
 
 <!-- ✅ SMART BACK BUTTON: Returns to referring page (same origin) or fallback to index.html -->
