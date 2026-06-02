@@ -243,72 +243,70 @@ Future recurring charges will be based on the downgraded plan unless the School 
   <script src="js/kaima-chatbot.js"></script>
 
   <script>
-    (function() {
-      const API_BASE = "https://api.gradely.info/api/public/legal";
-      const POLICY_TYPE = "refund";
+(function() {
+  const API_BASE = "https://api.gradely.info/api/public/legal";
+  const POLICY_TYPE = "refund";
 
-      const lastUpdatedEl = document.getElementById("lastUpdated");
-      const policyVersionEl = document.getElementById("policyVersion");
+  const policyContent = document.getElementById("policyContent");
+  const fallbackContent = document.getElementById("fallbackContent");
+  const lastUpdatedEl = document.getElementById("lastUpdated");
+  const policyVersionEl = document.getElementById("policyVersion");
 
-      async function loadPolicy() {
-        try {
-          const res = await fetch(`${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-          const data = await res.json();
-          if (!data.success || !data.data) throw new Error("Invalid response");
-
-          if (data.data.version) {
-            policyVersionEl.textContent = `Version: ${data.data.version}`;
-          }
-
-          if (data.data.updated_at) {
-            const date = new Date(data.data.updated_at);
-            lastUpdatedEl.textContent = `Last Updated: ${date.toLocaleDateString("en-GB", {
-              year: "numeric",
-              month: "long",
-              day: "numeric"
-            })}`;
-          }
-
-          console.log("✅ Refund policy version loaded:", data.data.version);
-        } catch (err) {
-          console.log("ℹ️ Using default refund policy content");
-        }
-      }
-
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", loadPolicy);
-      } else {
-        loadPolicy();
-      }
-    })();
-
-    document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll(".currentYear").forEach(el => {
-        el.textContent = new Date().getFullYear();
+  async function loadPolicy() {
+    try {
+      const res = await fetch(`${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`, {
+        cache: "no-store"
       });
 
-      const backLink = document.getElementById("backLink");
-      if (!backLink) return;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      let backUrl = "index.html";
+      const data = await res.json();
 
-      if (document.referrer) {
-        try {
-          const referrerUrl = new URL(document.referrer);
-          if (referrerUrl.origin === window.location.origin) {
-            backUrl = document.referrer;
-          }
-        } catch {}
+      if (!data.success || !data.data?.content) {
+        throw new Error("No live refund policy content");
       }
 
-      backLink.href = backUrl;
-      backLink.onclick = e => {
-        e.preventDefault();
-        window.location.href = backUrl;
-      };
-    });
-  </script>
+      policyContent.innerHTML = data.data.content;
+
+      if (fallbackContent) {
+        fallbackContent.style.display = "none";
+      }
+
+      if (data.data.version) {
+        policyVersionEl.textContent = `Version: ${data.data.version}`;
+      }
+
+      if (data.data.updated_at) {
+        const date = new Date(data.data.updated_at);
+        lastUpdatedEl.textContent = `Last Updated: ${date.toLocaleDateString("en-GB", {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        })}`;
+      }
+
+      console.log("✅ Live refund policy loaded:", data.data.version);
+
+    } catch (err) {
+      console.log("ℹ️ Using default refund policy content:", err.message);
+
+      if (policyContent) {
+        policyContent.innerHTML = "";
+      }
+
+      if (fallbackContent) {
+        fallbackContent.style.display = "block";
+      }
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", loadPolicy);
+  } else {
+    loadPolicy();
+  }
+})();
+</script>
+
 </body>
 </html>
