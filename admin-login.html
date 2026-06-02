@@ -1070,6 +1070,12 @@ input:focus{
         sessionStorage.setItem("pending_2fa_school_id", admin_id);
         sessionStorage.setItem("pending_2fa_method", data.method || "app");
 
+        const resendBtn = document.getElementById("resendSmsBtn");
+
+if (resendBtn) {
+  resendBtn.style.display = data.method === "sms" ? "inline-block" : "none";
+}
+
         document
   .getElementById("twoFactorBox")
   .classList.add("show");
