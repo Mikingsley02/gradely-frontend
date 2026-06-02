@@ -461,6 +461,11 @@ input:focus{
   border-top:1px solid rgba(255,255,255,.16);
 }
 
+.resend-btn{
+  display:none;
+  margin-top:10px;
+}
+
 
 
 /* TABLET */
@@ -1070,10 +1075,10 @@ input:focus{
         sessionStorage.setItem("pending_2fa_school_id", admin_id);
         sessionStorage.setItem("pending_2fa_method", data.method || "app");
 
-        const resendBtn = document.getElementById("resendSmsBtn");
+const resendBtn = document.getElementById("resendBtn");
 
 if (resendBtn) {
-  resendBtn.style.display = data.method === "sms" ? "inline-block" : "none";
+  resendBtn.style.display = data.method === "sms" ? "block" : "none";
 }
 
         document
