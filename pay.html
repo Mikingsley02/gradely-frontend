@@ -6,213 +6,221 @@
   <title>💳 Secure Payment | Gradely</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      color: #333;
-    }
-    .payment-container {
-      max-width: 520px;
-      width: 100%;
-      background: white;
-      border-radius: 24px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-      overflow: hidden;
-      margin: 0 auto;
-    }
-    .header {
-      background: linear-gradient(120deg, #4361ee 0%, #3a0ca3 100%);
-      color: white;
-      padding: 35px 30px;
-      text-align: center;
-      position: relative;
-    }
-    .header-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-    .brand-logo {
-      font-weight: 800;
-      font-size: 1.8rem;
-      background: linear-gradient(to right, #f9f9f8, #f9f9f8);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 12px;
-    }
-    .header h1 {
-      font-size: 1.4rem;
-      margin-bottom: 5px;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-    }
-    .header p {
-      opacity: 0.95;
-      font-size: 1.15rem;
-      margin-top: 4px;
-    }
-    .content {
-      padding: 40px 35px;
-    }
-    .plan-summary {
-      background: #f0f4ff;
-      border: 2px solid #4361ee;
-      border-radius: 16px;
-      padding: 25px;
-      margin-bottom: 30px;
-      box-shadow: 0 4px 12px rgba(67, 97, 238, 0.12);
-    }
-    .plan-summary h2 {
-      color: #1e293b;
-      margin-bottom: 18px;
-      font-size: 1.9rem;
-      font-weight: 800;
-      text-align: center;
-      letter-spacing: -0.8px;
-    }
-    .plan-details {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid #e2e8f0;
-      font-size: 1.05rem;
-    }
-    .plan-details:last-child { border-bottom: none; padding-bottom: 0; }
-    .plan-details strong { 
-      color: #4361ee; 
-      font-weight: 700;
-      font-size: 1.1rem;
-    }
-    .payment-methods {
-      text-align: center;
-      margin: 30px 0 25px;
-    }
-    .payment-methods p {
-      color: #334155;
-      margin-bottom: 18px;
-      font-weight: 600;
-      font-size: 1.15rem;
-    }
-    .paystack-badge {
-      display: inline-flex;
-      align-items: center;
-      background: linear-gradient(120deg, #f0f4ff 0%, #e6eeff 100%);
-      border: 2px solid #4361ee;
-      border-radius: 60px;
-      padding: 12px 28px;
-      font-weight: 700;
-      color: #1e3a8a;
-      gap: 10px;
-      box-shadow: 0 6px 15px rgba(67, 97, 238, 0.25);
-      font-size: 1.15rem;
-    }
-    .pay-btn {
-      background: linear-gradient(120deg, #4361ee 0%, #3a0ca3 100%);
-      color: white;
-      border: none;
-      width: 100%;
-      padding: 18px;
-      border-radius: 16px;
-      font-size: 1.35rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.35s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      box-shadow: 0 8px 25px rgba(67, 97, 238, 0.45);
-      margin-top: 10px;
-    }
-    .pay-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 30px rgba(67, 97, 238, 0.6);
-      background: linear-gradient(120deg, #3a0ca3 0%, #4361ee 100%);
-    }
-    .pay-btn:active { transform: translateY(1px); }
-    .pay-btn i { font-size: 1.5rem; }
-    .security-note {
-      background: #eef7ff;
-      border: 1px solid #bfdbfe;
-      border-radius: 14px;
-      padding: 20px;
-      margin-top: 30px;
-      font-size: 0.95rem;
-      color: #1e40af;
-      line-height: 1.5;
-    }
-    .security-note i { 
-      margin-right: 10px; 
-      color: #1d4ed8; 
-      font-size: 1.2rem;
-      vertical-align: middle;
-    }
-    .footer {
-      text-align: center;
-      padding: 25px;
-      background: #f8fafc;
-      border-top: 1px solid #e2e8f0;
-      color: #475569;
-      font-size: 0.95rem;
-      line-height: 1.6;
-    }
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 20px;
-      color: #4361ee;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 1.05rem;
-      padding: 10px 20px;
-      border-radius: 50px;
-      background: rgba(67, 97, 238, 0.08);
-      transition: all 0.25s;
-    }
-    .back-link:hover { 
-      background: rgba(67, 97, 238, 0.15);
-      transform: translateX(-3px);
-    }
-    .back-link i { margin-right: 8px; font-size: 1.1rem; }
-    
-    /* ✅ Auto-renewal tip */
-    .auto-renew-tip {
-      background: rgba(0, 230, 118, 0.1);
-      border: 1px solid #00e676;
-      border-radius: 10px;
-      padding: 12px 15px;
-      margin: 15px 0 25px;
-      font-size: 0.9rem;
-      color: #1e40af;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .auto-renew-tip i {
-      color: #00e676;
-      font-size: 1.1rem;
-    }
-    
-    @media (max-width: 480px) {
-      .content { padding: 30px 25px; }
-      .header { padding: 28px 20px; }
-      .header h1 { font-size: 1.3rem; }
-      .header p { font-size: 1.05rem; }
-      .plan-summary h2 { font-size: 1.7rem; }
-      .pay-btn { padding: 16px; font-size: 1.25rem; }
-      .paystack-badge { padding: 10px 22px; font-size: 1.05rem; }
-      .auto-renew-tip { font-size: 0.85rem; }
-    }
+    *{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family:'Segoe UI',sans-serif;
+  background:#f8fafc;
+  min-height:100vh;
+  padding:20px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.payment-container{
+  width:100%;
+  max-width:950px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  border-radius:28px;
+  overflow:hidden;
+  background:white;
+  box-shadow:0 25px 80px rgba(15,23,42,.15);
+}
+
+.header{
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+  color:white;
+  padding:35px 30px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  text-align:center;
+}
+
+.brand-logo{
+  font-size:2rem;
+  font-weight:900;
+}
+
+.header h1{
+  margin-top:22px;
+  font-size:2rem;
+  line-height:1.3;
+}
+
+.header p{
+  margin-top:12px;
+  color:#cbd5e1;
+  line-height:1.6;
+}
+
+.content{
+  padding:28px;
+}
+
+.plan-summary{
+  background:#f8fafc;
+  border:2px solid #e2e8f0;
+  border-radius:20px;
+  padding:25px;
+}
+
+.plan-summary h2{
+  text-align:center;
+  color:#0f172a;
+  margin-bottom:20px;
+}
+
+.plan-details{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  padding:10px 0;
+  border-bottom:1px solid #e2e8f0;
+}
+
+.plan-details:last-child{
+  border-bottom:none;
+}
+
+.plan-details strong{
+  color:#2563eb;
+  text-align:right;
+}
+
+.payment-methods{
+  text-align:center;
+  margin:18px 0 18px;
+}
+
+.payment-methods p{
+  color:#334155;
+  margin-bottom:16px;
+  font-weight:800;
+  line-height:1.7;
+}
+
+.paystack-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  background:#eff6ff;
+  border:1px solid #bfdbfe;
+  border-radius:999px;
+  padding:13px 24px;
+  color:#1e40af;
+  font-weight:900;
+  line-height:1.6;
+}
+
+.auto-renew-tip{
+  margin-top:18px;
+  background:#ecfeff;
+  border-left:4px solid #06b6d4;
+  padding:12px 14px;
+  border-radius:12px;
+  line-height:1.6;
+  color:#0f172a;
+}
+
+.pay-btn{
+  width:100%;
+  margin-top:25px;
+  border:none;
+  border-radius:16px;
+  padding:18px;
+  background:linear-gradient(135deg,#2563eb,#3b82f6);
+  color:white;
+  font-size:1.15rem;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.security-note{
+  margin-top:22px;
+  background:#eff6ff;
+  border-radius:15px;
+  padding:12px 14px;
+  line-height:1.6;
+  color:#1e40af;
+}
+
+.back-link{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-top:34px;
+  color:#2563eb;
+  text-decoration:none;
+  font-weight:800;
+}
+
+.footer{
+  grid-column:1/-1;
+  text-align:center;
+  padding:20px;
+  background:#f8fafc;
+  border-top:1px solid #e2e8f0;
+  color:#64748b;
+  line-height:1.6;
+}
+
+@media(max-width:768px){
+  body{
+    padding:14px;
+    align-items:flex-start;
+  }
+
+  .payment-container{
+    grid-template-columns:1fr;
+    border-radius:24px;
+  }
+
+  .header{
+    padding:34px 22px;
+  }
+
+  .brand-logo{
+    font-size:1.7rem;
+  }
+
+  .header h1{
+    font-size:1.5rem;
+  }
+
+  .content{
+    padding:25px 18px;
+  }
+
+  .plan-details{
+    flex-direction:column;
+    gap:4px;
+  }
+
+  .plan-details strong{
+    text-align:left;
+  }
+
+  .paystack-badge{
+    width:100%;
+    border-radius:16px;
+    padding:13px;
+    flex-wrap:wrap;
+  }
+
+  .back-link{
+  margin-top:22px;
+  padding-top:8px;
+}
+}
   </style>
 </head>
 <body>
