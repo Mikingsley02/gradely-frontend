@@ -372,9 +372,8 @@ const response = await fetch(`${backendUrl}/api/result/student/${studentId}`, {
         
         // ✅ Same robust approach for class
         const classValue = s.class || s.class_id || s.grade || 'Not assigned';
-        document.getElementById("studentClass").textContent = classValue.trim() || 'Not assigned';
-        
-        document.getElementById("studentClass").textContent = student.class?.trim() || 'Not assigned';
+        document.getElementById("studentClass").textContent =
+         String(classValue).trim() || 'Not assigned';
 
         // ✅ Handle empty results professionally
         if (!data.results || data.results.length === 0) {
