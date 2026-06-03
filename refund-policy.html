@@ -131,12 +131,9 @@
         <h2>7. Subscription Downgrades</h2>
         <p>
           Schools may downgrade their subscription plan at any time.
-
-Downgrades take effect immediately and do not require additional payment.
-
-No refund, credit, or prorated adjustment will be provided for any unused portion of the higher-tier plan.
-
-Future recurring charges will be based on the downgraded plan unless the School upgrades again before the next billing cycle:
+          Downgrades take effect immediately and do not require additional payment.
+          No refund, credit, or prorated adjustment will be provided for any unused portion of the higher-tier plan.
+          Future recurring charges will be based on the downgraded plan unless the School upgrades again before the next billing cycle:
         </p>
         <ul>
           <li>Features attached to the higher plan may become unavailable immediately;</li>
@@ -216,7 +213,7 @@ Future recurring charges will be based on the downgraded plan unless the School 
         <h2>15. Policy Changes</h2>
         <p>
           Gradely.info may update this Refund and Cancellation Policy from time to time.
-          Updated versions will be published on this page and will become effective upon publication.
+          Updated versions will be published on this page and will become effective upon publication. Continued usage would mean automatic acceptance.
         </p>
 
         <div class="contact-info">
@@ -227,9 +224,10 @@ Future recurring charges will be based on the downgraded plan unless the School 
         </div>
 
         <div class="compliance-note">
-          <strong>Legal Compliance:</strong> This policy is designed to align with applicable Nigerian consumer protection and data protection requirements, including the Federal Competition and Consumer Protection Act 2018 and the Nigeria Data Protection Act 2023. The FCCPC identifies the Federal Competition and Consumer Protection Act 2018 as Nigeria’s main consumer-protection and competition statute, and the NDPC states that the Nigeria Data Protection Act 2023 established the Nigeria Data Protection Commission. :contentReference[oaicite:1]{index=1}
+          <strong>Legal Compliance:</strong> This policy is designed to align with applicable Nigerian consumer protection and data protection requirements, including the Federal Competition and Consumer Protection Act 2018 and the Nigeria Data Protection Act 2023.
         </div>
 
+        <!-- ✅ Smart back button (ID for JS control) -->
         <a id="backLink" class="back-link">← Go Back</a>
       </div>
     </div>
@@ -242,71 +240,125 @@ Future recurring charges will be based on the downgraded plan unless the School 
 
   <script src="js/kaima-chatbot.js"></script>
 
+  <!-- ✅ DYNAMIC POLICY LOADER SCRIPT -->
   <script>
-(function() {
-  const API_BASE = "https://api.gradely.info/api/public/legal";
-  const POLICY_TYPE = "refund";
+  (function() {
+    const API_BASE = "https://api.gradely.info/api/public/legal";
+    const POLICY_TYPE = "refund";
 
-  const policyContent = document.getElementById("policyContent");
-  const fallbackContent = document.getElementById("fallbackContent");
-  const lastUpdatedEl = document.getElementById("lastUpdated");
-  const policyVersionEl = document.getElementById("policyVersion");
+    const policyContent = document.getElementById("policyContent");
+    const fallbackContent = document.getElementById("fallbackContent");
+    const lastUpdatedEl = document.getElementById("lastUpdated");
+    const policyVersionEl = document.getElementById("policyVersion");
 
-  async function loadPolicy() {
-    try {
-      const res = await fetch(`${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`, {
-        cache: "no-store"
-      });
+    async function loadPolicy() {
+      try {
+        const res = await fetch(`${API_BASE}/${POLICY_TYPE}?t=${Date.now()}`, {
+          cache: "no-store"
+        });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (!data.success || !data.data?.content) {
-        throw new Error("No live refund policy content");
-      }
+        if (!data.success || !data.data?.content) {
+          throw new Error("No live refund policy content");
+        }
 
-      policyContent.innerHTML = data.data.content;
+        policyContent.innerHTML = data.data.content;
 
-      if (fallbackContent) {
-        fallbackContent.style.display = "none";
-      }
+        if (fallbackContent) {
+          fallbackContent.style.display = "none";
+        }
 
-      if (data.data.version) {
-        policyVersionEl.textContent = `Version: ${data.data.version}`;
-      }
+        if (data.data.version) {
+          policyVersionEl.textContent = `Version: ${data.data.version}`;
+        }
 
-      if (data.data.updated_at) {
-        const date = new Date(data.data.updated_at);
-        lastUpdatedEl.textContent = `Last Updated: ${date.toLocaleDateString("en-GB", {
-          year: "numeric",
-          month: "long",
-          day: "numeric"
-        })}`;
-      }
+        if (data.data.updated_at) {
+          const date = new Date(data.data.updated_at);
+          lastUpdatedEl.textContent = `Last Updated: ${date.toLocaleDateString("en-GB", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+          })}`;
+        }
 
-      console.log("✅ Live refund policy loaded:", data.data.version);
+        console.log("✅ Live refund policy loaded:", data.data.version);
 
-    } catch (err) {
-      console.log("ℹ️ Using default refund policy content:", err.message);
+      } catch (err) {
+        console.log("ℹ️ Using default refund policy content:", err.message);
 
-      if (policyContent) {
-        policyContent.innerHTML = "";
-      }
+        if (policyContent) {
+          policyContent.innerHTML = "";
+        }
 
-      if (fallbackContent) {
-        fallbackContent.style.display = "block";
+        if (fallbackContent) {
+          fallbackContent.style.display = "block";
+        }
       }
     }
-  }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", loadPolicy);
-  } else {
-    loadPolicy();
-  }
-})();
-</script>
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", loadPolicy);
+    } else {
+      loadPolicy();
+    }
+  })();
+  </script>
+
+  <!-- ✅ SMART BACK BUTTON: Returns to referring page (same origin) or fallback to index.html -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const backLink = document.getElementById('backLink');
+      if (!backLink) return;
+      
+      const referrer = document.referrer;
+      const currentOrigin = window.location.origin;
+      
+      // Determine back URL: use referrer only if from same origin
+      let backUrl = 'index.html'; // Default fallback
+      
+      if (referrer) {
+        try {
+          const referrerUrl = new URL(referrer);
+          // Only use referrer if it's from our domain (security)
+          if (referrerUrl.origin === currentOrigin) {
+            backUrl = referrer;
+          }
+        } catch (e) {
+          // If URL parsing fails, fallback to index.html
+          backUrl = 'index.html';
+        }
+      }
+      
+      // Set the link and click handler
+      backLink.href = backUrl;
+      backLink.onclick = (e) => {
+        e.preventDefault();
+        window.location.href = backUrl;
+      };
+      
+      // Optional: Update link text to show where it goes
+      if (backUrl !== 'index.html') {
+        try {
+          const backPage = new URL(backUrl).pathname.split('/').pop().replace('.html', '');
+          if (backPage && backPage !== 'index') {
+            backLink.textContent = `← Back to ${backPage.charAt(0).toUpperCase() + backPage.slice(1)}`;
+          }
+        } catch (e) {
+          // Keep default text if parsing fails
+        }
+      }
+    });
+  </script>
+
+  <!-- ✅ DYNAMIC YEAR SCRIPT -->
+  <script>
+    document.querySelectorAll(".currentYear").forEach(el => {
+      el.textContent = new Date().getFullYear();
+    });
+  </script>
 
 </body>
 </html>
