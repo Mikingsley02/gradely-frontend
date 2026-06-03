@@ -6,37 +6,263 @@
   <title>💳 Refund & Cancellation Policy | gradely.info</title>
 
   <style>
-    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
-    body{background:#f4f6f9;color:#333;line-height:1.7;padding:20px}
-    .container{max-width:900px;margin:0 auto;background:white;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.1);overflow:hidden}
-    header{background:#091d50;color:white;text-align:center;padding:40px 25px}
-    header h1{font-size:1.8rem;font-weight:700}
-    .version-info{margin-top:10px;opacity:.9;font-size:.95rem}
-    .content{padding:40px}
-    h2{color:#2c3e50;margin:25px 0 15px;padding-bottom:8px;border-bottom:2px solid #eee}
-    h3{color:#34495e;margin:20px 0 12px;font-size:1.2rem}
-    p,ul,ol{margin-bottom:15px}
-    ul,ol{padding-left:25px}
-    li{margin-bottom:8px}
-    a{color:#3498db;text-decoration:none}
-    a:hover{text-decoration:underline}
-    .plan-box,.contact-info,.compliance-note,.tip-box{border-radius:8px;padding:18px 20px;margin:22px 0}
-    .plan-box{background:#f0f7ff;border:1px solid #bfdbfe}
-    .tip-box{background:rgba(255,209,102,.15);border-left:4px solid #ffd166}
-    .contact-info{background:#f8f9fa;border:1px solid #e2e8f0}
-    .compliance-note{background:#f8f9fa;border-left:4px solid #3498db;color:#555;font-size:.9rem}
-    .back-link{display:inline-block;margin:20px 0;color:#230baf;text-decoration:none;font-weight:700;cursor:pointer}
-    footer{text-align:center;padding:20px;background:#f8f9fa;border-top:1px solid #eee;font-size:.9rem;color:#666}
-    footer img{height:30px;vertical-align:middle;margin-right:8px}
+  *{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif
+  }
 
-    @media(max-width:600px){
-      body{padding:10px}
-      header{padding:30px 18px}
-      header h1{font-size:1.45rem}
-      .content{padding:25px 18px}
-      h2{font-size:1.25rem}
+  body{
+    background:#f4f6f9;
+    color:#333;
+    line-height:1.7;
+    padding:20px
+  }
+
+  .container{
+    max-width:900px;
+    margin:0 auto;
+    background:white;
+    border-radius:12px;
+    box-shadow:0 6px 20px rgba(0,0,0,.1);
+    overflow:hidden
+  }
+
+  header{
+    background:#091d50;
+    color:white;
+    text-align:center;
+    padding:40px 25px
+  }
+
+  header h1{
+    font-size:1.8rem;
+    font-weight:700
+  }
+
+  .version-info{
+    margin-top:10px;
+    opacity:.9;
+    font-size:.95rem
+  }
+
+  .content{
+    padding:40px
+  }
+
+  h2{
+    color:#2c3e50;
+    margin:25px 0 15px;
+    padding-bottom:8px;
+    border-bottom:2px solid #eee
+  }
+
+  h3{
+    color:#34495e;
+    margin:20px 0 12px;
+    font-size:1.2rem
+  }
+
+  p,ul,ol{
+    margin-bottom:15px
+  }
+
+  ul,ol{
+    padding-left:25px
+  }
+
+  li{
+    margin-bottom:8px
+  }
+
+  a{
+    color:#3498db;
+    text-decoration:none
+  }
+
+  a:hover{
+    text-decoration:underline
+  }
+
+  .plan-box,
+  .contact-info,
+  .compliance-note,
+  .tip-box{
+    border-radius:8px;
+    padding:18px 20px;
+    margin:22px 0
+  }
+
+  .plan-box{
+    background:#f0f7ff;
+    border:1px solid #bfdbfe
+  }
+
+  .tip-box{
+    background:rgba(255,209,102,.15);
+    border-left:4px solid #ffd166
+  }
+
+  .contact-info{
+    background:#f8f9fa;
+    border:1px solid #e2e8f0
+  }
+
+  .compliance-note{
+    background:#f8f9fa;
+    border-left:4px solid #3498db;
+    color:#555;
+    font-size:.9rem
+  }
+
+  .back-link{
+    display:inline-block;
+    margin:20px 0;
+    color:#230baf;
+    text-decoration:none;
+    font-weight:700;
+    cursor:pointer
+  }
+
+  footer{
+    text-align:center;
+    padding:20px;
+    background:#f8f9fa;
+    border-top:1px solid #eee;
+    font-size:.9rem;
+    color:#666
+  }
+
+  footer img{
+    height:30px;
+    vertical-align:middle;
+    margin-right:8px
+  }
+
+  /* ==================================
+     LIVE POLICY CONTENT STYLING
+     ================================== */
+
+  #policyContent{
+    font-size:1rem;
+    color:#333;
+  }
+
+  #policyContent p{
+    margin:0 0 14px;
+    line-height:1.75;
+  }
+
+  #policyContent ul,
+  #policyContent ol{
+    margin:12px 0 18px;
+    padding-left:28px;
+  }
+
+  #policyContent li{
+    margin-bottom:12px;
+    line-height:1.65;
+  }
+
+  #policyContent h1{
+    font-size:2rem;
+    margin:25px 0 15px;
+    color:#091d50;
+  }
+
+  #policyContent h2{
+    font-size:1.5rem;
+    margin:22px 0 14px;
+    color:#2c3e50;
+  }
+
+  #policyContent h3{
+    font-size:1.2rem;
+    margin:18px 0 12px;
+    color:#34495e;
+  }
+
+  #policyContent strong{
+    font-weight:700;
+    color:#111827;
+  }
+
+  #policyContent blockquote{
+    margin:20px 0;
+    padding:12px 18px;
+    border-left:4px solid #3498db;
+    background:#f8fafc;
+    color:#555;
+  }
+
+  #policyContent hr{
+    border:none;
+    border-top:1px solid #e5e7eb;
+    margin:25px 0;
+  }
+
+  /* Quill Editor Output Fixes */
+
+  #policyContent .ql-align-center{
+    text-align:center;
+  }
+
+  #policyContent .ql-align-right{
+    text-align:right;
+  }
+
+  #policyContent .ql-align-justify{
+    text-align:justify;
+  }
+
+  #policyContent .ql-indent-1{
+    padding-left:2em;
+  }
+
+  #policyContent .ql-indent-2{
+    padding-left:4em;
+  }
+
+  #policyContent .ql-indent-3{
+    padding-left:6em;
+  }
+
+  @media(max-width:600px){
+
+    body{
+      padding:10px
     }
-  </style>
+
+    header{
+      padding:30px 18px
+    }
+
+    header h1{
+      font-size:1.45rem
+    }
+
+    .content{
+      padding:25px 18px
+    }
+
+    h2{
+      font-size:1.25rem
+    }
+
+    #policyContent h1{
+      font-size:1.6rem
+    }
+
+    #policyContent h2{
+      font-size:1.3rem
+    }
+
+    #policyContent h3{
+      font-size:1.1rem
+    }
+  }
+</style>
 </head>
 
 <body>
