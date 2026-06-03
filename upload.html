@@ -362,13 +362,7 @@ document.getElementById("resultForm").addEventListener("submit", async (e) => {
   const term = document.getElementById("term").value.trim();
   const academic_year = document.getElementById("academicYear").value.trim();
   const file = document.getElementById("file").files[0];
-  const school_id = getSchoolId();
-
-  if (!school_id) {
-    alert("⚠️ School not found. Please log in again.");
-    redirectToLogin();
-    return;
-  }
+  
 
   if (!term || !academic_year || !file) {
     alert("⚠️ Please fill in all required fields.");
@@ -415,11 +409,10 @@ document.getElementById("resultForm").addEventListener("submit", async (e) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            term,
-            academic_year,
-            results,
-            school_id
-          })
+          term,
+          academic_year,
+          results
+        })
         });
 
         if (!response) return;
