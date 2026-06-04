@@ -525,9 +525,40 @@ function renewSubscription() {
   goToPayment(currentPlan || "basic", "&renew=true&is_renewal=true");
 }
 
-function enableAutoRenewal() {
-  goToPayment(currentPlan || "basic", "&renew=true&enable_autorenew=true");
+
+
+async function enableAutoRenewal() {
+  if (!confirm("Enable auto-renewal for your current plan? No payment will be taken now.")) {
+    return;
+  }
+
+  try {
+    const res = await authFetch(`${API_BASE}/api/subscription/enable-autorenew`, {
+      method: "POST",
+      body: JSON.stringify({})
+    });
+
+    if (!res) return;
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to enable auto-renewal");
+    }
+
+    document.getElementById("message").innerHTML =
+      `<span class="success">✅ ${data.message || "Auto-renewal enabled successfully."}</span>`;
+
+    setTimeout(fetchSubscriptionStatus, 1000);
+
+  } catch (err) {
+    console.error("Enable auto-renew error:", err);
+    document.getElementById("message").innerHTML =
+      `<span class="error">❌ ${err.message}</span>`;
+  }
 }
+
+
 
 function upgradeToPro() {
   if (!confirm("✨ Upgrade to Pro Plan?\n\nThis will start a Pro subscription. Continue?")) return;
