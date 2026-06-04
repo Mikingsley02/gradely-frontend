@@ -534,10 +534,56 @@ function upgradeToPro() {
   goToPayment("pro", `&from_plan=${encodeURIComponent(currentPlan || "basic")}&upgrade=true`);
 }
 
-function downgradeToBasic() {
-  if (!confirm("⬇️ Downgrade to Basic Plan?\n\nThis will switch your subscription to Basic. Continue?")) return;
-  goToPayment("basic", "&downgrade=true");
+async function downgradeToBasic() {
+  if (
+    !confirm(
+      "⬇️ Downgrade to Basic Plan?\n\n" +
+      "No payment is required.\n\n" +
+      "Your current subscription expiry date will remain unchanged.\n" +
+      "When the subscription renews, it will renew on the Basic plan.\n\n" +
+      "Continue?"
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const res = await authFetch(
+      `${API_BASE}/api/subscription/downgrade`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          plan: "basic"
+        })
+      }
+    );
+
+    if (!res) return;
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Downgrade failed");
+    }
+
+    document.getElementById("message").innerHTML =
+      `<span class="success">✅ ${data.message}</span>`;
+
+    setTimeout(() => {
+      fetchSubscriptionStatus();
+    }, 1000);
+
+  } catch (err) {
+    console.error("Downgrade error:", err);
+
+    document.getElementById("message").innerHTML =
+      `<span class="error">❌ ${err.message}</span>`;
+  }
 }
+
 
 async function cancelSubscription() {
   if (!confirm("⏸️ Cancel Auto-Renewal?\nAccess continues until your expiry date.\nAre you sure?")) return;
