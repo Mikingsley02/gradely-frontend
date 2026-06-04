@@ -670,7 +670,9 @@ async function searchStudents() {
   `;
 
   try {
-    const res = await authFetch(`${API}/students/search?q=${encodeURIComponent(query)}`);
+    const res = await authFetch(
+  `${API}/students/search?q=${encodeURIComponent(query)}&class_id=${encodeURIComponent(currentClass.id)}`
+);
     if (!res) return;
 
     const students = Array.isArray(res.data) ? res.data : [];
