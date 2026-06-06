@@ -82,6 +82,22 @@ select.glass-input option {
     .table-container { padding: 24px; overflow-x: auto; }
     .search-row { display: flex; gap: 12px; max-width: 650px; margin-bottom: 18px; }
     .search-row .glass-input { flex: 1; }
+
+    .search-row {
+  max-width: 480px;
+}
+
+#paymentModal .search-row,
+#assignFeesModal .search-row {
+  max-width: 100%;
+}
+
+@media(max-width:680px){
+  .search-row {
+    max-width: 100%;
+  }
+}
+
     .helper-text { margin-top: 8px; color: #94a3b8; font-size: .85rem; }
     table { width: 100%; min-width: 800px; border-collapse: collapse; }
     th, td { padding: 16px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, .1); }
@@ -309,7 +325,6 @@ select.glass-input option {
     const API_BASE = window.location.hostname.includes("localhost")
       ? "http://localhost:5000"
       : "https://api.gradely.info";
-    const TWO_FA_CONFIGURED_KEY = "financial_2fa_configured";
     let allStudentsData = [];
     let incomeExpenseChart = null;
     let outstandingChart = null;
@@ -394,7 +409,6 @@ select.glass-input option {
 
 
     function showSetupView() {
-      if (localStorage.getItem(TWO_FA_CONFIGURED_KEY) === "true") return;
       document.getElementById("unlockView").classList.add("hidden");
       document.getElementById("setupView").classList.remove("hidden");
       generateQRCode();
@@ -432,7 +446,7 @@ select.glass-input option {
         errorElement.textContent = data?.message || "Invalid code. Please try again.";
         return;
       }
-      if (isSetup) localStorage.setItem(TWO_FA_CONFIGURED_KEY, "true");
+      if (isSetup)
       sessionStorage.setItem("financial_unlocked", "true");
       document.getElementById("twoFAOverlay").classList.add("hidden");
       document.getElementById("mainContent").classList.remove("hidden");
@@ -440,8 +454,16 @@ select.glass-input option {
     }
 
     async function loadDashboard() {
-      await Promise.all([loadSummary(), loadStudents()]);
-    }
+  allStudentsData = await loadRegisteredStudents();
+
+  populateStudentSelect("payStudentId", allStudentsData);
+  populateStudentSelect("assignStudentId", allStudentsData);
+
+  await Promise.all([
+    loadSummary(),
+    loadStudents()
+  ]);
+}
 
     async function loadSummary() {
       const data = await readJson(await authFetch(`${API_BASE}/api/financial/summary`));
@@ -566,12 +588,19 @@ select.glass-input option {
     function searchStudents(inputId, selectId, resultId) {
   const query = document.getElementById(inputId).value.trim().toLowerCase();
 
+  if (!query) {
+    populateStudentSelect(selectId, allStudentsData);
+    document.getElementById(resultId).textContent = "Showing all students.";
+    return;
+  }
+
   const matches = allStudentsData.filter(student => {
-    const studentId = String(student.student_id || "").toLowerCase();
+    const studentId = String(student.student_id || student.id || "").toLowerCase();
 
     const studentName = String(
       student.student_name ||
       student.name ||
+      student.full_name ||
       [student.first_name, student.middle_name, student.last_name]
         .filter(Boolean)
         .join(" ")
@@ -669,9 +698,17 @@ select.glass-input option {
     document.getElementById("feeStudentSearchButton").addEventListener("click", () =>
       searchStudents("feeStudentSearch", "assignStudentId", "feeStudentResult")
     );
-    document.getElementById("searchButton").addEventListener("click", () =>
-      loadStudents(document.getElementById("searchInput").value.trim())
-    );
+    document.getElementById("searchButton").addEventListener("click", async () => {
+  await loadStudents(document.getElementById("searchInput").value.trim());
+});
+
+  document.getElementById("searchInput").addEventListener("input", e => {
+  if (!e.target.value.trim()) {
+    loadStudents();
+  }
+});
+
+
     ["otpInput", "setupOtpInput", "paymentStudentSearch", "feeStudentSearch", "searchInput"].forEach(id => {
       document.getElementById(id).addEventListener("keydown", event => {
         if (event.key !== "Enter") return;
@@ -728,9 +765,19 @@ await submitFinancialForm(`${API_BASE}/api/financial/assign-student-fee`, {
 
     async function loadRegisteredStudents() {
   const data = await readJson(await authFetch(`${API_BASE}/api/students`));
-  if (!data?.success) return [];
 
-  return data.data || data.students || [];
+  if (!data?.success) {
+    console.warn("Students endpoint failed:", data);
+    return [];
+  }
+
+  const students =
+    data.data ||
+    data.students ||
+    data.results ||
+    [];
+
+  return Array.isArray(students) ? students : [];
 }
 
 
