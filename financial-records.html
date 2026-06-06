@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>💰 Financial Records | Gradely.info</title>
+  <!-- ✅ Chart.js CDN for visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", system-ui, sans-serif; }
+    
+    body {
+      min-height: 100vh;
+      color: #fff;
+      background: radial-gradient(circle at top left, rgba(0,210,255,.25), transparent 35%),
+                  radial-gradient(circle at bottom right, rgba(34,197,94,.2), transparent 35%),
+                  linear-gradient(135deg, #020617, #0f172a, #1e1b4b);
+      padding: 20px;
+    }
+
+    /* ✅ Glassmorphism Core Classes */
+    .glass {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    .glass-input {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 14px 18px;
+      color: #fff;
+      font-size: 1rem;
+      width: 100%;
+      outline: none;
+      transition: 0.3s;
+    }
+    .glass-input:focus { border-color: #00d2ff; box-shadow: 0 0 0 3px rgba(0,210,255,0.2); }
+    .glass-input::placeholder { color: rgba(255, 255, 255, 0.5); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00d2ff, #2563eb);
+      border: none;
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 1rem;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,210,255,0.3); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.25); }
+
+    /* ✅ Layout */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding: 0 10px;
+    }
+    .header h1 { font-size: 1.8rem; font-weight: 900; }
+    .back-btn { text-decoration: none; color: #00d2ff; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .summary-card { padding: 24px; text-align: center; }
+    .summary-card h3 { font-size: 0.9rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .summary-card .value { font-size: 1.8rem; font-weight: 900; }
+    .text-green { color: #10b981; }
+    .text-red { color: #ef4444; }
+    .text-blue { color: #3b82f6; }
+    .text-yellow { color: #f59e0b; }
+
+    .actions-bar { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .chart-card { padding: 24px; }
+    .chart-card h3 { margin-bottom: 20px; font-size: 1.2rem; }
+
+    .table-container { padding: 24px; overflow-x: auto; }
+    .search-bar { margin-bottom: 20px; max-width: 400px; }
+    
+    table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    th, td { padding: 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    th { color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+    tr:hover { background: rgba(255,255,255,0.05); }
+
+    /* ✅ Overlays & Modals */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.85);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+    .modal-content { max-width: 500px; width: 100%; padding: 40px; text-align: center; }
+    .modal-content h2 { margin-bottom: 10px; font-size: 1.8rem; }
+    .modal-content p { color: #94a3b8; margin-bottom: 25px; }
+    
+    .otp-input {
+      text-align: center;
+      font-size: 2rem;
+      letter-spacing: 12px;
+      font-weight: 900;
+      margin-bottom: 20px;
+    }
+
+    .form-modal { max-width: 600px; width: 100%; padding: 35px; text-align: left; }
+    .form-modal h2 { margin-bottom: 25px; text-align: center; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #cbd5e1; font-size: 0.9rem; }
+    .form-actions { display: flex; gap: 15px; margin-top: 30px; }
+    .form-actions button { flex: 1; }
+
+    .hidden { display: none !important; }
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      .header h1 { font-size: 1.4rem; }
+      .summary-card .value { font-size: 1.4rem; }
+      .form-modal { padding: 25px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ✅ 2FA UNLOCK OVERLAY -->
+  <div id="twoFAOverlay" class="overlay">
+    <div class="glass modal-content">
+      <!-- Default Unlock View -->
+      <div id="unlockView">
+        <h2>🔐 Secure Access</h2>
+        <p>Financial records are protected. Enter your 6-digit authenticator code to continue.</p>
+        <input type="text" id="otpInput" maxlength="6" placeholder="000000" class="glass-input otp-input">
+        <button onclick="verify2FA()" class="btn-primary" style="width: 100%;">Unlock Records</button>
+        <p style="margin-top: 20px; font-size: 0.9rem; color: #64748b;">
+          First time? <a href="#" onclick="showSetupView(); return false;" style="color: #00d2ff; font-weight: 700;">Setup 2FA here</a>
+        </p>
+      </div>
+
+      <!-- Setup View (Hidden initially) -->
+      <div id="setupView" class="hidden">
+        <h2>📱 Setup 2FA</h2>
+        <p>Scan this QR code with Google Authenticator or Authy.</p>
+        <img id="qrCodeImg" src="" alt="QR Code" style="width: 220px; margin: 20px auto; background: white; padding: 15px; border-radius: 16px; display: block;">
+        <p style="font-size: 0.85rem; margin-bottom: 20px;">
+          Can't scan? Manual key: <strong id="manualSecret" style="color: #00d2ff; word-break: break-all;"></strong>
+        </p>
+        <input type="text" id="setupOtpInput" maxlength="6" placeholder="Enter 6-digit code" class="glass-input otp-input">
+        <button onclick="verifySetup()" class="btn-primary" style="width: 100%;">Verify & Activate</button>
+        <p id="setupError" style="color: #ef4444; margin-top: 15px; font-size: 0.9rem;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ RECORD PAYMENT MODAL -->
+  <div id="paymentModal" class="overlay hidden">
+    <div class="glass form-modal">
+      <h2>💵 Record Payment</h2>
+      <form id="paymentForm">
+        <div class="form-group">
+          <label>Student</label>
+          <select id="payStudentId" class="glass-input" required></select>
+        </div>
+        <div class="form-group">
+          <label>Amount (₦)</label>
+          <input type="number" id="payAmount" class="glass-input" placeholder="e.g. 50000" required min="1">
+        </div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="payMethod" class="glass-input" required>
+            <option value="Cash">Cash</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Paystack">Paystack</option>
+            <option value="Cheque">Cheque</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Notes (Optional)</label>
+          <input type="text" id="payNotes" class="glass-input" placeholder="e.g. Receipt #1234">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal('paymentModal')">Cancel</button>
+          <button type="submit" class="btn-primary">Record Payment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ✅ RECORD EXPENSE MODAL -->
+  <div id="expenseModal" class="overlay hidden">
+    <div class="glass form-modal">
+      <h2>💸 Record Expense</h2>
+      <form id="expenseForm">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="expCategory" class="glass-input" required>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Utilities">Utilities (Water/Power)</option>
+            <option value="Salaries">Salaries & Wages</option>
+            <option value="Supplies">Office Supplies</option>
+            <option value="Events">School Events</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" id="expDescription" class="glass-input" placeholder="e.g. Generator fuel" required>
+        </div>
+        <div class="form-group">
+          <label>Amount (₦)</label>
+          <input type="number" id="expAmount" class="glass-input" placeholder="e.g. 15000" required min="1">
+        </div>
+        <div class="form-group">
+          <label>Notes (Optional)</label>
+          <input type="text" id="expNotes" class="glass-input" placeholder="e.g. Invoice #998">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal('expenseModal')">Cancel</button>
+          <button type="submit" class="btn-primary">Record Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ✅ MAIN DASHBOARD CONTENT -->
+  <div id="mainContent" class="hidden">
+    <div class="header">
+      <h1>💰 Financial Records</h1>
+      <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <div class="glass summary-card">
+        <h3>Total Income</h3>
+        <div class="value text-green" id="totalIncome">₦0</div>
+      </div>
+      <div class="glass summary-card">
+        <h3>Total Expenses</h3>
+        <div class="value text-red" id="totalExpenses">₦0</div>
+      </div>
+      <div class="glass summary-card">
+        <h3>Net Balance</h3>
+        <div class="value text-blue" id="netBalance">₦0</div>
+      </div>
+      <div class="glass summary-card">
+        <h3>Outstanding Fees</h3>
+        <div class="value text-yellow" id="totalOutstanding">₦0</div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions-bar">
+      <button class="btn-primary" onclick="openModal('paymentModal')">➕ Record Payment</button>
+      <button class="btn-primary" onclick="openModal('expenseModal')" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">➖ Record Expense</button>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <div class="glass chart-card">
+        <h3>📊 Income vs Expenses</h3>
+        <canvas id="incomeExpenseChart"></canvas>
+      </div>
+      <div class="glass chart-card">
+        <h3>🏫 Outstanding by Class</h3>
+        <canvas id="outstandingChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Student Records Table -->
+    <div class="glass table-container">
+      <h3 style="margin-bottom: 20px;">👨‍🎓 Student Payment Status</h3>
+      <input type="text" id="searchInput" class="glass-input search-bar" placeholder="🔍 Search by Student ID or Name...">
+      <table>
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Name</th>
+            <th>Class</th>
+            <th>Total Fee</th>
+            <th>Paid</th>
+            <th>Outstanding</th>
+          </tr>
+        </thead>
+        <tbody id="studentsTableBody">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // ======================================================
+    // ✅ JWT AUTH HELPERS (Standalone for this page)
+    // ======================================================
+    const API_BASE = window.location.hostname.includes("localhost") ? "http://localhost:5000" : "https://api.gradely.info";
+
+    function getToken() {
+      const t = sessionStorage.getItem("gradely_token") || localStorage.getItem("gradely_token");
+      return (t && t !== "undefined" && t !== "null" && t.trim() !== "") ? t : null;
+    }
+
+    function clearAuth() {
+      sessionStorage.clear(); localStorage.removeItem("gradely_token");
+      window.location.href = "admin-login.html";
+    }
+
+    function isTokenExpired(token) {
+      try {
+        const p = JSON.parse(atob(token.split(".")[1]));
+        return !p.exp || Date.now() >= p.exp * 1000;
+      } catch { return true; }
+    }
+
+    async function authFetch(url, options = {}) {
+      const token = getToken();
+      if (!token || isTokenExpired(token)) { clearAuth(); return null; }
+
+      const res = await fetch(url, {
+        ...options,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...(options.headers || {}) }
+      });
+
+      if (res.status === 401) { clearAuth(); return null; }
+      return res;
+    }
+
+    // ======================================================
+    // ✅ 2FA LOGIC
+    // ======================================================
+    let studentsData = []; // Cache for payment dropdown
+
+    async function initPage() {
+      // Check if already unlocked in this session
+      if (sessionStorage.getItem('financial_unlocked') === 'true') {
+        document.getElementById('twoFAOverlay').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        await loadDashboard();
+      } else {
+        // Try to fetch summary to see if 2FA is actually required or if session is still valid on backend
+        const res = await authFetch(`${API_BASE}/api/financial/summary`);
+        if (res && res.ok) {
+          // Backend let us through (session still active)
+          sessionStorage.setItem('financial_unlocked', 'true');
+          document.getElementById('twoFAOverlay').classList.add('hidden');
+          document.getElementById('mainContent').classList.remove('hidden');
+          const data = await res.json();
+          renderSummary(data.data);
+          await loadStudents();
+        } else {
+          // Show 2FA overlay
+          document.getElementById('twoFAOverlay').classList.remove('hidden');
+        }
+      }
+    }
+
+    function showSetupView() {
+      document.getElementById('unlockView').classList.add('hidden');
+      document.getElementById('setupView').classList.remove('hidden');
+      generateQRCode();
+    }
+
+    async function generateQRCode() {
+      const res = await authFetch(`${API_BASE}/api/financial/setup-2fa`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('qrCodeImg').src = data.qrCode;
+        document.getElementById('manualSecret').textContent = data.secret;
+      } else {
+        document.getElementById('setupError').textContent = "Failed to generate QR code.";
+      }
+    }
+
+    async function verifySetup() {
+      const token = document.getElementById('setupOtpInput').value.trim();
+      if (token.length !== 6) return alert("Enter a valid 6-digit code.");
+      
+      await verify2FACode(token);
+    }
+
+    async function verify2FA() {
+      const token = document.getElementById('otpInput').value.trim();
+      if (token.length !== 6) return alert("Enter a valid 6-digit code.");
+      
+      await verify2FACode(token);
+    }
+
+    async function verify2FACode(token) {
+      const res = await authFetch(`${API_BASE}/api/financial/verify-2fa`, {
+        method: 'POST',
+        body: JSON.stringify({ token })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        sessionStorage.setItem('financial_unlocked', 'true');
+        document.getElementById('twoFAOverlay').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        await loadDashboard();
+      } else {
+        alert(data.message || "Invalid code. Please try again.");
+      }
+    }
+
+    // ======================================================
+    // ✅ DASHBOARD DATA LOADING
+    // ======================================================
+    async function loadDashboard() {
+      await Promise.all([loadSummary(), loadStudents()]);
+    }
+
+    async function loadSummary() {
+      const res = await authFetch(`${API_BASE}/api/financial/summary`);
+      if (!res) return;
+      const data = await res.json();
+      if (data.success) renderSummary(data.data);
+    }
+
+    function renderSummary(data) {
+      document.getElementById('totalIncome').textContent = formatCurrency(data.totalIncome);
+      document.getElementById('totalExpenses').textContent = formatCurrency(data.totalExpenses);
+      document.getElementById('netBalance').textContent = formatCurrency(data.netBalance);
+      document.getElementById('totalOutstanding').textContent = formatCurrency(data.totalOutstanding);
+    }
+
+    async function loadStudents(search = "") {
+      const url = `${API_BASE}/api/financial/students${search ? `?search=${encodeURIComponent(search)}` : ''}`;
+      const res = await authFetch(url);
+      if (!res) return;
+      const data = await res.json();
+      if (data.success) {
+        studentsData = data.data;
+        renderTable(studentsData);
+        renderCharts(studentsData);
+        populatePaymentDropdown(studentsData);
+      }
+    }
+
+    function renderTable(students) {
+      const tbody = document.getElementById('studentsTableBody');
+      if (students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:40px;">No student records found. Start by adding students and assigning fees.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = students.map(s => `
+        <tr>
+          <td>${s.student_id}</td>
+          <td>${s.student_name}</td>
+          <td>${s.class_name || 'N/A'}</td>
+          <td>${formatCurrency(s.total_fee)}</td>
+          <td class="text-green">${formatCurrency(s.amount_paid)}</td>
+          <td class="${parseFloat(s.outstanding_balance) > 0 ? 'text-red' : 'text-green'}">${formatCurrency(s.outstanding_balance)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderCharts(students) {
+      // Destroy existing charts to prevent overlap errors
+      Chart.helpers.each(Chart.instances, (instance) => { instance.destroy(); });
+
+      // 1. Income vs Expenses (We need to fetch this from summary, but we can use a placeholder or fetch again)
+      // For simplicity, we'll fetch summary again just for the chart data
+      authFetch(`${API_BASE}/api/financial/summary`).then(res => res.json()).then(data => {
+        if(data.success) {
+          new Chart(document.getElementById('incomeExpenseChart'), {
+            type: 'doughnut',
+            data: {
+              labels: ['Total Income', 'Total Expenses'],
+              datasets: [{
+                data: [data.data.totalIncome, data.data.totalExpenses],
+                backgroundColor: ['#10b981', '#ef4444'],
+                borderWidth: 0
+              }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
+          });
+        }
+      });
+
+      // 2. Outstanding by Class
+      const classOutstanding = {};
+      students.forEach(s => {
+        const cls = s.class_name || 'Unassigned';
+        if(!classOutstanding[cls]) classOutstanding[cls] = 0;
+        classOutstanding[cls] += parseFloat(s.outstanding_balance);
+      });
+
+      new Chart(document.getElementById('outstandingChart'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(classOutstanding),
+          datasets: [{
+            label: 'Outstanding Balance (₦)',
+            data: Object.values(classOutstanding),
+            backgroundColor: '#f59e0b',
+            borderRadius: 8
+          }]
+        },
+        options: { 
+          responsive: true, 
+          plugins: { legend: { display: false } },
+          scales: { 
+            y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } }, 
+            x: { ticks: { color: '#94a3b8' }, grid: { display: false } } 
+          } 
+        }
+      });
+    }
+
+    function populatePaymentDropdown(students) {
+      const select = document.getElementById('payStudentId');
+      select.innerHTML = '<option value="">-- Select Student --</option>' + 
+        students.map(s => `<option value="${s.student_id}" data-name="${s.student_name}">${s.student_id} - ${s.student_name}</option>`).join('');
+    }
+
+    // ======================================================
+    // ✅ FORM SUBMISSIONS
+    // ======================================================
+    document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const select = document.getElementById('payStudentId');
+      const studentId = select.value;
+      const studentName = select.options[select.selectedIndex].getAttribute('data-name');
+      
+      const payload = {
+        student_id: studentId,
+        student_name: studentName,
+        amount: parseFloat(document.getElementById('payAmount').value),
+        payment_method: document.getElementById('payMethod').value,
+        notes: document.getElementById('payNotes').value
+      };
+
+      const res = await authFetch(`${API_BASE}/api/financial/payment`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert("Payment recorded successfully!");
+        closeModal('paymentModal');
+        document.getElementById('paymentForm').reset();
+        await loadDashboard();
+      } else {
+        alert(data.message || "Failed to record payment.");
+      }
+    });
+
+    document.getElementById('expenseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        category: document.getElementById('expCategory').value,
+        description: document.getElementById('expDescription').value,
+        amount: parseFloat(document.getElementById('expAmount').value),
+        notes: document.getElementById('expNotes').value
+      };
+
+      const res = await authFetch(`${API_BASE}/api/financial/expense`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert("Expense recorded successfully!");
+        closeModal('expenseModal');
+        document.getElementById('expenseForm').reset();
+        await loadDashboard();
+      } else {
+        alert(data.message || "Failed to record expense.");
+      }
+    });
+
+    // ======================================================
+    // ✅ UTILS & EVENT LISTENERS
+    // ======================================================
+    function formatCurrency(num) {
+      return '₦' + parseFloat(num || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    // Search Debounce
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        loadStudents(e.target.value);
+      }, 500);
+    });
+
+    // Close modals on outside click
+    document.querySelectorAll('.overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay && overlay.id !== 'twoFAOverlay') {
+          overlay.classList.add('hidden');
+        }
+      });
+    });
+
+    // ✅ INIT
+    document.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>
