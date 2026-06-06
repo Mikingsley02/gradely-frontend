@@ -165,9 +165,25 @@
     <div class="actions">
       <button class="btn btn-download" onclick="downloadPDF()">📥 Download PDF</button>
       <button class="btn" style="background:#9b59b6;color:white;" onclick="openAttendanceModal()">📋 View Attendance</button>
+      <button class="btn" style="background:#f59e0b;color:white;" onclick="openStudentAwardModal()">🏅 Student of the Week</button>
       <button class="btn btn-logout" onclick="logout()">🔐 Logout</button>
     </div>
   </div>
+
+
+
+  <div id="studentAwardModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2100; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:16px; width:100%; max-width:620px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:20px; border-bottom:1px solid #eee;">
+      <h3 style="margin:0; color:#2c3e50;">🏅 Student of the Week</h3>
+      <button onclick="closeStudentAwardModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#666;">&times;</button>
+    </div>
+
+    <div id="studentAwardContent" style="padding:24px;">
+      Loading...
+    </div>
+  </div>
+</div>
 
 
   <!-- Change Password Trigger -->
@@ -738,10 +754,106 @@ async function loadStudentAttendance() {
 
 // Close modal on outside click
 window.onclick = function(e) {
-  const modal = document.getElementById('attendanceModal');
-  if (e.target === modal) closeAttendanceModal();
+
+  const attendanceModal =
+    document.getElementById('attendanceModal');
+
+  const awardModal =
+    document.getElementById('studentAwardModal');
+
+  if (e.target === attendanceModal) {
+    closeAttendanceModal();
+  }
+
+  if (e.target === awardModal) {
+    closeStudentAwardModal();
+  }
+};
+
+
+
+function openStudentAwardModal() {
+  document.getElementById("studentAwardModal").style.display = "flex";
+  loadStudentAward();
 }
 
+function closeStudentAwardModal() {
+  document.getElementById("studentAwardModal").style.display = "none";
+}
+
+async function loadStudentAward() {
+  const studentId = getStudentId();
+  const box = document.getElementById("studentAwardContent");
+
+  box.innerHTML = `<p style="text-align:center;color:#666;">Loading Student of the Week...</p>`;
+
+  try {
+    const res = await fetch(`${backendUrl}/api/student-awards/student/${studentId}`);
+    const data = await res.json();
+
+    if (!data.success || !data.award) {
+      box.innerHTML = `
+        <div style="text-align:center;padding:20px;">
+          <div style="font-size:3rem;">🏅</div>
+          <h3>No Student of the Week posted yet</h3>
+          <p style="color:#666;margin-top:8px;">Please check back later.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const award = data.award;
+
+    const medals = [
+      { type: "gold", icon: "🥇", label: "Gold Medal", id: award.gold_student_id, name: award.gold_student_name, color: "#f59e0b" },
+      { type: "silver", icon: "🥈", label: "Silver Medal", id: award.silver_student_id, name: award.silver_student_name, color: "#94a3b8" },
+      { type: "bronze", icon: "🥉", label: "Bronze Medal", id: award.bronze_student_id, name: award.bronze_student_name, color: "#b45309" }
+    ].filter(m => m.id);
+
+    box.innerHTML = `
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:3rem;">🏆</div>
+        <h3 style="margin:8px 0;color:#2c3e50;">This Week's Winners</h3>
+        <p style="color:#666;">
+          ${award.term || ""} ${award.academic_year ? "• " + award.academic_year : ""}
+        </p>
+        ${data.isWinner ? `
+          <div style="margin-top:14px;padding:12px;border-radius:10px;background:#ecfdf5;color:#166534;font-weight:700;">
+            🎉 Congratulations! Your child won the ${data.medal.toUpperCase()} medal.
+          </div>
+        ` : `
+          <div style="margin-top:14px;padding:12px;border-radius:10px;background:#f8fafc;color:#475569;">
+            Your child is not among this week's medal winners.
+          </div>
+        `}
+      </div>
+
+      ${medals.map(m => `
+        <div style="display:flex;align-items:center;gap:14px;padding:15px;border:1px solid #eee;border-left:5px solid ${m.color};border-radius:12px;margin-bottom:12px;background:#fff;">
+          <div style="font-size:2.4rem;">${m.icon}</div>
+          <div>
+            <strong style="display:block;color:#2c3e50;">${m.label}</strong>
+            <span>${m.name || "Student"} (${m.id})</span>
+          </div>
+        </div>
+      `).join("")}
+
+      ${award.message ? `
+        <div style="margin-top:16px;padding:14px;background:#f8fafc;border-radius:10px;color:#334155;line-height:1.6;">
+          ${award.message}
+        </div>
+      ` : ""}
+    `;
+
+  } catch (err) {
+    console.error("Student award error:", err);
+    box.innerHTML = `
+      <p style="text-align:center;color:#e74c3c;padding:20px;">
+        Failed to load Student of the Week.
+      </p>
+    `;
+  }
+}
 
 
 

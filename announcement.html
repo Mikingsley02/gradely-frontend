@@ -529,6 +529,28 @@ button[onclick="closeDeliveryReports()"]{
         <button type="button" onclick="sendWithTemplate()" style="flex: 1; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;" id="sendTemplateBtn" disabled>Send via Template</button>
       </div>
 
+
+        <div style="text-align:center;margin-top:15px;">
+  <button
+    type="button"
+    onclick="openStudentAwardsModal()"
+    style="
+      background:linear-gradient(135deg,#f59e0b,#d97706);
+      color:white;
+      border:none;
+      padding:14px 20px;
+      border-radius:12px;
+      font-weight:700;
+      cursor:pointer;
+      width:100%;
+      max-width:350px;
+    ">
+    🏅 Student of the Week
+  </button>
+</div>
+
+
+
       <a class="back-link"
    href="#"
    onclick="openDeliveryReports(); return false;"
@@ -607,6 +629,92 @@ button[onclick="closeDeliveryReports()"]{
   <div id="reportSummary" style="background: #f1f8ff; padding: 14px; border-radius: 8px; margin-bottom: 16px; display: none;"></div>
   <div id="reportLogs" style="max-height: 350px; overflow-y: auto;"></div>
 </div>
+
+
+
+<div id="studentAwardsModal"
+style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:95%;
+max-width:700px;
+max-height:90vh;
+overflow-y:auto;
+background:#fff;
+padding:24px;
+border-radius:16px;
+box-shadow:0 20px 60px rgba(0,0,0,.25);
+z-index:9999;
+">
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+  <h3 style="margin:0;color:#0c2461;">🏅 Student of the Week</h3>
+
+  <button onclick="closeStudentAwardsModal()"
+  style="
+  background:#dc2626;
+  color:#fff;
+  border:none;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;">
+  Close
+  </button>
+</div>
+
+<input id="awardWeek" type="date"
+placeholder="Award Week"
+style="margin-bottom:12px;">
+
+<input id="awardAcademicYear"
+placeholder="Academic Year (2025/2026)"
+style="margin-bottom:12px;">
+
+<select id="awardTerm"
+style="margin-bottom:12px;">
+<option value="">Select Term</option>
+<option>1st Term</option>
+<option>2nd Term</option>
+<option>3rd Term</option>
+</select>
+
+<h4>🥇 Gold Winner</h4>
+<input id="goldStudentId" placeholder="Student ID">
+<input id="goldStudentName" placeholder="Student Name">
+
+<h4 style="margin-top:15px;">🥈 Silver Winner</h4>
+<input id="silverStudentId" placeholder="Student ID">
+<input id="silverStudentName" placeholder="Student Name">
+
+<h4 style="margin-top:15px;">🥉 Bronze Winner</h4>
+<input id="bronzeStudentId" placeholder="Student ID">
+<input id="bronzeStudentName" placeholder="Student Name">
+
+<textarea
+id="awardMessage"
+placeholder="Optional message..."
+style="margin-top:15px;height:100px;"></textarea>
+
+<button
+onclick="postStudentAward()"
+style="
+width:100%;
+margin-top:15px;
+background:#16a34a;
+color:white;
+padding:14px;
+border:none;
+border-radius:12px;
+font-weight:700;">
+📢 Post Student of the Week
+</button>
+
+</div>
+
+
 
 <script>
 const API_BASE = "https://api.gradely.info";
@@ -1181,6 +1289,93 @@ async function loadDeliveryReport() {
     if (reportLogs) reportLogs.innerHTML = "";
   }
 }
+
+
+
+function openStudentAwardsModal(){
+  document.getElementById("studentAwardsModal").style.display = "block";
+}
+
+function closeStudentAwardsModal(){
+  document.getElementById("studentAwardsModal").style.display = "none";
+}
+
+async function postStudentAward(){
+
+  try{
+
+    const payload = {
+      award_week: document.getElementById("awardWeek").value,
+      academic_year: document.getElementById("awardAcademicYear").value,
+      term: document.getElementById("awardTerm").value,
+
+      gold_student_id:
+        document.getElementById("goldStudentId").value.trim(),
+
+      gold_student_name:
+        document.getElementById("goldStudentName").value.trim(),
+
+      silver_student_id:
+        document.getElementById("silverStudentId").value.trim(),
+
+      silver_student_name:
+        document.getElementById("silverStudentName").value.trim(),
+
+      bronze_student_id:
+        document.getElementById("bronzeStudentId").value.trim(),
+
+      bronze_student_name:
+        document.getElementById("bronzeStudentName").value.trim(),
+
+      message:
+        document.getElementById("awardMessage").value.trim()
+    };
+
+    const res = await authFetch(
+      `${API_BASE}/api/student-awards`,
+      {
+        method:"POST",
+        body: JSON.stringify(payload)
+      }
+    );
+
+    const data = await res.json();
+
+    if(!data.success){
+      throw new Error(data.message);
+    }
+
+    alert("🏅 Student of the Week posted successfully.");
+
+    document.getElementById("awardWeek").value = "";
+document.getElementById("awardAcademicYear").value = "";
+document.getElementById("awardTerm").value = "";
+
+document.getElementById("goldStudentId").value = "";
+document.getElementById("goldStudentName").value = "";
+
+document.getElementById("silverStudentId").value = "";
+document.getElementById("silverStudentName").value = "";
+
+document.getElementById("bronzeStudentId").value = "";
+document.getElementById("bronzeStudentName").value = "";
+
+document.getElementById("awardMessage").value = "";
+
+
+    closeStudentAwardsModal();
+
+  } catch(err){
+
+    console.error(err);
+
+    alert(err.message || "Failed to post award.");
+
+  }
+}
+
+
+
 </script>
 
 <script src="js/kaima-chatbot.js"></script>
