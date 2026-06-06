@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", system-ui, sans-serif; }
+    
     body {
       min-height: 100vh;
       color: #fff;
@@ -15,38 +16,42 @@
         radial-gradient(circle at bottom right, rgba(34, 197, 94, .2), transparent 35%),
         linear-gradient(135deg, #020617, #0f172a, #1e1b4b);
       padding: 20px;
+      overflow-x: hidden;
     }
+
+    /* ✅ Glassmorphism Core Classes */
     .glass {
-      background: rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, .15);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 24px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, .3);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
     }
+
     .glass-input {
       width: 100%;
       padding: 14px 18px;
       color: #fff;
       font-size: 1rem;
-      background: rgba(255, 255, 255, .1);
-      border: 1px solid rgba(255, 255, 255, .2);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 12px;
       outline: none;
-      transition: .2s;
+      transition: 0.2s;
     }
-    .glass-input:focus { border-color: #00d2ff; box-shadow: 0 0 0 3px rgba(0, 210, 255, .2); }
-    .glass-input::placeholder { color: rgba(255, 255, 255, .55); }
-      select.glass-input {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  cursor: pointer;
-}
-
-select.glass-input option {
-  background: #ffffff !important;
-  color: #0f172a !important;
-}
+    .glass-input:focus { border-color: #00d2ff; box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.2); }
+    .glass-input::placeholder { color: rgba(255, 255, 255, 0.55); }
+    
+    select.glass-input {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      cursor: pointer;
+    }
+    select.glass-input option {
+      background: #ffffff !important;
+      color: #0f172a !important;
+    }
 
     .btn-primary, .btn-secondary {
       padding: 13px 22px;
@@ -55,60 +60,116 @@ select.glass-input option {
       font-weight: 800;
       border-radius: 12px;
       cursor: pointer;
-      transition: .2s;
+      transition: 0.2s;
+      border: none;
     }
-    .btn-primary { background: linear-gradient(135deg, #00d2ff, #2563eb); border: 0; }
-    .btn-secondary { background: rgba(255, 255, 255, .15); border: 1px solid rgba(255, 255, 255, .2); }
+    .btn-primary { background: linear-gradient(135deg, #00d2ff, #2563eb); }
+    .btn-secondary { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.2); }
     .btn-primary:hover, .btn-secondary:hover { transform: translateY(-1px); filter: brightness(1.1); }
-    .btn-primary:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-    .header { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin: 0 10px 30px; }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* ✅ Header */
+    .header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      gap: 20px; 
+      margin: 0 10px 30px; 
+    }
     .header h1 { font-size: 1.8rem; font-weight: 900; }
     .back-btn { color: #00d2ff; font-weight: 700; text-decoration: none; }
-    .summary-grid, .charts-grid {
+
+    /* ✅ Summary Cards Grid */
+    .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 20px;
       margin-bottom: 30px;
     }
-    .summary-card { padding: 24px; text-align: center; }
-    .summary-card h3 { margin-bottom: 8px; color: #94a3b8; font-size: .9rem; text-transform: uppercase; letter-spacing: 1px; }
-    .summary-card .value { font-size: 1.8rem; font-weight: 900; }
-    .charts-grid { grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); }
-    .chart-card {
-    padding: 24px;
-    height: 420px }
-    .chart-card h3 { margin-bottom: 20px; }
-    .actions-bar { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
-    .danger { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-    .purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-    .table-container { padding: 24px; overflow-x: auto; }
-    .search-row { display: flex; gap: 12px; max-width: 650px; margin-bottom: 18px; }
+    .summary-card { 
+      padding: 24px; 
+      text-align: center; 
+    }
+    .summary-card h3 { 
+      margin-bottom: 8px; 
+      color: #94a3b8; 
+      font-size: 0.85rem; 
+      text-transform: uppercase; 
+      letter-spacing: 1px; 
+    }
+    .summary-card .value { 
+      font-size: 1.6rem; 
+      font-weight: 900; 
+    }
+
+    /* ✅ Action Buttons */
+    .actions-bar { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 15px; 
+      margin-bottom: 30px; 
+    }
+
+    /* ✅ Charts Grid - FIXED */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .chart-card { 
+      padding: 24px;
+      min-height: 350px;
+      position: relative;
+    }
+    .chart-card h3 { 
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+    }
+    .chart-card canvas {
+      max-height: 280px;
+    }
+
+    /* ✅ Table Container */
+    .table-container { 
+      padding: 24px; 
+      overflow-x: auto; 
+    }
+    .search-row { 
+      display: flex; 
+      gap: 12px; 
+      max-width: 480px; 
+      margin-bottom: 18px; 
+    }
     .search-row .glass-input { flex: 1; }
+    
+    table { 
+      width: 100%; 
+      min-width: 800px; 
+      border-collapse: collapse; 
+    }
+    th, td { 
+      padding: 16px; 
+      text-align: left; 
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+    }
+    th { 
+      color: #94a3b8; 
+      font-size: 0.85rem; 
+      text-transform: uppercase; 
+      letter-spacing: 1px; 
+    }
+    tr:hover { background: rgba(255, 255, 255, 0.05); }
 
-    .search-row {
-  max-width: 480px;
-}
-
-#paymentModal .search-row,
-#assignFeesModal .search-row {
-  max-width: 100%;
-}
-
-@media(max-width:680px){
-  .search-row {
-    max-width: 100%;
-  }
-}
-
-    .helper-text { margin-top: 8px; color: #94a3b8; font-size: .85rem; }
-    table { width: 100%; min-width: 800px; border-collapse: collapse; }
-    th, td { padding: 16px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, .1); }
-    th { color: #94a3b8; font-size: .85rem; text-transform: uppercase; letter-spacing: 1px; }
-    tr:hover { background: rgba(255, 255, 255, .05); }
+    /* ✅ Color Utilities */
     .text-green { color: #10b981; }
     .text-red { color: #ef4444; }
     .text-blue { color: #3b82f6; }
     .text-yellow { color: #f59e0b; }
+    .danger { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+
+    /* ✅ Modals & Overlays */
     .overlay {
       position: fixed;
       inset: 0;
@@ -117,27 +178,160 @@ select.glass-input option {
       align-items: center;
       justify-content: center;
       padding: 20px;
-      overflow-y: auto;
-      background: rgba(2, 6, 23, .88);
+      background: rgba(2, 6, 23, 0.88);
       backdrop-filter: blur(10px);
     }
-    .modal-content, .form-modal { width: 100%; max-width: 560px; padding: 35px; }
+    .modal-content, .form-modal { 
+      width: 100%; 
+      max-width: 560px; 
+      padding: 35px; 
+    }
     .modal-content { text-align: center; }
-    .modal-content h2, .form-modal h2 { margin-bottom: 12px; text-align: center; }
-    .modal-content > div > p, .modal-description { margin-bottom: 24px; color: #94a3b8; text-align: center; }
-    .otp-input { margin-bottom: 18px; text-align: center; font-size: 2rem; font-weight: 900; letter-spacing: 10px; }
+    .modal-content h2, .form-modal h2 { 
+      margin-bottom: 12px; 
+      text-align: center; 
+    }
+    .modal-content > div > p, .modal-description { 
+      margin-bottom: 24px; 
+      color: #94a3b8; 
+      text-align: center; 
+    }
+    .otp-input { 
+      margin-bottom: 18px; 
+      text-align: center; 
+      font-size: 2rem; 
+      font-weight: 900; 
+      letter-spacing: 10px; 
+    }
     .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; margin-bottom: 8px; color: #cbd5e1; font-size: .9rem; font-weight: 600; }
-    .form-actions { display: flex; gap: 15px; margin-top: 28px; }
+    .form-group label { 
+      display: block; 
+      margin-bottom: 8px; 
+      color: #cbd5e1; 
+      font-size: 0.9rem; 
+      font-weight: 600; 
+    }
+    .form-actions { 
+      display: flex; 
+      gap: 15px; 
+      margin-top: 28px; 
+    }
     .form-actions button { flex: 1; }
     .hidden { display: none !important; }
-    .error { min-height: 20px; margin-top: 12px; color: #f87171; font-size: .9rem; }
-    @media (max-width: 680px) {
-      .header, .search-row, .form-actions { flex-direction: column; align-items: stretch; }
-      .header h1 { font-size: 1.45rem; }
-      .charts-grid { grid-template-columns: 1fr; }
-      .form-modal, .modal-content { padding: 25px; }
+    .error { 
+      min-height: 20px; 
+      margin-top: 12px; 
+      color: #f87171; 
+      font-size: 0.9rem; 
     }
+
+    /* ✅ RESPONSIVE DESIGN - MOBILE FIRST */
+    @media (max-width: 768px) {
+      body { padding: 15px; }
+      
+      .header { 
+        flex-direction: column; 
+        align-items: flex-start; 
+        gap: 15px;
+        margin: 0 5px 25px;
+      }
+      .header h1 { font-size: 1.5rem; }
+      
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .summary-card { padding: 16px; }
+      .summary-card .value { font-size: 1.2rem; }
+      .summary-card h3 { font-size: 0.75rem; }
+      
+      .actions-bar {
+        flex-direction: column;
+        margin-bottom: 20px;
+      }
+      .btn-primary, .btn-secondary {
+        width: 100%;
+        text-align: center;
+      }
+      
+      .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+      .chart-card {
+        min-height: 300px;
+        padding: 18px;
+      }
+      .chart-card canvas {
+        max-height: 250px;
+      }
+      
+      .table-container {
+        padding: 16px;
+        overflow-x: auto;
+      }
+      table {
+        min-width: 600px;
+        font-size: 0.9rem;
+      }
+      th, td {
+        padding: 12px;
+      }
+      
+      .search-row {
+        flex-direction: column;
+        max-width: 100%;
+      }
+      
+      .modal-content, .form-modal {
+        padding: 25px 20px;
+        max-width: 95%;
+      }
+      .form-actions {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+      .header h1 { font-size: 1.3rem; }
+      .summary-card .value { font-size: 1.4rem; }
+      table {
+        min-width: 500px;
+        font-size: 0.85rem;
+      }
+    }
+
+
+        /* ✅ Spinner for loading states */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* ✅ Button with spinner layout */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+
   </style>
 </head>
 <body>
@@ -146,9 +340,11 @@ select.glass-input option {
       <div id="unlockView">
         <h2>Secure Access</h2>
         <p>Enter your 6-digit authenticator code to access financial records.</p>
-        <input type="text" id="otpInput" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
-          placeholder="000000" class="glass-input otp-input">
-        <button type="button" id="unlockButton" class="btn-primary" style="width:100%">Unlock Records</button>
+        <input type="text" id="otpInput" maxlength="6" placeholder="000000" class="glass-input otp-input">
+                <button type="button" id="unlockButton" class="btn-primary" style="width: 100%;">
+          <span id="unlockBtnText">Unlock Records</span>
+          <div class="spinner" id="unlockSpinner" style="display: none;"></div>
+        </button>
         <p id="setupPrompt" style="margin-top:20px;font-size:.9rem">
           First time? <a href="#" id="showSetupLink" style="color:#00d2ff;font-weight:700">Set up 2FA here</a>
         </p>
@@ -161,7 +357,10 @@ select.glass-input option {
         <p style="font-size:.85rem">Manual key: <strong id="manualSecret" style="color:#00d2ff;word-break:break-all"></strong></p>
         <input type="text" id="setupOtpInput" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
           placeholder="000000" class="glass-input otp-input">
-        <button type="button" id="verifySetupButton" class="btn-primary" style="width:100%">Verify and Activate</button>
+        <button type="button" id="verifySetupButton" class="btn-primary" style="width:100%">
+          <span id="setupBtnText">Verify and Activate</span>
+          <div class="spinner" id="setupSpinner" style="display: none;"></div>
+        </button>
         <button type="button" id="cancelSetupButton" class="btn-secondary" style="width:100%;margin-top:10px">Back</button>
         <p id="setupError" class="error"></p>
       </div>
@@ -437,31 +636,62 @@ select.glass-input option {
       }
     }
 
-    async function verify2FACode(token, isSetup) {
+        async function verify2FACode(token, isSetup) {
       const errorElement = document.getElementById(isSetup ? "setupError" : "unlockError");
       errorElement.textContent = "";
+      
       if (!/^\d{6}$/.test(token)) {
         errorElement.textContent = "Enter a valid 6-digit code.";
         return;
       }
-      const data = await readJson(await authFetch(`${API_BASE}/api/financial/verify-2fa`, {
-        method: "POST",
-        body: JSON.stringify({ token })
-      }));
-      if (!data?.success) {
-        errorElement.textContent = data?.message || "Invalid code. Please try again.";
-        return;
-      }
 
-      if (data.financialToken) {
-      sessionStorage.setItem("financial_access_token", data.financialToken);
-      }
+      // ✅ Set loading state
+      const buttonId = isSetup ? "verifySetupButton" : "unlockButton";
+      const textId = isSetup ? "setupBtnText" : "unlockBtnText";
+      const spinnerId = isSetup ? "setupSpinner" : "unlockSpinner";
+      
+      const button = document.getElementById(buttonId);
+      const buttonText = document.getElementById(textId);
+      const spinner = document.getElementById(spinnerId);
+      
+      button.disabled = true;
+      buttonText.style.display = "none";
+      spinner.style.display = "inline-block";
 
-      if (isSetup)
-      sessionStorage.setItem("financial_unlocked", "true");
-      document.getElementById("twoFAOverlay").classList.add("hidden");
-      document.getElementById("mainContent").classList.remove("hidden");
-      await loadDashboard();
+      try {
+        const data = await readJson(await authFetch(`${API_BASE}/api/financial/verify-2fa`, {
+          method: "POST",
+          body: JSON.stringify({ token })
+        }));
+
+        if (!data?.success) {
+          errorElement.textContent = data?.message || "Invalid code. Please try again.";
+          // ✅ Reset loading state on error
+          button.disabled = false;
+          buttonText.style.display = "inline";
+          spinner.style.display = "none";
+          return;
+        }
+
+        if (data.financialToken) {
+          sessionStorage.setItem("financial_access_token", data.financialToken);
+        }
+
+        if (isSetup) {
+          sessionStorage.setItem("financial_unlocked", "true");
+        }
+
+        document.getElementById("twoFAOverlay").classList.add("hidden");
+        document.getElementById("mainContent").classList.remove("hidden");
+        await loadDashboard();
+      } catch (error) {
+        console.error("2FA verification error:", error);
+        errorElement.textContent = "Network error. Please try again.";
+        // ✅ Reset loading state on network error
+        button.disabled = false;
+        buttonText.style.display = "inline";
+        spinner.style.display = "none";
+      }
     }
 
     async function loadDashboard() {
@@ -687,12 +917,13 @@ select.glass-input option {
       })[character]);
     }
 
-    document.getElementById("unlockButton").addEventListener("click", () =>
-      verify2FACode(document.getElementById("otpInput").value.trim(), false)
-    );
-    document.getElementById("verifySetupButton").addEventListener("click", () =>
-      verify2FACode(document.getElementById("setupOtpInput").value.trim(), true)
-    );
+        document.getElementById("unlockButton").addEventListener("click", () => {
+      verify2FACode(document.getElementById("otpInput").value.trim(), false);
+    });
+    document.getElementById("verifySetupButton").addEventListener("click", () => {
+      verify2FACode(document.getElementById("setupOtpInput").value.trim(), true);
+    });
+
     document.getElementById("showSetupLink").addEventListener("click", event => {
       event.preventDefault();
       showSetupView();
@@ -726,17 +957,25 @@ select.glass-input option {
 });
 
 
-    ["otpInput", "setupOtpInput", "paymentStudentSearch", "feeStudentSearch", "searchInput"].forEach(id => {
+        ["otpInput", "setupOtpInput", "paymentStudentSearch", "feeStudentSearch", "searchInput"].forEach(id => {
       document.getElementById(id).addEventListener("keydown", event => {
         if (event.key !== "Enter") return;
         event.preventDefault();
-        if (id === "otpInput") document.getElementById("unlockButton").click();
-        if (id === "setupOtpInput") document.getElementById("verifySetupButton").click();
+        if (id === "otpInput") {
+          const btn = document.getElementById("unlockButton");
+          if (!btn.disabled) btn.click();
+        }
+        if (id === "setupOtpInput") {
+          const btn = document.getElementById("verifySetupButton");
+          if (!btn.disabled) btn.click();
+        }
         if (id === "paymentStudentSearch") document.getElementById("paymentStudentSearchButton").click();
         if (id === "feeStudentSearch") document.getElementById("feeStudentSearchButton").click();
         if (id === "searchInput") document.getElementById("searchButton").click();
       });
     });
+
+    
     document.getElementById("backToDashboard").addEventListener("click", () =>
       sessionStorage.removeItem("financial_unlocked")
     );
