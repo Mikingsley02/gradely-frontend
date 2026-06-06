@@ -359,10 +359,13 @@ select.glass-input option {
         const response = await fetch(url, {
           ...options,
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            ...(options.headers || {})
-          }
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${token}`,
+  ...(sessionStorage.getItem("financial_access_token")
+    ? { "X-Financial-Token": sessionStorage.getItem("financial_access_token") }
+    : {}),
+  ...(options.headers || {})
+}
         });
         if (response.status === 401) {
           clearAuth();
@@ -387,6 +390,7 @@ select.glass-input option {
 
     async function initPage() {
   sessionStorage.removeItem("financial_unlocked");
+  sessionStorage.removeItem("financial_access_token");
 
   document.getElementById("mainContent").classList.add("hidden");
   document.getElementById("twoFAOverlay").classList.remove("hidden");
@@ -446,6 +450,11 @@ select.glass-input option {
         errorElement.textContent = data?.message || "Invalid code. Please try again.";
         return;
       }
+
+      if (data.financialToken) {
+      sessionStorage.setItem("financial_access_token", data.financialToken);
+      }
+
       if (isSetup)
       sessionStorage.setItem("financial_unlocked", "true");
       document.getElementById("twoFAOverlay").classList.add("hidden");
@@ -588,6 +597,11 @@ select.glass-input option {
 
     function searchStudents(inputId, selectId, resultId) {
   const query = document.getElementById(inputId).value.trim().toLowerCase();
+
+  console.log("Searching:", query);
+  console.log("Loaded students:", allStudentsData.length);
+  console.log(allStudentsData.slice(0,5));
+
 
   if (!query) {
     populateStudentSelect(selectId, allStudentsData);
@@ -765,7 +779,9 @@ await submitFinancialForm(`${API_BASE}/api/financial/assign-student-fee`, {
 
 
     async function loadRegisteredStudents() {
-  const data = await readJson(await authFetch(`${API_BASE}/api/financial/students`));
+  const data = await readJson(
+    await authFetch(`${API_BASE}/api/financial/student-directory`)
+  );
 
   if (!data?.success) {
     console.warn("Students endpoint failed:", data);
