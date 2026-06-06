@@ -731,7 +731,11 @@
   populateStudentSelect("assignStudentId", allStudentsData);
 }
 
-      renderTable(students);
+      if (search && students.length === 0) {
+  alert("Student record does not exist.");
+}
+
+renderTable(students);
       renderOutstandingChart(students);
     }
 
