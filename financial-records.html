@@ -263,6 +263,45 @@
     </div>
   </div>
 
+  <!-- ✅ ASSIGN FEES MODAL (✅ FIXED: Moved out of script tag) -->
+  <div id="assignFeesModal" class="overlay hidden">
+    <div class="glass form-modal">
+      <h2>🏷️ Assign Fees to Class</h2>
+      <p style="text-align: center; color: #94a3b8; margin-bottom: 25px; font-size: 0.95rem;">
+        This will set the total fee for all students in the selected class. Outstanding balances will be automatically recalculated based on previous payments.
+      </p>
+      <form id="assignFeesForm">
+        <div class="form-group">
+          <label>Select Class</label>
+          <select id="assignClassName" class="glass-input" required>
+            <option value="">Loading classes...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tuition Amount (₦)</label>
+          <input type="number" id="assignTuition" class="glass-input" placeholder="e.g. 50000" required min="0">
+        </div>
+        <div class="form-group">
+          <label>Other Fees (₦) <span style="color: #64748b; font-weight: normal;">(Optional)</span></label>
+          <input type="number" id="assignOther" class="glass-input" placeholder="e.g. 5000" min="0">
+        </div>
+        <div class="form-group">
+          <label>Term</label>
+          <select id="assignTerm" class="glass-input">
+            <option value="First Term">First Term</option>
+            <option value="Second Term">Second Term</option>
+            <option value="Third Term">Third Term</option>
+            <option value="Current" selected>Current Term</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal('assignFeesModal')">Cancel</button>
+          <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">Assign Fees</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ✅ MAIN DASHBOARD CONTENT -->
   <div id="mainContent" class="hidden">
     <div class="header">
@@ -290,10 +329,11 @@
       </div>
     </div>
 
-    <!-- Action Buttons -->
+    <!-- Action Buttons (✅ FIXED: All 3 buttons are now correctly inside this div) -->
     <div class="actions-bar">
       <button class="btn-primary" onclick="openModal('paymentModal')">➕ Record Payment</button>
       <button class="btn-primary" onclick="openModal('expenseModal')" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">➖ Record Expense</button>
+      <button class="btn-primary" onclick="openAssignFeesModal()" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">🏷️ Assign Fees</button>
     </div>
 
     <!-- Charts -->
@@ -500,8 +540,7 @@
       // Destroy existing charts to prevent overlap errors
       Chart.helpers.each(Chart.instances, (instance) => { instance.destroy(); });
 
-      // 1. Income vs Expenses (We need to fetch this from summary, but we can use a placeholder or fetch again)
-      // For simplicity, we'll fetch summary again just for the chart data
+      // 1. Income vs Expenses
       authFetch(`${API_BASE}/api/financial/summary`).then(res => res.json()).then(data => {
         if(data.success) {
           new Chart(document.getElementById('incomeExpenseChart'), {
@@ -610,6 +649,54 @@
         await loadDashboard();
       } else {
         alert(data.message || "Failed to record expense.");
+      }
+    });
+
+    // ======================================================
+    // ✅ ASSIGN FEES LOGIC (✅ FIXED: Now pure JS, no HTML trapped inside)
+    // ======================================================
+    async function openAssignFeesModal() {
+      openModal('assignFeesModal');
+      const select = document.getElementById('assignClassName');
+      select.innerHTML = '<option value="">Loading classes...</option>';
+      
+      const res = await authFetch(`${API_BASE}/api/financial/classes`);
+      if (!res) return;
+      const data = await res.json();
+      
+      if (data.success && data.data.length > 0) {
+        select.innerHTML = '<option value="">-- Select Class --</option>' + 
+          data.data.map(cls => `<option value="${cls}">${cls}</option>`).join('');
+      } else {
+        select.innerHTML = '<option value="">No classes found (Add students first)</option>';
+      }
+    }
+
+    document.getElementById('assignFeesForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const payload = {
+        class_name: document.getElementById('assignClassName').value,
+        tuition_amount: parseFloat(document.getElementById('assignTuition').value),
+        other_fees: parseFloat(document.getElementById('assignOther').value) || 0,
+        term: document.getElementById('assignTerm').value
+      };
+
+      if (!payload.class_name) return alert("Please select a class.");
+
+      const res = await authFetch(`${API_BASE}/api/financial/assign-fees`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message);
+        closeModal('assignFeesModal');
+        document.getElementById('assignFeesForm').reset();
+        await loadDashboard(); // Refreshes charts, summary, and table
+      } else {
+        alert(data.message || "Failed to assign fees.");
       }
     });
 
