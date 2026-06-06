@@ -489,7 +489,7 @@
 
   <main id="mainContent" class="hidden">
     <div class="header">
-      <h1>Financial Records</h1>
+      <h1> 💰 Financial Records</h1>
       <a href="dashboard.html" id="backToDashboard" class="back-btn">&larr; Back to Dashboard</a>
     </div>
     <section class="summary-grid">
@@ -502,6 +502,9 @@
       <button type="button" id="openPaymentButton" class="btn-primary">Record Payment</button>
       <button type="button" id="openExpenseButton" class="btn-primary danger">Record Expense</button>
       <button type="button" id="openAssignFeesButton" class="btn-primary purple">Assign Fees</button>
+      <button type="button" id="exportFinancialButton" class="btn-primary" style="background:linear-gradient(135deg,#14b8a6,#0f766e);">
+  📤 Export Financial Data
+</button>
     </div>
     <section class="charts-grid">
       <div class="glass chart-card"><h3>Income vs Expenses</h3><canvas id="incomeExpenseChart"></canvas></div>
@@ -861,7 +864,7 @@
 
   document.getElementById(resultId).textContent = matches.length
     ? `${matches.length} student${matches.length === 1 ? "" : "s"} found.`
-    : "No student matched that name or ID.";
+    : "Student record does not exist.";
 
   if (matches.length === 1) {
     document.getElementById(selectId).value = matches[0].student_id;
@@ -1037,6 +1040,41 @@ await submitFinancialForm(`${API_BASE}/api/financial/assign-student-fee`, {
 
   return Array.isArray(students) ? students : [];
 }
+
+
+function exportFinancialData() {
+  const rows = [
+    ["Student ID", "Name", "Class", "Total Fee", "Paid", "Outstanding"]
+  ];
+
+  const tableRows = document.querySelectorAll("#studentsTableBody tr");
+
+  tableRows.forEach(row => {
+    const cells = [...row.querySelectorAll("td")].map(td =>
+      `"${td.textContent.trim().replaceAll('"', '""')}"`
+    );
+
+    if (cells.length === 6) rows.push(cells);
+  });
+
+  if (rows.length === 1) {
+    alert("No financial records available to export.");
+    return;
+  }
+
+  const csv = rows.map(r => r.join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `financial-records-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById("exportFinancialButton").addEventListener("click", exportFinancialData);
 
 
     document.addEventListener("DOMContentLoaded", initPage);
