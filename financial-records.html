@@ -502,6 +502,14 @@
       <button type="button" id="openPaymentButton" class="btn-primary">Record Payment</button>
       <button type="button" id="openExpenseButton" class="btn-primary danger">Record Expense</button>
       <button type="button" id="openAssignFeesButton" class="btn-primary purple">Assign Fees</button>
+
+      <button
+      type="button"
+      id="openAssignClassFeesButton"
+      class="btn-primary purple">
+      Assign Fees by Class
+     </button>
+
       <button type="button" id="exportFinancialButton" class="btn-primary" style="background:linear-gradient(135deg,#14b8a6,#0f766e);">
   📤 Export Financial Data
 </button>
@@ -939,6 +947,11 @@ renderTable(students);
     document.getElementById("openPaymentButton").addEventListener("click", () => openModal("paymentModal"));
     document.getElementById("openExpenseButton").addEventListener("click", () => openModal("expenseModal"));
     document.getElementById("openAssignFeesButton").addEventListener("click", () => openModal("assignFeesModal"));
+
+    document.getElementById("openAssignClassFeesButton").addEventListener("click", () => {
+    alert("Assign Fees by Class backend is not ready yet. We will connect this next.");
+    });
+
     document.querySelectorAll(".modal-close").forEach(button =>
       button.addEventListener("click", () => closeModal(button.dataset.modal))
     );
@@ -982,6 +995,11 @@ renderTable(students);
       });
     });
 
+
+    document
+  .getElementById("exportFinancialButton")
+  .addEventListener("click", exportFinancialData);
+
     
     document.getElementById("backToDashboard").addEventListener("click", () =>
       sessionStorage.removeItem("financial_unlocked")
@@ -989,6 +1007,9 @@ renderTable(students);
 
     document.getElementById("paymentForm").addEventListener("submit", async event => {
       event.preventDefault();
+
+
+
       const student = getSelectedStudent("payStudentId");
       if (!student.student_id) return alert("Please search for and select a student.");
       await submitFinancialForm(`${API_BASE}/api/financial/payment`, {
@@ -1046,31 +1067,55 @@ await submitFinancialForm(`${API_BASE}/api/financial/assign-student-fee`, {
 }
 
 
-function exportFinancialData() {
-  const rows = [
-    ["Student ID", "Name", "Class", "Total Fee", "Paid", "Outstanding"]
-  ];
+async function exportFinancialData() {
+  const rows = [];
 
-  const tableRows = document.querySelectorAll("#studentsTableBody tr");
+  rows.push(["STUDENT PAYMENT STATUS"]);
+  rows.push(["Student ID", "Name", "Class", "Total Fee", "Paid", "Outstanding"]);
 
-  tableRows.forEach(row => {
+  document.querySelectorAll("#studentsTableBody tr").forEach(row => {
     const cells = [...row.querySelectorAll("td")].map(td =>
-      `"${td.textContent.trim().replaceAll('"', '""')}"`
+      td.textContent.trim().replaceAll('"', '""')
     );
 
     if (cells.length === 6) rows.push(cells);
   });
 
-  if (rows.length === 1) {
+  rows.push([]);
+  rows.push(["EXPENSES"]);
+  rows.push(["Category", "Description", "Amount", "Notes", "Date"]);
+
+  const expenseRes = await authFetch(`${API_BASE}/api/financial/expenses`);
+  const expenseData = await readJson(expenseRes);
+
+  if (expenseData?.success && Array.isArray(expenseData.data)) {
+    expenseData.data.forEach(exp => {
+      rows.push([
+        exp.category || "",
+        exp.description || "",
+        formatCurrency(exp.amount),
+        exp.notes || "",
+        exp.created_at ? new Date(exp.created_at).toLocaleDateString("en-GB") : ""
+      ]);
+    });
+  }
+
+  if (rows.length <= 5) {
     alert("No financial records available to export.");
     return;
   }
 
-  const csv = rows.map(r => r.join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
+  const csv = rows
+    .map(row => row.map(cell => `"${String(cell).replaceAll('"', '""')}"`).join(","))
+    .join("\n");
 
+  const blob = new Blob(["\uFEFF" + csv], {
+    type: "text/csv;charset=utf-8;"
+  });
+
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
+
   a.href = url;
   a.download = `financial-records-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
@@ -1078,10 +1123,10 @@ function exportFinancialData() {
   URL.revokeObjectURL(url);
 }
 
-document.getElementById("exportFinancialButton").addEventListener("click", exportFinancialData);
 
 
-    document.addEventListener("DOMContentLoaded", initPage);
+
+
   </script>
 </body>
 </html>
