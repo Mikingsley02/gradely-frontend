@@ -529,7 +529,7 @@
     </div>
   </div>
 
-  
+
 
   <div id="assignClassFeesModal" class="overlay hidden">
   <div class="glass form-modal">
@@ -1173,20 +1173,27 @@ await submitFinancialForm(`${API_BASE}/api/financial/assign-student-fee`, {
 
 
 async function loadClasses() {
+  const defaultClasses = [
+    "Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6",
+    "JSS 1", "JSS 2", "JSS 3",
+    "SSS 1", "SSS 2", "SSS 3"
+  ];
+
+  const select = document.getElementById("assignClassName");
+
+  let classes = defaultClasses;
+
   const data = await readJson(
     await authFetch(`${API_BASE}/api/financial/classes`)
   );
 
-  const select = document.getElementById("assignClassName");
-
-  if (!data?.success || !Array.isArray(data.data)) {
-    select.innerHTML = '<option value="">Failed to load classes</option>';
-    return;
+  if (data?.success && Array.isArray(data.data) && data.data.length > 0) {
+    classes = data.data;
   }
 
   select.innerHTML =
     '<option value="">-- Select Class --</option>' +
-    data.data.map(className => `
+    classes.map(className => `
       <option value="${escapeHtml(className)}">${escapeHtml(className)}</option>
     `).join("");
 }
