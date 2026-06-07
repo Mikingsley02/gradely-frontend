@@ -461,7 +461,15 @@
       }
 
       if (policyContent) {
-        policyContent.innerHTML = data.data.content;
+      const decodedContent = (data.data.content || "")
+       .replace(/&lt;/g, "<")
+       .replace(/&gt;/g, ">")
+       .replace(/&amp;/g, "&")
+       .replace(/&quot;/g, '"')
+       .replace(/&#039;/g, "'");
+
+      policyContent.innerHTML = decodedContent;
+
         policyContent.style.display = "block";
       }
 
