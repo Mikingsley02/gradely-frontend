@@ -446,6 +446,17 @@
     </div>
   </div>
 
+
+
+
+  <div class="form-actions" style="margin-bottom:24px">
+  <button type="button" id="showStudentFeeMode" class="btn-primary">Per Student</button>
+  <button type="button" id="showClassFeeMode" class="btn-secondary">By Class</button>
+ </div>
+
+
+
+
   <div id="assignFeesModal" class="overlay hidden">
     <div class="glass form-modal">
       <h2>Assign Fees to Student</h2>
@@ -590,12 +601,6 @@
       <button type="button" id="openExpenseButton" class="btn-primary danger">Record Expense</button>
       <button type="button" id="openAssignFeesButton" class="btn-primary purple">Assign Fees</button>
 
-      <button
-      type="button"
-      id="openAssignClassFeesButton"
-      class="btn-primary purple">
-      Assign Fees by Class
-     </button>
 
       <button type="button" id="exportFinancialButton" class="btn-primary" style="background:linear-gradient(135deg,#14b8a6,#0f766e);">
   📤 Export Financial Data
@@ -621,73 +626,79 @@
   </main>
 
   <script>
-    const API_BASE = window.location.hostname.includes("localhost")
-      ? "http://localhost:5000"
-      : "https://api.gradely.info";
-    let allStudentsData = [];
-    let incomeExpenseChart = null;
-    let outstandingChart = null;
+const API_BASE = window.location.hostname.includes("localhost")
+  ? "http://localhost:5000"
+  : "https://api.gradely.info";
 
-    function getToken() {
-      const token = sessionStorage.getItem("gradely_token") || localStorage.getItem("gradely_token");
-      return token && !["undefined", "null", ""].includes(token.trim()) ? token : null;
-    }
+let allStudentsData = [];
+let incomeExpenseChart = null;
+let outstandingChart = null;
 
-    function isTokenExpired(token) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-        return !payload.exp || Date.now() >= payload.exp * 1000;
-      } catch {
-        return true;
-      }
-    }
-
-    function clearAuth() {
-      sessionStorage.clear();
-      localStorage.removeItem("gradely_token");
-      window.location.href = "admin-login.html";
-    }
-
-    async function authFetch(url, options = {}) {
-      const token = getToken();
-      if (!token || isTokenExpired(token)) {
-        clearAuth();
-        return null;
-      }
-      try {
-        const response = await fetch(url, {
-          ...options,
-          headers: {
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${token}`,
-  ...(sessionStorage.getItem("financial_access_token")
-    ? { "X-Financial-Token": sessionStorage.getItem("financial_access_token") }
-    : {}),
-  ...(options.headers || {})
+function getToken() {
+  const token = sessionStorage.getItem("gradely_token") || localStorage.getItem("gradely_token");
+  return token && !["undefined", "null", ""].includes(token.trim()) ? token : null;
 }
-        });
-        if (response.status === 401) {
-          clearAuth();
-          return null;
-        }
-        return response;
-      } catch (error) {
-        console.error("Financial records request failed:", error);
-        alert("Unable to connect to the server. Please try again.");
-        return null;
+
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return !payload.exp || Date.now() >= payload.exp * 1000;
+  } catch {
+    return true;
+  }
+}
+
+function clearAuth() {
+  sessionStorage.clear();
+  localStorage.removeItem("gradely_token");
+  window.location.href = "admin-login.html";
+}
+
+async function authFetch(url, options = {}) {
+  const token = getToken();
+
+  if (!token || isTokenExpired(token)) {
+    clearAuth();
+    return null;
+  }
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(sessionStorage.getItem("financial_access_token")
+          ? { "X-Financial-Token": sessionStorage.getItem("financial_access_token") }
+          : {}),
+        ...(options.headers || {})
       }
+    });
+
+    if (response.status === 401) {
+      clearAuth();
+      return null;
     }
 
-    async function readJson(response) {
-      if (!response) return null;
-      try {
-        return await response.json();
-      } catch {
-        return { success: false, message: `Server returned HTTP ${response.status}.` };
-      }
-    }
+    return response;
+  } catch (error) {
+    console.error("Financial records request failed:", error);
+    alert("Unable to connect to the server. Please try again.");
+    return null;
+  }
+}
 
-    async function initPage() {
+async function readJson(response) {
+  if (!response) return null;
+
+  try {
+    return await response.json();
+  } catch {
+    return { success: false, message: `Server returned HTTP ${response.status}.` };
+  }
+}
+
+async function initPage() {
   sessionStorage.removeItem("financial_unlocked");
   sessionStorage.removeItem("financial_access_token");
 
@@ -701,98 +712,87 @@
     return;
   }
 
-  if (data.isSetup) {
-    document.getElementById("setupPrompt").classList.add("hidden");
-    showUnlockView();
+  document.getElementById("setupPrompt").classList.toggle("hidden", data.isSetup);
+  showUnlockView();
+}
+
+function showSetupView() {
+  document.getElementById("unlockView").classList.add("hidden");
+  document.getElementById("setupView").classList.remove("hidden");
+  generateQRCode();
+}
+
+function showUnlockView() {
+  document.getElementById("setupView").classList.add("hidden");
+  document.getElementById("unlockView").classList.remove("hidden");
+}
+
+async function generateQRCode() {
+  const errorElement = document.getElementById("setupError");
+  errorElement.textContent = "";
+
+  const data = await readJson(
+    await authFetch(`${API_BASE}/api/financial/setup-2fa`, { method: "POST" })
+  );
+
+  if (data?.success) {
+    document.getElementById("qrCodeImg").src = data.qrCode;
+    document.getElementById("manualSecret").textContent = data.secret;
   } else {
-    document.getElementById("setupPrompt").classList.remove("hidden");
-    showUnlockView();
+    errorElement.textContent = data?.message || "Failed to generate the QR code.";
   }
 }
 
+async function verify2FACode(token, isSetup) {
+  const errorElement = document.getElementById(isSetup ? "setupError" : "unlockError");
+  errorElement.textContent = "";
 
-    function showSetupView() {
-      document.getElementById("unlockView").classList.add("hidden");
-      document.getElementById("setupView").classList.remove("hidden");
-      generateQRCode();
+  if (!/^\d{6}$/.test(token)) {
+    errorElement.textContent = "Enter a valid 6-digit code.";
+    return;
+  }
+
+  const button = document.getElementById(isSetup ? "verifySetupButton" : "unlockButton");
+  const buttonText = document.getElementById(isSetup ? "setupBtnText" : "unlockBtnText");
+  const spinner = document.getElementById(isSetup ? "setupSpinner" : "unlockSpinner");
+
+  button.disabled = true;
+  buttonText.style.display = "none";
+  spinner.style.display = "inline-block";
+
+  try {
+    const data = await readJson(await authFetch(`${API_BASE}/api/financial/verify-2fa`, {
+      method: "POST",
+      body: JSON.stringify({ token })
+    }));
+
+    if (!data?.success) {
+      errorElement.textContent = data?.message || "Invalid code. Please try again.";
+      button.disabled = false;
+      buttonText.style.display = "inline";
+      spinner.style.display = "none";
+      return;
     }
 
-    function showUnlockView() {
-      document.getElementById("setupView").classList.add("hidden");
-      document.getElementById("unlockView").classList.remove("hidden");
+    if (data.financialToken) {
+      sessionStorage.setItem("financial_access_token", data.financialToken);
     }
 
-    async function generateQRCode() {
-      const errorElement = document.getElementById("setupError");
-      errorElement.textContent = "";
-      const data = await readJson(await authFetch(`${API_BASE}/api/financial/setup-2fa`, { method: "POST" }));
-      if (data?.success) {
-        document.getElementById("qrCodeImg").src = data.qrCode;
-        document.getElementById("manualSecret").textContent = data.secret;
-      } else {
-        errorElement.textContent = data?.message || "Failed to generate the QR code.";
-      }
-    }
+    document.getElementById("twoFAOverlay").classList.add("hidden");
+    document.getElementById("mainContent").classList.remove("hidden");
 
-        async function verify2FACode(token, isSetup) {
-      const errorElement = document.getElementById(isSetup ? "setupError" : "unlockError");
-      errorElement.textContent = "";
-      
-      if (!/^\d{6}$/.test(token)) {
-        errorElement.textContent = "Enter a valid 6-digit code.";
-        return;
-      }
+    await loadDashboard();
 
-      // ✅ Set loading state
-      const buttonId = isSetup ? "verifySetupButton" : "unlockButton";
-      const textId = isSetup ? "setupBtnText" : "unlockBtnText";
-      const spinnerId = isSetup ? "setupSpinner" : "unlockSpinner";
-      
-      const button = document.getElementById(buttonId);
-      const buttonText = document.getElementById(textId);
-      const spinner = document.getElementById(spinnerId);
-      
-      button.disabled = true;
-      buttonText.style.display = "none";
-      spinner.style.display = "inline-block";
+  } catch (error) {
+    console.error("2FA verification error:", error);
+    errorElement.textContent = "Network error. Please try again.";
+    button.disabled = false;
+    buttonText.style.display = "inline";
+    spinner.style.display = "none";
+  }
+}
 
-      try {
-        const data = await readJson(await authFetch(`${API_BASE}/api/financial/verify-2fa`, {
-          method: "POST",
-          body: JSON.stringify({ token })
-        }));
-
-        if (!data?.success) {
-          errorElement.textContent = data?.message || "Invalid code. Please try again.";
-          // ✅ Reset loading state on error
-          button.disabled = false;
-          buttonText.style.display = "inline";
-          spinner.style.display = "none";
-          return;
-        }
-
-        if (data.financialToken) {
-          sessionStorage.setItem("financial_access_token", data.financialToken);
-        }
-
-        if (isSetup) {
-          sessionStorage.setItem("financial_unlocked", "true");
-        }
-
-        document.getElementById("twoFAOverlay").classList.add("hidden");
-        document.getElementById("mainContent").classList.remove("hidden");
-        await loadDashboard();
-      } catch (error) {
-        console.error("2FA verification error:", error);
-        errorElement.textContent = "Network error. Please try again.";
-        // ✅ Reset loading state on network error
-        button.disabled = false;
-        buttonText.style.display = "inline";
-        spinner.style.display = "none";
-      }
-    }
-
-    async function loadDashboard() {
+async function loadDashboard() {
   allStudentsData = await loadRegisteredStudents();
 
   populateStudentSelect("payStudentId", allStudentsData);
@@ -804,96 +804,122 @@
   ]);
 }
 
-    async function loadSummary() {
-      const data = await readJson(await authFetch(`${API_BASE}/api/financial/summary`));
-      if (!data?.success) return;
-      const summary = data.data || {};
-      document.getElementById("totalIncome").textContent = formatCurrency(summary.totalIncome);
-      document.getElementById("totalExpenses").textContent = formatCurrency(summary.totalExpenses);
-      document.getElementById("netBalance").textContent = formatCurrency(summary.netBalance);
-      document.getElementById("totalOutstanding").textContent = formatCurrency(summary.totalOutstanding);
-      renderIncomeExpenseChart(summary);
-    }
+async function loadSummary() {
+  const data = await readJson(await authFetch(`${API_BASE}/api/financial/summary`));
+  if (!data?.success) return;
 
-    async function loadStudents(search = "") {
-      const query = search ? `?search=${encodeURIComponent(search)}` : "";
-      const data = await readJson(await authFetch(`${API_BASE}/api/financial/students${query}`));
-      if (!data?.success) return;
-      const students = Array.isArray(data.data) ? data.data : [];
-      if (!search) {
-  allStudentsData = await loadRegisteredStudents();
-  populateStudentSelect("payStudentId", allStudentsData);
-  populateStudentSelect("assignStudentId", allStudentsData);
+  const summary = data.data || {};
+
+  document.getElementById("totalIncome").textContent = formatCurrency(summary.totalIncome);
+  document.getElementById("totalExpenses").textContent = formatCurrency(summary.totalExpenses);
+  document.getElementById("netBalance").textContent = formatCurrency(summary.netBalance);
+  document.getElementById("totalOutstanding").textContent = formatCurrency(summary.totalOutstanding);
+
+  renderIncomeExpenseChart(summary);
 }
 
-      if (search && students.length === 0) {
-  alert("Student record does not exist.");
+async function loadStudents(search = "") {
+  const query = search ? `?search=${encodeURIComponent(search)}` : "";
+  const data = await readJson(await authFetch(`${API_BASE}/api/financial/students${query}`));
+
+  if (!data?.success) return;
+
+  const students = Array.isArray(data.data) ? data.data : [];
+
+  if (search && students.length === 0) {
+    alert("Student record does not exist.");
+  }
+
+  renderTable(students);
+  renderOutstandingChart(students);
 }
 
-renderTable(students);
-      renderOutstandingChart(students);
-    }
+function renderTable(students) {
+  const body = document.getElementById("studentsTableBody");
 
-    function renderTable(students) {
-      const body = document.getElementById("studentsTableBody");
-      if (!students.length) {
-        body.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:#94a3b8">No student records found.</td></tr>';
-        return;
-      }
-      body.innerHTML = students.map(student => `
-        <tr>
-          <td>${escapeHtml(student.student_id)}</td>
-          <td>${escapeHtml(student.student_name)}</td>
-          <td>${escapeHtml(student.class_name || "N/A")}</td>
-          <td>${formatCurrency(student.total_fee)}</td>
-          <td class="text-green">${formatCurrency(student.amount_paid)}</td>
-          <td class="${Number(student.outstanding_balance) > 0 ? "text-red" : "text-green"}">
-            ${formatCurrency(student.outstanding_balance)}
-          </td>
-        </tr>
-      `).join("");
-    }
+  if (!students.length) {
+    body.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:#94a3b8">No student records found.</td></tr>';
+    return;
+  }
 
-    function renderIncomeExpenseChart(summary) {
-      if (incomeExpenseChart) incomeExpenseChart.destroy();
-      incomeExpenseChart = new Chart(document.getElementById("incomeExpenseChart"), {
-        type: "doughnut",
-        data: {
-          labels: ["Total Income", "Total Expenses"],
-          datasets: [{
-            data: [Number(summary.totalIncome) || 0, Number(summary.totalExpenses) || 0],
-            backgroundColor: ["#10b981", "#ef4444"],
-            borderWidth: 0
-          }]
-        },
-        options: { plugins: { legend: { position: "bottom", labels: { color: "#fff" } } } }
-      });
-    }
+  body.innerHTML = students.map(student => `
+    <tr>
+      <td>${escapeHtml(student.student_id)}</td>
+      <td>${escapeHtml(student.student_name)}</td>
+      <td>${escapeHtml(student.class_name || "N/A")}</td>
+      <td>${formatCurrency(student.total_fee)}</td>
+      <td class="text-green">${formatCurrency(student.amount_paid)}</td>
+      <td class="${Number(student.outstanding_balance) > 0 ? "text-red" : "text-green"}">
+        ${formatCurrency(student.outstanding_balance)}
+      </td>
+    </tr>
+  `).join("");
+}
 
-    function renderOutstandingChart(students) {
-      const totals = {};
-      students.forEach(student => {
-        const className = student.class_name || "Unassigned";
-        totals[className] = (totals[className] || 0) + (Number(student.outstanding_balance) || 0);
-      });
-      if (outstandingChart) outstandingChart.destroy();
-      outstandingChart = new Chart(document.getElementById("outstandingChart"), {
-        type: "bar",
-        data: {
-          labels: Object.keys(totals),
-          datasets: [{ data: Object.values(totals), backgroundColor: "#f59e0b", borderRadius: 8 }]
-        },
-        options: {
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { ticks: { color: "#94a3b8" }, grid: { color: "rgba(255,255,255,.1)" } },
-            x: { ticks: { color: "#94a3b8" }, grid: { display: false } }
-          }
+function renderIncomeExpenseChart(summary) {
+  if (incomeExpenseChart) incomeExpenseChart.destroy();
+
+  incomeExpenseChart = new Chart(document.getElementById("incomeExpenseChart"), {
+    type: "doughnut",
+    data: {
+      labels: ["Total Income", "Total Expenses"],
+      datasets: [{
+        data: [
+          Number(summary.totalIncome) || 0,
+          Number(summary.totalExpenses) || 0
+        ],
+        backgroundColor: ["#10b981", "#ef4444"],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { color: "#fff" }
         }
-      });
+      }
     }
+  });
+}
 
-    function populateStudentSelect(selectId, students) {
+function renderOutstandingChart(students) {
+  const totals = {};
+
+  students.forEach(student => {
+    const className = student.class_name || "Unassigned";
+    totals[className] = (totals[className] || 0) + (Number(student.outstanding_balance) || 0);
+  });
+
+  if (outstandingChart) outstandingChart.destroy();
+
+  outstandingChart = new Chart(document.getElementById("outstandingChart"), {
+    type: "bar",
+    data: {
+      labels: Object.keys(totals),
+      datasets: [{
+        data: Object.values(totals),
+        backgroundColor: "#f59e0b",
+        borderRadius: 8
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          ticks: { color: "#94a3b8" },
+          grid: { color: "rgba(255,255,255,.1)" }
+        },
+        x: {
+          ticks: { color: "#94a3b8" },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function populateStudentSelect(selectId, students) {
   const select = document.getElementById(selectId);
 
   select.innerHTML =
@@ -927,15 +953,8 @@ renderTable(students);
     }).join("");
 }
 
-
-
-    function searchStudents(inputId, selectId, resultId) {
+function searchStudents(inputId, selectId, resultId) {
   const query = document.getElementById(inputId).value.trim().toLowerCase();
-
-  console.log("Searching:", query);
-  console.log("Loaded students:", allStudentsData.length);
-  console.log(allStudentsData.slice(0,5));
-
 
   if (!query) {
     populateStudentSelect(selectId, allStudentsData);
@@ -970,188 +989,72 @@ renderTable(students);
   }
 }
 
+function getSelectedStudent(selectId) {
+  const select = document.getElementById(selectId);
+  const option = select.options[select.selectedIndex];
 
-    function getSelectedStudent(selectId) {
-      const select = document.getElementById(selectId);
-      const option = select.options[select.selectedIndex];
-      return {
-        student_id: select.value,
-        student_name: option?.dataset.name || ""
-      };
-    }
+  return {
+    student_id: select.value,
+    student_name: option?.dataset.name || "",
+    class_name: option?.dataset.class || "N/A"
+  };
+}
 
-    async function submitFinancialForm(url, payload, formId, modalId, successMessage) {
-      const data = await readJson(await authFetch(url, {
-        method: "POST",
-        body: JSON.stringify(payload)
-      }));
-      if (!data?.success) {
-        alert(data?.message || "The request could not be completed.");
-        return;
-      }
-      alert(data.message || successMessage);
-      document.getElementById(formId).reset();
-      closeModal(modalId);
-      await loadDashboard();
-    }
+async function submitFinancialForm(url, payload, formId, modalId, successMessage) {
+  const data = await readJson(await authFetch(url, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  }));
 
-    function openModal(id) {
-      document.getElementById(id).classList.remove("hidden");
-      if (id === "paymentModal") populateStudentSelect("payStudentId", allStudentsData);
-      if (id === "assignFeesModal") populateStudentSelect("assignStudentId", allStudentsData);
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.add("hidden");
-    }
-
-    function formatCurrency(value) {
-      return new Intl.NumberFormat("en-NG", {
-        style: "currency",
-        currency: "NGN",
-        minimumFractionDigits: 2
-      }).format(Number(value) || 0);
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? "").replace(/[&<>"']/g, character => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-      })[character]);
-    }
-
-        document.getElementById("unlockButton").addEventListener("click", () => {
-      verify2FACode(document.getElementById("otpInput").value.trim(), false);
-    });
-    document.getElementById("verifySetupButton").addEventListener("click", () => {
-      verify2FACode(document.getElementById("setupOtpInput").value.trim(), true);
-    });
-
-    document.getElementById("showSetupLink").addEventListener("click", event => {
-      event.preventDefault();
-      showSetupView();
-    });
-    document.getElementById("cancelSetupButton").addEventListener("click", showUnlockView);
-    document.getElementById("openPaymentButton").addEventListener("click", () => openModal("paymentModal"));
-    document.getElementById("openExpenseButton").addEventListener("click", () => openModal("expenseModal"));
-    document.getElementById("openAssignFeesButton").addEventListener("click", () => openModal("assignFeesModal"));
-
-    document.getElementById("openAssignClassFeesButton").addEventListener("click", async () => {
-    await loadClasses();
-    openModal("assignClassFeesModal");
-    });
-
-
-    document.querySelectorAll(".modal-close").forEach(button =>
-      button.addEventListener("click", () => closeModal(button.dataset.modal))
-    );
-    document.querySelectorAll(".overlay").forEach(overlay =>
-      overlay.addEventListener("click", event => {
-        if (event.target === overlay && overlay.id !== "twoFAOverlay") closeModal(overlay.id);
-      })
-    );
-    document.getElementById("paymentStudentSearchButton").addEventListener("click", () =>
-      searchStudents("paymentStudentSearch", "payStudentId", "paymentStudentResult")
-    );
-    document.getElementById("feeStudentSearchButton").addEventListener("click", () =>
-      searchStudents("feeStudentSearch", "assignStudentId", "feeStudentResult")
-    );
-    document.getElementById("searchButton").addEventListener("click", async () => {
-  await loadStudents(document.getElementById("searchInput").value.trim());
-});
-
-  document.getElementById("searchInput").addEventListener("input", e => {
-  if (!e.target.value.trim()) {
-    loadStudents();
+  if (!data?.success) {
+    alert(data?.message || "The request could not be completed.");
+    return;
   }
-});
 
+  alert(data.message || successMessage);
 
-        ["otpInput", "setupOtpInput", "paymentStudentSearch", "feeStudentSearch", "searchInput"].forEach(id => {
-      document.getElementById(id).addEventListener("keydown", event => {
-        if (event.key !== "Enter") return;
-        event.preventDefault();
-        if (id === "otpInput") {
-          const btn = document.getElementById("unlockButton");
-          if (!btn.disabled) btn.click();
-        }
-        if (id === "setupOtpInput") {
-          const btn = document.getElementById("verifySetupButton");
-          if (!btn.disabled) btn.click();
-        }
-        if (id === "paymentStudentSearch") document.getElementById("paymentStudentSearchButton").click();
-        if (id === "feeStudentSearch") document.getElementById("feeStudentSearchButton").click();
-        if (id === "searchInput") document.getElementById("searchButton").click();
-      });
-    });
+  if (formId) document.getElementById(formId).reset();
 
+  closeModal(modalId);
+  await loadDashboard();
+}
 
-    document
-  .getElementById("exportFinancialButton")
-  .addEventListener("click", exportFinancialData);
+function openModal(id) {
+  document.getElementById(id).classList.remove("hidden");
 
-    
-    document.getElementById("backToDashboard").addEventListener("click", () =>
-      sessionStorage.removeItem("financial_unlocked")
-    );
+  if (id === "paymentModal") {
+    populateStudentSelect("payStudentId", allStudentsData);
+  }
 
-    document.getElementById("paymentForm").addEventListener("submit", async event => {
-      event.preventDefault();
+  if (id === "assignFeesModal") {
+    showStudentFeeMode();
+    populateStudentSelect("assignStudentId", allStudentsData);
+  }
+}
 
+function closeModal(id) {
+  document.getElementById(id).classList.add("hidden");
+}
 
+function showStudentFeeMode() {
+  document.getElementById("studentFeeSection").classList.remove("hidden");
+  document.getElementById("classFeeSection").classList.add("hidden");
 
-      const student = getSelectedStudent("payStudentId");
-      if (!student.student_id) return alert("Please search for and select a student.");
-      await submitFinancialForm(`${API_BASE}/api/financial/payment`, {
-        ...student,
-        amount: Number(document.getElementById("payAmount").value),
-        payment_method: document.getElementById("payMethod").value,
-        notes: document.getElementById("payNotes").value.trim()
-      }, "paymentForm", "paymentModal", "Payment recorded successfully.");
-    });
+  document.getElementById("showStudentFeeMode").className = "btn-primary";
+  document.getElementById("showClassFeeMode").className = "btn-secondary";
+}
 
-    document.getElementById("expenseForm").addEventListener("submit", async event => {
-      event.preventDefault();
-      await submitFinancialForm(`${API_BASE}/api/financial/expense`, {
-        category: document.getElementById("expCategory").value,
-        description: document.getElementById("expDescription").value.trim(),
-        amount: Number(document.getElementById("expAmount").value),
-        notes: document.getElementById("expNotes").value.trim()
-      }, "expenseForm", "expenseModal", "Expense recorded successfully.");
-    });
+async function showClassFeeMode() {
+  document.getElementById("studentFeeSection").classList.add("hidden");
+  document.getElementById("classFeeSection").classList.remove("hidden");
 
-    document.getElementById("assignFeesForm").addEventListener("submit", async event => {
-      event.preventDefault();
-      const selected = document.getElementById("assignStudentId");
-    const selectedOption = selected.options[selected.selectedIndex];
+  document.getElementById("showStudentFeeMode").className = "btn-secondary";
+  document.getElementById("showClassFeeMode").className = "btn-primary purple";
 
-await submitFinancialForm(`${API_BASE}/api/financial/assign-student-fee`, {
-  student_id: selected.value,
-  student_name: selectedOption?.dataset.name || "",
-  class_name: selectedOption?.dataset.class || "N/A",
-  tuition_amount: Number(document.getElementById("assignTuition").value),
-  other_fees: Number(document.getElementById("assignOther").value) || 0,
-  term: document.getElementById("assignTerm").value
-}, "assignFeesForm", "assignFeesModal", "Fees assigned successfully.");
+  await loadClasses();
+}
 
-    });
-
-
-
-  document.getElementById("assignClassFeesForm").addEventListener("submit", async event => {
-  event.preventDefault();
-
-  await submitFinancialForm(`${API_BASE}/api/financial/assign-fees`, {
-    class_name: document.getElementById("assignClassName").value,
-    tuition_amount: Number(document.getElementById("assignClassTuition").value),
-    other_fees: Number(document.getElementById("assignClassOther").value) || 0,
-    term: document.getElementById("assignClassTerm").value
-  }, "assignClassFeesForm", "assignClassFeesModal", "Fees assigned to class successfully.");
-});
-
-
-
-
-  async function loadRegisteredStudents() {
+async function loadRegisteredStudents() {
   const data = await readJson(
     await authFetch(`${API_BASE}/api/financial/student-directory`)
   );
@@ -1170,8 +1073,6 @@ await submitFinancialForm(`${API_BASE}/api/financial/assign-student-fee`, {
   return Array.isArray(students) ? students : [];
 }
 
-
-
 async function loadClasses() {
   const defaultClasses = [
     "Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6",
@@ -1181,14 +1082,20 @@ async function loadClasses() {
 
   const select = document.getElementById("assignClassName");
 
+  if (!select) return;
+
   let classes = defaultClasses;
 
-  const data = await readJson(
-    await authFetch(`${API_BASE}/api/financial/classes`)
-  );
+  try {
+    const data = await readJson(
+      await authFetch(`${API_BASE}/api/financial/classes`)
+    );
 
-  if (data?.success && Array.isArray(data.data) && data.data.length > 0) {
-    classes = data.data;
+    if (data?.success && Array.isArray(data.data) && data.data.length > 0) {
+      classes = [...new Set([...defaultClasses, ...data.data])];
+    }
+  } catch (err) {
+    console.warn("Using default classes because class API failed:", err);
   }
 
   select.innerHTML =
@@ -1198,7 +1105,25 @@ async function loadClasses() {
     `).join("");
 }
 
+async function assignFeesToClass() {
+  const className = document.getElementById("assignClassName").value;
+  const tuitionAmount = Number(document.getElementById("assignClassTuition").value);
+  const otherFees = Number(document.getElementById("assignClassOther").value) || 0;
+  const term = document.getElementById("assignClassTerm").value;
 
+  if (!className) return alert("Please select a class.");
+  if (!term) return alert("Please select a term.");
+  if (isNaN(tuitionAmount) || tuitionAmount <= 0) {
+    return alert("Please enter a valid tuition amount.");
+  }
+
+  await submitFinancialForm(`${API_BASE}/api/financial/assign-fees`, {
+    class_name: className,
+    tuition_amount: tuitionAmount,
+    other_fees: otherFees,
+    term
+  }, "assignFeesForm", "assignFeesModal", "Fees assigned to class successfully.");
+}
 
 async function exportFinancialData() {
   const rows = [];
@@ -1233,11 +1158,6 @@ async function exportFinancialData() {
     });
   }
 
-  if (rows.length <= 5) {
-    alert("No financial records available to export.");
-    return;
-  }
-
   const csv = rows
     .map(row => row.map(cell => `"${String(cell).replaceAll('"', '""')}"`).join(","))
     .join("\n");
@@ -1256,10 +1176,152 @@ async function exportFinancialData() {
   URL.revokeObjectURL(url);
 }
 
+function formatCurrency(value) {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    minimumFractionDigits: 2
+  }).format(Number(value) || 0);
+}
 
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[character]);
+}
 
+/* ================= EVENT LISTENERS ================= */
 
+document.getElementById("unlockButton").addEventListener("click", () => {
+  verify2FACode(document.getElementById("otpInput").value.trim(), false);
+});
 
-  </script>
+document.getElementById("verifySetupButton").addEventListener("click", () => {
+  verify2FACode(document.getElementById("setupOtpInput").value.trim(), true);
+});
+
+document.getElementById("showSetupLink").addEventListener("click", event => {
+  event.preventDefault();
+  showSetupView();
+});
+
+document.getElementById("cancelSetupButton").addEventListener("click", showUnlockView);
+
+document.getElementById("openPaymentButton").addEventListener("click", () => openModal("paymentModal"));
+document.getElementById("openExpenseButton").addEventListener("click", () => openModal("expenseModal"));
+document.getElementById("openAssignFeesButton").addEventListener("click", () => openModal("assignFeesModal"));
+
+document.getElementById("showStudentFeeMode").addEventListener("click", showStudentFeeMode);
+document.getElementById("showClassFeeMode").addEventListener("click", showClassFeeMode);
+
+document.querySelectorAll(".modal-close").forEach(button => {
+  button.addEventListener("click", () => closeModal(button.dataset.modal));
+});
+
+document.querySelectorAll(".overlay").forEach(overlay => {
+  overlay.addEventListener("click", event => {
+    if (event.target === overlay && overlay.id !== "twoFAOverlay") {
+      closeModal(overlay.id);
+    }
+  });
+});
+
+document.getElementById("paymentStudentSearchButton").addEventListener("click", () =>
+  searchStudents("paymentStudentSearch", "payStudentId", "paymentStudentResult")
+);
+
+document.getElementById("feeStudentSearchButton").addEventListener("click", () =>
+  searchStudents("feeStudentSearch", "assignStudentId", "feeStudentResult")
+);
+
+document.getElementById("searchButton").addEventListener("click", async () => {
+  await loadStudents(document.getElementById("searchInput").value.trim());
+});
+
+document.getElementById("searchInput").addEventListener("input", e => {
+  if (!e.target.value.trim()) loadStudents();
+});
+
+document.getElementById("exportFinancialButton").addEventListener("click", exportFinancialData);
+
+document.getElementById("backToDashboard").addEventListener("click", () => {
+  sessionStorage.removeItem("financial_unlocked");
+});
+
+document.getElementById("paymentForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const student = getSelectedStudent("payStudentId");
+
+  if (!student.student_id) {
+    return alert("Please search for and select a student.");
+  }
+
+  await submitFinancialForm(`${API_BASE}/api/financial/payment`, {
+    student_id: student.student_id,
+    student_name: student.student_name,
+    amount: Number(document.getElementById("payAmount").value),
+    payment_method: document.getElementById("payMethod").value,
+    notes: document.getElementById("payNotes").value.trim()
+  }, "paymentForm", "paymentModal", "Payment recorded successfully.");
+});
+
+document.getElementById("expenseForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  await submitFinancialForm(`${API_BASE}/api/financial/expense`, {
+    category: document.getElementById("expCategory").value,
+    description: document.getElementById("expDescription").value.trim(),
+    amount: Number(document.getElementById("expAmount").value),
+    notes: document.getElementById("expNotes").value.trim()
+  }, "expenseForm", "expenseModal", "Expense recorded successfully.");
+});
+
+document.getElementById("assignFeesForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const studentSectionHidden = document.getElementById("studentFeeSection").classList.contains("hidden");
+
+  if (studentSectionHidden) {
+    return assignFeesToClass();
+  }
+
+  const student = getSelectedStudent("assignStudentId");
+
+  if (!student.student_id) {
+    return alert("Please search for and select a student.");
+  }
+
+  await submitFinancialForm(`${API_BASE}/api/financial/assign-student-fee`, {
+    student_id: student.student_id,
+    student_name: student.student_name,
+    class_name: student.class_name,
+    tuition_amount: Number(document.getElementById("assignTuition").value),
+    other_fees: Number(document.getElementById("assignOther").value) || 0,
+    term: document.getElementById("assignTerm").value
+  }, "assignFeesForm", "assignFeesModal", "Fees assigned successfully.");
+});
+
+["otpInput", "setupOtpInput", "paymentStudentSearch", "feeStudentSearch", "searchInput"].forEach(id => {
+  document.getElementById(id).addEventListener("keydown", event => {
+    if (event.key !== "Enter") return;
+
+    event.preventDefault();
+
+    if (id === "otpInput") document.getElementById("unlockButton").click();
+    if (id === "setupOtpInput") document.getElementById("verifySetupButton").click();
+    if (id === "paymentStudentSearch") document.getElementById("paymentStudentSearchButton").click();
+    if (id === "feeStudentSearch") document.getElementById("feeStudentSearchButton").click();
+    if (id === "searchInput") document.getElementById("searchButton").click();
+  });
+});
+
+document.addEventListener("DOMContentLoaded", initPage);
+</script>
+
 </body>
 </html>
