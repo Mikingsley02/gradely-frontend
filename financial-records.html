@@ -409,6 +409,7 @@
     </div>
   </div>
 
+
   <div id="expenseModal" class="overlay hidden">
     <div class="glass form-modal">
       <h2>Record Expense</h2>
@@ -483,9 +484,95 @@
           <button type="button" class="btn-secondary modal-close" data-modal="assignFeesModal">Cancel</button>
           <button type="submit" class="btn-primary purple">Assign Fees</button>
         </div>
+
+        
+  <div class="glass form-modal">
+    <h2>Assign Fees by Class</h2>
+    <p class="modal-description">Assign the same fee to all active students in a selected class.</p>
+
+    <form id="assignClassFeesForm">
+      <div class="form-group">
+        <label for="assignClassName">Class</label>
+        <select id="assignClassName" class="glass-input" required>
+          <option value="">-- Select Class --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="assignClassTuition">Tuition Amount (₦)</label>
+        <input type="number" id="assignClassTuition" class="glass-input" required min="0" step="0.01">
+      </div>
+
+      <div class="form-group">
+        <label for="assignClassOther">Other Fees (₦) Optional</label>
+        <input type="number" id="assignClassOther" class="glass-input" min="0" step="0.01">
+      </div>
+
+      <div class="form-group">
+        <label for="assignClassTerm">Term</label>
+        <select id="assignClassTerm" class="glass-input" required>
+          <option value="">-- Select Term --</option>
+          <option value="First Term">First Term</option>
+          <option value="Second Term">Second Term</option>
+          <option value="Third Term">Third Term</option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-secondary modal-close" data-modal="assignClassFeesModal">Cancel</button>
+        <button type="submit" class="btn-primary purple">Assign to Class</button>
+      </div>
+    </form>
+  </div>
+</div>
       </form>
     </div>
   </div>
+
+  
+
+  <div id="assignClassFeesModal" class="overlay hidden">
+  <div class="glass form-modal">
+    <h2>Assign Fees by Class</h2>
+    <p class="modal-description">Assign the same fee to all active students in a selected class.</p>
+
+    <form id="assignClassFeesForm">
+      <div class="form-group">
+        <label for="assignClassName">Class</label>
+        <select id="assignClassName" class="glass-input" required>
+          <option value="">-- Select Class --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="assignClassTuition">Tuition Amount (₦)</label>
+        <input type="number" id="assignClassTuition" class="glass-input" required min="0" step="0.01">
+      </div>
+
+      <div class="form-group">
+        <label for="assignClassOther">Other Fees (₦) Optional</label>
+        <input type="number" id="assignClassOther" class="glass-input" min="0" step="0.01">
+      </div>
+
+      <div class="form-group">
+        <label for="assignClassTerm">Term</label>
+        <select id="assignClassTerm" class="glass-input" required>
+          <option value="">-- Select Term --</option>
+          <option value="First Term">First Term</option>
+          <option value="Second Term">Second Term</option>
+          <option value="Third Term">Third Term</option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-secondary modal-close" data-modal="assignClassFeesModal">Cancel</button>
+        <button type="submit" class="btn-primary purple">Assign to Class</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
 
   <main id="mainContent" class="hidden">
     <div class="header">
@@ -948,9 +1035,11 @@ renderTable(students);
     document.getElementById("openExpenseButton").addEventListener("click", () => openModal("expenseModal"));
     document.getElementById("openAssignFeesButton").addEventListener("click", () => openModal("assignFeesModal"));
 
-    document.getElementById("openAssignClassFeesButton").addEventListener("click", () => {
-    alert("Assign Fees by Class backend is not ready yet. We will connect this next.");
+    document.getElementById("openAssignClassFeesButton").addEventListener("click", async () => {
+    await loadClasses();
+    openModal("assignClassFeesModal");
     });
+
 
     document.querySelectorAll(".modal-close").forEach(button =>
       button.addEventListener("click", () => closeModal(button.dataset.modal))
@@ -1033,7 +1122,7 @@ renderTable(students);
     document.getElementById("assignFeesForm").addEventListener("submit", async event => {
       event.preventDefault();
       const selected = document.getElementById("assignStudentId");
-const selectedOption = selected.options[selected.selectedIndex];
+    const selectedOption = selected.options[selected.selectedIndex];
 
 await submitFinancialForm(`${API_BASE}/api/financial/assign-student-fee`, {
   student_id: selected.value,
@@ -1047,7 +1136,22 @@ await submitFinancialForm(`${API_BASE}/api/financial/assign-student-fee`, {
     });
 
 
-    async function loadRegisteredStudents() {
+
+  document.getElementById("assignClassFeesForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  await submitFinancialForm(`${API_BASE}/api/financial/assign-fees`, {
+    class_name: document.getElementById("assignClassName").value,
+    tuition_amount: Number(document.getElementById("assignClassTuition").value),
+    other_fees: Number(document.getElementById("assignClassOther").value) || 0,
+    term: document.getElementById("assignClassTerm").value
+  }, "assignClassFeesForm", "assignClassFeesModal", "Fees assigned to class successfully.");
+});
+
+
+
+
+  async function loadRegisteredStudents() {
   const data = await readJson(
     await authFetch(`${API_BASE}/api/financial/student-directory`)
   );
@@ -1065,6 +1169,28 @@ await submitFinancialForm(`${API_BASE}/api/financial/assign-student-fee`, {
 
   return Array.isArray(students) ? students : [];
 }
+
+
+
+async function loadClasses() {
+  const data = await readJson(
+    await authFetch(`${API_BASE}/api/financial/classes`)
+  );
+
+  const select = document.getElementById("assignClassName");
+
+  if (!data?.success || !Array.isArray(data.data)) {
+    select.innerHTML = '<option value="">Failed to load classes</option>';
+    return;
+  }
+
+  select.innerHTML =
+    '<option value="">-- Select Class --</option>' +
+    data.data.map(className => `
+      <option value="${escapeHtml(className)}">${escapeHtml(className)}</option>
+    `).join("");
+}
+
 
 
 async function exportFinancialData() {
