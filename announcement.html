@@ -524,6 +524,29 @@ button[onclick="closeDeliveryReports()"]{
         <label><input type="checkbox" id="send_email" checked> Email</label>
       </div>
 
+
+      <div class="form-group">
+  <label style="font-weight:600; margin-bottom:6px; display:block;">
+    👨‍👩‍👧 Recipients
+  </label>
+
+  <select id="recipientMode">
+    <option value="all">Send to all parents</option>
+    <option value="selected">Send only to selected Student IDs</option>
+  </select>
+
+  <textarea
+    id="selectedStudentIds"
+    placeholder="Enter Student IDs separated by commas e.g. STU001, EDS0001, STU002"
+    style="display:none; min-height:90px; margin-top:10px;"></textarea>
+
+  <small id="recipientHint">
+    Choose whether this announcement goes to all parents or only selected students' parents.
+  </small>
+</div>
+
+
+
       <div style="display: flex; gap: 12px; justify-content: center; margin: 10px 0;">
         <button type="button" onclick="postAnnouncement()" style="flex: 1; background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">Post Custom</button>
         <button type="button" onclick="sendWithTemplate()" style="flex: 1; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;" id="sendTemplateBtn" disabled>Send via Template</button>
@@ -847,11 +870,49 @@ async function loadAnnouncements() {
   }
 }
 
+
+
+document.getElementById("recipientMode").addEventListener("change", function () {
+  const box = document.getElementById("selectedStudentIds");
+
+  if (this.value === "selected") {
+    box.style.display = "block";
+  } else {
+    box.style.display = "none";
+    box.value = "";
+  }
+});
+
+function getSelectedStudentIds() {
+  const mode = document.getElementById("recipientMode").value;
+
+  if (mode !== "selected") return [];
+
+  return document
+    .getElementById("selectedStudentIds")
+    .value
+    .split(",")
+    .map(id => id.trim().toUpperCase())
+    .filter(Boolean);
+}
+
+
+
 async function postAnnouncement() {
   const title = titleInput.value.trim();
   const message = messageInput.value.trim();
   const send_sms = sms.checked;
   const send_email = email.checked;
+
+
+  const recipient_mode = document.getElementById("recipientMode").value;
+  const student_ids = getSelectedStudentIds();
+
+  if (recipient_mode === "selected" && student_ids.length === 0) {
+  alert("Please enter at least one Student ID.");
+  return;
+  }
+
 
   if (!title || !message) {
     alert("Fill all fields");
@@ -866,7 +927,14 @@ async function postAnnouncement() {
   try {
     const res = await authFetch(`${API_BASE}/api/announcement`, {
       method: "POST",
-      body: JSON.stringify({ title, message, send_sms, send_email })
+      body: JSON.stringify({
+  title,
+  message,
+  send_sms,
+  send_email,
+  recipient_mode,
+  student_ids
+})
     });
 
     if (!res) return;
@@ -874,6 +942,11 @@ async function postAnnouncement() {
 
     titleInput.value = "";
     messageInput.value = "";
+
+    document.getElementById("recipientMode").value = "all";
+    document.getElementById("selectedStudentIds").value = "";
+    document.getElementById("selectedStudentIds").style.display = "none";
+
     loadAnnouncements();
   } catch (err) {
     console.error("Failed to post announcement:", err);
