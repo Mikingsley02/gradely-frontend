@@ -520,9 +520,10 @@ button[onclick="closeDeliveryReports()"]{
       </div>
 
       <div class="toggle-row">
-        <label><input type="checkbox" id="send_sms" checked> SMS</label>
-        <label><input type="checkbox" id="send_email" checked> Email</label>
-      </div>
+  <label><input type="checkbox" id="send_sms" checked> SMS</label>
+  <label><input type="checkbox" id="send_email" checked> Email</label>
+  <label><input type="checkbox" id="send_in_app" checked> In-App</label>
+</div>
 
 
       <div class="form-group">
@@ -746,6 +747,7 @@ const titleInput = document.getElementById("title");
 const messageInput = document.getElementById("message");
 const sms = document.getElementById("send_sms");
 const email = document.getElementById("send_email");
+const inApp = document.getElementById("send_in_app");
 const list = document.getElementById("announcementsList");
 
 let templates = [];
@@ -903,6 +905,7 @@ async function postAnnouncement() {
   const message = messageInput.value.trim();
   const send_sms = sms.checked;
   const send_email = email.checked;
+  const send_in_app = inApp.checked;
 
 
   const recipient_mode = document.getElementById("recipientMode").value;
@@ -919,10 +922,10 @@ async function postAnnouncement() {
     return;
   }
 
-  if (!send_sms && !send_email) {
-    alert("Choose SMS or Email");
-    return;
-  }
+  if (!send_sms && !send_email && !send_in_app) {
+  alert("Choose SMS, Email, or In-App");
+  return;
+}
 
   try {
     const res = await authFetch(`${API_BASE}/api/announcement`, {
@@ -932,6 +935,7 @@ async function postAnnouncement() {
   message,
   send_sms,
   send_email,
+  send_in_app,
   recipient_mode,
   student_ids
 })
