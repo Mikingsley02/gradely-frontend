@@ -849,12 +849,18 @@ async function loadAnnouncements() {
     }
 
     data.forEach(a => {
-      const status =
-        a.sms_sent && a.email_sent
-          ? `<span class="ok">✔ Delivered</span>`
-          : a.sms_sent || a.email_sent
-            ? `<span class="warn">⚠ Partial</span>`
-            : `<span class="fail">⏳ Pending</span>`;
+      const channels = (a.sent_via || "").toLowerCase();
+
+const status =
+  channels.includes("in_app") && !a.sms_enabled && !a.email_enabled
+    ? `<span class="ok">✅ Posted In-App</span>`
+    : a.sms_sent && a.email_sent
+      ? `<span class="ok">✔ Delivered</span>`
+      : a.sms_sent || a.email_sent
+        ? `<span class="warn">⚠ Partial</span>`
+        : channels.includes("in_app")
+          ? `<span class="ok">✅ Posted In-App</span>`
+          : `<span class="fail">⏳ Pending</span>`;
 
       list.innerHTML += `
         <div class="announcement">
@@ -943,6 +949,10 @@ async function postAnnouncement() {
 
     if (!res) return;
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const result = await res.json();
+
+    alert(result.message || "✅ Announcement posted successfully.");
 
     titleInput.value = "";
     messageInput.value = "";
