@@ -851,16 +851,17 @@ async function loadAnnouncements() {
     data.forEach(a => {
       const channels = (a.sent_via || "").toLowerCase();
 
+
+const deliveryStatus = (a.delivery_status || "").toLowerCase();
+
 const status =
-  channels.includes("in_app") && !a.sms_enabled && !a.email_enabled
+  channels.includes("in_app") || deliveryStatus === "posted"
     ? `<span class="ok">✅ Posted In-App</span>`
     : a.sms_sent && a.email_sent
       ? `<span class="ok">✔ Delivered</span>`
       : a.sms_sent || a.email_sent
         ? `<span class="warn">⚠ Partial</span>`
-        : channels.includes("in_app")
-          ? `<span class="ok">✅ Posted In-App</span>`
-          : `<span class="fail">⏳ Pending</span>`;
+        : `<span class="fail">⏳ Pending</span>`;
 
       list.innerHTML += `
         <div class="announcement">
