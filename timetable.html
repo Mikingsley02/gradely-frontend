@@ -420,17 +420,19 @@ function getToken() {
 
 
 // ✅ NEW: Check if user is on Pro plan
+// ✅ NEW: Check if user is on Pro plan
 async function checkProPlanAccess() {
   try {
-    const schoolId = getSchoolId();
     const res = await authFetch(`${API_BASE}/api/subscription/status`);
     
     if (!res) return false;
     
     const data = await res.json();
+    console.log("Subscription data:", data); // Debug log
     
     if (data.success) {
       const plan = (data.current_plan || data.plan || '').toLowerCase();
+      console.log("Current plan:", plan); // Debug log
       return plan === 'pro';
     }
     
@@ -440,7 +442,6 @@ async function checkProPlanAccess() {
     return false;
   }
 }
-
 
 
 function getSchoolId() {
@@ -879,48 +880,57 @@ document.addEventListener("DOMContentLoaded", async () => {
   const isPro = await checkProPlanAccess();
   
   if (!isPro) {
-    // Show Pro feature banner
+    // Show Pro feature banner ONLY
     const banner = document.getElementById("proFeatureBanner");
-    if (banner) banner.style.display = "flex";
+    if (banner) {
+      banner.style.display = "flex";
+      banner.style.background = "linear-gradient(135deg,#8b5cf6,#6d28d9)";
+    }
     
-    // Disable all interactive elements
-    document.querySelectorAll("button, select, .editable").forEach(el => {
+    // Grey out/disabled ALL interactive elements EXCEPT Back button
+    document.querySelectorAll("button, select").forEach(el => {
+      // Don't disable the Back button
+      if (el.classList.contains("back-btn") || (el.tagName === "A" && el.classList.contains("back-btn"))) {
+        return; // Skip Back button
+      }
       el.disabled = true;
-      el.style.opacity = "0.5";
+      el.style.opacity = "0.4";
       el.style.pointerEvents = "none";
     });
     
-    // Show locked message in timetable area
-    const grid = document.getElementById("timetableGrid");
-    if (grid) {
-      grid.innerHTML = `
-        <div style="padding:60px 20px;text-align:center;color:#64748b;grid-column:1/-1">
-          <div style="font-size:3rem;margin-bottom:15px">🔒</div>
-          <h3 style="color:#1f2937;margin-bottom:10px">Timetable Management is a Pro Feature</h3>
-          <p style="margin-bottom:20px">Upgrade to Pro to create and manage class timetables.</p>
-          <a href="subscription.html?plan=pro" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Upgrade to Pro</a>
-        </div>
-      `;
-    }
+    // Also disable the timetable grid cells
+    document.querySelectorAll(".editable, .time-slot").forEach(el => {
+      el.style.pointerEvents = "none";
+      el.style.opacity = "0.4";
+    });
     
+    // Keep the timetable visible but non-interactive
+    // NO locked message in grid area
     return;
   }
 
-  // ✅ User has Pro plan - load normally
+  // ✅ User has Pro plan - load normally and hide banner
+  const banner = document.getElementById("proFeatureBanner");
+  if (banner) banner.style.display = "none";
+  
   const className = document.getElementById("className").value;
   const groupName = document.getElementById("groupName").value;
 
   await checkTimetableExists(className, groupName);
   await loadTimetable(className, groupName);
   renderTimetable();
+  
+  // Initialize event listeners for Pro users
+  initProEventListeners();
 });
+
 
 
 
 // ✅ Only attach these listeners if user has Pro access
 async function initProEventListeners() {
   const isPro = await checkProPlanAccess();
-  if (!isPro) return; // Don't attach listeners for non-Pro users
+  if (!isPro) return; // Don't attach for non-Pro users
 
   document
     .getElementById("className")
@@ -945,8 +955,7 @@ async function initProEventListeners() {
     });
 }
 
-// Call the initialization
-initProEventListeners();
+
 
 
 function exportPDF() {
