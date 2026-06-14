@@ -8,18 +8,35 @@
 
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: #f4f7fa;
-      color: #333;
-      margin: 0;
-      padding: 0;
-    }
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background: #f4f7fa;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
-    .container {
-      max-width: 1100px;
-      margin: 20px auto;
-      padding: 15px;
-    }
+.container {
+  max-width: 1100px;
+  margin: 20px auto;
+  padding: 15px;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+footer {
+  text-align: center;
+  padding: 15px 0;
+  color: #666;
+  font-size: 0.8rem;
+  border-top: 1px solid #eee;
+  background: #f4f7fa;
+  margin-top: auto;
+}
 
     h1 {
       text-align: center;
@@ -192,13 +209,14 @@
     .back-btn:hover { background: #17855d; }
 
     footer {
-      text-align: center;
-      margin-top: 30px;
-      padding: 15px 0;
-      color: #666;
-      font-size: 0.8rem;
-      border-top: 1px solid #eee;
-    }
+  text-align: center;
+  margin-top: auto;
+  padding: 15px 0;
+  color: #666;
+  font-size: 0.8rem;
+  border-top: 1px solid #eee;
+  background: #f4f7fa;
+}
 
     footer a {
       color: #6c3cff;
@@ -332,6 +350,37 @@
 }
 
 
+/* ✅ Pro Banner */
+.pro-banner{
+  background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  color:white;
+  padding:12px 14px;
+  border-radius:8px;
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-size:.85rem;
+}
+
+.pro-banner.upgrade{
+  background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);
+}
+
+.pro-banner button{
+  background:white;
+  color:#764ba2;
+  border:none;
+  padding:7px 12px;
+  border-radius:6px;
+  font-weight:600;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+
+
 
   </style>
 </head>
@@ -339,15 +388,20 @@
 <body>
   <div class="container">
         <h1>📅 Weekly Timetable</h1>
-    
-    <!-- ✅ Pro Feature Banner -->
-    <div id="proFeatureBanner" style="display:none;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;padding:16px 20px;border-radius:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;gap:15px;box-shadow:0 4px 12px rgba(139,92,246,0.3)">
-      <div style="flex:1">
-        <strong style="font-size:1rem">⚠️ Timetable Management is a Pro Feature</strong>
-        <p style="margin:4px 0 0;font-size:0.9rem;opacity:0.95">Upgrade to unlock full functionality.</p>
+  
+
+
+
+        <!-- ✅ Pro Feature Banner -->
+    <div id="proFeatureBanner" class="pro-banner" style="display:none;">
+      <div>
+        <strong>🔒 Timetable Management is a Pro Feature</strong>
+        <span style="margin-left:8px;opacity:0.9">Upgrade to unlock full functionality.</span>
       </div>
-      <a href="subscription.html?plan=pro" style="background:#fff;color:#6d28d9;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.9rem;white-space:nowrap;transition:transform 0.2s">Upgrade Now</a>
+      <a href="subscription.html?plan=pro" class="upgrade-btn" style="background:#fff;color:#764ba2;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;white-space:nowrap">Upgrade Now</a>
     </div>
+    
+
     
     <p class="hint">Select class and group to load an existing timetable. Click Edit before making changes.</p>
     <div id="timetableStatus"></div> 
@@ -879,33 +933,33 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ✅ Check if user has Pro plan
   const isPro = await checkProPlanAccess();
   
-  if (!isPro) {
+    if (!isPro) {
     // Show Pro feature banner ONLY
     const banner = document.getElementById("proFeatureBanner");
     if (banner) {
       banner.style.display = "flex";
-      banner.style.background = "linear-gradient(135deg,#8b5cf6,#6d28d9)";
     }
     
-    // Grey out/disabled ALL interactive elements EXCEPT Back button
+    // Grey out interactive elements EXCEPT Back button
     document.querySelectorAll("button, select").forEach(el => {
-      // Don't disable the Back button
-      if (el.classList.contains("back-btn") || (el.tagName === "A" && el.classList.contains("back-btn"))) {
-        return; // Skip Back button
+      if (el.classList.contains("back-btn") || 
+          (el.tagName === "A" && el.classList.contains("back-btn"))) {
+        return;
       }
       el.disabled = true;
       el.style.opacity = "0.4";
       el.style.pointerEvents = "none";
     });
     
-    // Also disable the timetable grid cells
+    // Disable timetable grid cells
     document.querySelectorAll(".editable, .time-slot").forEach(el => {
       el.style.pointerEvents = "none";
       el.style.opacity = "0.4";
     });
     
-    // Keep the timetable visible but non-interactive
-    // NO locked message in grid area
+    // DO NOT hide the timetable grid - keep it visible but disabled
+    // DO NOT change container styles
+    
     return;
   }
 

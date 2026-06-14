@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>📝 Tests & Assignments | Gradely</title>
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+
+    body{
+      font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      color:#fff;
+      background:
+        radial-gradient(circle at top left,rgba(34,197,94,.22),transparent 35%),
+        radial-gradient(circle at bottom right,rgba(0,210,255,.24),transparent 35%),
+        linear-gradient(135deg,#020617,#0f172a);
+      padding:28px 14px 0;
+    }
+
+    .container{
+      width:100%;
+      max-width:850px;
+      margin:32px auto;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.20);
+      backdrop-filter:blur(22px);
+      border-radius:30px;
+      padding:32px 24px;
+      box-shadow:0 30px 90px rgba(0,0,0,.4);
+    }
+
+    h2{
+      font-size:1.75rem;
+      font-weight:900;
+      text-align:center;
+      margin-bottom:8px;
+    }
+
+    .subtitle{
+      color:#dbeafe;
+      text-align:center;
+      line-height:1.6;
+      margin-bottom:24px;
+    }
+
+    .tabs{
+      display:flex;
+      gap:12px;
+      margin-bottom:24px;
+    }
+
+    .tab-btn{
+      flex:1;
+      min-height:48px;
+      border:0;
+      border-radius:14px;
+      font-weight:900;
+      cursor:pointer;
+      color:#fff;
+      background:rgba(255,255,255,.14);
+    }
+
+    .tab-btn.active{
+      background:linear-gradient(135deg,#22c55e,#2563eb);
+    }
+
+    .tab{display:none}
+    .tab.active{display:block}
+
+    form{
+      display:flex;
+      flex-direction:column;
+      gap:15px;
+    }
+
+    label{
+      font-weight:900;
+      color:#e0f2fe;
+      font-size:.92rem;
+    }
+
+    input,select,textarea{
+      width:100%;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.25);
+      background:rgba(255,255,255,.14);
+      color:#fff;
+      padding:14px;
+      font-size:1rem;
+      outline:none;
+    }
+
+    select option{color:#111827}
+
+    textarea{
+      min-height:100px;
+      resize:vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder{
+      color:#cbd5e1;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus{
+      border-color:#22c55e;
+      box-shadow:0 0 0 5px rgba(34,197,94,.16);
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    /* General buttons - no min-width */
+button{
+  min-height:54px;
+  border:none;
+  border-radius:16px;
+  font-size:1rem;
+  font-weight:900;
+  cursor:pointer;
+  color:#fff;
+  background:linear-gradient(135deg,#22c55e,#2563eb);
+  transition:.2s ease;
+}
+
+/* Only the search button gets extra width */
+#searchStudentBtn{
+  min-width:180px;
+  padding:0 20px;
+  white-space:nowrap;
+}
+
+    
+
+    button:hover{transform:translateY(-2px)}
+    button:disabled{opacity:.7;cursor:not-allowed;transform:none}
+
+    .student-box{
+      display:none;
+      background:rgba(34,197,94,.14);
+      border:1px solid rgba(34,197,94,.45);
+      border-radius:18px;
+      padding:16px;
+      color:#bbf7d0;
+      font-weight:800;
+      line-height:1.7;
+    }
+
+    .back-link{
+      display:block;
+      margin-top:22px;
+      text-align:center;
+      color:#00d2ff;
+      font-weight:900;
+      text-decoration:none;
+    }
+
+    .back-link:hover{
+      color:#fff;
+      text-decoration:underline;
+    }
+
+    .message{
+      display:none;
+      margin-top:18px;
+      padding:14px;
+      border-radius:16px;
+      text-align:center;
+      font-weight:800;
+    }
+
+    .message.success{
+      display:block;
+      background:rgba(34,197,94,.15);
+      border:1px solid rgba(34,197,94,.45);
+      color:#bbf7d0;
+    }
+
+    .message.error{
+      display:block;
+      background:rgba(239,68,68,.15);
+      border:1px solid rgba(239,68,68,.45);
+      color:#fecaca;
+    }
+
+    footer{
+      margin-top:auto;
+      text-align:center;
+      font-size:.82rem;
+      color:#e2e8f0;
+      width:100%;
+      padding:22px 10px;
+      background:rgba(0,0,0,.22);
+      border-top:1px solid rgba(255,255,255,.14);
+    }
+
+    footer a{
+      color:#00d2ff;
+      text-decoration:none;
+      margin:0 6px;
+      font-weight:900;
+    }
+
+    @media(max-width:650px){
+      body{padding:18px 10px 0}
+      .container{margin:20px auto 28px;padding:26px 16px;border-radius:24px}
+      .row{grid-template-columns:1fr}
+      .tabs{flex-direction:column}
+      h2{font-size:1.45rem}
+      input,select,textarea,button{font-size:16px}
+      footer{font-size:.74rem}
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>📝 Tests & Assignments</h2>
+  <p class="subtitle">
+    Post tasks for students or post individual assignment/test scores.
+  </p>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('postTaskTab', this)">📌 Student Task</button>
+    <button class="tab-btn" onclick="showTab('postScoreTab', this)">📊 Student Score</button>
+  </div>
+
+  <div id="postTaskTab" class="tab active">
+    <form id="assignmentForm">
+      <div>
+        <label>Class *</label>
+        <select id="className" required>
+          <option value="">-- Select Class --</option>
+          <option value="Basic 1">Basic 1</option>
+          <option value="Basic 2">Basic 2</option>
+          <option value="Basic 3">Basic 3</option>
+          <option value="Basic 4">Basic 4</option>
+          <option value="Basic 5">Basic 5</option>
+          <option value="Basic 6">Basic 6</option>
+          <option value="JSS 1">JSS 1</option>
+          <option value="JSS 2">JSS 2</option>
+          <option value="JSS 3">JSS 3</option>
+          <option value="SSS 1">SSS 1</option>
+          <option value="SSS 2">SSS 2</option>
+          <option value="SSS 3">SSS 3</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Group / Section</label>
+        <select id="section">
+          <option value="">All groups</option>
+          <option value="A">Group A</option>
+          <option value="B">Group B</option>
+          <option value="C">Group C</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Type *</label>
+          <select id="type" required>
+            <option value="">-- Select Type --</option>
+            <option value="Assignment">Assignment</option>
+            <option value="Class Test">Class Test</option>
+            <option value="Homework">Homework</option>
+            <option value="Quiz">Quiz</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Subject *</label>
+          <input type="text" id="subject" placeholder="e.g., Mathematics" required />
+        </div>
+      </div>
+
+      <div>
+        <label>Title</label>
+        <input type="text" id="title" placeholder="Optional title" />
+      </div>
+
+      <div>
+        <label>Instructions</label>
+        <textarea id="instructions" placeholder="Enter instructions..."></textarea>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Due Date</label>
+          <input type="date" id="dueDate" />
+        </div>
+
+        <div>
+          <label>Total Marks</label>
+          <input type="number" id="totalMarks" placeholder="e.g., 20" min="0" />
+        </div>
+      </div>
+
+      <button type="submit" id="submitBtn">📤 Post Task</button>
+    </form>
+  </div>
+
+  <div id="postScoreTab" class="tab">
+    <form id="scoreForm">
+      <div class="row">
+        <div>
+          <label>Search Student ID *</label>
+          <input type="text" id="scoreStudentId" placeholder="e.g., STU001" required />
+        </div>
+
+        <div style="display:flex;align-items:end;">
+          <button type="button" onclick="searchScoreStudent()" id="searchStudentBtn">
+            🔍 Search Student
+          </button>
+        </div>
+      </div>
+
+      <div id="studentBox" class="student-box"></div>
+
+      <div class="row">
+        <div>
+          <label>Type *</label>
+          <select id="scoreType" required>
+            <option value="">-- Select Type --</option>
+            <option value="Assignment">Assignment</option>
+            <option value="Class Test">Class Test</option>
+            <option value="Homework">Homework</option>
+            <option value="Quiz">Quiz</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Subject *</label>
+          <input type="text" id="scoreSubject" placeholder="e.g., Mathematics" required />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Publish Date</label>
+          <input type="date" id="publishDate" />
+        </div>
+
+        <div>
+          <label>Score *</label>
+          <input type="number" id="scoreValue" placeholder="e.g., 18" min="0" required />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Total Marks</label>
+          <input type="number" id="scoreTotalMarks" placeholder="e.g., 20" min="0" />
+        </div>
+
+        <div>
+          <label>Remarks</label>
+          <input type="text" id="scoreRemarks" placeholder="Optional remarks" />
+        </div>
+      </div>
+
+      <button type="submit" id="scoreBtn">💾 Post Score</button>
+    </form>
+  </div>
+
+  <div id="messageBox" class="message"></div>
+
+  <a href="dashboard.html" class="back-link">⬅ Back to Dashboard</a>
+</div>
+
+<footer>
+  © <span class="currentYear"></span> <strong>gradely.info</strong> All rights reserved. | Powered by RIS<br>
+  <a href="terms.html">Terms</a> •
+  <a href="privacy.html">Privacy</a> •
+  <a href="refund-policy.html">Refund Policy</a>
+</footer>
+
+<script>
+const API_BASE = "https://api.gradely.info";
+let selectedStudent = null;
+
+function getToken() {
+  const token =
+    sessionStorage.getItem("gradely_token") ||
+    localStorage.getItem("gradely_token");
+
+  if (!token || token === "null" || token === "undefined" || token.trim() === "") {
+    return null;
+  }
+
+  return token;
+}
+
+function clearAuth() {
+  sessionStorage.removeItem("gradely_token");
+  sessionStorage.removeItem("school_id");
+  sessionStorage.removeItem("admin_id");
+  sessionStorage.removeItem("adminId");
+
+  localStorage.removeItem("gradely_token");
+  localStorage.removeItem("school_id");
+  localStorage.removeItem("admin_id");
+  localStorage.removeItem("adminId");
+}
+
+function redirectToLogin() {
+  clearAuth();
+  window.location.href = "admin-login.html";
+}
+
+function showMessage(text, type = "error") {
+  const box = document.getElementById("messageBox");
+  box.className = `message ${type}`;
+  box.textContent = text;
+}
+
+async function authFetch(url, options = {}) {
+  const token = getToken();
+
+  if (!token) {
+    redirectToLogin();
+    return null;
+  }
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(options.headers || {})
+    }
+  });
+
+  if (res.status === 401) {
+    redirectToLogin();
+    return null;
+  }
+
+  return res;
+}
+
+function showTab(tabId, btn) {
+  document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+
+  document.getElementById(tabId).classList.add("active");
+  btn.classList.add("active");
+}
+
+document.getElementById("assignmentForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const submitBtn = document.getElementById("submitBtn");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Posting...";
+
+  const payload = {
+    class_name: document.getElementById("className").value.trim(),
+    section: document.getElementById("section").value.trim() || null,
+    type: document.getElementById("type").value.trim(),
+    title: document.getElementById("title").value.trim(),
+    subject: document.getElementById("subject").value.trim(),
+    instructions: document.getElementById("instructions").value.trim(),
+    due_date: document.getElementById("dueDate").value || null,
+    total_marks: document.getElementById("totalMarks").value || null
+  };
+
+  if (!payload.class_name || !payload.type || !payload.subject) {
+    showMessage("Please fill class, type, and subject.");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "📤 Post Task";
+    return;
+  }
+
+  try {
+    const res = await authFetch(`${API_BASE}/api/assignments-tests`, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    if (!res) return;
+
+    const data = await res.json();
+
+    if (data.success) {
+      showMessage(
+        `✅ ${data.message || "Task posted successfully."} Push sent: ${data.push_sent || 0}`,
+        "success"
+      );
+
+      document.getElementById("assignmentForm").reset();
+    } else {
+      showMessage(data.message || "Failed to post task.");
+    }
+
+  } catch (err) {
+    console.error("Task post error:", err);
+    showMessage("Network error. Please try again.");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "📤 Post Task";
+  }
+});
+
+async function searchScoreStudent() {
+  const studentId = document.getElementById("scoreStudentId").value.trim();
+  const btn = document.getElementById("searchStudentBtn");
+  const box = document.getElementById("studentBox");
+
+  selectedStudent = null;
+  box.style.display = "none";
+  box.innerHTML = "";
+
+  if (!studentId) {
+    showMessage("Please enter student ID.");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Searching...";
+
+  try {
+    const res = await authFetch(
+      `${API_BASE}/api/assignments-tests/score/student/${encodeURIComponent(studentId)}`
+    );
+
+    if (!res) return;
+
+    const data = await res.json();
+
+    if (!data.success) {
+      showMessage(data.message || "Student not found.");
+      return;
+    }
+
+    selectedStudent = data.student;
+
+    const name = `${selectedStudent.first_name || ""} ${selectedStudent.middle_name || ""} ${selectedStudent.last_name || ""}`
+      .replace(/\s+/g, " ")
+      .trim();
+
+    box.innerHTML = `
+      Student: ${name || selectedStudent.student_id}<br>
+      ID: ${selectedStudent.student_id}<br>
+      Class: ${selectedStudent.class || "-"} ${selectedStudent.section || ""}
+    `;
+    box.style.display = "block";
+
+    showMessage("✅ Student loaded.", "success");
+
+  } catch (err) {
+    console.error("Student search error:", err);
+    showMessage("Network error while searching student.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "🔍 Search Student";
+  }
+}
+
+document.getElementById("scoreForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  if (!selectedStudent) {
+    showMessage("Please search and load a student first.");
+    return;
+  }
+
+  const scoreBtn = document.getElementById("scoreBtn");
+  scoreBtn.disabled = true;
+  scoreBtn.textContent = "Posting...";
+
+  const payload = {
+    student_id: selectedStudent.student_id,
+    type: document.getElementById("scoreType").value.trim(),
+    subject: document.getElementById("scoreSubject").value.trim(),
+    publish_date: document.getElementById("publishDate").value || null,
+    score: document.getElementById("scoreValue").value,
+    total_marks: document.getElementById("scoreTotalMarks").value || null,
+    remarks: document.getElementById("scoreRemarks").value.trim()
+  };
+
+  if (!payload.student_id || !payload.type || !payload.subject || payload.score === "") {
+    showMessage("Please fill type, subject, and score.");
+    scoreBtn.disabled = false;
+    scoreBtn.textContent = "💾 Post Score";
+    return;
+  }
+
+  try {
+    const res = await authFetch(`${API_BASE}/api/assignments-tests/score/individual`, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    if (!res) return;
+
+    const data = await res.json();
+
+    if (data.success) {
+      showMessage("✅ Score posted successfully.", "success");
+
+      document.getElementById("scoreForm").reset();
+      document.getElementById("studentBox").style.display = "none";
+      selectedStudent = null;
+    } else {
+      showMessage(data.message || "Failed to post score.");
+    }
+
+  } catch (err) {
+    console.error("Score post error:", err);
+    showMessage("Network error. Please try again.");
+  } finally {
+    scoreBtn.disabled = false;
+    scoreBtn.textContent = "💾 Post Score";
+  }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (!getToken()) {
+    redirectToLogin();
+    return;
+  }
+
+  document.querySelectorAll(".currentYear").forEach(el => {
+    el.textContent = new Date().getFullYear();
+  });
+});
+</script>
+
+<script src="js/kaima-chatbot.js"></script>
+
+</body>
+</html>
