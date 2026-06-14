@@ -28,6 +28,51 @@
       color: #1f2937;
     }
 
+    /* Pro Feature Banner */
+    .pro-banner {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .pro-banner.show {
+      display: flex;
+    }
+
+    .pro-banner-content {
+      flex: 1;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .pro-banner strong {
+      font-weight: 700;
+    }
+
+    .upgrade-btn {
+      background: white;
+      color: #667eea;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .upgrade-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
     .class-selects {
       margin-bottom: 20px;
       display: flex;
@@ -60,6 +105,12 @@
       cursor: pointer;
     }
 
+    select:disabled {
+      background: #f1f5f9;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
     .hint {
       text-align: center;
       color: #64748b;
@@ -72,6 +123,27 @@
       -webkit-overflow-scrolling: touch;
       border-radius: 8px;
       margin: 10px 0;
+      position: relative;
+    }
+
+    .timetable-wrapper.locked::after {
+      content: "🔒 Timetable management is a Pro feature. Upgrade now to unlock.";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      font-weight: 600;
+      color: #667eea;
+      font-size: 1.1rem;
+      z-index: 10;
+      border-radius: 8px;
     }
 
     .timetable {
@@ -167,17 +239,35 @@
     }
     .save-btn:hover { background: #219653; }
 
+    .save-btn:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
     .delete-btn {
       background: #e74c3c;
       color: white;
     }
     .delete-btn:hover { background: #c0392b; }
 
+    .delete-btn:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
     .manage-classes-btn {
       background: #9b59b6;
       color: white;
     }
     .manage-classes-btn:hover { background: #8e44ad; }
+
+    .manage-classes-btn:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
 
     .attendance-btn {
       background: #3498db;
@@ -252,6 +342,11 @@
       footer {
         font-size: 0.75rem;
         padding: 14px 8px;
+      }
+
+      .pro-banner {
+        flex-direction: column;
+        text-align: center;
       }
     }
 
@@ -339,6 +434,15 @@
 <body>
   <div class="container">
     <h1>📅 Weekly Timetable</h1>
+    
+    <!-- Pro Feature Banner -->
+    <div id="proBanner" class="pro-banner">
+      <div class="pro-banner-content">
+        🔒 <strong>Timetable Management</strong> is a <strong>Pro Feature</strong>. Upgrade to unlock full functionality.
+      </div>
+      <button class="upgrade-btn" onclick="window.location.href='upgrade.html'">Upgrade Now</button>
+    </div>
+
     <p class="hint">Select class and group to load an existing timetable. Click Edit before making changes.</p>
     <div id="timetableStatus"></div> 
     <div class="class-selects">
@@ -370,16 +474,16 @@
       </div>
     </div>
 
-    <div class="timetable-wrapper">
+    <div class="timetable-wrapper" id="timetableWrapper">
       <div class="timetable" id="timetableGrid"></div>
     </div>
 
    <div class="action-buttons">
   <button class="export-btn" onclick="loadSelectedTimetable()">📂 Load Saved</button>
-  <button class="manage-classes-btn" onclick="enableEditMode()">✏️ Edit</button>
-  <button class="save-btn" onclick="manualSaveTimetable()">💾 Save</button>
+  <button class="manage-classes-btn" id="editBtn" onclick="enableEditMode()">✏️ Edit</button>
+  <button class="save-btn" id="saveBtn" onclick="manualSaveTimetable()">💾 Save</button>
   <button class="export-btn" onclick="exportPDF()">📄 Export as PDF</button>
-  <button class="delete-btn" onclick="clearCurrentTimetable()">🗑️ Clear</button>
+  <button class="delete-btn" id="deleteBtn" onclick="clearCurrentTimetable()">🗑️ Clear</button>
   <a href="manage-classes.html" class="back-btn">← Back</a>
 </div>
 
@@ -397,6 +501,8 @@
 const API_BASE = "https://api.gradely.info";
 
 let editMode = false;
+let isProUser = false;
+let userPlan = '';
 
 function getToken() {
   return (
@@ -464,6 +570,51 @@ async function authFetch(url, options = {}) {
   }
 
   return res;
+}
+
+async function checkUserPlan() {
+  try {
+    const schoolId = getSchoolId();
+    
+    const res = await authFetch(
+      `${API_BASE}/api/schools/${encodeURIComponent(schoolId)}`
+    );
+    
+    if (!res) return;
+    
+    const result = await res.json();
+    
+    if (result.success && result.data) {
+      userPlan = (result.data.current_plan || result.data.subscription_plan || '').toLowerCase();
+      isProUser = userPlan === 'pro';
+      
+      if (!isProUser) {
+        applyProRestrictions();
+      }
+    }
+  } catch (err) {
+    console.warn("Could not check user plan:", err);
+  }
+}
+
+function applyProRestrictions() {
+  // Show pro banner
+  document.getElementById('proBanner').classList.add('show');
+  
+  // Lock timetable wrapper
+  document.getElementById('timetableWrapper').classList.add('locked');
+  
+  // Disable buttons
+  document.getElementById('editBtn').disabled = true;
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('deleteBtn').disabled = true;
+  
+  // Disable selects
+  document.getElementById('className').disabled = true;
+  document.getElementById('groupName').disabled = true;
+  
+  // Change hint text
+  document.querySelector('.hint').innerHTML = '🔒 Timetable management is available only for <strong>Pro</strong> plan subscribers.';
 }
 
 function showToast(message, color = "#27ae60") {
@@ -605,6 +756,11 @@ async function loadTimetable(className, groupName) {
 }
 
 async function loadSelectedTimetable() {
+  if (!isProUser) {
+    showToast("🔒 This feature requires Pro plan", "#e74c3c");
+    return;
+  }
+
   const className = document.getElementById("className").value;
   const groupName = document.getElementById("groupName").value;
 
@@ -664,6 +820,11 @@ async function loadSelectedTimetable() {
 
 
 function enableEditMode() {
+  if (!isProUser) {
+    showToast("🔒 Edit mode requires Pro plan", "#e74c3c");
+    return;
+  }
+
   editMode = true;
 
   showToast(
@@ -673,6 +834,11 @@ function enableEditMode() {
 }
 
 async function saveTimetable(className, groupName, silent = false) {
+  if (!isProUser) {
+    showToast("🔒 Saving requires Pro plan", "#e74c3c");
+    return;
+  }
+
     try {
     const schoolId = getSchoolId();
 
@@ -710,6 +876,11 @@ if (!silent) {
 }
 
 function manualSaveTimetable() {
+  if (!isProUser) {
+    showToast("🔒 Saving requires Pro plan", "#e74c3c");
+    return;
+  }
+
   const className = document.getElementById("className").value;
   const groupName = document.getElementById("groupName").value;
 
@@ -717,6 +888,11 @@ function manualSaveTimetable() {
 }
 
 async function clearCurrentTimetable() {
+  if (!isProUser) {
+    showToast("🔒 This feature requires Pro plan", "#e74c3c");
+    return;
+  }
+
   const className = document.getElementById("className").value;
   const groupName = document.getElementById("groupName").value;
 
@@ -770,6 +946,11 @@ function renderTimetable() {
     timeDiv.textContent = time;
 
     timeDiv.addEventListener("dblclick", () => {
+      if (!isProUser) {
+        showToast("🔒 This feature requires Pro plan", "#e74c3c");
+        return;
+      }
+
       if (!editMode) {
         showToast(
           "Click Edit before changing timetable",
@@ -800,6 +981,11 @@ function renderTimetable() {
         `<strong>${item.subject}</strong><br><em>${item.teacher}</em>`;
 
       cell.addEventListener("dblclick", () => {
+        if (!isProUser) {
+          showToast("🔒 This feature requires Pro plan", "#e74c3c");
+          return;
+        }
+
         if (!editMode) {
           showToast(
             "Click Edit before changing timetable",
@@ -837,6 +1023,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  // Check user plan first
+  await checkUserPlan();
+
   const className =
     document.getElementById("className").value;
 
@@ -851,6 +1040,11 @@ renderTimetable();
 document
   .getElementById("className")
   .addEventListener("change", async e => {
+    if (!isProUser) {
+      showToast("🔒 Changing class requires Pro plan", "#e74c3c");
+      return;
+    }
+
     const className = e.target.value;
 
     const groupName =
@@ -865,6 +1059,11 @@ document
 document
   .getElementById("groupName")
   .addEventListener("change", async e => {
+    if (!isProUser) {
+      showToast("🔒 Changing group requires Pro plan", "#e74c3c");
+      return;
+    }
+
     const className =
       document.getElementById("className").value;
 
