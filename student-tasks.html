@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Tasks | Gradely.info</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:"Segoe UI",system-ui,sans-serif;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  background:linear-gradient(135deg,#020617,#0f172a);
+  color:#fff;
+}
+
+.main-content{
+  flex:1;
+  width:100%;
+  padding:18px;
+}
+
+.container{
+  max-width:900px;
+  margin:0 auto;
+  width:100%;
+}
+
+.header{
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:26px;
+  padding:26px;
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.header h1{
+  font-size:1.8rem;
+  font-weight:900;
+}
+
+.header p{
+  color:#dbeafe;
+  margin-top:8px;
+}
+
+.card{
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:22px;
+  padding:20px;
+  margin-bottom:14px;
+}
+
+.card h3{
+  font-size:1.2rem;
+  margin-bottom:8px;
+}
+
+.meta{
+  color:#93c5fd;
+  font-weight:800;
+  margin-bottom:10px;
+}
+
+.text{
+  color:#e2e8f0;
+  line-height:1.6;
+}
+
+.empty{
+  text-align:center;
+  padding:60px 20px;
+  color:#dbeafe;
+  font-weight:800;
+}
+
+/* Back button section - outside main content */
+.back-section{
+  width:100%;
+  padding:0 18px 30px;
+}
+
+.back-container{
+  max-width:900px;
+  margin:0 auto;
+  text-align:left;
+}
+
+.back-link{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:#60a5fa;
+  text-decoration:none;
+  font-weight:800;
+  font-size:0.95rem;
+  padding:10px 18px;
+  background:rgba(96,165,250,0.1);
+  border:1px solid rgba(96,165,250,0.3);
+  border-radius:10px;
+  transition:all 0.3s ease;
+}
+
+.back-link:hover{
+  color:#93c5fd;
+  background:rgba(96,165,250,0.2);
+  border-color:rgba(147,197,253,0.5);
+  text-decoration:none;
+  transform:translateX(-3px);
+}
+
+footer{
+  width:100%;
+  text-align:center;
+  padding:20px;
+  background:rgba(0,0,0,.3);
+  border-top:1px solid rgba(255,255,255,.1);
+  color:#94a3b8;
+  font-size:.82rem;
+  margin-top:auto;
+}
+
+footer a{
+  color:#00d2ff;
+  text-decoration:none;
+  margin:0 6px;
+  font-weight:900;
+}
+
+@media(max-width:600px){
+  .main-content{padding:14px}
+  .header h1{font-size:1.5rem}
+  .back-section{padding:0 14px 25px}
+  .back-link{width:100%;justify-content:center}
+}
+</style>
+</head>
+
+<body>
+
+<div class="main-content">
+  <div class="container">
+    <div class="header">
+      <h1>📝 Student Tasks</h1>
+      <p>Assignments, homework, quizzes, and class tests posted by your school.</p>
+    </div>
+
+    <div id="taskList" class="empty">Loading tasks...</div>
+  </div>
+</div>
+
+<!-- Back button section - outside main content -->
+<div class="back-section">
+  <div class="back-container">
+    <a class="back-link" href="parent-dashboard.html">← Back to Dashboard</a>
+  </div>
+</div>
+
+<footer>
+  © <span class="currentYear"></span> <strong>gradely.info</strong> | Powered by RIS<br>
+  <a href="terms.html">Terms</a> • 
+  <a href="dpa.html">DPA</a> • 
+  <a href="privacy.html">Privacy Policy</a>
+</footer>
+
+<script>
+const API_BASE = "https://api.gradely.info";
+
+function getStudentId(){
+  return localStorage.getItem("studentId") || sessionStorage.getItem("studentId");
+}
+
+function getStudentToken(){
+  return localStorage.getItem("student_token") || sessionStorage.getItem("student_token");
+}
+
+function logout(){
+  localStorage.removeItem("student_token");
+  sessionStorage.removeItem("student_token");
+  localStorage.removeItem("studentId");
+  sessionStorage.removeItem("studentId");
+  window.location.href = "parent-login.html";
+}
+
+async function loadTasks(){
+  const studentId = getStudentId();
+  const token = getStudentToken();
+
+  if(!studentId || !token){
+    logout();
+    return;
+  }
+
+  try{
+    const res = await fetch(`${API_BASE}/api/assignments-tests/parent/${studentId}`);
+    const data = await res.json();
+
+    const box = document.getElementById("taskList");
+
+    if(!data.success || !data.assignments_tests || data.assignments_tests.length === 0){
+      box.className = "empty";
+      box.innerHTML = "No tasks posted yet.";
+      return;
+    }
+
+    box.className = "";
+    box.innerHTML = data.assignments_tests.map(t => `
+      <div class="card">
+        <h3>${t.type || "Task"}: ${t.title || t.subject || "Untitled"}</h3>
+        <div class="meta">
+          ${t.subject || "-"} • ${t.class_name || "-"} ${t.section || ""} 
+          ${t.due_date ? " • Due: " + new Date(t.due_date).toLocaleDateString() : ""}
+        </div>
+        <div class="text">${t.instructions || "No instructions provided."}</div>
+        ${t.total_marks ? `<div class="meta" style="margin-top:10px;">Total Marks: ${t.total_marks}</div>` : ""}
+      </div>
+    `).join("");
+  }catch(err){
+    document.getElementById("taskList").innerHTML = "Unable to load tasks.";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadTasks();
+  document.querySelectorAll(".currentYear").forEach(el => el.textContent = new Date().getFullYear());
+});
+</script>
+
+<script src="js/kaima-chatbot.js"></script>
+
+</body>
+</html>
