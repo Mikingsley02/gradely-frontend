@@ -397,6 +397,13 @@
             <option value="Cheque">Cheque</option>
           </select>
         </div>
+
+        <div class="form-group">
+  <label for="payDate">Payment Date</label>
+  <input type="date" id="payDate" class="glass-input" required>
+</div>
+
+
         <div class="form-group">
           <label for="payNotes">Notes (Optional)</label>
           <input type="text" id="payNotes" class="glass-input" placeholder="e.g. Receipt #1234">
@@ -445,12 +452,6 @@
       </form>
     </div>
   </div>
-
-
-
-
-
-
 
   
 
@@ -796,19 +797,27 @@ function renderTable(students) {
     return;
   }
 
-  body.innerHTML = students.map(student => `
-    <tr>
-      <td>${escapeHtml(student.student_id)}</td>
-      <td>${escapeHtml(student.student_name)}</td>
-      <td>${escapeHtml(student.class_name || "N/A")}</td>
-      <td>${formatCurrency(student.total_fee)}</td>
-      <td class="text-green">${formatCurrency(student.amount_paid)}</td>
-      <td class="${Number(student.outstanding_balance) > 0 ? "text-red" : "text-green"}">
-        ${formatCurrency(student.outstanding_balance)}
-      </td>
-    </tr>
-  `).join("");
+  body.innerHTML = students.map(student => {
+    const paid = Number(student.amount_paid) || 0;
+    const outstanding = Number(student.outstanding_balance) || 0;
+    const totalFee = Number(student.total_fee) || paid + outstanding;
+
+    return `
+      <tr onclick="openStudentTransactions('${escapeHtml(student.student_id)}', '${escapeHtml(student.student_name)}')" style="cursor:pointer">
+        <td>${escapeHtml(student.student_id)}</td>
+        <td>${escapeHtml(student.student_name)}</td>
+        <td>${escapeHtml(student.class_name || "N/A")}</td>
+        <td>${formatCurrency(totalFee)}</td>
+        <td class="text-green">${formatCurrency(paid)}</td>
+        <td class="${outstanding > 0 ? "text-red" : "text-green"}">
+          ${formatCurrency(outstanding)}
+        </td>
+      </tr>
+    `;
+  }).join("");
 }
+
+
 
 function renderIncomeExpenseChart(summary) {
   if (incomeExpenseChart) incomeExpenseChart.destroy();
@@ -979,6 +988,11 @@ function openModal(id) {
   if (id === "paymentModal") {
     populateStudentSelect("payStudentId", allStudentsData);
   }
+
+  if (id === "paymentModal") {
+  populateStudentSelect("payStudentId", allStudentsData);
+  document.getElementById("payDate").value = new Date().toISOString().slice(0, 10);
+}
 
   if (id === "assignFeesModal") {
     showStudentFeeMode();
@@ -1158,6 +1172,75 @@ async function exportFinancialData() {
   URL.revokeObjectURL(url);
 }
 
+
+
+async function openStudentTransactions(studentId, studentName) {
+  const data = await readJson(
+    await authFetch(`${API_BASE}/api/financial/student-transactions/${encodeURIComponent(studentId)}`)
+  );
+
+  if (!data?.success) {
+    alert(data?.message || "Unable to load transactions for this student.");
+    return;
+  }
+
+  const payments = Array.isArray(data.payments) ? data.payments : [];
+  const fees = Array.isArray(data.fees) ? data.fees : [];
+
+  const feeRows = fees.map(f => `
+    <tr>
+      <td>Assigned Fee</td>
+      <td>${f.term || "N/A"}</td>
+      <td>${formatCurrency(f.total_fee)}</td>
+      <td>${f.created_at ? new Date(f.created_at).toLocaleDateString("en-GB") : "N/A"}</td>
+    </tr>
+  `).join("");
+
+  const paymentRows = payments.map(p => `
+    <tr>
+      <td>Payment</td>
+      <td>${p.payment_method || "N/A"}</td>
+      <td>${formatCurrency(p.amount)}</td>
+      <td>${p.payment_date ? new Date(p.payment_date).toLocaleDateString("en-GB") : "N/A"}</td>
+    </tr>
+  `).join("");
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "overlay";
+  wrapper.innerHTML = `
+    <div class="glass form-modal" style="max-width:760px">
+      <h2>${escapeHtml(studentName || studentId)}</h2>
+      <p class="modal-description">Payment and assigned-fee transaction history.</p>
+
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Details</th>
+              <th>Amount</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${feeRows || ""}
+            ${paymentRows || ""}
+            ${!feeRows && !paymentRows ? `<tr><td colspan="4" style="text-align:center;color:#94a3b8">No transactions found.</td></tr>` : ""}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" onclick="this.closest('.overlay').remove()">Close</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(wrapper);
+}
+
+
+
 function formatCurrency(value) {
   return new Intl.NumberFormat("en-NG", {
     style: "currency",
@@ -1221,7 +1304,21 @@ document.getElementById("feeStudentSearchButton").addEventListener("click", () =
 );
 
 document.getElementById("searchButton").addEventListener("click", async () => {
-  await loadStudents(document.getElementById("searchInput").value.trim());
+  const query = document.getElementById("searchInput").value.trim();
+  await loadStudents(query);
+});
+
+document.getElementById("searchInput").addEventListener("input", async e => {
+  const query = e.target.value.trim();
+
+  if (!query) {
+    await loadStudents();
+    return;
+  }
+
+  if (query.length >= 2) {
+    await loadStudents(query);
+  }
 });
 
 document.getElementById("searchInput").addEventListener("input", e => {
@@ -1244,12 +1341,15 @@ document.getElementById("paymentForm").addEventListener("submit", async event =>
   }
 
   await submitFinancialForm(`${API_BASE}/api/financial/payment`, {
-    student_id: student.student_id,
-    student_name: student.student_name,
-    amount: Number(document.getElementById("payAmount").value),
-    payment_method: document.getElementById("payMethod").value,
-    notes: document.getElementById("payNotes").value.trim()
-  }, "paymentForm", "paymentModal", "Payment recorded successfully.");
+  student_id: student.student_id,
+  student_name: student.student_name,
+  amount: Number(document.getElementById("payAmount").value),
+  payment_method: document.getElementById("payMethod").value,
+  payment_date: document.getElementById("payDate").value,
+  transaction_date: document.getElementById("payDate").value,
+  notes: document.getElementById("payNotes").value.trim()
+}, "paymentForm", "paymentModal", "Payment recorded successfully.");
+
 });
 
 document.getElementById("expenseForm").addEventListener("submit", async event => {
