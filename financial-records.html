@@ -986,12 +986,9 @@ function openModal(id) {
   document.getElementById(id).classList.remove("hidden");
 
   if (id === "paymentModal") {
-    populateStudentSelect("payStudentId", allStudentsData);
-  }
-
-  if (id === "paymentModal") {
   populateStudentSelect("payStudentId", allStudentsData);
-  document.getElementById("payDate").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("payDate").value =
+    new Date().toISOString().slice(0, 10);
 }
 
   if (id === "assignFeesModal") {
