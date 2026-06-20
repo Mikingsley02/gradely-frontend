@@ -1147,14 +1147,14 @@ async function exportFinancialData() {
   const rows = [];
 
   rows.push(["STUDENT PAYMENT STATUS"]);
-  rows.push(["Student ID", "Name", "Class", "Total Fee", "Paid", "Outstanding"]);
+  rows.push(["Student ID", "Name", "Class", "Paid", "Outstanding"]);
 
   document.querySelectorAll("#studentsTableBody tr").forEach(row => {
     const cells = [...row.querySelectorAll("td")].map(td =>
       td.textContent.trim().replaceAll('"', '""')
     );
 
-    if (cells.length === 6) rows.push(cells);
+    if (cells.length === 5) rows.push(cells);
   });
 
   rows.push([]);
