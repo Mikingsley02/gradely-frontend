@@ -561,11 +561,6 @@
     <div class="value text-blue" id="netBalance">&#8358;0.00</div>
   </div>
 
-<div class="glass summary-card">
-  <h3>Assigned Fees</h3>
-  <div class="value text-blue" id="totalAssigned">&#8358;0.00</div>
-</div>
-
 
   <div class="glass summary-card">
     <h3>Outstanding</h3>
@@ -596,7 +591,7 @@
       </div>
       <table>
         <thead>
-          <tr><th>Student ID</th><th>Name</th><th>Class</th><th>Assigned Fees</th><th>Paid</th><th>Outstanding</th></tr>
+          <tr><th>Student ID</th><th>Name</th><th>Class</th><th>Paid</th><th>Outstanding</th></tr>
         </thead>
         <tbody id="studentsTableBody"></tbody>
       </table>
@@ -797,7 +792,6 @@ async function loadSummary() {
   document.getElementById("totalIncome").textContent = formatCurrency(summary.totalIncome || 0);
   document.getElementById("totalExpenses").textContent = formatCurrency(summary.totalExpenses || 0);
   document.getElementById("netBalance").textContent = formatCurrency(summary.netBalance || 0);
-  document.getElementById("totalAssigned").textContent = formatCurrency(summary.totalAssigned || 0);
   document.getElementById("totalOutstanding").textContent = formatCurrency(summary.totalOutstanding || 0);
 
   renderIncomeExpenseChart(summary);
@@ -825,7 +819,7 @@ function renderTable(students) {
   const body = document.getElementById("studentsTableBody");
 
   if (!students.length) {
-    body.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:#94a3b8">No student records found.</td></tr>';
+    body.innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:#94a3b8">No student records found.</td></tr>';
     return;
   }
 
@@ -839,7 +833,6 @@ function renderTable(students) {
         <td>${escapeHtml(student.student_id)}</td>
         <td>${escapeHtml(student.student_name)}</td>
         <td>${escapeHtml(student.class_name || "N/A")}</td>
-        <td>${formatCurrency(totalFee)}</td>
         <td class="text-green">${formatCurrency(paid)}</td>
         <td class="${outstanding > 0 ? "text-red" : "text-green"}">
           ${formatCurrency(outstanding)}
