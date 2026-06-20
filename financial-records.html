@@ -560,6 +560,13 @@
     <h3>Net Balance</h3>
     <div class="value text-blue" id="netBalance">&#8358;0.00</div>
   </div>
+
+<div class="glass summary-card">
+  <h3>Assigned Fees</h3>
+  <div class="value text-blue" id="totalAssigned">&#8358;0.00</div>
+</div>
+
+
   <div class="glass summary-card">
     <h3>Outstanding</h3>
     <div class="value text-yellow" id="totalOutstanding">&#8358;0.00</div>
@@ -790,6 +797,7 @@ async function loadSummary() {
   document.getElementById("totalIncome").textContent = formatCurrency(summary.totalIncome || 0);
   document.getElementById("totalExpenses").textContent = formatCurrency(summary.totalExpenses || 0);
   document.getElementById("netBalance").textContent = formatCurrency(summary.netBalance || 0);
+  document.getElementById("totalAssigned").textContent = formatCurrency(summary.totalAssigned || 0);
   document.getElementById("totalOutstanding").textContent = formatCurrency(summary.totalOutstanding || 0);
 
   renderIncomeExpenseChart(summary);
@@ -1233,7 +1241,7 @@ async function openStudentTransactions(studentId, studentName) {
       <h2>${escapeHtml(studentName || studentId)}</h2>
       <p class="modal-description">Payment and assigned-fee transaction history.</p>
 
-      <div style="overflow-x:auto">
+      <div style="max-height:360px;overflow-y:auto;overflow-x:auto;padding-right:6px">
         <table>
           <thead>
             <tr>
