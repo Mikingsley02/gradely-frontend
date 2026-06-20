@@ -208,17 +208,32 @@ async function loadTasks(){
     }
 
     box.className = "";
-    box.innerHTML = data.assignments_tests.map(t => `
-      <div class="card">
-        <h3>${t.type || "Task"}: ${t.title || t.subject || "Untitled"}</h3>
-        <div class="meta">
-          ${t.subject || "-"} • ${t.class_name || "-"} ${t.section || ""} 
-          ${t.due_date ? " • Due: " + new Date(t.due_date).toLocaleDateString() : ""}
-        </div>
-        <div class="text">${t.instructions || "No instructions provided."}</div>
-        ${t.total_marks ? `<div class="meta" style="margin-top:10px;">Total Marks: ${t.total_marks}</div>` : ""}
+    box.innerHTML = data.assignments_tests.map(t => {
+  const instructions =
+    t.instructions ||
+    t.instruction ||
+    t.description ||
+    t.remarks ||
+    "No instructions provided.";
+
+  return `
+    <div class="card">
+      <h3>${t.type || "Task"}: ${t.title || t.subject || "Untitled"}</h3>
+
+      <div class="meta">
+        <strong>Subject:</strong> ${t.subject || "-"}<br>
+        <strong>Class:</strong> ${t.class_name || "-"} ${t.section ? "• Group " + t.section : ""}<br>
+        ${t.due_date ? `<strong>Due:</strong> ${new Date(t.due_date).toLocaleDateString()}<br>` : ""}
+        ${t.total_marks ? `<strong>Total Marks:</strong> ${t.total_marks}` : ""}
       </div>
-    `).join("");
+
+      <div class="text" style="margin-top:12px;">
+        <strong>Instructions:</strong><br>
+        ${instructions}
+      </div>
+    </div>
+  `;
+}).join("");
   }catch(err){
     document.getElementById("taskList").innerHTML = "Unable to load tasks.";
   }
