@@ -1,699 +1,1033 @@
-import 'dart:convert';
-import 'package:flutter/material.dart';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>⚙️ School Settings | gradely Info</title>
 
-import '../services/api_service.dart';
+  <style>
+*{margin:0;padding:0;box-sizing:border-box}
 
-class AdminSettingsScreen extends StatefulWidget {
-  final String token;
+body{
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:36px 14px;
+  color:#0f172a;
+  background:
+    radial-gradient(circle at top left,rgba(34,197,94,.25),transparent 35%),
+    radial-gradient(circle at bottom right,rgba(0,210,255,.25),transparent 35%),
+    linear-gradient(135deg,#020617,#0f172a);
+}
 
-  const AdminSettingsScreen({
-    super.key,
-    required this.token,
+.settings-card{
+  max-width:700px;
+  width:100%;
+  border-radius:28px;
+  overflow:hidden;
+  background:rgba(255,255,255,.9);
+  border:1px solid rgba(255,255,255,.25);
+  backdrop-filter:blur(22px);
+  box-shadow:0 30px 80px rgba(0,0,0,.35);
+  margin-bottom:28px;
+}
+
+.card-header{
+  background:linear-gradient(135deg,rgba(2,6,23,.95),rgba(37,99,235,.85));
+  color:#fff;
+  padding:32px 24px;
+  text-align:center;
+}
+
+.card-header h2{
+  font-size:1.65rem;
+  font-weight:900;
+}
+
+.card-header p{
+  margin-top:6px;
+  color:#dbeafe;
+}
+
+.card-body{
+  padding:30px;
+}
+
+.section-title{
+  font-size:1.25rem;
+  font-weight:900;
+  color:#0f172a;
+  margin:28px 0 18px;
+  padding-bottom:8px;
+  border-bottom:2px solid #e2e8f0;
+}
+
+.form-group{
+  margin-bottom:18px;
+  position:relative;
+}
+
+label{
+  display:block;
+  font-weight:900;
+  margin-bottom:7px;
+}
+
+input,select{
+  width:100%;
+  min-height:52px;
+  padding:0 14px;
+  border:1px solid #cbd5e1;
+  border-radius:16px;
+  font-size:1rem;
+  outline:none;
+  background:#fff;
+}
+
+input:focus,select:focus{
+  border-color:#22c55e;
+  box-shadow:0 0 0 5px rgba(34,197,94,.14);
+}
+
+.toggle-password{
+  position:absolute;
+  right:15px;
+  top:40px;
+  cursor:pointer;
+  font-size:1.2rem;
+}
+
+.form-actions{
+  display:flex;
+  gap:12px;
+  margin-top:10px;
+}
+
+button{
+  width:100%;
+  min-height:52px;
+  padding:12px;
+  border:none;
+  border-radius:16px;
+  font-size:1rem;
+  font-weight:900;
+  cursor:pointer;
+  text-align:center;
+  text-decoration:none;
+  transition:.2s ease;
+}
+
+button:hover{
+  transform:translateY(-2px);
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,#22c55e,#2563eb);
+  color:#fff;
+}
+
+.btn-cancel{
+  background:#64748b;
+  color:#fff;
+}
+
+.btn-success{
+  background:linear-gradient(135deg,#16a34a,#15803d);
+  color:#fff;
+}
+
+.btn-purple{
+  background:linear-gradient(135deg,#7c3aed,#6d28d9);
+  color:#fff;
+}
+
+.btn-danger{
+  background:linear-gradient(135deg,#dc2626,#b91c1c);
+  color:#fff;
+}
+
+button:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+  transform:none;
+}
+
+.message{
+  margin-top:15px;
+  text-align:center;
+  min-height:22px;
+  font-weight:800;
+}
+
+.error{color:#dc2626}
+.success{color:#16a34a}
+.info{color:#2563eb}
+
+.twofa-status{
+  padding:20px;
+  border-radius:16px;
+  margin-bottom:18px;
+  border:2px solid;
+}
+
+.twofa-status.enabled{
+  background:#ecfdf5;
+  border-color:#22c55e;
+}
+
+.twofa-status.disabled{
+  background:#fef2f2;
+  border-color:#ef4444;
+}
+
+.twofa-status h3{
+  font-size:1.1rem;
+  font-weight:900;
+  margin-bottom:8px;
+}
+
+.twofa-status.enabled h3{
+  color:#166534;
+}
+
+.twofa-status.disabled h3{
+  color:#991b1b;
+}
+
+.twofa-status p{
+  font-weight:700;
+  line-height:1.4;
+  font-size:0.95rem;
+}
+
+.twofa-status.enabled p{
+  color:#166534;
+}
+
+.twofa-status.disabled p{
+  color:#991b1b;
+}
+
+.qr-container{
+  background:#fff;
+  border-radius:18px;
+  padding:20px;
+  text-align:center;
+  margin:16px 0;
+  border:2px solid #e2e8f0;
+}
+
+.qr-container img{
+  max-width:220px;
+  width:100%;
+  height:auto;
+  margin:12px 0;
+}
+
+.qr-container p{
+  color:#0f172a;
+  font-weight:900;
+  font-size:1rem;
+}
+
+.secret-code{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  margin:14px 0;
+  word-break:break-all;
+  font-weight:800;
+  color:#0f172a;
+  line-height:1.5;
+  border:1px solid #e2e8f0;
+}
+
+.back-link{
+  display:inline-block;
+  width:100%;
+  text-align:center;
+  margin-top:16px;
+  padding:14px;
+  background:#0c2461;
+  color:#fff!important;
+  border-radius:16px;
+  text-decoration:none;
+  font-weight:800;
+  font-size:1rem;
+  transition:.2s ease;
+}
+
+.back-link:hover{
+  background:#1e3a8a;
+  transform:translateY(-2px);
+}
+
+.footer{
+  text-align:center;
+  padding:18px 10px;
+  font-size:.82rem;
+  color:#e2e8f0;
+  margin-top:auto;
+}
+
+.footer a{
+  color:#00d2ff!important;
+  text-decoration:none;
+  font-weight:800;
+  margin:0 10px;
+}
+
+.loading-overlay{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(0,0,0,.16);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+
+.loading-overlay.active{
+  display:flex;
+}
+
+.spinner{
+  width:50px;
+  height:50px;
+  border:5px solid rgba(255,255,255,.3);
+  border-top-color:#7c3aed;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+@media(max-width:600px){
+  body{padding:20px 10px}
+
+  .settings-card{
+    border-radius:22px;
+  }
+
+  .card-header{
+    padding:25px 16px;
+  }
+
+  .card-header h2{
+    font-size:1.35rem;
+  }
+
+  .card-body{
+    padding:22px 16px;
+  }
+
+  .form-actions{
+    flex-direction:column;
+  }
+
+  input,select,button{
+    font-size:16px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= SINGLE CONTAINER ================= -->
+<div class="settings-card">
+  <div class="card-header">
+    <h2>⚙️ School Settings</h2>
+    <p>Manage your school information and security</p>
+  </div>
+
+  <div class="card-body">
+    
+    <!-- School Information Section -->
+    <h3 class="section-title">🏫 School Information</h3>
+    <form id="settingsForm">
+      <div class="form-group">
+        <label>School Name *</label>
+        <input type="text" id="schoolName" required />
+      </div>
+
+      <div class="form-group">
+        <label>School Email *</label>
+        <input type="email" id="email" required />
+      </div>
+
+      <div class="form-group">
+        <label>Phone Number *</label>
+        <input type="tel" id="phone" required />
+      </div>
+    </form>
+
+    <!-- Change Password Section -->
+    <h3 class="section-title">🔐 Change Password</h3>
+    <form id="passwordForm">
+      <div class="form-group">
+        <label>Current Password</label>
+        <input type="password" id="currentPassword" />
+        <span class="toggle-password" onclick="togglePassword('currentPassword', this)">👁️</span>
+      </div>
+
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" id="newPassword" />
+        <span class="toggle-password" onclick="togglePassword('newPassword', this)">👁️</span>
+      </div>
+
+      <div class="form-group">
+        <label>Confirm New Password</label>
+        <input type="password" id="confirmPassword" />
+        <span class="toggle-password" onclick="togglePassword('confirmPassword', this)">👁️</span>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="goBack()">Cancel</button>
+        <button type="button" class="btn-primary" onclick="saveSettings()">💾 Save Changes</button>
+      </div>
+
+      <div class="message" id="settingsMessage"></div>
+    </form>
+
+    <!-- Two-Factor Authentication Section -->
+    <h3 class="section-title">🔒 Two-Factor Authentication</h3>
+    
+    <div id="twoFaStatus" class="twofa-status disabled">
+      <h3>❌ Two-Factor Authentication is OFF</h3>
+      <p>Choose either Google Authenticator or SMS verification.</p>
+    </div>
+
+    <div id="twoFaSetup">
+      <div class="form-group">
+        <label>Choose 2FA Method</label>
+        <select id="twoFaMethod" onchange="handleMethodChange()">
+          <option value="">-- Select Method --</option>
+          <option value="app">Google Authenticator App</option>
+          <option value="sms">SMS Code</option>
+        </select>
+      </div>
+
+      <div id="smsSection" style="display:none;">
+        <div class="form-group">
+          <label>Phone Number for SMS</label>
+          <input type="tel" id="twoFaPhone" placeholder="Enter phone number" />
+        </div>
+        <button type="button" class="btn-success" onclick="setup2FA('sms')">
+          📤 Send SMS Code
+        </button>
+      </div>
+
+      <div id="appSection" style="display:none;">
+        <div id="qrCodeContainer"></div>
+        <div id="secretCodeContainer"></div>
+      </div>
+
+      <div class="form-group" style="margin-top:16px;">
+        <label>Enter 6-Digit Code</label>
+        <input type="text" id="twoFaCode" maxlength="6" placeholder="000000" style="text-align:center;font-size:1.1rem;letter-spacing:8px;" />
+      </div>
+
+      <button type="button" class="btn-purple" onclick="enable2FA()">
+        🔐 Enable 2FA
+      </button>
+
+      <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+
+      <div class="message" id="twoFaMessage"></div>
+    </div>
+
+    <div id="twoFaDisable" style="display:none;">
+      <button type="button" class="btn-danger" onclick="showDisableDialog()">
+        Disable 2FA
+      </button>
+      
+      <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+      
+      <div class="message" id="disableMessage"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Password Dialog for Disabling 2FA -->
+<div id="disablePasswordDialog" class="loading-overlay" style="display:none;">
+  <div class="settings-card" style="max-width:500px; margin:0;">
+    <div class="card-header">
+      <h2>🔐 Disable Two-Factor Authentication</h2>
+      <p>Enter your password to confirm</p>
+    </div>
+    <div class="card-body">
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="disablePassword" placeholder="Enter your password" />
+        <span class="toggle-password" onclick="togglePassword('disablePassword', this)">👁️</span>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeDisableDialog()">Cancel</button>
+        <button type="button" class="btn-danger" onclick="confirmDisable2FA()">Disable 2FA</button>
+      </div>
+      <div class="message" id="dialogMessage"></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+
+
+
+<div class="footer">
+  &copy; © <span class="currentYear"></span> <strong>gradely.info</strong> All rights reserved.
+  <div style="margin-top:10px;">
+    <a href="terms.html">Terms</a> •
+    <a href="privacy.html">Privacy</a> •
+    <a href="refund-policy.html">Refund Policy</a>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+</div>
+
+<script>
+const API_BASE = "https://api.gradely.info";
+
+let twoFactorEnabled = false;
+let selectedMethod = '';
+
+// ===============================
+// JWT AUTH HELPERS
+// ===============================
+function getToken() {
+  const token =
+    sessionStorage.getItem("gradely_token") ||
+    localStorage.getItem("gradely_token");
+
+  if (!token || token === "null" || token === "undefined" || token.trim() === "") {
+    return null;
+  }
+
+  return token;
+}
+
+function clearAuth() {
+  sessionStorage.removeItem("gradely_token");
+  sessionStorage.removeItem("school_id");
+  sessionStorage.removeItem("adminId");
+  sessionStorage.removeItem("admin_id");
+
+  localStorage.removeItem("gradely_token");
+  localStorage.removeItem("school_id");
+  localStorage.removeItem("adminId");
+  localStorage.removeItem("admin_id");
+}
+
+function redirectToLogin() {
+  clearAuth();
+  window.location.href = "admin-login.html";
+}
+
+function getAuthHeaders(extraHeaders = {}) {
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+    ...extraHeaders
+  };
+}
+
+async function authFetch(url, options = {}) {
+  if (!getToken()) {
+    redirectToLogin();
+    return null;
+  }
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...(options.headers || {})
+    }
   });
 
-  @override
-  State<AdminSettingsScreen> createState() => _AdminSettingsScreenState();
-}
-
-class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
-  final schoolNameController = TextEditingController();
-  final emailController = TextEditingController();
-  final phoneController = TextEditingController();
-  final currentPasswordController = TextEditingController();
-  final newPasswordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
-
-  final twoFaPhoneController = TextEditingController();
-  final twoFaCodeController = TextEditingController();
-  final disablePasswordController = TextEditingController();
-
-  bool isLoading = true;
-  bool isSaving = false;
-  bool is2faBusy = false;
-  bool twoFactorEnabled = false;
-
-  bool showCurrentPassword = false;
-  bool showNewPassword = false;
-  bool showConfirmPassword = false;
-  bool showDisablePassword = false;
-
-  String selected2faMethod = '';
-  String qrCode = '';
-  String secretCode = '';
-  String twoFaMessage = '';
-
-  @override
-  void initState() {
-    super.initState();
-    loadSettings();
+  if (res.status === 401) {
+    redirectToLogin();
+    return null;
   }
 
-  @override
-  void dispose() {
-    schoolNameController.dispose();
-    emailController.dispose();
-    phoneController.dispose();
-    currentPasswordController.dispose();
-    newPasswordController.dispose();
-    confirmPasswordController.dispose();
-    twoFaPhoneController.dispose();
-    twoFaCodeController.dispose();
-    disablePasswordController.dispose();
-    super.dispose();
-  }
-
-  void showMsg(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text)),
-    );
-  }
-
-  Future<void> loadSettings() async {
-    final data = await ApiService.get(
-      '/api/admin/settings/school-info',
-      token: widget.token,
-    );
-
-    if (data['school'] != null) {
-      final school = data['school'];
-      setState(() {
-        schoolNameController.text = school['school_name'] ?? '';
-        emailController.text = school['email'] ?? '';
-        phoneController.text = school['phone_number'] ?? '';
-        twoFactorEnabled = school['two_factor_enabled'] == true;
-        isLoading = false;
-      });
-    } else {
-      setState(() => isLoading = false);
-      showMsg(data['message'] ?? 'Unable to load settings.');
-    }
-  }
-
-  Future<void> saveSettings() async {
-    final currentPassword = currentPasswordController.text.trim();
-    final newPassword = newPasswordController.text.trim();
-    final confirmPassword = confirmPasswordController.text.trim();
-
-    if (currentPassword.isNotEmpty ||
-        newPassword.isNotEmpty ||
-        confirmPassword.isNotEmpty) {
-      if (currentPassword.isEmpty ||
-          newPassword.isEmpty ||
-          confirmPassword.isEmpty) {
-        showMsg('Fill all password fields.');
-        return;
-      }
-
-      if (newPassword != confirmPassword) {
-        showMsg('Passwords do not match.');
-        return;
-      }
-    }
-
-    setState(() => isSaving = true);
-
-    final body = <String, dynamic>{
-      'school_name': schoolNameController.text.trim(),
-      'email': emailController.text.trim().toLowerCase(),
-      'phone_number': phoneController.text.trim(),
-    };
-
-    if (newPassword.isNotEmpty) {
-      body['current_password'] = currentPassword;
-      body['new_password'] = newPassword;
-    }
-
-    final data = await ApiService.put(
-      '/api/admin/settings/school-info',
-      token: widget.token,
-      body: body,
-    );
-
-    setState(() => isSaving = false);
-
-    if (data['success'] == true) {
-      currentPasswordController.clear();
-      newPasswordController.clear();
-      confirmPasswordController.clear();
-      showMsg('Settings updated successfully.');
-      loadSettings();
-    } else {
-      showMsg(data['message'] ?? 'Failed to update settings.');
-    }
-  }
-
-  Future<void> setup2FA(String method) async {
-    setState(() {
-      selected2faMethod = method;
-      is2faBusy = true;
-      qrCode = '';
-      secretCode = '';
-      twoFaMessage = 'Preparing 2FA setup...';
-    });
-
-    final body = <String, dynamic>{'method': method};
-
-    if (method == 'sms') {
-      final phone = twoFaPhoneController.text.trim();
-
-      if (phone.isEmpty) {
-        setState(() {
-          is2faBusy = false;
-          twoFaMessage = 'Enter phone number before sending SMS code.';
-        });
-        return;
-      }
-
-      body['phone'] = phone;
-    }
-
-    final data = await ApiService.post(
-      '/api/auth/2fa/setup',
-      token: widget.token,
-      body: body,
-    );
-
-    setState(() => is2faBusy = false);
-
-    if (data['success'] == true) {
-      setState(() {
-        qrCode = data['qr_code'] ?? data['qrCode'] ?? '';
-        secretCode = data['secret'] ?? '';
-        twoFaMessage = method == 'sms'
-            ? 'SMS code sent. Enter the 6-digit code below.'
-            : 'Scan the QR code with Google Authenticator, then enter the 6-digit code.';
-      });
-    } else {
-      setState(() {
-        twoFaMessage = data['message'] ?? 'Unable to start 2FA setup.';
-      });
-    }
-  }
-
-  Future<void> enable2FA() async {
-    final code = twoFaCodeController.text.trim();
-
-    if (selected2faMethod.isEmpty) {
-      showMsg('Choose Google Authenticator or SMS first.');
-      return;
-    }
-
-    if (code.length != 6) {
-      showMsg('Enter a valid 6-digit code.');
-      return;
-    }
-
-    setState(() => is2faBusy = true);
-
-    final body = <String, dynamic>{
-      'method': selected2faMethod,
-      'code': code,
-    };
-
-    if (selected2faMethod == 'sms') {
-      body['phone'] = twoFaPhoneController.text.trim();
-    }
-
-    final data = await ApiService.post(
-      '/api/auth/2fa/verify',
-      token: widget.token,
-      body: body,
-    );
-
-    setState(() => is2faBusy = false);
-
-    if (data['success'] == true) {
-      twoFaCodeController.clear();
-      setState(() {
-        twoFactorEnabled = true;
-        qrCode = '';
-        secretCode = '';
-        twoFaMessage = 'Two-factor authentication enabled successfully.';
-      });
-
-      showMsg('2FA enabled successfully.');
-      loadSettings();
-    } else {
-      setState(() {
-        twoFaMessage = data['message'] ?? 'Invalid 2FA code.';
-      });
-    }
-  }
-
-  Future<void> disable2FA() async {
-    final password = disablePasswordController.text.trim();
-
-    if (password.isEmpty) {
-      showMsg('Enter your password to disable 2FA.');
-      return;
-    }
-
-    setState(() => is2faBusy = true);
-
-    final data = await ApiService.post(
-      '/api/auth/2fa/disable',
-      token: widget.token,
-      body: {
-        'password': password,
-        'confirm_disable': true,
-      },
-    );
-
-    setState(() => is2faBusy = false);
-
-    if (data['success'] == true) {
-      disablePasswordController.clear();
-
-      setState(() {
-        twoFactorEnabled = false;
-        selected2faMethod = '';
-        qrCode = '';
-        secretCode = '';
-        twoFaMessage = 'Two-factor authentication disabled.';
-      });
-
-      showMsg('2FA disabled.');
-      loadSettings();
-    } else {
-      showMsg(data['message'] ?? 'Unable to disable 2FA.');
-    }
-  }
-
-  InputDecoration inputDecoration(
-    String label, {
-    Widget? suffixIcon,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      filled: true,
-      fillColor: Colors.white,
-      suffixIcon: suffixIcon,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
-      ),
-    );
-  }
-
-  Widget passwordField({
-    required TextEditingController controller,
-    required String label,
-    required bool visible,
-    required VoidCallback onToggle,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: !visible,
-      decoration: inputDecoration(
-        label,
-        suffixIcon: IconButton(
-          onPressed: onToggle,
-          icon: Icon(visible ? Icons.visibility_off : Icons.visibility),
-        ),
-      ),
-    );
-  }
-
-  Widget qrCodeWidget() {
-    if (qrCode.isEmpty) return const SizedBox.shrink();
+  if (!res.ok) {
+    let message = `HTTP ${res.status}`;
 
     try {
-      final cleaned = qrCode.contains(',')
-          ? qrCode.split(',').last
-          : qrCode;
+      const errorData = await res.json();
+      message = errorData.message || message;
+    } catch (e) {}
 
-      final bytes = base64Decode(cleaned);
+    throw new Error(message);
+  }
 
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Column(
-          children: [
-            const Text(
-              'Scan QR Code',
-              style: TextStyle(
-                color: Color(0xFF0F172A),
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Image.memory(
-              bytes,
-              width: 220,
-              height: 220,
-              fit: BoxFit.contain,
-            ),
-          ],
-        ),
-      );
-    } catch (_) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFF7ED),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFF59E0B)),
-        ),
-        child: const Text(
-          'QR image could not be displayed. Use the manual secret below.',
-          style: TextStyle(
-            color: Color(0xFF92400E),
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      );
+  return res;
+}
+
+// ===============================
+// UI HELPERS
+// ===============================
+function showLoading(show) {
+  document.getElementById("loadingOverlay").classList.toggle("active", show);
+}
+
+function showMessage(elementId, message, type) {
+  const el = document.getElementById(elementId);
+  el.textContent = message;
+  el.className = `message ${type}`;
+  if (type === "success") {
+    setTimeout(() => { el.textContent = ""; }, 5000);
+  }
+}
+
+function togglePassword(id, icon) {
+  const input = document.getElementById(id);
+  input.type = input.type === "password" ? "text" : "password";
+  icon.textContent = input.type === "password" ? "👁️" : "🙈";
+}
+
+function goBack() {
+  window.location.href = "dashboard.html";
+}
+
+// ===============================
+// LOAD SETTINGS
+// ===============================
+async function loadSettings() {
+  const token = getToken();
+  if (!token) {
+    redirectToLogin();
+    return;
+  }
+
+  showLoading(true);
+
+  try {
+    const res = await authFetch(`${API_BASE}/api/admin/settings/school-info`, {
+      method: "GET"
+    });
+
+    if (!res) return;
+
+    const data = await res.json();
+
+    if (data.success && data.school) {
+      document.getElementById("schoolName").value = data.school.school_name || "";
+      document.getElementById("email").value = data.school.email || "";
+      document.getElementById("phone").value = data.school.phone_number || "";
+      
+      twoFactorEnabled = data.school.two_factor_enabled === true;
+      updateTwoFaUI();
+    } else {
+      alert(data.message || "Unable to load settings.");
+    }
+  } catch (err) {
+    console.error("Load settings error:", err);
+    alert("Failed to load settings.");
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ===============================
+// UPDATE 2FA UI
+// ===============================
+function updateTwoFaUI() {
+  const statusEl = document.getElementById("twoFaStatus");
+  const setupEl = document.getElementById("twoFaSetup");
+  const disableEl = document.getElementById("twoFaDisable");
+
+  if (twoFactorEnabled) {
+    statusEl.className = "twofa-status enabled";
+    statusEl.innerHTML = `
+      <h3>✅ Two-Factor Authentication is ON</h3>
+      <p>Your account is secured with 2FA.</p>
+    `;
+    setupEl.style.display = "none";
+    disableEl.style.display = "block";
+  } else {
+    statusEl.className = "twofa-status disabled";
+    statusEl.innerHTML = `
+      <h3>❌ Two-Factor Authentication is OFF</h3>
+      <p>Choose either Google Authenticator or SMS verification.</p>
+    `;
+    setupEl.style.display = "block";
+    disableEl.style.display = "none";
+  }
+}
+
+// ===============================
+// HANDLE METHOD CHANGE
+// ===============================
+function handleMethodChange() {
+  const method = document.getElementById("twoFaMethod").value;
+  selectedMethod = method;
+
+  document.getElementById("smsSection").style.display = method === "sms" ? "block" : "none";
+  document.getElementById("appSection").style.display = method === "app" ? "block" : "none";
+
+  if (method === "app") {
+    setup2FA("app");
+  }
+}
+
+// ===============================
+// SAVE SETTINGS
+// ===============================
+async function saveSettings() {
+  const token = getToken();
+  if (!token) {
+    redirectToLogin();
+    return;
+  }
+
+  const schoolName = document.getElementById("schoolName").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const currentPassword = document.getElementById("currentPassword").value.trim();
+  const newPassword = document.getElementById("newPassword").value.trim();
+  const confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+  // Validate password fields
+  if (currentPassword || newPassword || confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showMessage("settingsMessage", "❌ Fill all password fields.", "error");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showMessage("settingsMessage", "❌ Passwords do not match.", "error");
+      return;
     }
   }
 
-  Widget twoFactorCard() {
-    final bgColor =
-        twoFactorEnabled ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2);
-    final borderColor =
-        twoFactorEnabled ? const Color(0xFF22C55E) : const Color(0xFFEF4444);
-    final textColor =
-        twoFactorEnabled ? const Color(0xFF166534) : const Color(0xFF991B1B);
+  showLoading(true);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            twoFactorEnabled
-                ? '✅ Two-Factor Authentication is ON'
-                : '❌ Two-Factor Authentication is OFF',
-            style: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.w900,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Choose either Google Authenticator or SMS verification.',
-            style: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.w700,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 18),
+  try {
+    const body = {
+      school_name: schoolName,
+      email: email.toLowerCase(),
+      phone_number: phone
+    };
 
-          if (!twoFactorEnabled) ...[
-            DropdownButtonFormField<String>(
-              value: selected2faMethod.isEmpty ? null : selected2faMethod,
-              decoration: inputDecoration('Choose 2FA Method'),
-              items: const [
-                DropdownMenuItem(
-                  value: 'app',
-                  child: Text('Google Authenticator App'),
-                ),
-                DropdownMenuItem(
-                  value: 'sms',
-                  child: Text('SMS Code'),
-                ),
-              ],
-              onChanged: (value) {
-                if (value == null) return;
+    if (newPassword) {
+      body.current_password = currentPassword;
+      body.new_password = newPassword;
+    }
 
-                setState(() {
-                  selected2faMethod = value;
-                  qrCode = '';
-                  secretCode = '';
-                  twoFaMessage = '';
-                });
+    const res = await authFetch(`${API_BASE}/api/admin/settings/school-info`, {
+      method: "PUT",
+      body: JSON.stringify(body)
+    });
 
-                if (value == 'app') {
-                  setup2FA('app');
-                }
-              },
-            ),
+    if (!res) return;
 
-            if (selected2faMethod == 'sms') ...[
-              const SizedBox(height: 12),
-              TextField(
-                controller: twoFaPhoneController,
-                keyboardType: TextInputType.phone,
-                decoration: inputDecoration('Phone Number for SMS'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: is2faBusy ? null : () => setup2FA('sms'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF16A34A),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                child: const Text(
-                  '📤 Send SMS Code',
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
-            ],
+    const data = await res.json();
 
-            if (selected2faMethod == 'app') ...[
-              const SizedBox(height: 14),
-              qrCodeWidget(),
-            ],
-
-            if (selected2faMethod == 'app' && secretCode.isNotEmpty) ...[
-              const SizedBox(height: 14),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: SelectableText(
-                  'Manual Secret:\n$secretCode',
-                  style: const TextStyle(
-                    color: Color(0xFF0F172A),
-                    fontWeight: FontWeight.w800,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 12),
-            TextField(
-              controller: twoFaCodeController,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              textAlign: TextAlign.center,
-              decoration: inputDecoration('Enter 6-Digit Code'),
-            ),
-
-            ElevatedButton(
-              onPressed: is2faBusy ? null : enable2FA,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7C3AED),
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 52),
-              ),
-              child: const Text(
-                '🔐 Enable 2FA',
-                style: TextStyle(fontWeight: FontWeight.w900),
-              ),
-            ),
-          ],
-
-          if (twoFactorEnabled) ...[
-            passwordField(
-              controller: disablePasswordController,
-              label: 'Enter Password to Disable 2FA',
-              visible: showDisablePassword,
-              onToggle: () {
-                setState(() => showDisablePassword = !showDisablePassword);
-              },
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: is2faBusy ? null : disable2FA,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDC2626),
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 52),
-              ),
-              child: const Text(
-                'Disable 2FA',
-                style: TextStyle(fontWeight: FontWeight.w900),
-              ),
-            ),
-          ],
-
-          if (twoFaMessage.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              twoFaMessage,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: FontWeight.w800,
-                height: 1.4,
-              ),
-            ),
-          ],
-
-          if (is2faBusy) ...[
-            const SizedBox(height: 14),
-            const Center(child: CircularProgressIndicator()),
-          ],
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0F172A),
-        foregroundColor: Colors.white,
-        title: const Text('School Settings'),
-      ),
-      body: Stack(
-        children: [
-          if (isLoading)
-            const Center(child: CircularProgressIndicator())
-          else
-            ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(22),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF020617), Color(0xFF7C3AED)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '⚙️ School Settings',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 23,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Update school information, password, and account security.',
-                        style: TextStyle(
-                          color: Color(0xFFDBEAFE),
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                TextField(
-                  controller: schoolNameController,
-                  decoration: inputDecoration('School Name'),
-                ),
-                const SizedBox(height: 12),
-
-                TextField(
-                  controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: inputDecoration('School Email'),
-                ),
-                const SizedBox(height: 12),
-
-                TextField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: inputDecoration('Phone Number'),
-                ),
-
-                const SizedBox(height: 22),
-                const Text(
-                  'Change Password',
-                  style: TextStyle(
-                    color: Color(0xFF0F172A),
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                passwordField(
-                  controller: currentPasswordController,
-                  label: 'Current Password',
-                  visible: showCurrentPassword,
-                  onToggle: () {
-                    setState(() => showCurrentPassword = !showCurrentPassword);
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                passwordField(
-                  controller: newPasswordController,
-                  label: 'New Password',
-                  visible: showNewPassword,
-                  onToggle: () {
-                    setState(() => showNewPassword = !showNewPassword);
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                passwordField(
-                  controller: confirmPasswordController,
-                  label: 'Confirm New Password',
-                  visible: showConfirmPassword,
-                  onToggle: () {
-                    setState(() => showConfirmPassword = !showConfirmPassword);
-                  },
-                ),
-
-                const SizedBox(height: 18),
-                ElevatedButton(
-                  onPressed: isSaving ? null : saveSettings,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 54),
-                  ),
-                  child: Text(
-                    isSaving ? 'Saving...' : '💾 Save Changes',
-                    style: const TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                ),
-
-                const SizedBox(height: 22),
-                twoFactorCard(),
-              ],
-            ),
-
-          if (isSaving)
-            Container(
-              color: Colors.black.withOpacity(0.16),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
-        ],
-      ),
-    );
+    if (data.success) {
+      document.getElementById("currentPassword").value = "";
+      document.getElementById("newPassword").value = "";
+      document.getElementById("confirmPassword").value = "";
+      showMessage("settingsMessage", "✅ Settings updated successfully.", "success");
+      loadSettings();
+    } else {
+      showMessage("settingsMessage", data.message || "❌ Failed to update settings.", "error");
+    }
+  } catch (err) {
+    console.error("Save settings error:", err);
+    showMessage("settingsMessage", "❌ Failed to save settings.", "error");
+  } finally {
+    showLoading(false);
   }
 }
+
+// ===============================
+// SETUP 2FA
+// ===============================
+async function setup2FA(method) {
+  const token = getToken();
+  if (!token) {
+    redirectToLogin();
+    return;
+  }
+
+  selectedMethod = method;
+  showMessage("twoFaMessage", "⏳ Preparing 2FA setup...", "info");
+
+  const body = { method };
+
+  if (method === "sms") {
+    const phone = document.getElementById("twoFaPhone").value.trim();
+    if (!phone) {
+      showMessage("twoFaMessage", "❌ Enter phone number before sending SMS code.", "error");
+      return;
+    }
+    body.phone = phone;
+  }
+
+  showLoading(true);
+
+  try {
+    const res = await authFetch(`${API_BASE}/api/auth/2fa/setup`, {
+      method: "POST",
+      body: JSON.stringify(body)
+    });
+
+    if (!res) return;
+
+    const data = await res.json();
+
+    if (data.success) {
+      const qrCode = data.qr_code || data.qrCode || "";
+      const secretCode = data.secret || "";
+
+      if (method === "app") {
+        if (qrCode) {
+          document.getElementById("qrCodeContainer").innerHTML = `
+            <div class="qr-container">
+              <p>Scan QR Code</p>
+              <img src="${qrCode}" alt="QR Code" />
+            </div>
+          `;
+        }
+        if (secretCode) {
+          document.getElementById("secretCodeContainer").innerHTML = `
+            <div class="secret-code">
+              <strong>Manual Secret:</strong><br>${secretCode}
+            </div>
+          `;
+        }
+      }
+
+      showMessage("twoFaMessage", 
+        method === "sms" 
+          ? "✅ SMS code sent. Enter the 6-digit code below." 
+          : "✅ Scan the QR code with Google Authenticator, then enter the 6-digit code.",
+        "success"
+      );
+    } else {
+      showMessage("twoFaMessage", data.message || "❌ Unable to start 2FA setup.", "error");
+    }
+  } catch (err) {
+    console.error("Setup 2FA error:", err);
+    showMessage("twoFaMessage", "❌ Failed to setup 2FA.", "error");
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ===============================
+// ENABLE 2FA
+// ===============================
+async function enable2FA() {
+  const token = getToken();
+  if (!token) {
+    redirectToLogin();
+    return;
+  }
+
+  const code = document.getElementById("twoFaCode").value.trim();
+
+  if (!selectedMethod) {
+    showMessage("twoFaMessage", "❌ Choose Google Authenticator or SMS first.", "error");
+    return;
+  }
+
+  if (code.length !== 6) {
+    showMessage("twoFaMessage", "❌ Enter a valid 6-digit code.", "error");
+    return;
+  }
+
+  showLoading(true);
+
+  try {
+    const body = {
+      method: selectedMethod,
+      code: code
+    };
+
+    if (selectedMethod === "sms") {
+      body.phone = document.getElementById("twoFaPhone").value.trim();
+    }
+
+    const res = await authFetch(`${API_BASE}/api/auth/2fa/verify`, {
+      method: "POST",
+      body: JSON.stringify(body)
+    });
+
+    if (!res) return;
+
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById("twoFaCode").value = "";
+      twoFactorEnabled = true;
+      updateTwoFaUI();
+      alert("✅ 2FA enabled successfully.");
+      loadSettings();
+    } else {
+      showMessage("twoFaMessage", data.message || "❌ Invalid 2FA code.", "error");
+    }
+  } catch (err) {
+    console.error("Enable 2FA error:", err);
+    showMessage("twoFaMessage", "❌ Failed to enable 2FA.", "error");
+  } finally {
+    showLoading(false);
+  }
+}
+
+
+
+// ===============================
+// SHOW DISABLE PASSWORD DIALOG
+// ===============================
+function showDisableDialog() {
+  document.getElementById("disablePasswordDialog").style.display = "flex";
+  document.getElementById("disablePassword").value = "";
+  document.getElementById("dialogMessage").textContent = "";
+}
+
+// ===============================
+// CLOSE DISABLE PASSWORD DIALOG
+// ===============================
+function closeDisableDialog() {
+  document.getElementById("disablePasswordDialog").style.display = "none";
+}
+
+// ===============================
+// DISABLE 2FA (UPDATED)
+// ===============================
+async function confirmDisable2FA() {
+  const token = getToken();
+  if (!token) {
+    redirectToLogin();
+    return;
+  }
+
+  const password = document.getElementById("disablePassword").value.trim();
+
+  if (!password) {
+    showMessage("dialogMessage", "❌ Enter your password to disable 2FA.", "error");
+    return;
+  }
+
+  showLoading(true);
+
+  try {
+    const res = await authFetch(`${API_BASE}/api/auth/2fa/disable`, {
+      method: "POST",
+      body: JSON.stringify({
+        password: password,
+        confirm_disable: true
+      })
+    });
+
+    if (!res) return;
+
+    const data = await res.json();
+
+    if (data.success) {
+      closeDisableDialog();
+      twoFactorEnabled = false;
+      selectedMethod = "";
+      updateTwoFaUI();
+      alert("✅ 2FA disabled.");
+      loadSettings();
+    } else {
+      showMessage("dialogMessage", data.message || "❌ Unable to disable 2FA.", "error");
+    }
+  } catch (err) {
+    console.error("Disable 2FA error:", err);
+    showMessage("dialogMessage", "❌ Failed to disable 2FA.", "error");
+  } finally {
+    showLoading(false);
+  }
+}
+
+
+
+
+// ===============================
+// DISABLE 2FA
+// ===============================
+async function disable2FA() {
+  const token = getToken();
+  if (!token) {
+    redirectToLogin();
+    return;
+  }
+
+  const password = document.getElementById("disablePassword").value.trim();
+
+  if (!password) {
+    showMessage("disableMessage", "❌ Enter your password to disable 2FA.", "error");
+    return;
+  }
+
+  showLoading(true);
+
+  try {
+    const res = await authFetch(`${API_BASE}/api/auth/2fa/disable`, {
+      method: "POST",
+      body: JSON.stringify({
+        password: password,
+        confirm_disable: true
+      })
+    });
+
+    if (!res) return;
+
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById("disablePassword").value = "";
+      twoFactorEnabled = false;
+      selectedMethod = "";
+      updateTwoFaUI();
+      alert("✅ 2FA disabled.");
+      loadSettings();
+    } else {
+      showMessage("disableMessage", data.message || "❌ Unable to disable 2FA.", "error");
+    }
+  } catch (err) {
+    console.error("Disable 2FA error:", err);
+    showMessage("disableMessage", "❌ Failed to disable 2FA.", "error");
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ===============================
+// PAGE LOAD
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  if (!getToken()) {
+    redirectToLogin();
+    return;
+  }
+
+  loadSettings();
+});
+</script>
+
+<script src="js/kaima-chatbot.js"></script>
+
+<script>
+  document.querySelectorAll(".currentYear").forEach(el => {
+    el.textContent = new Date().getFullYear();
+  });
+</script>
+
+</body>
+</html>
