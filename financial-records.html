@@ -545,12 +545,28 @@
       <h1> 💰 Financial Records</h1>
       <a href="dashboard.html" id="backToDashboard" class="back-btn">&larr; Back to Dashboard</a>
     </div>
+    
+
     <section class="summary-grid">
-      <div class="glass summary-card"><h3>Total Income</h3><div class="value text-green" id="totalIncome">&#8358;0.00</div></div>
-      <div class="glass summary-card"><h3>Total Expenses</h3><div class="value text-red" id="totalExpenses">&#8358;0.00</div></div>
-      <div class="glass summary-card"><h3>Net Balance</h3><div class="value text-blue" id="netBalance">&#8358;0.00</div></div>
-      <div class="glass summary-card"><h3>Outstanding Fees</h3><div class="value text-yellow" id="totalOutstanding">&#8358;0.00</div></div>
-    </section>
+  <div class="glass summary-card">
+    <h3>Total Paid</h3>
+    <div class="value text-green" id="totalIncome">&#8358;0.00</div>
+  </div>
+  <div class="glass summary-card">
+    <h3>Total Expenses</h3>
+    <div class="value text-red" id="totalExpenses">&#8358;0.00</div>
+  </div>
+  <div class="glass summary-card">
+    <h3>Net Balance</h3>
+    <div class="value text-blue" id="netBalance">&#8358;0.00</div>
+  </div>
+  <div class="glass summary-card">
+    <h3>Outstanding</h3>
+    <div class="value text-yellow" id="totalOutstanding">&#8358;0.00</div>
+  </div>
+</section>
+
+
     <div class="actions-bar">
       <button type="button" id="openPaymentButton" class="btn-primary">Record Payment</button>
       <button type="button" id="openExpenseButton" class="btn-primary danger">Record Expense</button>
@@ -565,7 +581,7 @@
       <div class="glass chart-card"><h3>Income vs Expenses</h3><canvas id="incomeExpenseChart"></canvas></div>
       <div class="glass chart-card"><h3>Outstanding by Class</h3><canvas id="outstandingChart"></canvas></div>
     </section>
-    <section class="glass table-container">
+        <section class="glass table-container">
       <h3 style="margin-bottom:20px">Student Payment Status</h3>
       <div class="search-row">
         <input type="search" id="searchInput" class="glass-input" placeholder="Search by Student ID or Name">
@@ -573,7 +589,7 @@
       </div>
       <table>
         <thead>
-          <tr><th>Student ID</th><th>Name</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Outstanding</th></tr>
+          <tr><th>Student ID</th><th>Name</th><th>Class</th><th>Assigned Fees</th><th>Paid</th><th>Outstanding</th></tr>
         </thead>
         <tbody id="studentsTableBody"></tbody>
       </table>
@@ -763,19 +779,23 @@ async function loadDashboard() {
   ]);
 }
 
+
+
 async function loadSummary() {
   const data = await readJson(await authFetch(`${API_BASE}/api/financial/summary`));
   if (!data?.success) return;
 
   const summary = data.data || {};
 
-  document.getElementById("totalIncome").textContent = formatCurrency(summary.totalIncome);
-  document.getElementById("totalExpenses").textContent = formatCurrency(summary.totalExpenses);
-  document.getElementById("netBalance").textContent = formatCurrency(summary.netBalance);
-  document.getElementById("totalOutstanding").textContent = formatCurrency(summary.totalOutstanding);
+  document.getElementById("totalIncome").textContent = formatCurrency(summary.totalIncome || 0);
+  document.getElementById("totalExpenses").textContent = formatCurrency(summary.totalExpenses || 0);
+  document.getElementById("netBalance").textContent = formatCurrency(summary.netBalance || 0);
+  document.getElementById("totalOutstanding").textContent = formatCurrency(summary.totalOutstanding || 0);
 
   renderIncomeExpenseChart(summary);
 }
+
+
 
 async function loadStudents(search = "") {
   const query = search ? `?search=${encodeURIComponent(search)}` : "";
@@ -802,9 +822,9 @@ function renderTable(students) {
   }
 
   body.innerHTML = students.map(student => {
+    const totalFee = Number(student.total_fee) || 0;
     const paid = Number(student.amount_paid) || 0;
     const outstanding = Number(student.outstanding_balance) || 0;
-    const totalFee = Number(student.total_fee) || paid + outstanding;
 
     return `
       <tr onclick="openStudentTransactions('${escapeHtml(student.student_id)}', '${escapeHtml(student.student_name)}')" style="cursor:pointer">
