@@ -482,7 +482,7 @@
 
           <div class="form-group">
             <label for="assignTuition">Tuition Amount (&#8358;)</label>
-            <input type="number" id="assignTuition" class="glass-input" placeholder="e.g. 50000" required min="0" step="0.01">
+            <input type="number" id="assignTuition" class="glass-input" placeholder="e.g. 50000" required min="1" step="0.01">
           </div>
 
           <div class="form-group">
@@ -511,7 +511,7 @@
 
           <div class="form-group">
             <label for="assignClassTuition">Tuition Amount (&#8358;)</label>
-            <input type="number" id="assignClassTuition" class="glass-input" placeholder="e.g. 50000" min="0" step="0.01">
+            <input type="number" id="assignClassTuition" class="glass-input" placeholder="e.g. 50000" min="1" step="0.01">
           </div>
 
           <div class="form-group">
@@ -1241,8 +1241,9 @@ async function openStudentTransactions(studentId, studentName) {
       <h2>${escapeHtml(studentName || studentId)}</h2>
       <p class="modal-description">Payment and assigned-fee transaction history.</p>
 
-      <div style="max-height:360px;overflow-y:auto;overflow-x:auto;padding-right:6px">
-        <table>
+      <div style="max-height:285px;overflow-y:auto;overflow-x:hidden;padding-right:6px">
+  <table style="width:100%;min-width:0;table-layout:fixed">
+      <table>
           <thead>
             <tr>
               <th>Type</th>
