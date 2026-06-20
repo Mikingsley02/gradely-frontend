@@ -1230,21 +1230,21 @@ async function openStudentTransactions(studentId, studentName) {
   const wrapper = document.createElement("div");
   wrapper.className = "overlay";
   wrapper.innerHTML = `
-    <div class="glass form-modal" style="max-width:760px">
+    <div class="glass form-modal" style="max-width:920px">
       <h2>${escapeHtml(studentName || studentId)}</h2>
       <p class="modal-description">Payment and assigned-fee transaction history.</p>
 
       <div style="max-height:285px;overflow-y:auto;overflow-x:hidden;padding-right:6px">
-  <table style="width:100%;min-width:0;table-layout:fixed">
+  <table style="width:100%;min-width:760px;table-layout:fixed">
       <table>
           <thead>
-            <tr>
-              <th>Type</th>
-              <th>Details</th>
-              <th>Amount</th>
-              <th>Date</th>
-            </tr>
-          </thead>
+  <tr>
+    <th style="width:28%">TYPE</th>
+    <th style="width:28%">DETAILS</th>
+    <th style="width:24%">AMOUNT</th>
+    <th style="width:20%">DATE</th>
+  </tr>
+</thead>
           <tbody>
             ${feeRows || ""}
             ${paymentRows || ""}
