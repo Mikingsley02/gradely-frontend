@@ -421,7 +421,7 @@
   <section class="hero">
     <h1 id="welcomeText">Welcome, Parent</h1>
     <p>
-      View your child's academic updates, school notices, attendance, assignments, tests, and performance records from one secure dashboard.
+      View your child's academic updates, school announcements, attendance, assignments, tests, and performance records from one secure dashboard.
     </p>
 
     <div class="student-box">
@@ -984,7 +984,7 @@ async function loadSchoolNotices() {
   const token = getStudentToken();
   const box = document.getElementById('noticesList');
 
-  box.innerHTML = '<div style="text-align:center; padding:60px 20px; color:#dbeafe; font-weight:800;">Loading notices...</div>';
+  box.innerHTML = '<div style="text-align:center; padding:60px 20px; color:#dbeafe; font-weight:800;">Loading announcements...</div>';
 
   try {
     const res = await fetch(`${backendUrl}/api/announcement/parent/${studentId}`, {
@@ -999,7 +999,7 @@ async function loadSchoolNotices() {
       box.innerHTML = `
         <div class="empty-state">
           <div style="font-size:3rem; margin-bottom:12px;">📭</div>
-          <h3>No school notices yet</h3>
+          <h3>No school announcements yet</h3>
           <p style="color:#94a3b8; margin-top:8px;">Check back later for announcements from your school.</p>
         </div>
       `;
@@ -1010,7 +1010,7 @@ async function loadSchoolNotices() {
       const date = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
       return `
         <div class="notice-card">
-          <h3>${item.title || "School Notice"}</h3>
+          <h3>${item.title || "School Announcements"}</h3>
           <div class="notice-date">${date}</div>
           <div class="notice-message">${item.message || ""}</div>
         </div>
@@ -1039,7 +1039,7 @@ async function loadSchoolNotices() {
     box.innerHTML = `
       <div class="empty-state" style="color:#ef4444;">
         <div style="font-size:3rem; margin-bottom:12px;">⚠️</div>
-        <h3>Unable to load notices</h3>
+        <h3>Unable to load announcements</h3>
         <p style="color:#94a3b8; margin-top:8px;">Please try again later.</p>
       </div>
     `;
