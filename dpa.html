@@ -236,7 +236,7 @@
         <span id="lastUpdated">Last Updated: February 26, 2026</span>
         <span id="policyVersion" style="margin-left: 15px;"></span>
       </p>
-      <span class="compliance-badge">✅ NDPR 2019 Compliant</span>
+      <span class="compliance-badge">✅ NDP Act 2023 & NDPC GAID 2025 Compliant</span>
     </header>
 
     <div class="content">
@@ -251,8 +251,8 @@
         <p><strong>Effective Date:</strong> <span id="effectiveDate">February 26, 2026</span></p>
         
         <div class="section-box">
-          <strong>🇳🇬 Nigeria Data Protection Regulation (NDPR) 2019 Compliant</strong><br>
-          This Agreement satisfies Article 2.3 of the NDPR requiring written agreements between Data Controllers and Data Processors.
+          <strong>🇳🇬 Nigeria Data Protection Commission (NDPC) / NDP Act 2023 Compliant</strong><br>
+          This Agreement is aligned with the Nigeria Data Protection Act (NDP Act) 2023 and Article 34 of the Nigeria Data Protection Commission (NDPC) General Application and Implementation Directive (GAID) 2025 on Data Processing Agreements.
         </div>
 
         <h2>1. Parties</h2>
@@ -273,11 +273,11 @@
         <h2>3. School Responsibilities (Data Controller)</h2>
         <p>The School agrees to:</p>
         <ul>
-          <li>Obtain lawful basis for collecting student and parent data under NDPR 2019 (consent, contract, legal obligation, or legitimate interest)</li>
+          <li>Obtain lawful basis for collecting student and parent data under NDP Act 2023 (consent, contract, legal obligation, or legitimate interest)</li>
           <li>Ensure data accuracy and update records when information changes</li>
           <li>Respond to data subject requests (access, correction, deletion) within required timelines</li>
           <li>Notify Gradely within 24 hours of becoming aware of any personal data breach</li>
-          <li>Comply with all applicable Nigerian data protection laws, including the NDPR 2019 and Cybercrimes Act 2015</li>
+          <li>Comply with all applicable Nigerian data protection laws, including the NDP Act 2023 and Cybercrimes Act 2015</li>
           <li>Obtain necessary consents from parents/guardians before uploading student data to the platform</li>
         </ul>
 
@@ -290,7 +290,7 @@
           <li>Assist the School in responding to data subject requests and regulatory inquiries</li>
           <li>Notify the School without undue delay upon becoming aware of a personal data breach</li>
           <li>Delete or return all personal data upon termination of services, unless retention is required by Nigerian law</li>
-          <li>Maintain records of processing activities as required by NDPR Article 2.6</li>
+          <li>Maintain appropriate records of processing activities and compliance documentation as required under the NDP Act 2023 and the NDPC GAID 2025</li>
         </ul>
 
         <h2>5. Sub-Processors</h2>
@@ -318,7 +318,7 @@
         <ol>
           <li>Gradely will notify the School within <strong>24 hours</strong> of becoming aware of the breach</li>
           <li>Notification will include: nature of breach, categories of data affected, likely consequences, measures taken</li>
-          <li>Gradely will assist the School in notifying the Nigeria Data Protection Bureau (NDPB) within 72 hours if required</li>
+          <li>Gradely will assist the School in notifying the Nigeria Data Protection Commission (NDPC) within 72 hours if required</li>
           <li>Gradely will assist the School in notifying affected data subjects where the breach poses high risk to their rights</li>
         </ol>
 
@@ -330,14 +330,15 @@
         <h2>9. International Data Transfers</h2>
         <p>Gradely's infrastructure may process data outside Nigeria. Where transfers occur:</p>
         <ul>
-          <li>Transfers comply with NDPR Article 2.12 requirements for adequate safeguards</li>
+          <li>Transfers comply with Part VIII Section 41 of the NDP Act 2023 requirements for adequate safeguards</li>
           <li>Standard Contractual Clauses or equivalent protections are in place with sub-processors</li>
+          <li>The recipients  not in Nigeria or in other jurisdiction are subject to the law and such transfers must be in compliance with the NDP Act 2023 and other applicable guidelines or directives issued by the NDPC</li>
           <li>The School consents to such transfers by using the Gradely services</li>
         </ul>
 
         <h2>10. Audit & Compliance</h2>
         <p><strong>School Audit Rights:</strong> The School may request a compliance report annually. On-site audits require 30 days' notice and are subject to Gradely's security policies.</p>
-        <p><strong>Regulatory Cooperation:</strong> Both parties agree to cooperate with the Nigeria Data Protection Bureau (NDPB) and other relevant authorities in investigations or compliance reviews.</p>
+        <p><strong>Regulatory Cooperation:</strong> Both parties agree to cooperate with the Nigeria Data Protection Commission (NDPC) and other relevant authorities in investigations or compliance reviews.</p>
 
         <h2>11. Liability & Indemnification</h2>
         <p><strong>Gradely Liability:</strong> Gradely's total liability under this Agreement shall not exceed the fees paid by the School in the 12 months preceding the claim, except for breaches of confidentiality or data protection obligations.</p>
@@ -356,13 +357,13 @@
         </div>
 
         <div class="tip-box">
-          <strong>🔄 Policy Updates:</strong> Gradely may update this Agreement to reflect legal or operational changes. Schools will be notified of material changes via email and dashboard notice. Continued use of services constitutes acceptance of updated terms.
+          <strong>🔄 Policy Updates:</strong> Gradely may update this Agreement to reflect legal or operational changes. Schools will be notified of material changes via email or dashboard notice. Continued use of services constitutes acceptance of updated terms.
         </div>
 
         <!-- ✅ Compliance Note -->
         <div class="compliance-note">
           <strong>Legal Compliance:</strong> This Agreement complies with Nigeria's 
-          <a href="https://nitda.gov.ng/ngdata-protection-regulation/" target="_blank">NDPR 2019</a>, 
+          <a href="https://nitda.gov.ng/ngdata-protection-regulation/" target="_blank">NDP Act 2023</a>, 
           <a href="https://nigcybercrime.gov.ng/" target="_blank">Cybercrimes Act 2015</a>, 
           and applicable data protection laws.
         </div>
@@ -426,7 +427,15 @@ if (data.data.content) {
     .replace(/&quot;/g, '"')
     .replace(/&#039;/g, "'");
 
-  policyContent.innerHTML = decodedContent;
+  const cleanedContent = decodedContent
+    .replace(/NDPR 2019 Compliant/g, "NDP Act 2023 & NDPC GAID 2025 Compliant")
+    .replace(/Nigeria Data Protection Regulation \(NDPR\) 2019/g, "Nigeria Data Protection Act (NDP Act) 2023")
+    .replace(/NDPR/g, "NDP Act")
+    .replace(/Nigeria Data Protection Bureau \(NDPB\)/g, "Nigeria Data Protection Commission (NDPC)")
+    .replace(/NDPB/g, "NDPC")
+    .replace(/NDPA 2023/g, "NDP Act 2023");
+
+  policyContent.innerHTML = cleanedContent;
 
   const fallback = document.getElementById("fallbackContent");
   if (fallback) {
