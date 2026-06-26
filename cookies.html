@@ -315,7 +315,7 @@
       <p style="margin-top: 10px; opacity: 0.95;">How we use cookies on Gradely.info</p>
       <!-- ✅ Dynamic version info (populated by API) -->
       <p id="policyMeta" class="version-info">
-        <span id="lastUpdated">Last Updated: February 26, 2026</span>
+        <span id="lastUpdated">Last Updated: June 26, 2026</span>
         <span id="policyVersion" style="margin-left: 15px;"></span>
       </p>
     </header>
@@ -331,37 +331,69 @@
         <div class="policy-section">
           <div class="policy-title">What are cookies?</div>
           <div class="policy-text">
-            Cookies are small text files stored on your device when you visit a website. They help websites remember your preferences and provide a better browsing experience.
+            Cookies are small text files stored on your device when you visit a website or use an online service. They help Gradely.info remember your preferences, keep your session secure, improve performance, and understand how the platform is used.
           </div>
         </div>
 
         <div class="policy-section">
           <div class="policy-title">Types of cookies we use</div>
           <div class="policy-text">
-            <strong>Essential Cookies:</strong> Required for secure login, system functionality, and maintaining sessions.<br><br>
-            <strong>Analytics Cookies:</strong> Help us understand user interactions and improve our services.<br><br>
-            <strong>Optional/Marketing Cookies:</strong> Enhance your experience, display personalized content, and provide relevant updates.
+            <strong>Essential Cookies:</strong> These are required for secure login, authentication, fraud prevention, account protection, system functionality, and maintaining school, parent, and admin sessions. These cookies are necessary for Gradely.info to work properly and cannot be switched off through our cookie banner.<br><br>
+
+            <strong>Analytics Cookies:</strong> These help us understand how users interact with Gradely.info, identify technical issues, improve page performance, and enhance the user experience. Where required by law, analytics cookies are used only with your consent.<br><br>
+
+            <strong>Preference Cookies:</strong> These help us remember choices you make, such as cookie preferences, page settings, and other non-sensitive display preferences.<br><br>
+
+            <strong>Optional or Marketing Cookies:</strong> These may be used to provide relevant updates, measure communication effectiveness, or improve user engagement. These cookies are not essential and will only be used where you have given consent, where consent is required.
           </div>
         </div>
 
         <div class="policy-section">
           <div class="policy-title">How we use cookies</div>
           <div class="policy-text">
-            We use cookies to ensure you have a smooth experience while navigating Gradely.info. They help us maintain login sessions, improve website functionality, and provide insights into how our services are used.
+            Gradely.info uses cookies and similar technologies to protect user accounts, maintain secure sessions, remember cookie choices, support core platform features, improve service performance, and understand how users navigate our website. We do not use cookies to sell personal data.
+          </div>
+        </div>
+
+        <div class="policy-section">
+          <div class="policy-title">Lawful basis for cookie processing</div>
+          <div class="policy-text">
+            Essential cookies are processed because they are necessary to provide a secure and functional platform. Analytics, preference, optional, and marketing cookies are processed based on consent where required under the <strong>Nigeria Data Protection Act (NDP Act) 2023</strong>, the <strong>General Application and Implementation Directive (GAID) 2025</strong>, and applicable guidance issued by the <strong>Nigeria Data Protection Commission (NDPC)</strong>.
           </div>
         </div>
 
         <div class="policy-section">
           <div class="policy-title">Your choices</div>
           <div class="policy-text">
-            You can choose to accept all cookies or reject non-essential cookies via the cookie banner. Essential cookies will always be active as they are necessary for the service to work.
+            You may accept all cookies or reject non-essential cookies through the cookie banner where available. Essential cookies will remain active because they are required for login, security, and the proper operation of Gradely.info. You may withdraw or change your consent at any time by adjusting your cookie preferences or browser settings.
           </div>
         </div>
 
         <div class="policy-section">
           <div class="policy-title">Managing cookies</div>
           <div class="policy-text">
-            You can manage your cookie preferences through your browser settings or revisit the cookie consent banner whenever you wish to change your choices.
+            You can manage cookies through your browser settings by deleting cookies, blocking cookies, or setting alerts when cookies are being used. You may also revisit the cookie consent banner, where available, to update your preferences. Please note that disabling essential cookies may affect login, security, and core platform functionality.
+          </div>
+        </div>
+
+        <div class="policy-section">
+          <div class="policy-title">Third-party cookies and service providers</div>
+          <div class="policy-text">
+            Some trusted third-party services may use cookies or similar technologies when supporting Gradely.info, including hosting, payment processing, email delivery, SMS delivery, analytics, and security-related services. These service providers are expected to apply appropriate technical and organisational safeguards consistent with applicable Nigerian data protection requirements.
+          </div>
+        </div>
+
+        <div class="policy-section">
+          <div class="policy-title">Cookies and personal data</div>
+          <div class="policy-text">
+            Some cookies may collect or relate to personal data, such as IP addresses, device information, login activity, session identifiers, or usage logs. Where cookies involve personal data, Gradely.info handles that information in line with our <a href="privacy.html">Privacy Policy</a>, <a href="terms.html">Terms of Service</a>, and applicable Nigerian data protection laws.
+          </div>
+        </div>
+
+        <div class="policy-section">
+          <div class="policy-title">Changes to this Cookie Policy</div>
+          <div class="policy-text">
+            We may update this Cookie Policy from time to time to reflect changes in our technology, legal obligations, platform features, or regulatory guidance. Where changes are material, we may notify users through the website, dashboard, or other appropriate channels.
           </div>
         </div>
 
@@ -369,13 +401,13 @@
         <div class="nigeria-compliance">
           <strong>🇳🇬 Nigeria Data Protection Compliance</strong><br>
           <span style="font-size: 0.95rem;">
-            This policy complies with the Nigeria Data Protection Regulation (NDPR) 2019 and the Nigeria Data Protection Act (NDPA) 2023.
+            This Cookie Policy is designed to comply with the <strong>Nigeria Data Protection Act (NDP Act) 2023</strong>, the <strong>General Application and Implementation Directive (GAID) 2025</strong> issued by the <strong>Nigeria Data Protection Commission (NDPC)</strong>, and other applicable Nigerian privacy and cybersecurity laws.
           </span>
         </div>
 
         <!-- ✅ Compliance Note -->
         <div class="compliance-note">
-          <strong>Need More Information?</strong> If you have questions about our cookie practices, please contact our support team.
+          <strong>Questions about Cookies or Privacy?</strong> If you have questions about our cookie practices, consent, or your rights under the Nigeria Data Protection Act (NDP Act) 2023, please contact us at <a href="mailto:support@gradely.info">support@gradely.info</a>.
         </div>
 
         <!-- ✅ Smart back button (ID for JS control) -->
@@ -424,7 +456,14 @@
         throw new Error("No live cookie policy content");
       }
 
-      policyContent.innerHTML = data.data.content;
+      const decodedContent = (data.data.content || "")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#039;/g, "'");
+
+      policyContent.innerHTML = decodedContent;
 
       if (fallbackContent) {
         fallbackContent.style.display = "none";
