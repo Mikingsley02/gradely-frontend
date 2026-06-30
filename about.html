@@ -323,6 +323,160 @@ body{
   font-size:1.3rem;
 }
 
+
+/* =========================
+   HOW IT WORKS
+========================= */
+
+.how-it-works-wrap{
+  background:white;
+  border-radius:36px;
+  padding:42px;
+  box-shadow:var(--shadow);
+  border:1px solid #eef2ff;
+}
+
+.how-copy{
+  max-width:980px;
+  margin:auto;
+}
+
+.how-copy h3{
+  color:var(--dark);
+  font-size:1.7rem;
+  margin-bottom:14px;
+}
+
+.how-copy p{
+  margin-bottom:16px;
+}
+
+.steps-list{
+  counter-reset:step;
+  list-style:none;
+  display:grid;
+  gap:18px;
+  margin:28px 0;
+}
+
+.steps-list li{
+  position:relative;
+  background:linear-gradient(135deg,#fff,#f4f7ff);
+  border:1px solid #eef2ff;
+  border-radius:22px;
+  padding:22px 22px 22px 76px;
+  color:var(--text);
+}
+
+.steps-list li::before{
+  counter-increment:step;
+  content:counter(step);
+  position:absolute;
+  left:22px;
+  top:22px;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#6c3cff,#7c4dff);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+}
+
+.benefits-list{
+  list-style:none;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:14px;
+  margin:20px 0 28px;
+}
+
+.benefits-list li{
+  background:#f8fafc;
+  border:1px solid #eef2ff;
+  border-radius:16px;
+  padding:14px 16px;
+  color:var(--dark);
+  font-weight:600;
+}
+
+.audience-boxes{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:18px;
+  margin:28px 0;
+}
+
+.audience-box{
+  background:#f8fafc;
+  border:1px solid #eef2ff;
+  border-radius:22px;
+  padding:22px;
+}
+
+.audience-box strong{
+  color:var(--primary-dark);
+}
+
+.video-box{
+  margin-top:34px;
+  background:linear-gradient(135deg,#12053a,#3c1f94);
+  border-radius:30px;
+  padding:18px;
+  box-shadow:0 20px 45px rgba(91,61,245,.22);
+}
+
+.video-box video{
+  width:100%;
+  display:block;
+  border-radius:22px;
+  background:#000;
+}
+
+.video-note{
+  color:white;
+  text-align:center;
+  margin-top:14px;
+  font-weight:600;
+}
+
+@media(max-width:768px){
+  .how-it-works-wrap{
+    padding:28px;
+    border-radius:28px;
+  }
+
+  .steps-list li{
+    padding:20px 18px 20px 68px;
+  }
+
+  .steps-list li::before{
+    left:18px;
+    top:20px;
+  }
+}
+
+@media(max-width:480px){
+  .how-it-works-wrap{
+    padding:22px;
+  }
+
+  .how-copy h3{
+    font-size:1.35rem;
+  }
+
+  .video-box{
+    border-radius:22px;
+    padding:12px;
+  }
+
+  .video-box video{
+    border-radius:16px;
+  }
+}
+
 /* =========================
    CEO SECTION
 ========================= */
@@ -723,6 +877,107 @@ footer{
   </div>
 
 </section>
+
+
+<!-- HOW IT WORKS -->
+<section class="container" id="how-it-works">
+
+  <div class="section-title">
+    <span>HOW IT WORKS</span>
+    <h2>Step-by-Step Guide</h2>
+    <p>
+      See how gradely.info helps schools automate administration,
+      share results instantly, and keep parents informed.
+    </p>
+  </div>
+
+  <div class="how-it-works-wrap">
+
+    <div class="how-copy">
+
+      <h3>Gradely.info — Smart School Management for Nigerian Schools</h3>
+
+      <p>
+        Gradely.info is a complete digital platform that helps Nigerian schools
+        <strong>automate administration</strong>, <strong>share results instantly</strong>,
+        and <strong>communicate seamlessly with parents</strong> — all in one secure place.
+      </p>
+
+      <h3>How it works – Step by step:</h3>
+
+      <ol class="steps-list">
+        <li>
+          <strong>Schools sign up</strong> and activate features like
+          <strong>Financial Records</strong> from the admin dashboard using
+          Google Authenticator for added security.
+        </li>
+
+        <li>
+          <strong>Register students</strong> and provide each parent with a unique
+          <strong>Student ID + password</strong> to access their child’s portal.
+          Parents can change the password later.
+        </li>
+
+        <li>
+          <strong>Assign students to classes</strong>, record attendance, post results,
+          tests, and announcements — all from one dashboard.
+        </li>
+
+        <li>
+          <strong>Parents get real-time alerts</strong> via
+          <strong>in-app notifications, SMS, and email</strong> whenever assignments,
+          results, or school announcements are posted.
+        </li>
+      </ol>
+
+      <h3>Key benefits:</h3>
+
+      <ul class="benefits-list">
+        <li>✅ Instant report cards & automated result sharing</li>
+        <li>✅ Attendance tracking with automatic parent alerts</li>
+        <li>✅ Secure financial records with 2FA activation</li>
+        <li>✅ Bulk student registration & class management</li>
+        <li>✅ School-wide announcements via SMS/email/in-app</li>
+        <li>✅ Affordable monthly plans: Basic ₦83,900 | Pro ₦89,700</li>
+      </ul>
+
+      <div class="audience-boxes">
+
+        <div class="audience-box">
+          <p>
+            <strong>For schools:</strong>
+            Less paperwork, better organization, and stronger parent engagement.
+          </p>
+        </div>
+
+        <div class="audience-box">
+          <p>
+            <strong>For parents:</strong>
+            Always informed — no more waiting for manual reports.
+          </p>
+        </div>
+
+      </div>
+
+     
+
+      <div class="video-box">
+        <video controls preload="metadata">
+          <source src="gradely-how-it-works.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+
+        <p class="video-note">
+          Click play to watch the step-by-step guide.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
 
 <!-- STORY -->
 <section class="container">
