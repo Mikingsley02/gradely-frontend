@@ -218,14 +218,34 @@ button{
     }
 
     @media(max-width:650px){
-      body{padding:18px 10px 0}
-      .container{margin:20px auto 28px;padding:26px 16px;border-radius:24px}
-      .row{grid-template-columns:1fr}
-      .tabs{flex-direction:column}
-      h2{font-size:1.45rem}
-      input,select,textarea,button{font-size:16px}
-      footer{font-size:.74rem}
-    }
+  body{padding:18px 10px 0}
+  .container{margin:20px auto 28px;padding:26px 16px;border-radius:24px}
+  .row{
+    grid-template-columns:1fr;
+    width:100%;
+  }
+  .row > div{
+    min-width:0;
+    width:100%;
+  }
+  input,
+  select,
+  textarea{
+    max-width:100%;
+    min-width:0;
+  }
+  input[type="date"]{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    display:block;
+  }
+  .tabs{flex-direction:column}
+  h2{font-size:1.45rem}
+  input,select,textarea,button{font-size:16px}
+  footer{font-size:.74rem}
+}
+
   </style>
 </head>
 
