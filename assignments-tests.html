@@ -246,6 +246,56 @@ button{
   footer{font-size:.74rem}
 }
 
+
+/* ✅ Mobile overflow fix for date input */
+@media (max-width:650px){
+  body{
+    width:100%;
+    overflow-x:hidden;
+  }
+
+  .container{
+    width:100%;
+    max-width:100%;
+    overflow:hidden;
+  }
+
+  form,
+  .row,
+  .row > div{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+  }
+
+  .row{
+    display:block;
+  }
+
+  .row > div{
+    margin-bottom:15px;
+  }
+
+  input,
+  select,
+  textarea,
+  button{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    box-sizing:border-box;
+  }
+
+  input[type="date"]{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    display:block;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+}
+
   </style>
 </head>
 
