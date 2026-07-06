@@ -173,6 +173,38 @@ footer a:hover{
     font-size:.76rem;
   }
 }
+
+
+.pagination-controls{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin-top:18px;
+  flex-wrap:wrap;
+}
+
+.pagination-controls button{
+  padding:8px 14px;
+  border:none;
+  border-radius:10px;
+  background:#2563eb;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.pagination-controls button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.pagination-controls span{
+  font-weight:700;
+  color:#0f172a;
+}
+
+
 </style>
 </head>
 <body>
@@ -207,6 +239,7 @@ footer a:hover{
         <tr><td colspan="5" class="text-center">Loading...</td></tr>
       </tbody>
     </table>
+    <div id="studentPagination" class="pagination-controls"></div>
   </div>
 </div>
 
@@ -271,6 +304,9 @@ const searchBtn = document.getElementById("searchBtn");
 const modal = new bootstrap.Modal(document.getElementById("editStudentModal"));
 
 let allStudents = [];
+let currentStudentPage = 1;
+const studentsPerPage = 10;
+let currentStudentList = [];
 
 function getToken() {
   const token =
@@ -403,7 +439,9 @@ async function loadStudents() {
       return;
     }
 
+    
     allStudents = data.students;
+    currentStudentPage = 1;
     renderTable(allStudents);
   } catch (err) {
     console.error("Load students error:", err);
@@ -420,7 +458,15 @@ async function loadStudents() {
 
 /* RENDER TABLE */
 function renderTable(list) {
-  if (!list || list.length === 0) {
+  currentStudentList = Array.isArray(list) ? list : [];
+
+  const totalPages = Math.ceil(currentStudentList.length / studentsPerPage);
+
+  if (currentStudentPage > totalPages) {
+    currentStudentPage = totalPages || 1;
+  }
+
+  if (!currentStudentList.length) {
     tableBody.innerHTML = `
       <tr>
         <td colspan="5" class="text-center text-warning">
@@ -428,10 +474,14 @@ function renderTable(list) {
         </td>
       </tr>
     `;
+    renderStudentPagination();
     return;
   }
 
-  tableBody.innerHTML = list.map(s => `
+  const startIndex = (currentStudentPage - 1) * studentsPerPage;
+  const studentsToShow = currentStudentList.slice(startIndex, startIndex + studentsPerPage);
+
+  tableBody.innerHTML = studentsToShow.map(s => `
     <tr>
       <td>${s.student_id || "-"}</td>
       <td>${s.first_name || ""} ${s.middle_name || ""} ${s.last_name || ""}</td>
@@ -447,7 +497,48 @@ function renderTable(list) {
       </td>
     </tr>
   `).join("");
+
+  renderStudentPagination();
 }
+
+
+function renderStudentPagination() {
+  const pagination = document.getElementById("studentPagination");
+  if (!pagination) return;
+
+  const totalStudents = currentStudentList.length;
+  const totalPages = Math.ceil(totalStudents / studentsPerPage);
+
+  if (totalStudents <= studentsPerPage) {
+    pagination.innerHTML = "";
+    return;
+  }
+
+  pagination.innerHTML = `
+    <button type="button" ${currentStudentPage === 1 ? "disabled" : ""} onclick="changeStudentPage(-1)">
+      Previous
+    </button>
+
+    <span>Page ${currentStudentPage} of ${totalPages}</span>
+
+    <button type="button" ${currentStudentPage === totalPages ? "disabled" : ""} onclick="changeStudentPage(1)">
+      Next
+    </button>
+  `;
+}
+
+function changeStudentPage(direction) {
+  const totalPages = Math.ceil(currentStudentList.length / studentsPerPage);
+
+  currentStudentPage += direction;
+
+  if (currentStudentPage < 1) currentStudentPage = 1;
+  if (currentStudentPage > totalPages) currentStudentPage = totalPages;
+
+  renderTable(currentStudentList);
+}
+
+
 
 /* SEARCH */
 async function handleSearch() {
@@ -489,6 +580,7 @@ async function handleSearch() {
     }
 
     allStudents = data.students;
+    currentStudentPage = 1;
     renderTable(allStudents);
   } catch (err) {
     console.error("Search students error:", err);
