@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "build": "xcopy *.html .vercel\\output\\static\\ /Y && xcopy *.png .vercel\\output\\static\\ /Y && xcopy *.ico .vercel\\output\\static\\ /Y && xcopy *.webmanifest .vercel\\output\\static\\ /Y && xcopy *.mp4 .vercel\\output\\static\\ /Y && xcopy js .vercel\\output\\static\\js\\ /E /I /Y && xcopy public .vercel\\output\\static\\ /E /I /Y"
+  }
+}
