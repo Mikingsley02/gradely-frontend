@@ -339,6 +339,34 @@
       gap: 8px;
     }
 
+    .pagination-controls{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin-top:18px;
+  flex-wrap:wrap;
+}
+
+.pagination-controls button{
+  padding:10px 16px;
+  border:none;
+  border-radius:10px;
+  background:rgba(255,255,255,.15);
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.pagination-controls button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.pagination-controls span{
+  color:#cbd5e1;
+  font-weight:700;
+}
 
   </style>
 </head>
@@ -598,11 +626,13 @@
         <button type="button" id="searchButton" class="btn-primary">Search</button>
       </div>
       <table>
-        <thead>
-          <tr><th>Student ID</th><th>Name</th><th>Class</th><th>Paid</th><th>Outstanding</th></tr>
-        </thead>
-        <tbody id="studentsTableBody"></tbody>
-      </table>
+  <thead>
+    <tr><th>Student ID</th><th>Name</th><th>Class</th><th>Paid</th><th>Outstanding</th></tr>
+  </thead>
+  <tbody id="studentsTableBody"></tbody>
+</table>
+
+<div id="studentPagination" class="pagination-controls"></div>
     </section>
   </main>
 
@@ -612,6 +642,9 @@ const API_BASE = window.location.hostname.includes("localhost")
   : "https://api.gradely.info";
 
 let allStudentsData = [];
+let studentTableData = [];
+let currentStudentPage = 1;
+const studentsPerPage = 10;
 let incomeExpenseChart = null;
 let outstandingChart = null;
 
@@ -819,20 +852,32 @@ async function loadStudents(search = "") {
     alert("Student record does not exist.");
   }
 
+  currentStudentPage = 1;
   renderTable(students);
   renderOutstandingChart(students);
 }
 
 function renderTable(students) {
+  studentTableData = Array.isArray(students) ? students : [];
+
+  const totalPages = Math.ceil(studentTableData.length / studentsPerPage);
+
+  if (currentStudentPage > totalPages) {
+    currentStudentPage = totalPages || 1;
+  }
+
+  const startIndex = (currentStudentPage - 1) * studentsPerPage;
+  const paginatedStudents = studentTableData.slice(startIndex, startIndex + studentsPerPage);
+
   const body = document.getElementById("studentsTableBody");
 
-  if (!students.length) {
+  if (!paginatedStudents.length) {
     body.innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:#94a3b8">No student records found.</td></tr>';
+    renderStudentPagination();
     return;
   }
 
-  body.innerHTML = students.map(student => {
-    const totalFee = Number(student.total_fee) || 0;
+  body.innerHTML = paginatedStudents.map(student => {
     const paid = Number(student.amount_paid) || 0;
     const outstanding = Number(student.outstanding_balance) || 0;
 
@@ -848,6 +893,46 @@ function renderTable(students) {
       </tr>
     `;
   }).join("");
+
+  renderStudentPagination();
+}
+
+
+
+function renderStudentPagination() {
+  const pagination = document.getElementById("studentPagination");
+  if (!pagination) return;
+
+  const totalStudents = studentTableData.length;
+  const totalPages = Math.ceil(totalStudents / studentsPerPage);
+
+  if (totalStudents <= studentsPerPage) {
+    pagination.innerHTML = "";
+    return;
+  }
+
+  pagination.innerHTML = `
+    <button type="button" ${currentStudentPage === 1 ? "disabled" : ""} onclick="changeStudentPage(-1)">
+      Previous
+    </button>
+
+    <span>Page ${currentStudentPage} of ${totalPages}</span>
+
+    <button type="button" ${currentStudentPage === totalPages ? "disabled" : ""} onclick="changeStudentPage(1)">
+      Next
+    </button>
+  `;
+}
+
+function changeStudentPage(direction) {
+  const totalPages = Math.ceil(studentTableData.length / studentsPerPage);
+
+  currentStudentPage += direction;
+
+  if (currentStudentPage < 1) currentStudentPage = 1;
+  if (currentStudentPage > totalPages) currentStudentPage = totalPages;
+
+  renderTable(studentTableData);
 }
 
 
