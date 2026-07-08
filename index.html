@@ -618,13 +618,12 @@ function getVisitorId() {
   }
 
   // ✅ On page load: show banner ONLY if no consent exists
-  if (!savedConsent) {
-    if (window.location.pathname === "/" || window.location.pathname.endsWith("index.html")) {
-      overlay.style.display = "flex";
-    }
-  } else {
-    loadNonEssentialScripts();  // ✅ GA loads on return visits if already accepted
-  }
+  // ✅ On page load: show banner on every public page if no consent exists
+if (!savedConsent) {
+  overlay.style.display = "flex";
+} else {
+  loadNonEssentialScripts();
+}
 </script>
 
 
