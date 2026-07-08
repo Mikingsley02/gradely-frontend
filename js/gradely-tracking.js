@@ -1,5 +1,14 @@
 const savedConsent = localStorage.getItem("gradely_cookie_consent");
 
+function getVisitorId() {
+  let id = sessionStorage.getItem("gradely_visitor_id");
+  if (!id) {
+    id = "v-" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem("gradely_visitor_id", id);
+  }
+  return id;
+}
+
 function loadNonEssentialScripts() {
   if (localStorage.getItem("gradely_cookie_consent") !== "accepted") {
     console.log("⚠️ Non-essential cookies rejected - analytics blocked");
@@ -15,16 +24,12 @@ function loadNonEssentialScripts() {
     document.head.appendChild(gaScript);
 
     window.dataLayer = window.dataLayer || [];
-    window.gtag = function(){ dataLayer.push(arguments); };
+    window.gtag = function () {
+      dataLayer.push(arguments);
+    };
 
     gtag("js", new Date());
-    gtag("config", "G-8G4E0GYWT1", {
-      user_type: sessionStorage.getItem("adminId")
-        ? "admin"
-        : sessionStorage.getItem("school_id")
-          ? "school"
-          : "visitor"
-    });
+    gtag("config", "G-8G4E0GYWT1");
 
     console.log("✅ Google Analytics loaded (G-8G4E0GYWT1)");
   }
@@ -56,4 +61,31 @@ function loadNonEssentialScripts() {
   }
 }
 
-loadNonEssentialScripts();
+function acceptCookies() {
+  localStorage.setItem("gradely_cookie_consent", "accepted");
+
+  const overlay = document.getElementById("cookieOverlay");
+  if (overlay) overlay.style.display = "none";
+
+  loadNonEssentialScripts();
+}
+
+function rejectCookies() {
+  localStorage.setItem("gradely_cookie_consent", "rejected");
+
+  const overlay = document.getElementById("cookieOverlay");
+  if (overlay) overlay.style.display = "none";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const overlay = document.getElementById("cookieOverlay");
+  const consent = localStorage.getItem("gradely_cookie_consent");
+
+  if (!consent) {
+    if (overlay) overlay.style.display = "flex";
+  } else if (consent === "accepted") {
+    loadNonEssentialScripts();
+  } else {
+    console.log("⚠️ Non-essential cookies rejected - analytics blocked");
+  }
+});
