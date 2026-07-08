@@ -461,6 +461,15 @@ footer a{
       console.log("✅ Registration response:", result);
 
       if (res.ok && result.success) {
+
+        // ✅ Meta Pixel: School registration completed
+if (window.fbq) {
+  fbq('track', 'CompleteRegistration', {
+    content_name: 'School Registration',
+    status: 'Success'
+  });
+}
+
         // ✅ CRITICAL FIX: Pass EMAIL to payment page via URL parameter
         if (redirectStatus) {
           redirectStatus.textContent = "✅ Account created! Redirecting to payment...";

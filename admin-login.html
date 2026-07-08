@@ -1130,6 +1130,15 @@ await completeLogin(data);
 
     showMessage("Login successful. Redirecting...", "success");
 
+
+    // ✅ Meta Pixel: Successful admin login
+if (window.fbq) {
+  fbq('track', 'Login', {
+    content_name: 'Admin Login',
+    user_type: 'School Admin'
+  });
+}
+
     setTimeout(() => {
       window.location.href = "dashboard.html";
     }, 700);

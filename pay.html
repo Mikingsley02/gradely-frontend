@@ -592,6 +592,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     localStorage.removeItem("payment_pending");
 
+    // ✅ Meta Pixel: Successful subscription payment
+if (window.fbq) {
+  const pixelPlan =
+    cleanPlan(result.plan) ||
+    cleanPlan(plan) ||
+    cleanPlan(localStorage.getItem("plan")) ||
+    "basic";
+
+  fbq('track', 'Purchase', {
+    value: pixelPlan === "pro" ? 29900 : 19900,
+    currency: 'NGN',
+    content_name: `${pixelPlan.toUpperCase()} Subscription`,
+    content_category: 'School Subscription'
+  });
+}
+
+
     if (result.token) {
       localStorage.setItem("gradely_token", result.token);
       sessionStorage.setItem("gradely_token", result.token);

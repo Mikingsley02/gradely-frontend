@@ -397,9 +397,19 @@
     .then(response => response.json())
     .then(result => {
       if (result.success) {
-        alert("Your message has been sent successfully!");
-        this.reset();
-      } else {
+
+    // ✅ Meta Pixel: Contact form submitted successfully
+    if (window.fbq) {
+        fbq('track', 'Lead', {
+            content_name: 'Contact Form',
+            lead_type: 'Website Contact'
+        });
+    }
+
+    alert("Your message has been sent successfully!");
+    this.reset();
+
+} else {
         alert("Something went wrong. Please try again.");
       }
     })
