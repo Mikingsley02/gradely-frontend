@@ -1,5 +1,3 @@
-const savedConsent = localStorage.getItem("gradely_cookie_consent");
-
 function getVisitorId() {
   let id = sessionStorage.getItem("gradely_visitor_id");
   if (!id) {
@@ -31,7 +29,7 @@ function loadNonEssentialScripts() {
     gtag("js", new Date());
     gtag("config", "G-8G4E0GYWT1");
 
-    console.log("✅ Google Analytics loaded (G-8G4E0GYWT1)");
+    console.log("✅ Google Analytics loaded");
   }
 
   if (!window.gradelyMetaPixelLoaded) {
@@ -50,14 +48,21 @@ function loadNonEssentialScripts() {
       t = b.createElement(e);
       t.async = true;
       t.src = v;
+
+      t.onload = function () {
+        console.log("✅ Meta Pixel script actually loaded");
+        fbq("init", "229177753419897");
+        fbq("track", "PageView");
+        console.log("✅ Meta Pixel PageView fired");
+      };
+
+      t.onerror = function () {
+        console.error("❌ Meta Pixel failed to load. Check CSP, ad blocker, or browser privacy settings.");
+      };
+
       s = b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t, s);
     }(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
-
-    fbq("init", "229177753419897");
-    fbq("track", "PageView");
-
-    console.log("✅ Meta Pixel loaded");
   }
 }
 
