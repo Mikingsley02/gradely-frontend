@@ -415,8 +415,8 @@
 
 <header>
   <div class="header-inner">
-    <div class="brand">
-  🎓 gradely<span>.info</span>
+    <div class="brand" id="dashboardSchoolName">
+  🎓 Loading school...
 </div>
 
     <button class="logout" onclick="logoutParent()">Logout</button>
@@ -657,15 +657,18 @@ function getStudentAuthHeaders() {
   };
 }
 
+
 function logoutParent() {
   localStorage.removeItem("student_token");
   sessionStorage.removeItem("student_token");
   localStorage.removeItem("studentId");
   sessionStorage.removeItem("studentId");
   localStorage.removeItem("studentData");
+  localStorage.removeItem("student_school_name");
 
   window.location.href = "parent-login.html";
 }
+
 
 function goTo(page) {
   if (!getStudentToken() || !getStudentId()) {
@@ -676,7 +679,9 @@ function goTo(page) {
   window.location.href = page;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+
+
+document.addEventListener("DOMContentLoaded", async () => {
   if (!getStudentToken() || !getStudentId()) {
     logoutParent();
     return;
@@ -691,14 +696,108 @@ document.addEventListener("DOMContentLoaded", () => {
     `${data.first_name || ""} ${data.last_name || ""}`.trim() ||
     "Student";
 
-  document.getElementById("studentIdPill").textContent = `Student ID: ${studentId}`;
-  document.getElementById("studentNamePill").textContent = `Student: ${name}`;
-  document.getElementById("welcomeText").textContent = `Welcome, ${name}'s Parent`;
+  document.getElementById("studentIdPill").textContent =
+    `Student ID: ${studentId}`;
+
+  document.getElementById("studentNamePill").textContent =
+    `Student: ${name}`;
+
+  document.getElementById("welcomeText").textContent =
+    `Welcome, ${name}'s Parent`;
 
   document.querySelectorAll(".currentYear").forEach(el => {
     el.textContent = new Date().getFullYear();
   });
+
+  await loadStudentSchoolName();
 });
+
+
+async function loadStudentSchoolName() {
+  const studentId = getStudentId();
+  const schoolNameElement =
+    document.getElementById("dashboardSchoolName");
+
+  if (!studentId || !schoolNameElement) {
+    return;
+  }
+
+  const studentData = getStudentData();
+
+  const cachedSchoolName =
+    studentData.school_name ||
+    studentData.schoolName ||
+    localStorage.getItem("student_school_name");
+
+  if (cachedSchoolName) {
+    schoolNameElement.textContent =
+      `🎓 ${cachedSchoolName}`;
+  }
+
+  try {
+    const res = await fetch(
+      `${backendUrl}/api/schools/student/${encodeURIComponent(studentId)}`,
+      {
+        method: "GET",
+        headers: getStudentAuthHeaders(),
+        cache: "no-store"
+      }
+    );
+
+    const responseText = await res.text();
+
+    let result;
+
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      throw new Error("Invalid server response");
+    }
+
+    if (!res.ok || !result.success) {
+      throw new Error(
+        result.message ||
+        `Request failed with status ${res.status}`
+      );
+    }
+
+    const schoolName = String(
+      result.school_name || ""
+    ).trim();
+
+    if (!schoolName) {
+      throw new Error("School name was not returned");
+    }
+
+    schoolNameElement.textContent =
+      `🎓 ${schoolName}`;
+
+    localStorage.setItem(
+      "student_school_name",
+      schoolName
+    );
+
+    localStorage.setItem(
+      "studentData",
+      JSON.stringify({
+        ...studentData,
+        school_id:
+          result.school_id ||
+          studentData.school_id,
+        school_name: schoolName
+      })
+    );
+  } catch (err) {
+    console.error("School name load error:", err);
+
+    if (!cachedSchoolName) {
+      schoolNameElement.textContent =
+        "🎓 School Dashboard";
+    }
+  }
+}
+
+
 
 // Password Modal Functions
 function openPasswordModal() {
