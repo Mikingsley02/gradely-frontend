@@ -484,18 +484,65 @@ if (window.fbq) {
         sessionStorage.removeItem("register_form_data");
 
         // ✅ CRITICAL: Include email in redirect URL for payment flow
-        const schoolId = result.data?.school_id || result.data?.admin_id;
-        const adminId = result.data?.admin_id;
-        
-               // ✅ CRITICAL: Include referral_code in redirect URL for payment flow
-        setTimeout(() => {
-          window.location.href =
-  `pay.html?school_id=${encodeURIComponent(schoolId)}` +
-  `&plan=${encodeURIComponent(subscriptionPlan)}` +
-  `&email=${encodeURIComponent(email)}` +
-  `&admin_id=${encodeURIComponent(adminId)}` +
-  `&new=true`;
-        }, 1000);
+        const schoolId =
+  result.data?.school_id ||
+  result.data?.admin_id;
+
+const returnedAdminId =
+  result.data?.admin_id ||
+  adminId;
+
+const returnedEmail =
+  result.data?.email ||
+  email;
+
+const returnedPlan =
+  result.data?.current_plan ||
+  result.data?.subscription_plan ||
+  subscriptionPlan;
+
+const paymentUrl =
+  result.data?.payment_url ||
+  (
+    `pay.html?school_id=${encodeURIComponent(schoolId)}` +
+    `&plan=${encodeURIComponent(returnedPlan)}` +
+    `&email=${encodeURIComponent(returnedEmail)}` +
+    `&admin_id=${encodeURIComponent(returnedAdminId)}` +
+    `&new=true` +
+    `${result.payment_pending ? "&pending=true" : ""}`
+  );
+
+if (result.payment_pending) {
+  if (redirectStatus) {
+    redirectStatus.textContent =
+      "✅ Registration found. Redirecting you to retry payment...";
+    redirectStatus.style.display = "block";
+  }
+
+  submitBtn.textContent = "🔄 Redirecting to payment...";
+} else {
+  if (redirectStatus) {
+    redirectStatus.textContent =
+      "✅ Account created! Redirecting to payment...";
+    redirectStatus.style.display = "block";
+  }
+
+  submitBtn.textContent = "🔄 Redirecting...";
+}
+
+localStorage.setItem("school_id", schoolId || "");
+localStorage.setItem("admin_id", returnedAdminId || "");
+localStorage.setItem("email", returnedEmail || "");
+localStorage.setItem("plan", returnedPlan || "");
+
+sessionStorage.setItem("school_id", schoolId || "");
+sessionStorage.setItem("admin_id", returnedAdminId || "");
+sessionStorage.setItem("email", returnedEmail || "");
+sessionStorage.setItem("plan", returnedPlan || "");
+
+setTimeout(() => {
+  window.location.href = paymentUrl;
+}, 1000);
         
       } else {
         alert("⚠️ " + (result.message || "Registration failed."));
