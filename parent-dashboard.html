@@ -690,20 +690,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const studentId = getStudentId();
   const data = getStudentData();
 
-  const name =
-    data.student_name ||
-    data.full_name ||
-    `${data.first_name || ""} ${data.last_name || ""}`.trim() ||
-    "Student";
-
   document.getElementById("studentIdPill").textContent =
-    `Student ID: ${studentId}`;
+  `Student ID: ${studentId}`;
 
-  document.getElementById("studentNamePill").textContent =
-    `Student: ${name}`;
+document.getElementById("studentNamePill").textContent =
+  "Student: Loading...";
 
-  document.getElementById("welcomeText").textContent =
-    `Welcome, ${name}'s Parent`;
+document.getElementById("welcomeText").textContent =
+  "Welcome, Parent";
 
   document.querySelectorAll(".currentYear").forEach(el => {
     el.textContent = new Date().getFullYear();
@@ -765,6 +759,12 @@ async function loadStudentSchoolName() {
       result.school_name || ""
     ).trim();
 
+    const correctStudentName = String(
+  result.student_name ||
+  `${result.first_name || ""} ${result.last_name || ""}`.trim() ||
+  ""
+).trim();
+
     if (!schoolName) {
       throw new Error("School name was not returned");
     }
@@ -772,21 +772,41 @@ async function loadStudentSchoolName() {
     schoolNameElement.textContent =
       `🎓 ${schoolName}`;
 
+
+      if (correctStudentName) {
+  document.getElementById("studentNamePill").textContent =
+    `Student: ${correctStudentName}`;
+
+  document.getElementById("welcomeText").textContent =
+    `Welcome, ${correctStudentName}'s Parent`;
+}
+
+
     localStorage.setItem(
       "student_school_name",
       schoolName
     );
 
     localStorage.setItem(
-      "studentData",
-      JSON.stringify({
-        ...studentData,
-        school_id:
-          result.school_id ||
-          studentData.school_id,
-        school_name: schoolName
-      })
-    );
+  "studentData",
+  JSON.stringify({
+    ...studentData,
+    student_id: result.student_id || studentId,
+    school_id:
+      result.school_id ||
+      studentData.school_id,
+    school_name: schoolName,
+    student_name:
+      correctStudentName ||
+      studentData.student_name,
+    first_name:
+      result.first_name ||
+      studentData.first_name,
+    last_name:
+      result.last_name ||
+      studentData.last_name
+  })
+);
   } catch (err) {
     console.error("School name load error:", err);
 
