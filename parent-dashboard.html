@@ -736,7 +736,7 @@ async function loadStudentSchoolName() {
 
   try {
     const res = await fetch(
-      `${backendUrl}/api/schools/student/${encodeURIComponent(studentId)}`,
+      `${backendUrl}/api/school/student/${encodeURIComponent(studentId)}`,
       {
         method: "GET",
         headers: getStudentAuthHeaders(),
