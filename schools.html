@@ -30,6 +30,14 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="manifest" href="site.webmanifest" />
 
+  <!-- Font Awesome social media icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
   <style>
     * {
       box-sizing: border-box;
@@ -749,69 +757,64 @@
     }
 
     /* =========================
-       FOOTER
-    ========================= */
+   FOOTER
+========================= */
 
-    footer {
-      margin-top: 80px;
-      padding: 38px 0;
-      background: rgba(2, 6, 23, 0.9);
-      border-top: 1px solid var(--border);
-    }
+footer{
+  background:#0b1120;
+  line-height:1.7;
+  color:#cbd5e1;
+  padding:75px 20px 35px;
+}
 
-    .footer-inner {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 30px;
-      align-items: center;
-    }
+.footer-inner{
+  max-width:1200px;
+  margin:auto;
+}
 
-    .footer-copy {
-      color: #94a3b8;
-      line-height: 1.7;
-      font-size: 0.9rem;
-    }
+.footer-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr;
+  gap:40px;
+}
 
-    .footer-copy strong {
-      color: #fff;
-    }
+.footer-logo{
+  font-size:2rem;
+  font-weight:800;
+  margin-bottom:20px;
+  color:white;
+}
 
-    .footer-links {
-      display: flex;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
+.footer-logo .info{
+  color:var(--gold);
+}
 
-    .footer-links a {
-      color: var(--cyan);
-      text-decoration: none;
-      font-size: 0.88rem;
-      font-weight: 700;
-    }
+.footer-links h4{
+  color:white;
+  margin-bottom:18px;
+}
 
-    /* =========================
-       FLOATING WHATSAPP
-    ========================= */
+.footer-links a{
+  display:block;
+  color:#cbd5e1;
+  text-decoration:none;
+  margin-bottom:12px;
+  transition:.3s;
+}
 
-    .floating-whatsapp {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      z-index: 900;
-      width: 58px;
-      height: 58px;
-      display: grid;
-      place-items: center;
-      border-radius: 50%;
-      color: #fff;
-      background: #16a34a;
-      box-shadow: 0 18px 40px rgba(22, 163, 74, 0.38);
-      text-decoration: none;
-      font-size: 1.55rem;
-    }
+.footer-links a:hover{
+  color:white;
+}
 
-    /* =========================
+.footer-bottom{
+  border-top:1px solid rgba(255,255,255,.08);
+  margin-top:50px;
+  padding-top:25px;
+  text-align:center;
+  font-size:.95rem;
+}
+
+/* =========================
        COOKIE CONSENT
     ========================= */
 
@@ -868,6 +871,13 @@
 
     .cookie-reject {
       background: #dc2626;
+    }
+
+
+    @media (max-width: 900px) {
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     /* =========================
@@ -949,16 +959,7 @@
       .dashboard-cards {
         grid-template-columns: 1fr;
       }
-
-      .footer-inner {
-        grid-template-columns: 1fr;
-        text-align: center;
-      }
-
-      .footer-links {
-        justify-content: center;
-      }
-    }
+}
 
     @media (max-width: 480px) {
       .page-shell,
@@ -1456,38 +1457,144 @@
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer>
-    <div class="page-shell footer-inner">
-      <div class="footer-copy">
-        © <span class="currentYear"></span>
-        <strong>gradely.info</strong> — Powered by Remit Integrated Services LTD.
-        All Rights Reserved.
+<!-- ✅ GRADLEY ANDROID APP DOWNLOAD SECTION -->
+<section style="background: linear-gradient(135deg, #f0f4ff 0%, #e6eeff 100%); padding: 60px 20px; margin: 40px auto; border-radius: 24px; text-align: center; max-width: 800px;">
+  <div>
+    <h2 style="color: #1e293b; font-size: 2.2rem; margin-bottom: 20px;">
+      📱 Download Gradely Mobile App
+    </h2>
+
+    <p style="font-size: 1.1rem; color: #475569; margin-bottom: 30px; line-height: 1.6;">
+      Get instant access to your child's results, attendance, and school announcements 
+      on your Android device. Always stay connected with your school!
+    </p>
+
+    <a 
+      href="/downloads/Gradely-v1.0.0.apk"
+      download="Gradely-v1.0.0.apk"
+      id="apkDownloadBtn"
+      style="display: inline-block; background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); color: white; padding: 16px 40px; border-radius: 60px; font-weight: 700; font-size: 1.2rem; text-decoration: none; box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4); transition: all 0.3s ease;"
+    >
+      📥 Download Android App (APK)
+    </a>
+
+    <div id="apkSecurityNotice" style="display:none; margin-top: 25px; padding: 20px; background: #fff9db; border-left: 4px solid #ffc107; border-radius: 12px; text-align: left;">
+      <strong style="color: #856404; display: flex; align-items: center; gap: 8px;">
+        ⚠️ Important Security Note
+      </strong>
+
+      <p style="color: #856404; margin-top: 10px; line-height: 1.5;">
+        Your browser or antivirus may block the download because this is a direct APK file.
+        <strong>To install:</strong>
+      </p>
+
+      <ol style="color: #856404; padding-left: 20px; margin-top: 10px; line-height: 1.5;">
+        <li>Click "Keep" or "Download anyway" if prompted by your browser</li>
+        <li>Go to <strong>Settings &gt; Security</strong> on your Android device</li>
+        <li>Enable <strong>"Install unknown apps"</strong> for your browser</li>
+        <li>Open your Downloads folder and tap the APK file to install</li>
+      </ol>
+
+      <button 
+        id="closeApkNotice"
+        style="margin-top: 15px; background:#856404; color:white; border:none; padding:10px 24px; border-radius:30px; font-weight:700; cursor:pointer;"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+</section>
+
+<script>
+const apkDownloadBtn = document.getElementById("apkDownloadBtn");
+const apkSecurityNotice = document.getElementById("apkSecurityNotice");
+const closeApkNotice = document.getElementById("closeApkNotice");
+
+apkDownloadBtn.addEventListener("click", () => {
+  apkSecurityNotice.style.display = "block";
+});
+
+closeApkNotice.addEventListener("click", () => {
+  apkSecurityNotice.style.display = "none";
+});
+</script>
+
+<!-- FOOTER -->
+<footer>
+
+  <div class="footer-inner">
+
+    <div class="footer-grid">
+
+      <div>
+
+        <div class="footer-logo">
+          🎓 gradely<span class="info">.info</span>
+        </div>
+
+        <p>
+          Modern school management software designed
+          for Nigerian educational institutions.
+        </p>
+
+        <!-- ✅ SOCIAL MEDIA ICONS -->
+        <div style="margin-top:20px; display:flex; gap:15px;">
+          <a href="https://facebook.com/gradelyinfo" target="_blank" rel="noopener noreferrer" 
+             style="color:#cbd5e1; font-size:1.4rem; transition:.3s;" 
+             aria-label="Facebook">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+          <a href="https://www.youtube.com/@gradely_info" target="_blank" rel="noopener noreferrer" 
+             style="color:#cbd5e1; font-size:1.4rem; transition:.3s;" 
+             aria-label="YouTube">
+            <i class="fab fa-youtube"></i>
+          </a>
+          <a href="https://www.instagram.com/gradely.info" target="_blank" rel="noopener noreferrer" 
+             style="color:#cbd5e1; font-size:1.4rem; transition:.3s;" 
+             aria-label="Instagram">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a href="https://www.tiktok.com/@gradely.info" target="_blank" rel="noopener noreferrer" 
+             style="color:#cbd5e1; font-size:1.4rem; transition:.3s;" 
+             aria-label="TikTok">
+            <i class="fab fa-tiktok"></i>
+          </a>
+        </div>
+
       </div>
 
       <div class="footer-links">
+
+        <h4>Quick Links</h4>
+
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
+        <a href="admin-login.html">Login</a>
+
+      </div>
+
+      <div class="footer-links">
+
+        <h4>Legal</h4>
+
         <a href="terms.html">Terms</a>
         <a href="privacy.html">Privacy</a>
         <a href="refund-policy.html">Refund Policy</a>
-        <a href="cookies.html">Cookie Policy</a>
-      </div>
-    </div>
-  </footer>
 
-  <!-- Floating WhatsApp -->
-  <a
-    class="floating-whatsapp"
-    href="https://wa.me/2348064287477?text=Hello%20Gradely.info%2C%20I%20would%20like%20to%20learn%20more%20about%20your%20school%20management%20platform."
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="Chat with Gradely.info on WhatsApp"
-    title="Chat on WhatsApp"
-  >
-    💬
-  </a>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      © <span class="currentYear"></span> <strong>gradely.info</strong> • Developed by Remit Integrated Services LTD
+    </div>
+
+  </div>
+
+</footer>
+
+
 
   <!-- Cookie consent -->
   <div class="cookie-overlay" id="cookieOverlay">
@@ -1536,7 +1643,8 @@
     });
   </script>
 
-  <script src="js/kaima-chatbot.js"></script>
   <script src="js/gradely-tracking.js"></script>
+  <script src="js/kaima-chatbot.js"></script>
+
 </body>
 </html>
