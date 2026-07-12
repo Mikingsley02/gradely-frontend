@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>School Management Software for Nigerian Schools | Gradely.info</title>
+
+  <meta
+    name="description"
+    content="Gradely.info helps Nigerian schools manage students, attendance, fees, results, announcements and parent communication from one secure platform."
+  />
+
+  <meta
+    name="keywords"
+    content="school management software Nigeria, school portal Nigeria, school ERP, student management system, school fees software, result management software"
+  />
+
+  <meta property="og:title" content="Gradely.info for Schools" />
+  <meta
+    property="og:description"
+    content="Manage students, attendance, fees, results and parent communication from one secure platform."
+  />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://gradely.info/schools.html" />
+
+  <!-- Gradely favicon -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="site.webmanifest" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --navy: #020617;
+      --navy-soft: #0f172a;
+      --blue: #2563eb;
+      --cyan: #00d2ff;
+      --green: #22c55e;
+      --green-dark: #15803d;
+      --gold: #ffd700;
+      --white: #ffffff;
+      --muted: #cbd5e1;
+      --border: rgba(255, 255, 255, 0.16);
+      --glass: rgba(2, 6, 23, 0.66);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--white);
+      background:
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.2), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(0, 210, 255, 0.17), transparent 35%),
+        linear-gradient(135deg, #020617, #071426, #0f172a);
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    .page-shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    /* =========================
+       NAVIGATION
+    ========================= */
+
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(2, 6, 23, 0.84);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(22px);
+    }
+
+    .nav-inner {
+      width: min(1180px, calc(100% - 32px));
+      min-height: 76px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      font-size: 1.22rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 15px;
+      background: rgba(255, 215, 0, 0.13);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      font-size: 1.4rem;
+    }
+
+    .brand-info {
+      color: var(--gold);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: #e2e8f0;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .nav-links a:hover {
+      color: var(--cyan);
+    }
+
+    .nav-links .nav-cta {
+      padding: 11px 18px;
+      border-radius: 12px;
+      color: #fff;
+      background: linear-gradient(135deg, #34d399, #15803d);
+      box-shadow: 0 14px 32px rgba(21, 128, 61, 0.28);
+    }
+
+    /* =========================
+       GENERAL
+    ========================= */
+
+    section {
+      padding: 88px 0;
+    }
+
+    .section-heading {
+      max-width: 760px;
+      margin: 0 auto 44px;
+      text-align: center;
+    }
+
+    .section-heading .eyebrow,
+    .hero-copy .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 215, 0, 0.1);
+      border: 1px solid rgba(255, 215, 0, 0.32);
+      color: var(--gold);
+      font-size: 0.82rem;
+      font-weight: 900;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .section-heading h2 {
+      font-size: clamp(2rem, 4vw, 3.1rem);
+      line-height: 1.12;
+      letter-spacing: -1.5px;
+      margin-bottom: 18px;
+    }
+
+    .section-heading p {
+      color: var(--muted);
+      font-size: 1.03rem;
+      line-height: 1.75;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      min-height: 54px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 23px;
+      border-radius: 15px;
+      text-decoration: none;
+      font-weight: 900;
+      transition: 0.25s ease;
+    }
+
+    .primary-btn {
+      color: #fff;
+      background: linear-gradient(135deg, #34d399, #15803d);
+      box-shadow: 0 20px 40px rgba(21, 128, 61, 0.3);
+    }
+
+    .secondary-btn {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+    }
+
+    .primary-btn:hover,
+    .secondary-btn:hover {
+      transform: translateY(-3px);
+    }
+
+    /* =========================
+       HERO
+    ========================= */
+
+    .hero {
+      position: relative;
+      min-height: 760px;
+      display: flex;
+      align-items: center;
+      padding: 92px 0;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(2, 6, 23, 0.97) 0%, rgba(2, 6, 23, 0.8) 52%, rgba(2, 6, 23, 0.52) 100%),
+        url("https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=1800");
+      background-size: cover;
+      background-position: center;
+      z-index: -2;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 520px;
+      height: 520px;
+      right: -120px;
+      top: 30px;
+      border-radius: 50%;
+      background: rgba(37, 99, 235, 0.26);
+      filter: blur(90px);
+      z-index: -1;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 54px;
+      align-items: center;
+    }
+
+    .hero-copy h1 {
+      max-width: 780px;
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      line-height: 1.02;
+      letter-spacing: -3px;
+      margin-bottom: 24px;
+    }
+
+    .hero-copy h1 span {
+      color: var(--gold);
+    }
+
+    .hero-copy > p {
+      max-width: 700px;
+      color: #dbeafe;
+      font-size: 1.08rem;
+      line-height: 1.8;
+      margin-bottom: 30px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 34px;
+    }
+
+    .trust-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      color: #dbeafe;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .trust-row span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dashboard-preview {
+      position: relative;
+      padding: 20px;
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(25px);
+      box-shadow: 0 35px 90px rgba(0, 0, 0, 0.52);
+    }
+
+    .dashboard-window {
+      overflow: hidden;
+      border-radius: 22px;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .dashboard-topbar {
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      color: #fff;
+      background: linear-gradient(135deg, #020617, #1d4ed8);
+    }
+
+    .dashboard-topbar strong {
+      font-size: 1rem;
+    }
+
+    .dashboard-body {
+      padding: 18px;
+    }
+
+    .dashboard-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .mini-card {
+      min-height: 105px;
+      padding: 14px;
+      border-radius: 15px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .mini-card span {
+      display: block;
+      color: #64748b;
+      font-size: 0.72rem;
+      margin-bottom: 8px;
+    }
+
+    .mini-card strong {
+      font-size: 1.22rem;
+    }
+
+    .dashboard-chart {
+      height: 160px;
+      display: flex;
+      align-items: end;
+      gap: 12px;
+      padding: 22px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #eff6ff, #fff);
+      border: 1px solid #dbeafe;
+    }
+
+    .bar {
+      flex: 1;
+      border-radius: 8px 8px 2px 2px;
+      background: linear-gradient(180deg, #38bdf8, #2563eb);
+    }
+
+    .bar:nth-child(1) { height: 38%; }
+    .bar:nth-child(2) { height: 64%; }
+    .bar:nth-child(3) { height: 46%; }
+    .bar:nth-child(4) { height: 82%; }
+    .bar:nth-child(5) { height: 70%; }
+    .bar:nth-child(6) { height: 94%; }
+
+    /* =========================
+       FEATURES
+    ========================= */
+
+    .features {
+      background: rgba(255, 255, 255, 0.025);
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .feature-card {
+      min-height: 260px;
+      padding: 28px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(18px);
+      transition: 0.25s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255, 215, 0, 0.48);
+    }
+
+    .feature-icon {
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 20px;
+      border-radius: 18px;
+      background: rgba(255, 215, 0, 0.12);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      font-size: 1.55rem;
+    }
+
+    .feature-card h3 {
+      margin-bottom: 12px;
+      font-size: 1.22rem;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      line-height: 1.72;
+      font-size: 0.95rem;
+    }
+
+    /* =========================
+       BENEFITS
+    ========================= */
+
+    .benefit-layout {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .benefit-panel {
+      padding: 34px;
+      border-radius: 28px;
+      background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.22), rgba(34, 197, 94, 0.12)),
+        rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+    }
+
+    .benefit-panel h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.12;
+      margin-bottom: 18px;
+    }
+
+    .benefit-panel p {
+      color: var(--muted);
+      line-height: 1.8;
+      margin-bottom: 26px;
+    }
+
+    .benefit-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .benefit-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 18px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+    }
+
+    .benefit-item span {
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .benefit-item p {
+      margin: 0;
+      color: #e2e8f0;
+      font-size: 0.93rem;
+      line-height: 1.55;
+    }
+
+    /* =========================
+       HOW IT WORKS
+    ========================= */
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      counter-reset: step;
+    }
+
+    .step-card {
+      position: relative;
+      padding: 28px 22px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+    }
+
+    .step-number {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+      border-radius: 50%;
+      color: #020617;
+      background: var(--gold);
+      font-weight: 900;
+    }
+
+    .step-card h3 {
+      margin-bottom: 10px;
+    }
+
+    .step-card p {
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 0.93rem;
+    }
+
+    /* =========================
+       PRICING
+    ========================= */
+
+    .pricing {
+      background:
+        radial-gradient(circle at center, rgba(37, 99, 235, 0.16), transparent 50%);
+    }
+
+    .pricing-grid {
+      width: min(900px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 26px;
+    }
+
+    .price-card {
+      position: relative;
+      padding: 36px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--border);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28);
+    }
+
+    .price-card.featured {
+      border-color: rgba(255, 215, 0, 0.62);
+      transform: translateY(-8px);
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      color: #020617;
+      background: var(--gold);
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+
+    .price-card h3 {
+      font-size: 1.45rem;
+      margin-bottom: 10px;
+    }
+
+    .price-card > p {
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .price {
+      margin: 24px 0;
+      font-size: 2.4rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .price span {
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .price-features {
+      list-style: none;
+      display: grid;
+      gap: 13px;
+      margin-bottom: 28px;
+    }
+
+    .price-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: #e2e8f0;
+      line-height: 1.5;
+      font-size: 0.94rem;
+    }
+
+    .price-features li::before {
+      content: "✓";
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    /* =========================
+       FAQ
+    ========================= */
+
+    .faq-list {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      gap: 14px;
+    }
+
+    .faq-item {
+      overflow: hidden;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+    }
+
+    .faq-question {
+      width: 100%;
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 22px;
+      color: #fff;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .faq-answer {
+      display: none;
+      padding: 0 22px 22px;
+      color: var(--muted);
+      line-height: 1.72;
+    }
+
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+
+    /* =========================
+       CTA
+    ========================= */
+
+    .final-cta {
+      padding-top: 40px;
+    }
+
+    .cta-box {
+      position: relative;
+      overflow: hidden;
+      padding: 58px 36px;
+      border-radius: 32px;
+      text-align: center;
+      background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.88), rgba(21, 128, 61, 0.86));
+      box-shadow: 0 34px 90px rgba(0, 0, 0, 0.4);
+    }
+
+    .cta-box::before {
+      content: "";
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      top: -140px;
+      right: -70px;
+      border-radius: 50%;
+      background: rgba(255, 215, 0, 0.2);
+      filter: blur(20px);
+    }
+
+    .cta-box h2 {
+      position: relative;
+      font-size: clamp(2rem, 4vw, 3.3rem);
+      line-height: 1.12;
+      margin-bottom: 16px;
+    }
+
+    .cta-box p {
+      position: relative;
+      max-width: 700px;
+      margin: 0 auto 28px;
+      color: #eff6ff;
+      line-height: 1.75;
+    }
+
+    .cta-actions {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    footer {
+      margin-top: 80px;
+      padding: 38px 0;
+      background: rgba(2, 6, 23, 0.9);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-inner {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .footer-copy {
+      color: #94a3b8;
+      line-height: 1.7;
+      font-size: 0.9rem;
+    }
+
+    .footer-copy strong {
+      color: #fff;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-links a {
+      color: var(--cyan);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    /* =========================
+       FLOATING WHATSAPP
+    ========================= */
+
+    .floating-whatsapp {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 900;
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: #16a34a;
+      box-shadow: 0 18px 40px rgba(22, 163, 74, 0.38);
+      text-decoration: none;
+      font-size: 1.55rem;
+    }
+
+    /* =========================
+       COOKIE CONSENT
+    ========================= */
+
+    .cookie-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.64);
+    }
+
+    .cookie-box {
+      width: min(900px, 100%);
+      padding: 24px;
+      border-radius: 24px;
+      background: rgba(2, 6, 23, 0.97);
+      border: 1px solid var(--border);
+      box-shadow: 0 -24px 70px rgba(0, 0, 0, 0.55);
+    }
+
+    .cookie-box h3 {
+      margin-bottom: 10px;
+    }
+
+    .cookie-box p {
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 17px;
+      font-size: 0.92rem;
+    }
+
+    .cookie-actions {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .cookie-btn {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 17px;
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .cookie-accept {
+      background: #16a34a;
+    }
+
+    .cookie-reject {
+      background: #dc2626;
+    }
+
+    /* =========================
+       RESPONSIVE
+    ========================= */
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .benefit-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-copy {
+        text-align: center;
+      }
+
+      .hero-copy > p {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .hero-actions,
+      .trust-row {
+        justify-content: center;
+      }
+
+      .dashboard-preview {
+        max-width: 720px;
+        margin: 0 auto;
+      }
+
+      .feature-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 760px) {
+      .nav-inner {
+        min-height: auto;
+        padding: 14px 0;
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      section {
+        padding: 68px 0;
+      }
+
+      .hero {
+        min-height: auto;
+        padding: 78px 0;
+      }
+
+      .hero-copy h1 {
+        letter-spacing: -1.8px;
+      }
+
+      .feature-grid,
+      .pricing-grid,
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .price-card.featured {
+        transform: none;
+      }
+
+      .benefit-list {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-inner {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .footer-links {
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .page-shell,
+      .nav-inner {
+        width: min(100% - 22px, 1180px);
+      }
+
+      .hero-copy h1 {
+        font-size: 2.35rem;
+      }
+
+      .hero-actions a,
+      .cta-actions a {
+        width: 100%;
+      }
+
+      .dashboard-preview,
+      .benefit-panel,
+      .price-card,
+      .cta-box {
+        padding: 22px;
+        border-radius: 22px;
+      }
+
+      .feature-card {
+        padding: 23px;
+      }
+
+      .cookie-actions {
+        justify-content: center;
+      }
+
+      .cookie-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-icon">🎓</span>
+        <span>gradely<span class="brand-info">.info</span></span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+        <a href="about.html">About</a>
+        <a href="register-school.html" class="nav-cta">Register School</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="page-shell hero-grid">
+      <div class="hero-copy">
+        <div class="eyebrow">Built for Nigerian schools</div>
+
+        <h1>
+          The complete digital platform for
+          <span>modern school management.</span>
+        </h1>
+
+        <p>
+          Manage students, attendance, financial records, assignments,
+          announcements and termly results while keeping parents informed
+          through secure web and mobile access.
+        </p>
+
+        <div class="hero-actions">
+          <a href="register-school.html" class="primary-btn">
+            🏫 Register Your School
+          </a>
+
+          <a
+            href="https://wa.me/2348064287477?text=Hello%20Gradely.info%2C%20I%20would%20like%20to%20learn%20more%20about%20the%20school%20management%20platform."
+            class="secondary-btn"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            💬 Chat on WhatsApp
+          </a>
+        </div>
+
+        <div class="trust-row">
+          <span>✓ Secure cloud platform</span>
+          <span>✓ Parent web and mobile access</span>
+          <span>✓ Affordable monthly plans</span>
+        </div>
+      </div>
+
+      <div class="dashboard-preview">
+        <div class="dashboard-window">
+          <div class="dashboard-topbar">
+            <strong>Gradely School Dashboard</strong>
+            <span>🔔</span>
+          </div>
+
+          <div class="dashboard-body">
+            <div class="dashboard-cards">
+              <div class="mini-card">
+                <span>Registered Students</span>
+                <strong>1,240</strong>
+              </div>
+
+              <div class="mini-card">
+                <span>Attendance Today</span>
+                <strong>94%</strong>
+              </div>
+
+              <div class="mini-card">
+                <span>Fees Recorded</span>
+                <strong>₦4.8m</strong>
+              </div>
+            </div>
+
+            <div class="dashboard-chart" aria-label="Dashboard performance chart">
+              <div class="bar"></div>
+              <div class="bar"></div>
+              <div class="bar"></div>
+              <div class="bar"></div>
+              <div class="bar"></div>
+              <div class="bar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="page-shell">
+      <div class="section-heading">
+        <div class="eyebrow">Everything in one place</div>
+        <h2>Tools that simplify your school's daily operations</h2>
+        <p>
+          Replace scattered spreadsheets, notebooks and multiple communication
+          channels with one secure and easy-to-use platform.
+        </p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-icon">👨‍🎓</div>
+          <h3>Student Management</h3>
+          <p>
+            Register students, organise classes and groups, update records and
+            manage student information from one dashboard.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">💳</div>
+          <h3>Fees & Financial Records</h3>
+          <p>
+            Assign school fees, record payments, monitor outstanding balances
+            and track school income and expenses.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Results & Report Cards</h3>
+          <p>
+            Upload test and exam scores, publish termly results and allow
+            parents to download secure report cards.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">📅</div>
+          <h3>Attendance Tracking</h3>
+          <p>
+            Record student attendance by class and date, monitor trends and
+            give parents access to attendance summaries.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">📢</div>
+          <h3>Announcements & Tasks</h3>
+          <p>
+            Publish school announcements, assignments, tests and instructions
+            that parents and students can view instantly.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">🔐</div>
+          <h3>Secure & Reliable</h3>
+          <p>
+            Protect school and student information with secure authentication,
+            cloud access and controlled user permissions.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits -->
+  <section>
+    <div class="page-shell benefit-layout">
+      <div class="benefit-panel">
+        <div class="eyebrow">Why Gradely.info?</div>
+        <h2>Built around the needs of Nigerian schools</h2>
+
+        <p>
+          Gradely.info helps school owners and administrators digitise
+          operations without requiring complicated software or technical
+          expertise.
+        </p>
+
+        <a href="register-school.html" class="primary-btn">
+          Start Your Registration
+        </a>
+      </div>
+
+      <div class="benefit-list">
+        <div class="benefit-item">
+          <span>✓</span>
+          <p>Access your school dashboard securely from anywhere.</p>
+        </div>
+
+        <div class="benefit-item">
+          <span>✓</span>
+          <p>Give parents private access to their child's information.</p>
+        </div>
+
+        <div class="benefit-item">
+          <span>✓</span>
+          <p>Publish results and announcements without printing delays.</p>
+        </div>
+
+        <div class="benefit-item">
+          <span>✓</span>
+          <p>Track fees, payments and outstanding balances more accurately.</p>
+        </div>
+
+        <div class="benefit-item">
+          <span>✓</span>
+          <p>Use the platform on desktop, tablet or mobile devices.</p>
+        </div>
+
+        <div class="benefit-item">
+          <span>✓</span>
+          <p>Receive support when your school needs assistance.</p>
+        </div>
+
+        <div class="benefit-item">
+          <span>✓</span>
+          <p>Keep academic and administrative information in one place.</p>
+        </div>
+
+        <div class="benefit-item">
+          <span>✓</span>
+          <p>Improve communication between schools and families.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how-it-works">
+    <div class="page-shell">
+      <div class="section-heading">
+        <div class="eyebrow">Simple onboarding</div>
+        <h2>How Gradely.info works</h2>
+        <p>
+          Your school can move from registration to digital management through
+          a straightforward setup process.
+        </p>
+      </div>
+
+      <div class="steps-grid">
+        <article class="step-card">
+          <div class="step-number">1</div>
+          <h3>Register Your School</h3>
+          <p>
+            Create your school account and provide the required administrative
+            information.
+          </p>
+        </article>
+
+        <article class="step-card">
+          <div class="step-number">2</div>
+          <h3>Set Up Classes</h3>
+          <p>
+            Create classes and groups, then register or import student
+            information.
+          </p>
+        </article>
+
+        <article class="step-card">
+          <div class="step-number">3</div>
+          <h3>Manage Operations</h3>
+          <p>
+            Record attendance, financial information, assignments,
+            announcements and academic results.
+          </p>
+        </article>
+
+        <article class="step-card">
+          <div class="step-number">4</div>
+          <h3>Connect Parents</h3>
+          <p>
+            Parents log in securely to view results, attendance, tasks,
+            notifications and other updates.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing" id="pricing">
+    <div class="page-shell">
+      <div class="section-heading">
+        <div class="eyebrow">Affordable monthly plans</div>
+        <h2>Choose the right plan for your school</h2>
+        <p>
+          Start with the features your school needs and upgrade as your
+          operations grow.
+        </p>
+      </div>
+
+      <div class="pricing-grid">
+        <article class="price-card">
+          <h3>Basic</h3>
+          <p>Essential digital tools for everyday school administration.</p>
+
+          <div class="price">
+            ₦19,900 <span>/ month</span>
+          </div>
+
+          <ul class="price-features">
+            <li>Student and class management</li>
+            <li>Attendance tracking</li>
+            <li>Results and report cards</li>
+            <li>Assignments and announcements</li>
+            <li>Parent portal access</li>
+            <li>Secure cloud access</li>
+          </ul>
+
+          <a href="register-school.html?plan=basic" class="secondary-btn">
+            Choose Basic
+          </a>
+        </article>
+
+        <article class="price-card featured">
+          <div class="popular-badge">Most Popular</div>
+
+          <h3>Pro</h3>
+          <p>Advanced tools for schools that need broader management features.</p>
+
+          <div class="price">
+            ₦29,900 <span>/ month</span>
+          </div>
+
+          <ul class="price-features">
+            <li>Everything included in Basic</li>
+            <li>Financial records and fee management</li>
+            <li>Advanced school administration tools</li>
+            <li>Expanded reporting features</li>
+            <li>Priority feature access</li>
+            <li>Enhanced operational visibility</li>
+          </ul>
+
+          <a href="register-school.html?plan=pro" class="primary-btn">
+            Choose Pro
+          </a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="page-shell">
+      <div class="section-heading">
+        <div class="eyebrow">Common questions</div>
+        <h2>Frequently asked questions</h2>
+      </div>
+
+      <div class="faq-list">
+        <article class="faq-item">
+          <button class="faq-question" type="button">
+            Can parents access Gradely.info on their phones?
+            <span>＋</span>
+          </button>
+
+          <div class="faq-answer">
+            Yes. Parents can securely access their child's information through
+            the Gradely.info website and supported mobile access.
+          </div>
+        </article>
+
+        <article class="faq-item">
+          <button class="faq-question" type="button">
+            Can we register existing students?
+            <span>＋</span>
+          </button>
+
+          <div class="faq-answer">
+            Yes. Schools can register existing students and organise them into
+            their appropriate classes and groups.
+          </div>
+        </article>
+
+        <article class="faq-item">
+          <button class="faq-question" type="button">
+            Can Gradely.info manage school fees?
+            <span>＋</span>
+          </button>
+
+          <div class="faq-answer">
+            Schools using the applicable plan can assign fees, record payments,
+            monitor outstanding balances and maintain financial records.
+          </div>
+        </article>
+
+        <article class="faq-item">
+          <button class="faq-question" type="button">
+            Is our school data secure?
+            <span>＋</span>
+          </button>
+
+          <div class="faq-answer">
+            Gradely.info uses secure authentication and controlled access to
+            protect school, student and parent information.
+          </div>
+        </article>
+
+        <article class="faq-item">
+          <button class="faq-question" type="button">
+            Do we need technical knowledge to use the platform?
+            <span>＋</span>
+          </button>
+
+          <div class="faq-answer">
+            No. Gradely.info is designed to be straightforward for school
+            administrators, teachers and parents.
+          </div>
+        </article>
+
+        <article class="faq-item">
+          <button class="faq-question" type="button">
+            Can we contact someone before registering?
+            <span>＋</span>
+          </button>
+
+          <div class="faq-answer">
+            Yes. You can contact Gradely.info through WhatsApp, phone or email
+            if you need clarification before registering your school.
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="final-cta">
+    <div class="page-shell">
+      <div class="cta-box">
+        <h2>Ready to digitise your school?</h2>
+
+        <p>
+          Join Gradely.info and manage your students, academic records,
+          finances and parent communication from one secure platform.
+        </p>
+
+        <div class="cta-actions">
+          <a href="register-school.html" class="primary-btn">
+            Register Your School Today
+          </a>
+
+          <a
+            href="https://wa.me/2348064287477?text=Hello%20Gradely.info%2C%20I%20would%20like%20more%20information%20before%20registering%20my%20school."
+            class="secondary-btn"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Chat With Us
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="page-shell footer-inner">
+      <div class="footer-copy">
+        © <span class="currentYear"></span>
+        <strong>gradely.info</strong> — Powered by Remit Integrated Services LTD.
+        All Rights Reserved.
+      </div>
+
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="refund-policy.html">Refund Policy</a>
+        <a href="cookies.html">Cookie Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating WhatsApp -->
+  <a
+    class="floating-whatsapp"
+    href="https://wa.me/2348064287477?text=Hello%20Gradely.info%2C%20I%20would%20like%20to%20learn%20more%20about%20your%20school%20management%20platform."
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Chat with Gradely.info on WhatsApp"
+    title="Chat on WhatsApp"
+  >
+    💬
+  </a>
+
+  <!-- Cookie consent -->
+  <div class="cookie-overlay" id="cookieOverlay">
+    <div class="cookie-box">
+      <h3>🍪 We Value Your Privacy</h3>
+
+      <p>
+        Gradely.info uses essential cookies for login and functionality.
+        Optional cookies help us understand website usage and improve our
+        marketing.
+      </p>
+
+      <div class="cookie-actions">
+        <button
+          type="button"
+          class="cookie-btn cookie-reject"
+          onclick="rejectCookies()"
+        >
+          Reject Non-Essential
+        </button>
+
+        <button
+          type="button"
+          class="cookie-btn cookie-accept"
+          onclick="acceptCookies()"
+        >
+          Accept All
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll(".currentYear").forEach((element) => {
+      element.textContent = new Date().getFullYear();
+    });
+
+    document.querySelectorAll(".faq-question").forEach((button) => {
+      button.addEventListener("click", () => {
+        const faqItem = button.closest(".faq-item");
+        const icon = button.querySelector("span");
+
+        faqItem.classList.toggle("open");
+        icon.textContent = faqItem.classList.contains("open") ? "−" : "＋";
+      });
+    });
+  </script>
+
+  <script src="js/kaima-chatbot.js"></script>
+  <script src="js/gradely-tracking.js"></script>
+</body>
+</html>
