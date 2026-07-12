@@ -27,9 +27,11 @@ function loadNonEssentialScripts() {
     };
 
     gtag("js", new Date());
-    gtag("config", "G-8G4E0GYWT1");
 
-    console.log("✅ Google Analytics loaded");
+gtag("config", "G-8G4E0GYWT1");
+gtag("config", "AW-18317919428");
+
+console.log("✅ Google Analytics and Google Ads tag loaded");
   }
 
   if (!window.gradelyMetaPixelLoaded) {

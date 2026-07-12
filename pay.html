@@ -297,6 +297,8 @@ body{
   </div>
 
   
+<script src="js/gradely-tracking.js"></script>
+
  <script>
 const API_BASE = window.location.hostname.includes("localhost")
   ? "http://localhost:5000"
@@ -609,6 +611,41 @@ if (window.fbq) {
 }
 
 
+
+// ✅ Google Ads: successful subscription purchase
+if (typeof window.gtag === "function") {
+  const googlePlan =
+    cleanPlan(result.plan) ||
+    cleanPlan(plan) ||
+    cleanPlan(localStorage.getItem("plan")) ||
+    "basic";
+
+  const transactionId =
+    String(result.reference || reference || "").trim();
+
+  if (transactionId) {
+    window.gtag("event", "conversion", {
+      send_to: "AW-18317919428/mvVjCIDv_M4cEMSJ1Z5E",
+      value: googlePlan === "pro" ? 29900 : 19900,
+      currency: "NGN",
+      transaction_id: transactionId
+    });
+
+    console.log("✅ Google Ads Purchase conversion fired", {
+      plan: googlePlan,
+      value: googlePlan === "pro" ? 29900 : 19900,
+      currency: "NGN",
+      transaction_id: transactionId
+    });
+  } else {
+    console.warn(
+      "⚠️ Google Ads conversion not fired because transaction ID is missing"
+    );
+  }
+}
+
+
+
     if (result.token) {
       localStorage.setItem("gradely_token", result.token);
       sessionStorage.setItem("gradely_token", result.token);
@@ -661,7 +698,7 @@ if (window.fbq) {
   <script src="js/kaima-chatbot.js"></script>
 <!-- <script src="js/session-timeout.js"></script> -->
 
-<script src="js/gradely-tracking.js"></script>
+
   
 </body>
 </html>
