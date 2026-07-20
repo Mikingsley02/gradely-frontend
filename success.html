@@ -326,6 +326,107 @@
     });
   </script>
 
-  <script src="js/kaima-chatbot.js"></script>
+  <script src="js/gradely-tracking.js"></script>
+<script src="js/kaima-chatbot.js"></script>
+
+
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const conversionParams = new URLSearchParams(window.location.search);
+
+    // Only use payment information supplied in the successful payment URL.
+    // Do not use old localStorage values to record a new purchase.
+    const conversionReference =
+      conversionParams.get("reference") ||
+      conversionParams.get("ref") ||
+      "";
+
+    const conversionPlan = (
+      conversionParams.get("plan") || ""
+    ).toLowerCase();
+
+    const conversionValue =
+      conversionPlan === "pro"
+        ? 29900
+        : conversionPlan === "basic"
+        ? 19900
+        : 0;
+
+    const hasValidConversion =
+      conversionReference &&
+      conversionReference !== "undefined" &&
+      conversionReference !== "null" &&
+      conversionReference !== "Not available" &&
+      conversionValue > 0;
+
+    if (!hasValidConversion) {
+      console.warn(
+        "⚠️ Google Ads conversion not sent: valid payment reference or plan is missing."
+      );
+      return;
+    }
+
+    if (
+      localStorage.getItem("gradely_cookie_consent") !== "accepted"
+    ) {
+      console.log(
+        "⚠️ Google Ads conversion not sent because analytics consent was not accepted."
+      );
+      return;
+    }
+
+    const conversionStorageKey =
+      `google_ads_conversion_${conversionReference}`;
+
+    if (localStorage.getItem(conversionStorageKey) === "sent") {
+      console.log(
+        "⚠️ Google Ads conversion already sent for:",
+        conversionReference
+      );
+      return;
+    }
+
+    let retryCount = 0;
+    const maximumRetries = 20;
+
+    function sendGoogleAdsPurchase() {
+      if (typeof window.gtag !== "function") {
+        retryCount += 1;
+
+        if (retryCount >= maximumRetries) {
+          console.error(
+            "❌ Google Ads conversion was not sent because gtag did not load."
+          );
+          return;
+        }
+
+        setTimeout(sendGoogleAdsPurchase, 300);
+        return;
+      }
+
+      window.gtag("event", "conversion", {
+        send_to: "AW-18317919428/mvVjCIDv_M4cEMSJ1Z5E",
+        value: conversionValue,
+        currency: "NGN",
+        transaction_id: conversionReference
+      });
+
+      localStorage.setItem(conversionStorageKey, "sent");
+
+      console.log("✅ Google Ads purchase conversion sent", {
+        reference: conversionReference,
+        plan: conversionPlan,
+        value: conversionValue,
+        currency: "NGN"
+      });
+    }
+
+    sendGoogleAdsPurchase();
+  });
+
+</script>
+
+
+  
 </body>
 </html>
